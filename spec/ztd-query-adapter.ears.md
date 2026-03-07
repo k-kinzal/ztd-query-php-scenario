@@ -498,6 +498,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Batch processing workflow: multi-step shadow accumulation — seeding, conditional UPDATE with IN subquery, JOIN-based filtering, iterative balance updates (self-referencing arithmetic), cross-table aggregation after mutations, prepared statement batch updates with 20+ rows. Verified on all 4 adapters.
 - Shadow store DEFAULT non-enforcement: column DEFAULT values are NOT applied by the shadow store. INSERT with omitted columns receives NULL (not the default). Filed as issue #21.
 - UNION/EXCEPT/INTERSECT mutation reflection: UNION ALL, UNION (distinct), EXCEPT, and INTERSECT correctly reflect shadow store mutations (INSERT, UPDATE, DELETE). UNION with prepared statements and aggregation in UNION branches work correctly. Verified on all 4 adapters (EXCEPT/INTERSECT on SQLite and PostgreSQL only).
+- rowCount()/ztdAffectedRows() accuracy: correct affected row counts after INSERT (1), UPDATE single/multiple/zero rows, DELETE single/multiple/zero rows, exec() return value, re-execute with frozen CTE snapshot (see 3.2 note). Verified on all 4 adapters.
+- Concurrent ZTD instances: multiple ZtdPdo/ZtdMysqli instances connected to the same physical database maintain fully independent shadow stores. Interleaved INSERT/UPDATE/DELETE operations are isolated — mutations in one instance are invisible to the other. Disabling ZTD on one instance does not affect the other. Verified on all 4 adapters.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

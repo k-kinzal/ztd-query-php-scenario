@@ -389,6 +389,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Utility methods: getAvailableDrivers(), lastInsertId(), errorCode(), errorInfo(), setAttribute()/getAttribute(), quote(); verified on all PDO platforms.
 - Realistic multi-step workflows: e-commerce order processing (create customer/products, add order items, calculate totals, update stock, complete order), user registration with tier upgrade, inventory reporting with LEFT JOINs and aggregations, order cancellation with stock restoration and item cleanup; verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO) with ZTD isolation confirmed (no data leaks to physical DB).
 - Advanced subquery patterns: nested subqueries (3 levels deep), scalar subqueries in SELECT, CASE in WHERE clause, EXISTS/NOT EXISTS correlated subqueries, UNION vs UNION ALL, 3-table JOINs; verified on all PDO platforms.
+- Prepared statements with complex queries: prepared JOINs with params, prepared aggregation with GROUP BY re-execute, prepared subqueries with params, prepared UPDATE/DELETE with params, prepared INSERT then query, named params in JOIN; verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO).
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

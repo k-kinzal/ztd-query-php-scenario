@@ -75,7 +75,7 @@ Prepared statements support the following binding methods:
 
 Query rewriting occurs at **prepare time**, not execute time. If ZTD mode is toggled between `prepare()` and `execute()`, the prepared query retains its original rewritten form.
 
-**Data snapshotting**: The CTE VALUES clause (shadow store data) is also captured at prepare time. A prepared SELECT will NOT see data inserted after it was prepared — even if the INSERT occurs before `execute()`. To see post-INSERT data, the SELECT must be prepared (or re-prepared) after the INSERT.
+**Data snapshotting**: The CTE VALUES clause (shadow store data) is also captured at prepare time. A prepared SELECT will NOT see data inserted after it was prepared — even if the INSERT occurs before `execute()`. To see post-INSERT data, the SELECT must be prepared (or re-prepared) after the INSERT. Similarly, re-executing a prepared DELETE or UPDATE operates on the frozen CTE snapshot — previously deleted rows are still "visible" in the snapshot, so `rowCount()` / `ztdAffectedRows()` may report affected-row counts for rows that were already removed by a prior execution of the same statement.
 
 ### 3.3 Complex Queries
 When ZTD is enabled, the CTE rewriting shall correctly handle:

@@ -1,0 +1,94 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Pdo;
+
+use PDO;
+use PHPUnit\Framework\TestCase;
+use Testcontainers\Containers\ReuseMode;
+use Testcontainers\Testcontainers;
+use Tests\Support\MySQLContainer;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
+
+class SessionIsolationTest extends TestCase
+{
+    public static function setUpBeforeClass(): void
+    {
+        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
+        Testcontainers::run($container);
+
+        $raw = new PDO(
+            MySQLContainer::getDsn(),
+            'root',
+            'root',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+        $raw->exec('DROP TABLE IF EXISTS session_test');
+        $raw->exec('CREATE TABLE session_test (id INT PRIMARY KEY, val VARCHAR(255))');
+    }
+
+    public function testShadowDataNotSharedBetweenInstances(): void
+    {
+        $pdo1 = new ZtdPdo(
+            MySQLContainer::getDsn(),
+            'root',
+            'root',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+        $pdo2 = new ZtdPdo(
+            MySQLContainer::getDsn(),
+            'root',
+            'root',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+
+        // Insert in instance 1
+        $pdo1->exec("INSERT INTO session_test (id, val) VALUES (1, 'from_pdo1')");
+
+        // Instance 1 sees the row
+        $stmt = $pdo1->query('SELECT * FROM session_test WHERE id = 1');
+        $this->assertCount(1, $stmt->fetchAll(PDO::FETCH_ASSOC));
+
+        // Instance 2 does NOT see it
+        $stmt = $pdo2->query('SELECT * FROM session_test WHERE id = 1');
+        $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    public function testShadowDataNotPersistedAcrossLifecycle(): void
+    {
+        $pdo = new ZtdPdo(
+            MySQLContainer::getDsn(),
+            'root',
+            'root',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+        $pdo->exec("INSERT INTO session_test (id, val) VALUES (1, 'temporary')");
+
+        $stmt = $pdo->query('SELECT * FROM session_test WHERE id = 1');
+        $this->assertCount(1, $stmt->fetchAll(PDO::FETCH_ASSOC));
+
+        // Simulate end of lifecycle by creating a new instance
+        unset($pdo);
+
+        $pdo2 = new ZtdPdo(
+            MySQLContainer::getDsn(),
+            'root',
+            'root',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+        $stmt = $pdo2->query('SELECT * FROM session_test WHERE id = 1');
+        $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        $raw = new PDO(
+            MySQLContainer::getDsn(),
+            'root',
+            'root',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+        $raw->exec('DROP TABLE IF EXISTS session_test');
+    }
+}

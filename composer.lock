@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7502a39934d27094ca0c0482f62492cb",
+    "content-hash": "202ff315fe8be00a73774e34b9114b87",
     "packages": [],
     "packages-dev": [
         {
@@ -247,6 +247,97 @@
                 "source": "https://github.com/k-kinzal/ztd-query-pdo-adapter/tree/v0.1.1"
             },
             "time": "2026-03-06T16:09:45+00:00"
+        },
+        {
+            "name": "k-kinzal/ztd-query-postgres",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/k-kinzal/ztd-query-postgres.git",
+                "reference": "ef078061614b81a57bbf9f03cc6ab418f815a56f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/k-kinzal/ztd-query-postgres/zipball/ef078061614b81a57bbf9f03cc6ab418f815a56f",
+                "reference": "ef078061614b81a57bbf9f03cc6ab418f815a56f",
+                "shasum": ""
+            },
+            "require": {
+                "k-kinzal/ztd-query-core": "^0.1",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "brianium/paratest": "^6.11 || ^7",
+                "friendsofphp/php-cs-fixer": "^3.92",
+                "giorgiosironi/eris": "^1.0",
+                "infection/infection": "^0.28 || ^0.29 || ^0.30 || ^0.31 || ^0.32",
+                "k-kinzal/sql-faker": "^0.1",
+                "nikic/php-fuzzer": "^0.0.11",
+                "phpbench/phpbench": "^1.4",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^10.5 || ^11 || ^12 || ^13"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ZtdQuery\\Platform\\Postgres\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PostgreSQL platform support for ZTD Query",
+            "support": {
+                "source": "https://github.com/k-kinzal/ztd-query-postgres/tree/v0.1.1"
+            },
+            "time": "2026-03-06T16:09:48+00:00"
+        },
+        {
+            "name": "k-kinzal/ztd-query-sqlite",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/k-kinzal/ztd-query-sqlite.git",
+                "reference": "9c3fb7a63def8a322e139be8252baf19d93b7a8a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/k-kinzal/ztd-query-sqlite/zipball/9c3fb7a63def8a322e139be8252baf19d93b7a8a",
+                "reference": "9c3fb7a63def8a322e139be8252baf19d93b7a8a",
+                "shasum": ""
+            },
+            "require": {
+                "k-kinzal/ztd-query-core": "^0.1",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "brianium/paratest": "^6.11 || ^7",
+                "friendsofphp/php-cs-fixer": "^3.92",
+                "infection/infection": "^0.28 || ^0.29 || ^0.30 || ^0.31 || ^0.32",
+                "k-kinzal/sql-faker": "^0.1",
+                "nikic/php-fuzzer": "^0.0.11",
+                "phpbench/phpbench": "^1.4",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^10.5 || ^11 || ^12 || ^13"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ZtdQuery\\Platform\\Sqlite\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "SQLite platform support for ZTD Query",
+            "support": {
+                "source": "https://github.com/k-kinzal/ztd-query-sqlite/tree/v0.1.1"
+            },
+            "time": "2026-03-06T16:09:49+00:00"
         },
         {
             "name": "myclabs/deep-copy",

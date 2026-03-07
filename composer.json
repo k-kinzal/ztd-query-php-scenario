@@ -16,7 +16,9 @@
         "phpunit/phpunit": "^10 || ^11",
         "k-kinzal/ztd-query-mysqli-adapter": "^0.1",
         "k-kinzal/ztd-query-pdo-adapter": "^0.1",
-        "k-kinzal/testcontainers-php": "^0.5"
+        "k-kinzal/testcontainers-php": "^0.5",
+        "k-kinzal/ztd-query-sqlite": "^0.1.1",
+        "k-kinzal/ztd-query-postgres": "^0.1.1"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

@@ -26,7 +26,15 @@ If the required platform package is not installed, the system shall throw a `Run
 ### 1.6 Schema Reflection
 When a ZTD adapter is constructed, the system shall reflect all existing table schemas from the physical database via `SchemaReflector::reflectAll()`.
 
-The ZTD adapter MUST be constructed AFTER the physical tables exist; otherwise, schema-dependent operations (UPDATE, DELETE) will fail with "requires primary keys" errors.
+The ZTD adapter MUST be constructed AFTER the physical tables exist; otherwise, schema-dependent operations (UPDATE, DELETE) will fail with `RuntimeException` ("UPDATE simulation requires primary keys" / "DELETE simulation requires primary keys").
+
+INSERT and SELECT operations on unreflected tables may still work, as they do not require primary key information.
+
+### 1.7 Supported Platforms
+The PDO adapter supports the following platforms via auto-detection:
+- MySQL (driver: `mysql`, package: `k-kinzal/ztd-query-mysql`)
+- PostgreSQL (driver: `pgsql`, package: `k-kinzal/ztd-query-postgres`)
+- SQLite (driver: `sqlite`, package: `k-kinzal/ztd-query-sqlite`)
 
 ## 2. ZTD Mode
 
@@ -68,12 +76,16 @@ When an UPDATE is executed with ZTD enabled, the system shall track the updated 
 
 Subsequent SELECT queries shall reflect the updated values.
 
-UPDATE operations require the table schema (including primary keys) to be known. If the schema was not reflected at session creation time, a `RuntimeException` ("UPDATE simulation requires primary keys") shall be thrown.
+UPDATE operations require the table schema (including primary keys) to be known. If the schema was not reflected at session creation time, the behavior depends on `unknownSchemaBehavior`:
+- `Passthrough`: The UPDATE passes through to the physical database (breaking ZTD isolation).
+- `Exception`: A `ZtdMysqliException`/`ZtdPdoException` ("Unknown table") is thrown.
 
 ### 4.3 DELETE
 When a DELETE is executed with ZTD enabled, the system shall track the deletion in the shadow store without modifying the physical table.
 
 Subsequent SELECT queries shall not include the deleted rows.
+
+DELETE operations on unreflected tables follow the same `unknownSchemaBehavior` rules as UPDATE (see 4.2).
 
 ### 4.4 Affected Row Count
 After a write operation via `ZtdMysqli::query()`, `lastAffectedRows()` shall return the number of rows affected by the ZTD-simulated operation.
@@ -94,10 +106,12 @@ For `ZtdPdoStatement`, calling `fetchAll()` after a write operation returns an e
 ### 5.1 CREATE TABLE
 When a CREATE TABLE statement is executed with ZTD enabled and the table already exists physically, the system shall throw a `ZtdMysqliException`/`ZtdPdoException` with "Table already exists" error.
 
-When a CREATE TABLE statement is executed with ZTD enabled and the table does NOT exist physically, the system shall track the table schema in the shadow store.
+When a CREATE TABLE statement is executed with ZTD enabled and the table does NOT exist physically, the system shall track the table schema in the shadow store. Subsequent INSERT/SELECT operations on the shadow-created table shall work.
 
 ### 5.2 DROP TABLE
-When a DROP TABLE statement is executed with ZTD enabled, the system shall remove the table from the shadow store.
+When a DROP TABLE statement is executed with ZTD enabled, the system shall clear the shadow data for the table.
+
+After DROP TABLE, subsequent queries on that table shall fall through to the physical database (the physical table is not dropped).
 
 ### 5.3 TRUNCATE
 When a TRUNCATE statement is executed with ZTD enabled, the system shall clear all shadowed data for the table.
@@ -107,22 +121,42 @@ When a TRUNCATE statement is executed with ZTD enabled, the system shall clear a
 ### 6.1 Default Behavior
 If unsupported SQL is executed and `unsupportedBehavior` is `Exception` (the default), the system shall throw a `ZtdMysqliException` or `ZtdPdoException`.
 
-If unsupported SQL is executed and `unsupportedBehavior` is `Ignore`, the system shall silently skip the statement.
+If unsupported SQL is executed and `unsupportedBehavior` is `Ignore`, the system shall silently skip the statement and return `false` (mysqli) or `0` (PDO exec).
 
-If unsupported SQL is executed and `unsupportedBehavior` is `Notice`, the system shall emit a notice and skip the statement.
+If unsupported SQL is executed and `unsupportedBehavior` is `Notice`, the system shall emit a user notice/warning and skip the statement.
 
 ### 6.2 Behavior Rules
-When `behaviorRules` are configured, the system shall apply the first matching rule's behavior for unsupported SQL, overriding the default.
+When `behaviorRules` are configured in `ZtdConfig`, the system shall apply the first matching rule's behavior for unsupported SQL, overriding the default.
+
+Rules support two pattern types:
+- Prefix match (case-insensitive): e.g., `'SET'` matches any SQL starting with "SET".
+- Regex match: e.g., `'/^SET\s+/i'` matches SQL matching the regex. Patterns starting with `/` are treated as regex.
 
 ### 6.3 Transaction Statements
 Transaction control statements (BEGIN, COMMIT, ROLLBACK, SAVEPOINT) are not rewritten and shall be delegated directly to the underlying connection.
 
+For `ZtdMysqli`, transaction control should use the dedicated methods (`begin_transaction()`, `commit()`, `rollback()`) rather than SQL strings via `query()`.
+
 ## 7. Unknown Schema
 
 ### 7.1 Passthrough (default)
-If `unknownSchemaBehavior` is `Passthrough` (the default) and a query references an unknown table, the system shall pass the query directly to the underlying connection.
+If `unknownSchemaBehavior` is `Passthrough` (the default) and a write operation (UPDATE, DELETE) references an unreflected table, the system shall pass the operation directly to the underlying connection (breaking ZTD isolation for that operation).
 
-Note: In passthrough mode, SELECT and INSERT operations may work for unknown tables, but UPDATE and DELETE operations will fail because they require primary key information from the schema.
+SELECT and INSERT operations on unreflected tables pass through to the physical database or shadow store respectively, regardless of this setting.
 
 ### 7.2 Exception
-If `unknownSchemaBehavior` is `Exception` and a query references an unknown table, the system shall throw an exception.
+If `unknownSchemaBehavior` is `Exception` and a write operation (UPDATE, DELETE) references an unreflected table, the system shall throw a `ZtdMysqliException`/`ZtdPdoException` ("Unknown table").
+
+### 7.3 Additional Modes
+The `UnknownSchemaBehavior` enum also defines `EmptyResult` and `Notice` variants, but their behavior for write operations on unreflected tables follows the same pattern as other modes - the behavior applies when schema lookup is required during UPDATE/DELETE simulation.
+
+## 8. Configuration
+
+### 8.1 ZtdConfig
+The `ZtdConfig` class accepts three parameters:
+- `unsupportedBehavior` (`UnsupportedSqlBehavior`): Default `Exception`. Controls handling of unsupported SQL.
+- `unknownSchemaBehavior` (`UnknownSchemaBehavior`): Default `Passthrough`. Controls handling of queries on unreflected tables.
+- `behaviorRules` (`array<string, UnsupportedSqlBehavior>`): Pattern-to-behavior mapping for fine-grained unsupported SQL control.
+
+### 8.2 Default Configuration
+`ZtdConfig::default()` creates a config with `Exception` unsupported behavior and `Passthrough` unknown schema behavior.

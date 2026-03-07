@@ -384,6 +384,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Special character handling: quotes, newlines, Unicode, emoji, empty strings preserved correctly in shadow store (see 10.3 for MySQL backslash exception).
 - ZTD lifecycle: shadow data persists across enable/disable toggle cycles; physical data inserted while ZTD is off is not visible when ZTD is re-enabled.
 - Transaction isolation: shadow data persists after rollback (shadow store is independent of physical transaction state).
+- Query edge cases: COUNT(*) vs COUNT(col) with NULLs, SUM ignoring NULLs, ORDER BY with NULLs, LIMIT 0, LIMIT with OFFSET, self-referencing UPDATE (score = score + 10), string concatenation in UPDATE, DISTINCT with NULLs, GROUP BY HAVING, MIN/MAX on strings, multiple sequential UPDATEs to same row, insert-delete-insert same ID cycle.
+- Stress testing: 50 sequential INSERTs, bulk UPDATE, bulk DELETE with correct counts; verified on all platforms.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
@@ -421,5 +423,9 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **PostgreSQL BOOLEAN false casting**: On PostgreSQL, inserting PHP `false` into a BOOLEAN column via prepared statement succeeds, but subsequent SELECT fails because the CTE rewriter generates `CAST('' AS BOOLEAN)`, which is invalid PostgreSQL syntax. `true` works correctly. MySQL is unaffected (uses TINYINT). SQLite is unaffected (typeless).
 
 - **PostgreSQL BIGINT overflow**: On PostgreSQL, inserting large integers (> 2,147,483,647) into BIGINT columns via prepared statement succeeds, but subsequent SELECT fails because the CTE rewriter generates `CAST(value AS integer)` instead of `CAST(value AS bigint)`, causing numeric overflow. MySQL and SQLite handle BIGINT values correctly.
+
+- **DELETE without WHERE clause (SQLite)**: On MySQL and PostgreSQL, `DELETE FROM table` (without WHERE clause) correctly clears the shadow store. On SQLite, `DELETE FROM table` without a WHERE clause is silently ignored — the shadow store retains all rows. The workaround is to use `DELETE FROM table WHERE 1=1` which works correctly on all platforms.
+
+- **NULL sort order in ORDER BY**: MySQL and SQLite sort NULLs first in ASC order. PostgreSQL sorts NULLs last in ASC order. This is standard SQL behavior (not a ZTD issue), but tests should account for the difference.
 
 - **Unknown schema EmptyResult/Notice modes (PostgreSQL/SQLite)**: On MySQL, all four `unknownSchemaBehavior` modes (Passthrough, Exception, EmptyResult, Notice) work correctly for both UPDATE and DELETE on unreflected tables. On PostgreSQL and SQLite, only DELETE operations respect EmptyResult and Notice modes. UPDATE operations throw `RuntimeException` ("UPDATE simulation requires primary keys") regardless of the configured behavior, because the error occurs in the ShadowStore before the unknown schema behavior check is applied.

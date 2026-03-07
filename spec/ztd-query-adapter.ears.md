@@ -203,17 +203,6 @@ When an `INSERT ... ON DUPLICATE KEY UPDATE` (MySQL) or `INSERT ... ON CONFLICT 
 
 When `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL) is executed and a duplicate exists, the insert is silently ignored. **Note**: On SQLite, `ON CONFLICT DO NOTHING` inserts both rows because the shadow store does not enforce PK constraints (see 10.3). Use `INSERT OR IGNORE` instead on SQLite.
 
-### 4.2e INSERT IGNORE / Ignore-Duplicate Syntax
-When an `INSERT IGNORE INTO` (MySQL), `INSERT OR IGNORE INTO` (SQLite), or `INSERT ... ON CONFLICT (col) DO NOTHING` (PostgreSQL) statement is executed with ZTD enabled, the system shall silently skip rows that would cause a duplicate primary key violation in the shadow store. Non-duplicate rows are inserted normally.
-
-Batch INSERT IGNORE with mixed duplicate and non-duplicate rows correctly inserts only non-duplicate rows while skipping duplicates.
-
-Prepared ignore-duplicate INSERT via `prepare()` + `execute()` also correctly skips duplicates on all platforms.
-
-Ignore-duplicate INSERT does not affect subsequent INSERT operations — a normal INSERT after an ignore-duplicate INSERT works as expected.
-
-**Note**: Each platform uses different syntax: MySQL uses `INSERT IGNORE INTO`, SQLite uses `INSERT OR IGNORE INTO`, and PostgreSQL uses `INSERT ... ON CONFLICT (col) DO NOTHING`. On SQLite, the standard SQL `INSERT ... ON CONFLICT DO NOTHING` does NOT correctly skip duplicates (see 10.3); use `INSERT OR IGNORE` instead.
-
 **Limitation (PDO prepared statements):** On the PDO adapter, `INSERT ... ON CONFLICT DO UPDATE` via `prepare()` + `execute()` does NOT update existing rows in the shadow store — the old row is retained unchanged. The same operation works correctly via `exec()`. Users should use `exec()` for upsert operations, or execute SELECT + conditional INSERT/UPDATE in application code (see 10.3). **Note:** The MySQLi adapter handles prepared UPSERT (`ON DUPLICATE KEY UPDATE`) correctly — the existing row is updated as expected.
 
 ### 4.2b REPLACE
@@ -236,6 +225,17 @@ When a multi-table DELETE statement is executed with ZTD enabled, the system sha
 Platform-specific syntax:
 - **MySQL**: `DELETE o FROM orders o JOIN users u ON o.user_id = u.id WHERE u.name = 'Bob'`
 - **PostgreSQL**: `DELETE FROM orders USING users WHERE orders.user_id = users.id AND users.name = 'Bob'`
+
+### 4.2e INSERT IGNORE / Ignore-Duplicate Syntax
+When an `INSERT IGNORE INTO` (MySQL), `INSERT OR IGNORE INTO` (SQLite), or `INSERT ... ON CONFLICT (col) DO NOTHING` (PostgreSQL) statement is executed with ZTD enabled, the system shall silently skip rows that would cause a duplicate primary key violation in the shadow store. Non-duplicate rows are inserted normally.
+
+Batch INSERT IGNORE with mixed duplicate and non-duplicate rows correctly inserts only non-duplicate rows while skipping duplicates.
+
+Prepared ignore-duplicate INSERT via `prepare()` + `execute()` also correctly skips duplicates on all platforms.
+
+Ignore-duplicate INSERT does not affect subsequent INSERT operations — a normal INSERT after an ignore-duplicate INSERT works as expected.
+
+**Note**: Each platform uses different syntax: MySQL uses `INSERT IGNORE INTO`, SQLite uses `INSERT OR IGNORE INTO`, and PostgreSQL uses `INSERT ... ON CONFLICT (col) DO NOTHING`. On SQLite, the standard SQL `INSERT ... ON CONFLICT DO NOTHING` does NOT correctly skip duplicates (see 10.3); use `INSERT OR IGNORE` instead.
 
 ### 4.3 DELETE
 When a DELETE is executed with ZTD enabled, the system shall track the deletion in the shadow store without modifying the physical table.
@@ -351,6 +351,8 @@ When an `ALTER TABLE` statement is executed with ZTD enabled, the system shall m
 - **ADD PRIMARY KEY / DROP PRIMARY KEY**: Modifies the primary key definition in the shadow schema.
 - **ADD/DROP FOREIGN KEY**: No-op (foreign keys are metadata-only in ZTD).
 - Unsupported ALTER TABLE operations (e.g., ADD INDEX, ADD SPATIAL INDEX, PARTITION) throw `UnsupportedSqlException`.
+
+Advanced ALTER TABLE operations (RENAME TABLE, CHANGE COLUMN with existing shadow data, MODIFY COLUMN with existing data, DROP COLUMN removing shadow data, multiple sequential ALTER operations) are verified on both MySQL PDO and MySQLi adapters. Physical table isolation is confirmed — ALTER TABLE changes do not leak to the physical database.
 
 **Error handling (MySQL)**: ALTER TABLE error scenarios are properly handled:
 - **ADD COLUMN** with a column name that already exists throws `ColumnAlreadyExistsException`.

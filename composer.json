@@ -1,5 +1,16 @@
 {
     "name": "k-kinzal/ztd-query-php-scenario",
+    "description": "Executable PHPUnit scenarios and EARS specifications for ztd-query-php adapters.",
+    "type": "project",
+    "keywords": [
+        "ztd-query",
+        "phpunit",
+        "testcontainers",
+        "mysqli",
+        "pdo",
+        "ears"
+    ],
+    "license": "proprietary",
     "autoload": {},
     "autoload-dev": {
         "psr-4": {
@@ -19,6 +30,10 @@
         "k-kinzal/testcontainers-php": "^0.5",
         "k-kinzal/ztd-query-sqlite": "^0.1.1",
         "k-kinzal/ztd-query-postgres": "^0.1.1"
+    },
+    "support": {
+        "issues": "https://github.com/k-kinzal/ztd-query-php/issues",
+        "source": "https://github.com/k-kinzal/ztd-query-php-scenario"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

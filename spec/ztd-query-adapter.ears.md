@@ -388,6 +388,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Stress testing: 50 sequential INSERTs, bulk UPDATE, bulk DELETE with correct counts; verified on all platforms.
 - Utility methods: getAvailableDrivers(), lastInsertId(), errorCode(), errorInfo(), setAttribute()/getAttribute(), quote(); verified on all PDO platforms.
 - Realistic multi-step workflows: e-commerce order processing (create customer/products, add order items, calculate totals, update stock, complete order), user registration with tier upgrade, inventory reporting with LEFT JOINs and aggregations, order cancellation with stock restoration and item cleanup; verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO) with ZTD isolation confirmed (no data leaks to physical DB).
+- Advanced subquery patterns: nested subqueries (3 levels deep), scalar subqueries in SELECT, CASE in WHERE clause, EXISTS/NOT EXISTS correlated subqueries, UNION vs UNION ALL, 3-table JOINs; verified on all PDO platforms.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
@@ -426,7 +427,11 @@ The following behaviors differ across platforms and may indicate areas for impro
 
 - **PostgreSQL BIGINT overflow**: On PostgreSQL, inserting large integers (> 2,147,483,647) into BIGINT columns via prepared statement succeeds, but subsequent SELECT fails because the CTE rewriter generates `CAST(value AS integer)` instead of `CAST(value AS bigint)`, causing numeric overflow. MySQL and SQLite handle BIGINT values correctly.
 
-- **UPDATE with IN (subquery GROUP BY HAVING)**: On MySQL (both MySQLi and PDO), `UPDATE t SET ... WHERE id IN (SELECT col FROM t2 GROUP BY col HAVING SUM(x) > N)` works correctly. On SQLite, the CTE rewriter produces incomplete SQL, causing "incomplete input" error. On PostgreSQL, the CTE rewriter generates an incorrect cross join between tables, causing "ambiguous column" error. The SELECT version of the same subquery works correctly on all platforms. This is a potential issue for users who need to UPDATE based on aggregated subquery results on SQLite or PostgreSQL.
+- **UPDATE with IN (subquery GROUP BY HAVING)**: On MySQL (both MySQLi and PDO), `UPDATE t SET ... WHERE id IN (SELECT col FROM t2 GROUP BY col HAVING SUM(x) > N)` works correctly when the subquery references a **different** table. On SQLite, the CTE rewriter produces incomplete SQL, causing "incomplete input" error. On PostgreSQL, the CTE rewriter generates an incorrect cross join between tables, causing "ambiguous column" error. The SELECT version of the same subquery works correctly on all platforms. This is a potential issue for users who need to UPDATE based on aggregated subquery results on SQLite or PostgreSQL.
+
+- **UPDATE with self-referencing IN subquery + GROUP BY HAVING**: On MySQL, `UPDATE t SET ... WHERE col IN (SELECT col FROM t GROUP BY col HAVING AVG(x) > N)` (where the subquery references the **same** table being updated) runs without error but incorrectly updates ALL rows instead of only matching ones. The CTE rewriter mishandles the self-referencing subquery.
+
+- **UPDATE with correlated subquery in SET clause**: `UPDATE t1 SET col = (SELECT SUM(col2) FROM t2 WHERE t2.fk = t1.pk)` works on MySQL. On SQLite, the CTE rewriter produces "near FROM: syntax error". On PostgreSQL, the CTE rewriter produces "column must appear in GROUP BY clause" error.
 
 - **DELETE without WHERE clause (SQLite)** (Issue #7): On MySQL and PostgreSQL, `DELETE FROM table` (without WHERE clause) correctly clears the shadow store. On SQLite, `DELETE FROM table` without a WHERE clause is silently ignored — the shadow store retains all rows. The workaround is to use `DELETE FROM table WHERE 1=1` which works correctly on all platforms.
 

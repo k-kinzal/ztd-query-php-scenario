@@ -569,4 +569,10 @@ The following behaviors differ across platforms and may indicate areas for impro
 
 - **BLOB/BINARY data with binary bytes**: Inserting binary data (containing null bytes, high-byte values like `\xFF`) into BLOB/BYTEA columns via prepared statements succeeds, but subsequent SELECT fails because the CTE rewriter embeds the binary bytes as string literals, producing invalid SQL syntax (e.g., "unrecognized token" on SQLite). Text-only BLOB payloads work correctly. Users storing binary data should disable ZTD for those queries or encode binary data (e.g., base64) before inserting.
 
+- **SAVEPOINT commands**: SAVEPOINT, RELEASE SAVEPOINT, and ROLLBACK TO SAVEPOINT are not supported in ZTD mode. Behavior is platform-specific:
+  - **SQLite**: All three commands throw `UnsupportedSqlException` ("Statement type not supported").
+  - **MySQL** (PDO and MySQLi): SAVEPOINT and RELEASE SAVEPOINT throw "Empty or unparseable SQL statement"; ROLLBACK TO SAVEPOINT throws "Statement type not supported."
+  - **PostgreSQL**: All three commands silently pass through without error, but the shadow store does **not** participate in savepoints — shadow data persists regardless of savepoint rollback.
+  Users requiring savepoint-like behavior should manage state in application code.
+
 - **Unknown schema EmptyResult/Notice modes (PostgreSQL/SQLite)**: On MySQL, all four `unknownSchemaBehavior` modes (Passthrough, Exception, EmptyResult, Notice) work correctly for both UPDATE and DELETE on unreflected tables. On PostgreSQL and SQLite, only DELETE operations respect EmptyResult and Notice modes. UPDATE operations throw `RuntimeException` ("UPDATE simulation requires primary keys") regardless of the configured behavior, because the error occurs in the ShadowStore before the unknown schema behavior check is applied.

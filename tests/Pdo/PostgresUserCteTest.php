@@ -79,6 +79,19 @@ class PostgresUserCteTest extends TestCase
         $this->assertSame('Widget A', $rows[0]['name']);
     }
 
+    public function testInsertSelectStarWorksOnPostgresql(): void
+    {
+        // Unlike MySQL (which throws RuntimeException for SELECT *),
+        // PostgreSQL correctly handles INSERT ... SELECT *
+        $this->pdo->exec("INSERT INTO pg_cte_backup SELECT * FROM pg_cte_products");
+
+        $stmt = $this->pdo->query('SELECT * FROM pg_cte_backup ORDER BY id');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertCount(3, $rows);
+        $this->assertSame('Widget A', $rows[0]['name']);
+    }
+
     public function testInsertSelectIsolation(): void
     {
         $this->pdo->exec("INSERT INTO pg_cte_backup (id, name, category, price) SELECT id, name, category, price FROM pg_cte_products");

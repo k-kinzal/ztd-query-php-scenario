@@ -150,13 +150,25 @@ If `unknownSchemaBehavior` is `Exception` and a write operation (UPDATE, DELETE)
 ### 7.3 Additional Modes
 The `UnknownSchemaBehavior` enum also defines `EmptyResult` and `Notice` variants, but their behavior for write operations on unreflected tables follows the same pattern as other modes - the behavior applies when schema lookup is required during UPDATE/DELETE simulation.
 
-## 8. Configuration
+## 8. Constraint Enforcement
 
-### 8.1 ZtdConfig
+### 8.1 Shadow Store Constraints
+The shadow store does NOT enforce database constraints. The following constraints are not checked during ZTD-simulated write operations:
+
+- **PRIMARY KEY**: Duplicate primary key values are accepted in the shadow store.
+- **UNIQUE**: Duplicate values in unique columns are accepted.
+- **NOT NULL**: NULL values are accepted even for NOT NULL columns.
+- **FOREIGN KEY**: References to non-existent parent rows are accepted.
+
+This is by design - the shadow store is an in-memory simulation layer, not a full database engine. Constraint enforcement is deferred to the physical database when changes are eventually applied.
+
+## 9. Configuration
+
+### 9.1 ZtdConfig
 The `ZtdConfig` class accepts three parameters:
 - `unsupportedBehavior` (`UnsupportedSqlBehavior`): Default `Exception`. Controls handling of unsupported SQL.
 - `unknownSchemaBehavior` (`UnknownSchemaBehavior`): Default `Passthrough`. Controls handling of queries on unreflected tables.
 - `behaviorRules` (`array<string, UnsupportedSqlBehavior>`): Pattern-to-behavior mapping for fine-grained unsupported SQL control.
 
-### 8.2 Default Configuration
+### 9.2 Default Configuration
 `ZtdConfig::default()` creates a config with `Exception` unsupported behavior and `Passthrough` unknown schema behavior.

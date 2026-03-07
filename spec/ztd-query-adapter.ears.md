@@ -424,7 +424,7 @@ The following behaviors differ across platforms and may indicate areas for impro
 
 - **PostgreSQL BIGINT overflow**: On PostgreSQL, inserting large integers (> 2,147,483,647) into BIGINT columns via prepared statement succeeds, but subsequent SELECT fails because the CTE rewriter generates `CAST(value AS integer)` instead of `CAST(value AS bigint)`, causing numeric overflow. MySQL and SQLite handle BIGINT values correctly.
 
-- **DELETE without WHERE clause (SQLite)**: On MySQL and PostgreSQL, `DELETE FROM table` (without WHERE clause) correctly clears the shadow store. On SQLite, `DELETE FROM table` without a WHERE clause is silently ignored — the shadow store retains all rows. The workaround is to use `DELETE FROM table WHERE 1=1` which works correctly on all platforms.
+- **DELETE without WHERE clause (SQLite)** (Issue #7): On MySQL and PostgreSQL, `DELETE FROM table` (without WHERE clause) correctly clears the shadow store. On SQLite, `DELETE FROM table` without a WHERE clause is silently ignored — the shadow store retains all rows. The workaround is to use `DELETE FROM table WHERE 1=1` which works correctly on all platforms.
 
 - **NULL sort order in ORDER BY**: MySQL and SQLite sort NULLs first in ASC order. PostgreSQL sorts NULLs last in ASC order. This is standard SQL behavior (not a ZTD issue), but tests should account for the difference.
 

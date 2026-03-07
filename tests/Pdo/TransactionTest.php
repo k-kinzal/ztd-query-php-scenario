@@ -69,6 +69,25 @@ class TransactionTest extends TestCase
         $this->assertCount(1, $rows);
     }
 
+    public function testRollbackDoesNotAffectShadowData(): void
+    {
+        $this->pdo->beginTransaction();
+        $this->pdo->exec("INSERT INTO tx_test (id, val) VALUES (1, 'in_tx')");
+        $this->pdo->rollBack();
+
+        // Shadow data persists after rollback because shadow store
+        // is independent of physical transaction state
+        $stmt = $this->pdo->query('SELECT * FROM tx_test WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('in_tx', $rows[0]['val']);
+
+        // Physical table should be empty (rollback affected physical layer)
+        $this->pdo->disableZtd();
+        $stmt = $this->pdo->query('SELECT * FROM tx_test');
+        $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
     public function testLastInsertId(): void
     {
         $raw = new PDO(

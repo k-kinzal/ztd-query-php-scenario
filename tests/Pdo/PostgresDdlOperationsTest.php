@@ -80,6 +80,21 @@ class PostgresDdlOperationsTest extends TestCase
         $this->assertCount(0, $rows);
     }
 
+    public function testTruncateClearsShadowedData(): void
+    {
+        $this->pdo->exec("INSERT INTO ddl_existing (id, val) VALUES (1, 'a')");
+        $this->pdo->exec("INSERT INTO ddl_existing (id, val) VALUES (2, 'b')");
+
+        $stmt = $this->pdo->query('SELECT * FROM ddl_existing');
+        $this->assertCount(2, $stmt->fetchAll(PDO::FETCH_ASSOC));
+
+        $this->pdo->exec('TRUNCATE TABLE ddl_existing');
+
+        $stmt = $this->pdo->query('SELECT * FROM ddl_existing');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(0, $rows);
+    }
+
     public static function tearDownAfterClass(): void
     {
         $raw = new PDO(

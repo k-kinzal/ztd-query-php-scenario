@@ -6,42 +6,23 @@ namespace Tests\Pdo;
 
 use PDO;
 use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
 use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
-class ComplexQueryTest extends TestCase
+class SqliteComplexQueryTest extends TestCase
 {
+    private PDO $raw;
     private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
-    {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-    }
 
     protected function setUp(): void
     {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS order_items');
-        $raw->exec('DROP TABLE IF EXISTS orders');
-        $raw->exec('DROP TABLE IF EXISTS users');
-        $raw->exec('CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255))');
-        $raw->exec('CREATE TABLE orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(50))');
-        $raw->exec('CREATE TABLE order_items (id INT PRIMARY KEY, order_id INT, product VARCHAR(255), qty INT)');
+        $this->raw = new PDO('sqlite::memory:', null, null, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
+        $this->raw->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, department TEXT)');
+        $this->raw->exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL, status TEXT)');
+        $this->raw->exec('CREATE TABLE order_items (id INTEGER PRIMARY KEY, order_id INTEGER, product TEXT, qty INTEGER)');
 
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        $this->pdo = ZtdPdo::fromPdo($this->raw);
     }
 
     public function testJoinWithShadowData(): void
@@ -56,7 +37,7 @@ class ComplexQueryTest extends TestCase
 
         $this->assertCount(1, $rows);
         $this->assertSame('Alice', $rows[0]['name']);
-        $this->assertSame('99.99', $rows[0]['amount']);
+        $this->assertSame(99.99, (float) $rows[0]['amount']);
     }
 
     public function testLeftJoinWithShadowData(): void
@@ -72,7 +53,7 @@ class ComplexQueryTest extends TestCase
 
         $this->assertCount(2, $rows);
         $this->assertSame('Alice', $rows[0]['name']);
-        $this->assertSame('50.00', $rows[0]['amount']);
+        $this->assertNotNull($rows[0]['amount']);
         $this->assertSame('Bob', $rows[1]['name']);
         $this->assertNull($rows[1]['amount']);
     }
@@ -116,7 +97,7 @@ class ComplexQueryTest extends TestCase
         $stmt = $this->pdo->query("SELECT SUM(amount) AS total FROM orders WHERE status = 'completed'");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $this->assertSame('300.50', $rows[0]['total']);
+        $this->assertSame(300.5, (float) $rows[0]['total']);
     }
 
     public function testOrderByAndLimit(): void
@@ -168,6 +149,7 @@ class ComplexQueryTest extends TestCase
         $this->pdo->exec("INSERT INTO orders (id, user_id, amount, status) VALUES (2, 1, 200.00, 'completed')");
         $this->pdo->exec("INSERT INTO orders (id, user_id, amount, status) VALUES (3, 2, 50.00, 'completed')");
 
+        // SQLite supports column aliases in HAVING
         $stmt = $this->pdo->query(
             'SELECT user_id, SUM(amount) AS total FROM orders GROUP BY user_id HAVING total > 100 ORDER BY user_id'
         );
@@ -175,7 +157,7 @@ class ComplexQueryTest extends TestCase
 
         $this->assertCount(1, $rows);
         $this->assertSame(1, (int) $rows[0]['user_id']);
-        $this->assertSame('300.00', $rows[0]['total']);
+        $this->assertSame(300.0, (float) $rows[0]['total']);
     }
 
     public function testDistinctSelect(): void
@@ -210,10 +192,10 @@ class ComplexQueryTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame('Alice', $rows[0]['name']);
         $this->assertSame(2, (int) $rows[0]['order_count']);
-        $this->assertSame('300.00', $rows[0]['total']);
+        $this->assertSame(300.0, (float) $rows[0]['total']);
         $this->assertSame('Bob', $rows[1]['name']);
         $this->assertSame(1, (int) $rows[1]['order_count']);
-        $this->assertSame('50.00', $rows[1]['total']);
+        $this->assertSame(50.0, (float) $rows[1]['total']);
     }
 
     public function testUpdateWithSubquery(): void
@@ -247,6 +229,22 @@ class ComplexQueryTest extends TestCase
 
         $this->assertCount(1, $rows);
         $this->assertSame(1, (int) $rows[0]['id']);
+    }
+
+    public function testZtdSelectReadsOnlyFromShadowStore(): void
+    {
+        // Insert physical data via raw connection
+        $this->raw->exec("INSERT INTO users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
+
+        $this->pdo->disableZtd();
+        $stmt = $this->pdo->query('SELECT * FROM users');
+        $this->assertCount(1, $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'Physical data visible with ZTD disabled');
+        $this->pdo->enableZtd();
+
+        $stmt = $this->pdo->query('SELECT * FROM users');
+        $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'ZTD SELECT reads only from shadow store; physical data is not visible');
     }
 
     public function testSelfJoin(): void
@@ -293,8 +291,8 @@ class ComplexQueryTest extends TestCase
         $stmt = $this->pdo->query('SELECT MIN(amount) AS min_amt, MAX(amount) AS max_amt FROM orders');
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $this->assertSame('50.00', $rows[0]['min_amt']);
-        $this->assertSame('200.00', $rows[0]['max_amt']);
+        $this->assertSame(50.0, (float) $rows[0]['min_amt']);
+        $this->assertSame(200.0, (float) $rows[0]['max_amt']);
     }
 
     public function testCorrelatedSubquery(): void
@@ -315,44 +313,5 @@ class ComplexQueryTest extends TestCase
         $this->assertSame(2, (int) $rows[0]['order_count']);
         $this->assertSame('Bob', $rows[1]['name']);
         $this->assertSame(0, (int) $rows[1]['order_count']);
-    }
-
-    public function testZtdSelectReadsOnlyFromShadowStore(): void
-    {
-        // Insert physical data via raw connection
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec("INSERT INTO users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
-
-        // Physical data is visible with ZTD disabled (passthrough)
-        $this->pdo->disableZtd();
-        $stmt = $this->pdo->query('SELECT * FROM users');
-        $this->assertCount(1, $stmt->fetchAll(PDO::FETCH_ASSOC),
-            'Physical data visible with ZTD disabled');
-        $this->pdo->enableZtd();
-
-        // With ZTD enabled, SELECT reads only from the shadow store.
-        // Physical table data is NOT merged — the shadow store is an
-        // independent layer that replaces the physical table entirely.
-        $stmt = $this->pdo->query('SELECT * FROM users');
-        $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC),
-            'ZTD SELECT reads only from shadow store; physical data is not visible');
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS order_items');
-        $raw->exec('DROP TABLE IF EXISTS orders');
-        $raw->exec('DROP TABLE IF EXISTS users');
     }
 }

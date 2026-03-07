@@ -250,6 +250,74 @@ class ComplexQueryTest extends TestCase
         $this->assertSame(1, (int) $rows[0]['id']);
     }
 
+    public function testSelfJoin(): void
+    {
+        $this->mysqli->query("INSERT INTO users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
+        $this->mysqli->query("INSERT INTO users (id, name, department) VALUES (2, 'Bob', 'Engineering')");
+        $this->mysqli->query("INSERT INTO users (id, name, department) VALUES (3, 'Charlie', 'Sales')");
+
+        $result = $this->mysqli->query(
+            'SELECT a.name AS name1, b.name AS name2 '
+            . 'FROM users a INNER JOIN users b ON a.department = b.department AND a.id < b.id '
+            . 'ORDER BY a.name'
+        );
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(1, $rows);
+        $this->assertSame('Alice', $rows[0]['name1']);
+        $this->assertSame('Bob', $rows[0]['name2']);
+    }
+
+    public function testUnionQuery(): void
+    {
+        $this->mysqli->query("INSERT INTO users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
+        $this->mysqli->query("INSERT INTO users (id, name, department) VALUES (2, 'Bob', 'Sales')");
+
+        $result = $this->mysqli->query(
+            "SELECT name FROM users WHERE department = 'Engineering' "
+            . "UNION SELECT name FROM users WHERE department = 'Sales' "
+            . 'ORDER BY name'
+        );
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame('Bob', $rows[1]['name']);
+    }
+
+    public function testMinMaxAggregation(): void
+    {
+        $this->mysqli->query("INSERT INTO orders (id, user_id, amount, status) VALUES (1, 1, 100.00, 'completed')");
+        $this->mysqli->query("INSERT INTO orders (id, user_id, amount, status) VALUES (2, 1, 200.00, 'completed')");
+        $this->mysqli->query("INSERT INTO orders (id, user_id, amount, status) VALUES (3, 2, 50.00, 'pending')");
+
+        $result = $this->mysqli->query('SELECT MIN(amount) AS min_amt, MAX(amount) AS max_amt FROM orders');
+        $row = $result->fetch_assoc();
+
+        $this->assertSame('50.00', $row['min_amt']);
+        $this->assertSame('200.00', $row['max_amt']);
+    }
+
+    public function testCorrelatedSubquery(): void
+    {
+        $this->mysqli->query("INSERT INTO users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
+        $this->mysqli->query("INSERT INTO users (id, name, department) VALUES (2, 'Bob', 'Sales')");
+        $this->mysqli->query("INSERT INTO orders (id, user_id, amount, status) VALUES (1, 1, 100.00, 'completed')");
+        $this->mysqli->query("INSERT INTO orders (id, user_id, amount, status) VALUES (2, 1, 200.00, 'completed')");
+
+        $result = $this->mysqli->query(
+            'SELECT u.name, (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) AS order_count '
+            . 'FROM users u ORDER BY u.id'
+        );
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame(2, (int) $rows[0]['order_count']);
+        $this->assertSame('Bob', $rows[1]['name']);
+        $this->assertSame(0, (int) $rows[1]['order_count']);
+    }
+
     public function testZtdSelectReadsOnlyFromShadowStore(): void
     {
         // Insert physical data via raw connection

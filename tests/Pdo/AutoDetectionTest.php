@@ -54,6 +54,34 @@ class AutoDetectionTest extends TestCase
         $this->assertTrue($pdo->isZtdEnabled());
     }
 
+    public function testAutoDetectsPostgresDriver(): void
+    {
+        $container = (new \Tests\Support\PostgreSQLContainer())->withReuseMode(\Testcontainers\Containers\ReuseMode::REUSE());
+        \Testcontainers\Testcontainers::run($container);
+
+        $pdo = new ZtdPdo(
+            \Tests\Support\PostgreSQLContainer::getDsn(),
+            'test',
+            'test',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+
+        $this->assertTrue($pdo->isZtdEnabled());
+    }
+
+    public function testFromPdoWithPostgresDriver(): void
+    {
+        $raw = new PDO(
+            \Tests\Support\PostgreSQLContainer::getDsn(),
+            'test',
+            'test',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+        $pdo = ZtdPdo::fromPdo($raw);
+
+        $this->assertTrue($pdo->isZtdEnabled());
+    }
+
     public function testUnsupportedDriverThrowsException(): void
     {
         // ODBC driver (if available) or simulated unsupported driver

@@ -67,8 +67,11 @@ When a prepared SELECT statement with bound parameters is executed, the system s
 ### 3.3 Complex Queries
 When ZTD is enabled, the CTE rewriting shall correctly handle:
 - **JOINs** (INNER JOIN, LEFT JOIN) across multiple shadow tables.
-- **Aggregations** (COUNT, SUM) with GROUP BY and HAVING clauses.
+- **Self-JOINs** where the same shadow table is referenced with different aliases.
+- **Aggregations** (COUNT, SUM, MIN, MAX) with GROUP BY and HAVING clauses.
 - **Subqueries** in WHERE clauses (e.g., `WHERE id IN (SELECT ...)`).
+- **Correlated subqueries** in SELECT list (e.g., `(SELECT COUNT(*) FROM t WHERE t.fk = u.id)`).
+- **UNION** queries combining results from shadow tables.
 - **ORDER BY** with LIMIT and OFFSET.
 - **DISTINCT** selection.
 
@@ -152,13 +155,24 @@ For `ZtdMysqli`, transaction control should use the dedicated methods (`begin_tr
 ### 7.1 Passthrough (default)
 If `unknownSchemaBehavior` is `Passthrough` (the default) and a write operation (UPDATE, DELETE) references an unreflected table, the system shall pass the operation directly to the underlying connection (breaking ZTD isolation for that operation).
 
+**Platform note:** This passthrough behavior is verified on MySQL (both adapters). On PostgreSQL and SQLite, UPDATE on unreflected tables throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of passing through (see 10.3). DELETE on unreflected tables passes through on MySQL and SQLite, but throws `RuntimeException` on PostgreSQL.
+
 SELECT and INSERT operations on unreflected tables pass through to the physical database or shadow store respectively, regardless of this setting.
 
 ### 7.2 Exception
 If `unknownSchemaBehavior` is `Exception` and a write operation (UPDATE, DELETE) references an unreflected table, the system shall throw a `ZtdMysqliException`/`ZtdPdoException` ("Unknown table").
 
-### 7.3 Additional Modes
-The `UnknownSchemaBehavior` enum also defines `EmptyResult` and `Notice` variants, but their behavior for write operations on unreflected tables follows the same pattern as other modes - the behavior applies when schema lookup is required during UPDATE/DELETE simulation.
+**Platform note:** On MySQL, the exception type is `ZtdMysqliException`/`ZtdPdoException` with "Unknown table" message. On PostgreSQL and SQLite, UPDATE operations throw `RuntimeException` ("UPDATE simulation requires primary keys") regardless of the `unknownSchemaBehavior` setting. DELETE operations on PostgreSQL/SQLite throw `RuntimeException` ("Unknown table") rather than `ZtdPdoException`.
+
+### 7.3 EmptyResult
+If `unknownSchemaBehavior` is `EmptyResult` and a write operation (UPDATE, DELETE) references an unreflected table, the system shall return an empty result without modifying the physical database and without throwing an exception.
+
+Verified on MySQL (PDO adapter): the physical table remains unchanged after UPDATE/DELETE operations.
+
+### 7.4 Notice
+If `unknownSchemaBehavior` is `Notice` and a write operation (UPDATE, DELETE) references an unreflected table, the system shall emit a user notice/warning and return an empty result without modifying the physical database.
+
+Verified on MySQL (both adapters): a `E_USER_NOTICE` or `E_USER_WARNING` is triggered.
 
 ## 8. Constraint Enforcement
 
@@ -194,9 +208,22 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Write result sets (exec() returns affected count; fetchAll() after write returns empty array).
 - Constraint non-enforcement (PRIMARY KEY, NOT NULL, UNIQUE, FOREIGN KEY not enforced in shadow store).
 - Prepared statement parameter binding.
-- Auto-detection of PDO driver.
+- Auto-detection of PDO driver (mysql, pgsql, sqlite all verified).
+- Complex queries: JOINs (INNER, LEFT), self-JOINs, aggregations (COUNT, SUM, MIN, MAX), GROUP BY/HAVING, subqueries, correlated subqueries, UNION, ORDER BY/LIMIT/OFFSET, DISTINCT.
+- UPDATE/DELETE with subqueries referencing other shadow tables.
+- Unsupported SQL handling (Exception, Ignore, Notice modes; behavior rules with prefix and regex patterns; transaction statement passthrough).
 
 ### 10.2 Platform-Specific Notes
-- **TRUNCATE**: Verified on MySQL only. PostgreSQL and SQLite TRUNCATE handling has not been tested.
+- **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
 - **FOREIGN KEY constraints**: The foreign key constraint scenario uses a parent-child table relationship on MySQL and PostgreSQL. SQLite does not include the foreign key test because SQLite requires `PRAGMA foreign_keys = ON` to enforce them, which is outside ZTD scope.
-- **Unsupported SQL and Unknown Schema**: Behavior rules and unknown schema handling are verified on MySQL (both adapters). PostgreSQL and SQLite share the same PDO adapter code path.
+- **Unsupported SQL**: Platform-specific unsupported SQL examples: MySQL uses `SET @var = 1`, PostgreSQL uses `SET search_path TO public`, SQLite uses `PRAGMA journal_mode=WAL`. All three platforms support behavior rules with prefix and regex patterns.
+- **Unknown Schema**: Behavior rules and unknown schema handling are verified on all platforms. See 10.3 for cross-platform inconsistencies.
+
+### 10.3 Cross-Platform Inconsistencies
+The following behaviors differ across platforms and may indicate areas for improvement:
+
+- **Unknown schema UPDATE (Passthrough mode)**: On MySQL (both adapters), UPDATE on unreflected tables passes through to the physical database as documented. On PostgreSQL and SQLite (PDO adapter), the same operation throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of passing through. This means the `unknownSchemaBehavior: Passthrough` setting does not take effect for UPDATE operations on PostgreSQL and SQLite.
+
+- **Unknown schema UPDATE (Exception mode)**: On MySQL, UPDATE on unreflected tables throws `ZtdPdoException` ("Unknown table"). On PostgreSQL and SQLite, it throws `RuntimeException` ("UPDATE simulation requires primary keys") — the exception type and message differ from MySQL.
+
+- **Unknown schema DELETE**: On MySQL and SQLite, DELETE on unreflected tables in Passthrough mode passes through to the physical database. On PostgreSQL, DELETE in Exception mode throws `RuntimeException` ("Unknown table") rather than `ZtdPdoException`. On SQLite, DELETE in Exception mode also throws `RuntimeException` ("Unknown table") rather than `ZtdPdoException`.

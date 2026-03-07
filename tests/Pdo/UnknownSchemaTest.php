@@ -128,6 +128,76 @@ class UnknownSchemaTest extends TestCase
         $this->assertSame('shadow', $rows[0]['val']);
     }
 
+    public function testEmptyResultUpdateOnUnknownTable(): void
+    {
+        $pdo = $this->createAdapterThenTable(UnknownSchemaBehavior::EmptyResult);
+
+        // EmptyResult mode: UPDATE on unknown table returns without modifying physical data
+        $result = $pdo->exec("UPDATE late_table SET val = 'updated' WHERE id = 1");
+        $this->assertIsInt($result);
+
+        // Physical table should be unchanged
+        $pdo->disableZtd();
+        $stmt = $pdo->query('SELECT val FROM late_table WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertSame('physical', $rows[0]['val']);
+    }
+
+    public function testEmptyResultDeleteOnUnknownTable(): void
+    {
+        $pdo = $this->createAdapterThenTable(UnknownSchemaBehavior::EmptyResult);
+
+        $result = $pdo->exec("DELETE FROM late_table WHERE id = 1");
+        $this->assertIsInt($result);
+
+        // Physical table should be unchanged
+        $pdo->disableZtd();
+        $stmt = $pdo->query('SELECT * FROM late_table');
+        $this->assertCount(1, $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    public function testNoticeUpdateOnUnknownTable(): void
+    {
+        $pdo = $this->createAdapterThenTable(UnknownSchemaBehavior::Notice);
+
+        $noticeTriggered = false;
+        set_error_handler(function (int $errno) use (&$noticeTriggered): bool {
+            if ($errno === E_USER_NOTICE || $errno === E_USER_WARNING) {
+                $noticeTriggered = true;
+            }
+            return true;
+        });
+
+        try {
+            $result = $pdo->exec("UPDATE late_table SET val = 'updated' WHERE id = 1");
+            $this->assertTrue($noticeTriggered, 'Expected a notice to be triggered');
+            $this->assertIsInt($result);
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    public function testNoticeDeleteOnUnknownTable(): void
+    {
+        $pdo = $this->createAdapterThenTable(UnknownSchemaBehavior::Notice);
+
+        $noticeTriggered = false;
+        set_error_handler(function (int $errno) use (&$noticeTriggered): bool {
+            if ($errno === E_USER_NOTICE || $errno === E_USER_WARNING) {
+                $noticeTriggered = true;
+            }
+            return true;
+        });
+
+        try {
+            $result = $pdo->exec("DELETE FROM late_table WHERE id = 1");
+            $this->assertTrue($noticeTriggered, 'Expected a notice to be triggered');
+            $this->assertIsInt($result);
+        } finally {
+            restore_error_handler();
+        }
+    }
+
     protected function tearDown(): void
     {
         $raw = new PDO(

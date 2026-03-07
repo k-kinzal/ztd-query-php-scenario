@@ -60,4 +60,21 @@ class SqliteDdlOperationsTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(0, $rows);
     }
+
+    public function testDeleteWithWhereDeletesShadowedRows(): void
+    {
+        $this->pdo->exec("INSERT INTO ddl_existing (id, val) VALUES (1, 'a')");
+        $this->pdo->exec("INSERT INTO ddl_existing (id, val) VALUES (2, 'b')");
+
+        $stmt = $this->pdo->query('SELECT * FROM ddl_existing');
+        $this->assertCount(2, $stmt->fetchAll(PDO::FETCH_ASSOC));
+
+        // DELETE with WHERE clause removes specific rows from shadow store
+        $this->pdo->exec('DELETE FROM ddl_existing WHERE id = 1');
+
+        $stmt = $this->pdo->query('SELECT * FROM ddl_existing');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('b', $rows[0]['val']);
+    }
 }

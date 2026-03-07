@@ -8,25 +8,25 @@ use PDO;
 use PHPUnit\Framework\TestCase;
 use Testcontainers\Containers\ReuseMode;
 use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
+use Tests\Support\PostgreSQLContainer;
 use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
-class ComplexQueryTest extends TestCase
+class PostgresComplexQueryTest extends TestCase
 {
     private ZtdPdo $pdo;
 
     public static function setUpBeforeClass(): void
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
+        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
         Testcontainers::run($container);
     }
 
     protected function setUp(): void
     {
         $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
+            PostgreSQLContainer::getDsn(),
+            'test',
+            'test',
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
         $raw->exec('DROP TABLE IF EXISTS order_items');
@@ -37,9 +37,9 @@ class ComplexQueryTest extends TestCase
         $raw->exec('CREATE TABLE order_items (id INT PRIMARY KEY, order_id INT, product VARCHAR(255), qty INT)');
 
         $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
+            PostgreSQLContainer::getDsn(),
+            'test',
+            'test',
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
     }
@@ -168,8 +168,9 @@ class ComplexQueryTest extends TestCase
         $this->pdo->exec("INSERT INTO orders (id, user_id, amount, status) VALUES (2, 1, 200.00, 'completed')");
         $this->pdo->exec("INSERT INTO orders (id, user_id, amount, status) VALUES (3, 2, 50.00, 'completed')");
 
+        // PostgreSQL requires the aggregate expression in HAVING, not the alias
         $stmt = $this->pdo->query(
-            'SELECT user_id, SUM(amount) AS total FROM orders GROUP BY user_id HAVING total > 100 ORDER BY user_id'
+            'SELECT user_id, SUM(amount) AS total FROM orders GROUP BY user_id HAVING SUM(amount) > 100 ORDER BY user_id'
         );
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -249,6 +250,27 @@ class ComplexQueryTest extends TestCase
         $this->assertSame(1, (int) $rows[0]['id']);
     }
 
+    public function testZtdSelectReadsOnlyFromShadowStore(): void
+    {
+        $raw = new PDO(
+            PostgreSQLContainer::getDsn(),
+            'test',
+            'test',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+        $raw->exec("INSERT INTO users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
+
+        $this->pdo->disableZtd();
+        $stmt = $this->pdo->query('SELECT * FROM users');
+        $this->assertCount(1, $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'Physical data visible with ZTD disabled');
+        $this->pdo->enableZtd();
+
+        $stmt = $this->pdo->query('SELECT * FROM users');
+        $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'ZTD SELECT reads only from shadow store; physical data is not visible');
+    }
+
     public function testSelfJoin(): void
     {
         $this->pdo->exec("INSERT INTO users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
@@ -317,38 +339,25 @@ class ComplexQueryTest extends TestCase
         $this->assertSame(0, (int) $rows[1]['order_count']);
     }
 
-    public function testZtdSelectReadsOnlyFromShadowStore(): void
+    public function testMultipleInsertsThenAggregateQuery(): void
     {
-        // Insert physical data via raw connection
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec("INSERT INTO users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
+        for ($i = 1; $i <= 5; $i++) {
+            $this->pdo->exec("INSERT INTO order_items (id, order_id, product, qty) VALUES ($i, 1, 'Product$i', $i)");
+        }
 
-        // Physical data is visible with ZTD disabled (passthrough)
-        $this->pdo->disableZtd();
-        $stmt = $this->pdo->query('SELECT * FROM users');
-        $this->assertCount(1, $stmt->fetchAll(PDO::FETCH_ASSOC),
-            'Physical data visible with ZTD disabled');
-        $this->pdo->enableZtd();
+        $stmt = $this->pdo->query('SELECT COUNT(*) AS cnt, SUM(qty) AS total_qty FROM order_items WHERE order_id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // With ZTD enabled, SELECT reads only from the shadow store.
-        // Physical table data is NOT merged — the shadow store is an
-        // independent layer that replaces the physical table entirely.
-        $stmt = $this->pdo->query('SELECT * FROM users');
-        $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC),
-            'ZTD SELECT reads only from shadow store; physical data is not visible');
+        $this->assertSame(5, (int) $rows[0]['cnt']);
+        $this->assertSame(15, (int) $rows[0]['total_qty']);
     }
 
     public static function tearDownAfterClass(): void
     {
         $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
+            PostgreSQLContainer::getDsn(),
+            'test',
+            'test',
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
         $raw->exec('DROP TABLE IF EXISTS order_items');

@@ -143,6 +143,78 @@ class UnknownSchemaTest extends TestCase
         $mysqli->close();
     }
 
+    public function testEmptyResultUpdateOnUnknownTable(): void
+    {
+        $mysqli = $this->createAdapterThenTable(UnknownSchemaBehavior::EmptyResult);
+
+        // EmptyResult mode: UPDATE on unknown table returns without modifying physical data
+        $mysqli->query("UPDATE late_table SET val = 'updated' WHERE id = 1");
+
+        // Physical table should be unchanged
+        $mysqli->disableZtd();
+        $result = $mysqli->query('SELECT val FROM late_table WHERE id = 1');
+        $row = $result->fetch_assoc();
+        $this->assertSame('physical', $row['val']);
+
+        $mysqli->close();
+    }
+
+    public function testEmptyResultDeleteOnUnknownTable(): void
+    {
+        $mysqli = $this->createAdapterThenTable(UnknownSchemaBehavior::EmptyResult);
+
+        $mysqli->query("DELETE FROM late_table WHERE id = 1");
+
+        // Physical table should be unchanged
+        $mysqli->disableZtd();
+        $result = $mysqli->query('SELECT * FROM late_table');
+        $this->assertSame(1, $result->num_rows);
+
+        $mysqli->close();
+    }
+
+    public function testNoticeUpdateOnUnknownTable(): void
+    {
+        $mysqli = $this->createAdapterThenTable(UnknownSchemaBehavior::Notice);
+
+        $noticeTriggered = false;
+        set_error_handler(function (int $errno) use (&$noticeTriggered): bool {
+            if ($errno === E_USER_NOTICE || $errno === E_USER_WARNING) {
+                $noticeTriggered = true;
+            }
+            return true;
+        });
+
+        try {
+            $mysqli->query("UPDATE late_table SET val = 'updated' WHERE id = 1");
+            $this->assertTrue($noticeTriggered, 'Expected a notice to be triggered');
+        } finally {
+            restore_error_handler();
+            $mysqli->close();
+        }
+    }
+
+    public function testNoticeDeleteOnUnknownTable(): void
+    {
+        $mysqli = $this->createAdapterThenTable(UnknownSchemaBehavior::Notice);
+
+        $noticeTriggered = false;
+        set_error_handler(function (int $errno) use (&$noticeTriggered): bool {
+            if ($errno === E_USER_NOTICE || $errno === E_USER_WARNING) {
+                $noticeTriggered = true;
+            }
+            return true;
+        });
+
+        try {
+            $mysqli->query("DELETE FROM late_table WHERE id = 1");
+            $this->assertTrue($noticeTriggered, 'Expected a notice to be triggered');
+        } finally {
+            restore_error_handler();
+            $mysqli->close();
+        }
+    }
+
     protected function tearDown(): void
     {
         $raw = new \mysqli(

@@ -20,7 +20,6 @@ Let's identify potential problems in advance to proactively resolve the issues t
    - Periodically review the specs to ensure there are no contradictions or omissions.
 - Clearly specify the version of ztd-query for both adapters.
 - Always keep up with the latest version of ztd-query.
-- Spawn an Architect and a Critic as your teammates to provide you with advice and consultation.
 
 ## When You Find an Issue
 

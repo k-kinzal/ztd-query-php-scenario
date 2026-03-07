@@ -221,13 +221,7 @@ When a CREATE TABLE statement is executed with ZTD enabled and the table already
 
 When a CREATE TABLE statement is executed with ZTD enabled and the table does NOT exist physically, the system shall track the table schema in the shadow store. Subsequent INSERT/SELECT/UPDATE/DELETE operations on the shadow-created table shall work correctly.
 
-### 5.1a CREATE TABLE ... LIKE
-When a `CREATE TABLE ... LIKE` statement is executed with ZTD enabled, the system shall create a shadow table with the same schema as the source table. Subsequent CRUD operations on the new table shall work correctly.
-
-### 5.1b CREATE TABLE ... AS SELECT
-When a `CREATE TABLE ... AS SELECT` statement is executed with ZTD enabled, the system shall create a shadow table with the columns from the SELECT result and populate it with the selected data.
-
-### 5.1c ALTER TABLE
+### 5.1a ALTER TABLE
 When an `ALTER TABLE` statement is executed with ZTD enabled, the system shall modify the table definition in the shadow store's schema registry without modifying the physical table.
 
 **MySQL** — Fully supported. ALTER TABLE operations:
@@ -249,12 +243,12 @@ When an `ALTER TABLE` statement is executed with ZTD enabled, the system shall m
 
 **PostgreSQL** — Not supported. ALTER TABLE throws `ZtdPdoException` ("ALTER TABLE not yet supported for PostgreSQL").
 
-### 5.1d CREATE TABLE LIKE
+### 5.1b CREATE TABLE LIKE
 When a `CREATE TABLE ... LIKE` statement is executed with ZTD enabled, the system shall create a shadow table with the same schema as the source table. Subsequent CRUD operations on the new table shall work correctly.
 
 Supported on MySQL, PostgreSQL, and SQLite. PostgreSQL uses `CREATE TABLE t (LIKE source)` syntax.
 
-### 5.1e CREATE TABLE AS SELECT
+### 5.1c CREATE TABLE AS SELECT
 When a `CREATE TABLE ... AS SELECT` statement is executed with ZTD enabled, the system shall create a shadow table with the columns from the SELECT result and populate it with the selected data.
 
 **MySQL and PostgreSQL**: Fully supported. Subsequent SELECT on the created table returns the data.
@@ -385,9 +379,9 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
 - **FOREIGN KEY constraints**: The foreign key constraint scenario uses a parent-child table relationship on MySQL and PostgreSQL. SQLite does not include the foreign key test because SQLite requires `PRAGMA foreign_keys = ON` to enforce them, which is outside ZTD scope.
 - **Unsupported SQL**: Platform-specific unsupported SQL examples: MySQL uses `SET @var = 1`, PostgreSQL uses `SET search_path TO public`, SQLite uses `PRAGMA journal_mode=WAL`. All three platforms support behavior rules with prefix and regex patterns.
-- **ALTER TABLE**: Fully supported on MySQL (via `AlterTableMutation`). SQLite accepts ALTER TABLE without error but CTE rewriter ignores schema changes (see 5.1c). PostgreSQL throws `ZtdPdoException` for ALTER TABLE.
+- **ALTER TABLE**: Fully supported on MySQL (via `AlterTableMutation`). SQLite accepts ALTER TABLE without error but CTE rewriter ignores schema changes (see 5.1a). PostgreSQL throws `ZtdPdoException` for ALTER TABLE.
 - **CREATE TABLE LIKE**: Verified on MySQL, PostgreSQL, and SQLite. PostgreSQL uses `CREATE TABLE t (LIKE source)` syntax.
-- **CREATE TABLE AS SELECT**: Fully supported on MySQL and PostgreSQL. SQLite has limitations (see 5.1e).
+- **CREATE TABLE AS SELECT**: Fully supported on MySQL and PostgreSQL. SQLite has limitations (see 5.1c).
 - **Unknown Schema**: Behavior rules and unknown schema handling are verified on all platforms. See 10.3 for cross-platform inconsistencies.
 
 ### 10.3 Cross-Platform Inconsistencies

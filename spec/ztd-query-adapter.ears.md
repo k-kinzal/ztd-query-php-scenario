@@ -64,6 +64,12 @@ When ZTD is enabled and the result set is empty, the system shall return an empt
 ### 3.2 Prepared SELECT
 When a prepared SELECT statement with bound parameters is executed, the system shall rewrite the query and return correct results.
 
+Prepared statements support the following binding methods:
+- **PDO**: `bindValue()` for value binding, `bindParam()` for by-reference binding, and `execute($params)` with positional or named parameter arrays.
+- **MySQLi**: `bind_param()` with type string and by-reference variables, `execute()` for execution, and `execute_query()` (PHP 8.2+) as a shortcut.
+
+Query rewriting occurs at **prepare time**, not execute time. If ZTD mode is toggled between `prepare()` and `execute()`, the prepared query retains its original rewritten form.
+
 ### 3.3 Complex Queries
 When ZTD is enabled, the CTE rewriting shall correctly handle:
 - **JOINs** (INNER JOIN, LEFT JOIN) across multiple shadow tables.
@@ -76,6 +82,16 @@ When ZTD is enabled, the CTE rewriting shall correctly handle:
 - **DISTINCT** selection.
 
 UPDATE and DELETE statements with subqueries referencing other shadow tables shall also be correctly rewritten.
+
+### 3.4 Fetch Methods
+When ZTD is enabled, the following fetch methods shall return correct results from the shadow store:
+- `fetchAll()` with `FETCH_ASSOC`, `FETCH_NUM`, `FETCH_BOTH` modes.
+- `fetch()` for row-by-row iteration (returns `false` when no more rows).
+- `fetchColumn()` for retrieving a single column value.
+- `fetchObject()` for retrieving rows as `stdClass` objects.
+- `columnCount()` shall return the correct number of columns in the result set.
+
+Re-executing a prepared statement (calling `execute()` multiple times with different parameters) shall work correctly with ZTD-enabled queries.
 
 ## 4. Write Operations
 
@@ -106,6 +122,8 @@ After a write operation via `ZtdMysqli::query()`, `lastAffectedRows()` shall ret
 After a write operation via `ZtdPdo::exec()`, the return value shall be the number of affected rows.
 
 After a write operation via `ZtdPdoStatement::execute()`, `rowCount()` shall return the number of affected rows.
+
+After a write operation via `ZtdMysqliStatement::execute()`, `ztdAffectedRows()` shall return the number of affected rows. Note: The `$stmt->affected_rows` property may not be available ("Property access is not allowed yet"); `ztdAffectedRows()` is the reliable accessor.
 
 ### 4.5 Write Result Sets
 When a write operation (INSERT/UPDATE/DELETE) is executed with ZTD enabled, the affected row data is consumed internally for shadow processing.

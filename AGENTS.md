@@ -5,6 +5,7 @@ This file is for agents to understand the context of the project.
 ## Project Goal
 
 The objective of this project is to utilize k-kinzal/ztd-query-mysqli-adapter and k-kinzal/ztd-query-pdo-adapter from a user perspective.
+Let's identify potential problems in advance to proactively resolve the issues that users of ztd-query-php might encounter.
 
 ## Something important
 

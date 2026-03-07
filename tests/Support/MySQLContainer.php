@@ -14,6 +14,7 @@ class MySQLContainer extends GenericContainer
 {
     use AfterStartHook;
     protected static $IMAGE = 'mysql:8.0';
+    protected static $AUTO_REMOVE_ON_EXIT = true;
 
     protected static $EXPOSED_PORTS = [3306];
 

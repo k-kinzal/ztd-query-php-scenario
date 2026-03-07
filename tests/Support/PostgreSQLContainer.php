@@ -14,6 +14,7 @@ class PostgreSQLContainer extends GenericContainer
     use AfterStartHook;
 
     protected static $IMAGE = 'postgres:16';
+    protected static $AUTO_REMOVE_ON_EXIT = true;
     protected static $EXPOSED_PORTS = [5432];
     protected static $ENVIRONMENTS = [
         'POSTGRES_USER' => 'test',

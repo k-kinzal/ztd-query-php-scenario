@@ -563,6 +563,9 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - fetchColumn(), closeCursor(), fetchObject(), FETCH_KEY_PAIR, FETCH_COLUMN: all work correctly with shadow data across platforms. fetchColumn with column index, iteration via fetchColumn loop, fetchColumn returns false when exhausted. Verified on all 3 PDO platforms.
 - Iterator and default fetch mode: foreach/getIterator, ATTR_DEFAULT_FETCH_MODE (NUM/ASSOC/OBJ), setFetchMode override, query() with fetch mode argument. Verified on all 3 PDO platforms.
 - Advanced fetch modes: FETCH_BOTH, FETCH_NUM, FETCH_OBJ, FETCH_LAZY, fetchAll with FETCH_GROUP, FETCH_UNIQUE, FETCH_COLUMN with column index, setFetchMode persistence across fetches. Verified on all 3 PDO platforms.
+- nextRowset(): delegates to underlying PDO driver. MySQL returns false (no additional result sets from CTE queries). SQLite and PostgreSQL throw PDOException "Driver does not support this function". Verified on all 3 PDO platforms.
+- MySQL backslash corruption: string values containing backslashes in shadow store are corrupted by CTE rewriter. `\t` → tab, `\n` → newline, `\b` → backspace, `\r` → carriage return. Double backslash `\\` also affected. Occurs with both exec() and prepared statements. SQLite and PostgreSQL not affected. Verified on MySQL PDO.
+- PostgreSQL BOOLEAN/BIGINT edge cases: BOOLEAN `true` via prepared statement works, but `false` fails on SELECT (CTE generates invalid `CAST('' AS BOOLEAN)`). BIGINT within int32 range works, values exceeding int32 fail (CTE generates `CAST(value AS integer)` instead of `bigint`). Verified on PostgreSQL PDO.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

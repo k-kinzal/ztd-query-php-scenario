@@ -369,6 +369,7 @@ The shadow store does NOT enforce database constraints. The following constraint
 - **UNIQUE**: Duplicate values in unique columns are accepted.
 - **NOT NULL**: NULL values are accepted even for NOT NULL columns.
 - **FOREIGN KEY**: References to non-existent parent rows are accepted.
+- **DEFAULT**: Column default values are NOT applied. When INSERT omits columns with DEFAULT values, the shadow store inserts NULL (not the default). Users must explicitly provide all column values in INSERT statements when using ZTD mode.
 
 This is by design - the shadow store is an in-memory simulation layer, not a full database engine. Constraint enforcement is deferred to the physical database when changes are eventually applied.
 

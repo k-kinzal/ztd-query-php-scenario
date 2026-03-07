@@ -68,4 +68,25 @@ class SqliteUtilityMethodsTest extends TestCase
         $this->assertIsString($quoted);
         $this->assertStringContainsString("it", $quoted);
     }
+
+    public function testConnectStaticFactory(): void
+    {
+        if (!method_exists(PDO::class, 'connect')) {
+            $this->markTestSkipped('PDO::connect() requires PHP 8.4+');
+        }
+
+        $pdo = ZtdPdo::connect('sqlite::memory:');
+        $this->assertTrue($pdo->isZtdEnabled());
+
+        // Create table and test basic operation
+        $pdo->disableZtd();
+        $pdo->exec('CREATE TABLE connect_test (id INTEGER PRIMARY KEY, val TEXT)');
+        $pdo->enableZtd();
+
+        $pdo->exec("INSERT INTO connect_test (id, val) VALUES (1, 'hello')");
+        $stmt = $pdo->query('SELECT * FROM connect_test WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('hello', $rows[0]['val']);
+    }
 }

@@ -86,7 +86,7 @@ When ZTD is enabled, the CTE rewriting shall correctly handle:
 
 UPDATE and DELETE statements with subqueries referencing other shadow tables shall also be correctly rewritten.
 
-User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CTE shadowing.
+User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CTE shadowing on MySQL and SQLite. On PostgreSQL, table references inside user CTEs are not rewritten, causing the inner CTE to read from the physical table rather than the shadow store (see 10.3).
 
 ### 3.4 Fetch Methods
 When ZTD is enabled, the following fetch methods shall return correct results from the shadow store:
@@ -131,12 +131,20 @@ When `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL) is executed and a duplicat
 When a `REPLACE INTO` statement (MySQL) is executed with ZTD enabled, the system shall delete any existing row with matching primary key and insert the new row in the shadow store.
 
 ### 4.2c Multi-Table UPDATE
-When a multi-table UPDATE statement (e.g., `UPDATE users u JOIN orders o ON u.id = o.user_id SET u.active = 0 WHERE o.amount > 150`) is executed with ZTD enabled, the system shall update the target table rows in the shadow store based on the JOIN condition, without modifying the physical database.
+When a multi-table UPDATE statement is executed with ZTD enabled, the system shall update the target table rows in the shadow store based on the JOIN condition, without modifying the physical database.
 
 Only rows matching the JOIN and WHERE conditions shall be updated; other rows remain unchanged.
 
+Platform-specific syntax:
+- **MySQL**: `UPDATE users u JOIN orders o ON u.id = o.user_id SET u.active = 0 WHERE o.amount > 150`
+- **PostgreSQL**: `UPDATE users SET active = 0 FROM orders WHERE users.id = orders.user_id AND orders.amount > 150`
+
 ### 4.2d Multi-Table DELETE
-When a multi-table DELETE statement (e.g., `DELETE o FROM orders o JOIN users u ON o.user_id = u.id WHERE u.name = 'Bob'`) is executed with ZTD enabled, the system shall delete the specified rows from the shadow store based on the JOIN condition, without modifying the physical database.
+When a multi-table DELETE statement is executed with ZTD enabled, the system shall delete the specified rows from the shadow store based on the JOIN condition, without modifying the physical database.
+
+Platform-specific syntax:
+- **MySQL**: `DELETE o FROM orders o JOIN users u ON o.user_id = u.id WHERE u.name = 'Bob'`
+- **PostgreSQL**: `DELETE FROM orders USING users WHERE orders.user_id = users.id AND users.name = 'Bob'`
 
 ### 4.3 DELETE
 When a DELETE is executed with ZTD enabled, the system shall track the deletion in the shadow store without modifying the physical table.
@@ -322,8 +330,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - DDL shadow-created table operations (INSERT/UPDATE/DELETE on shadow-created tables).
 - Statement methods (closeCursor, setFetchMode, bindColumn, columnCount, getIterator/foreach).
 - UPSERT operations (INSERT ... ON DUPLICATE KEY UPDATE on MySQL; INSERT ... ON CONFLICT on PostgreSQL).
-- Multi-table UPDATE/DELETE operations (UPDATE ... JOIN, DELETE ... JOIN) on MySQL (both adapters).
-- User-written CTE (WITH) queries work alongside ZTD CTE shadowing.
+- Multi-table UPDATE/DELETE operations (UPDATE ... JOIN, DELETE ... JOIN on MySQL; UPDATE ... FROM, DELETE ... USING on PostgreSQL).
+- User-written CTE (WITH) queries work alongside ZTD CTE shadowing (MySQL and SQLite; see 10.3 for PostgreSQL limitation).
 - INSERT ... SELECT with explicit column lists.
 
 ### 10.2 Platform-Specific Notes
@@ -345,3 +353,7 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **INSERT ... ON CONFLICT DO NOTHING (SQLite)**: On PostgreSQL, `ON CONFLICT DO NOTHING` correctly ignores duplicate inserts in the shadow store. On SQLite, the same syntax inserts both rows into the shadow store (the DO NOTHING clause is not processed, and the shadow store does not enforce PK constraints). `ON CONFLICT DO UPDATE` works correctly on both platforms.
 
 - **INSERT ... SELECT * (MySQL)**: On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` ("INSERT column count does not match SELECT column count") because the MySQL InsertTransformer counts `SELECT *` as 1 column instead of expanding it. The workaround is to use explicit column lists: `INSERT INTO t (a, b) SELECT a, b FROM s`. On SQLite, `INSERT ... SELECT *` works correctly.
+
+- **User-written CTEs (PostgreSQL)**: On MySQL and SQLite, user-written CTE queries (e.g., `WITH cte AS (SELECT * FROM t) SELECT * FROM cte`) work correctly — table references inside the user's CTE are rewritten to read from the shadow store. On PostgreSQL, table references inside user CTEs are NOT rewritten, so the inner CTE reads from the physical table (empty) instead of the shadow store, returning 0 rows.
+
+- **Multi-table UPDATE/DELETE syntax**: MySQL uses `UPDATE t1 JOIN t2 ON ... SET ...` and `DELETE t1 FROM t1 JOIN t2 ON ...`. PostgreSQL uses `UPDATE t1 SET ... FROM t2 WHERE ...` and `DELETE FROM t1 USING t2 WHERE ...`. Both syntaxes are supported by their respective platform adapters.

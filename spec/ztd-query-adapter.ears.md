@@ -91,7 +91,7 @@ When ZTD is enabled, the CTE rewriting shall correctly handle:
 - **BETWEEN** range conditions.
 - **EXISTS** / **NOT EXISTS** correlated subqueries.
 - **COALESCE** and other SQL functions.
-- **Window functions** (ROW_NUMBER, SUM OVER PARTITION BY).
+- **Window functions** (ROW_NUMBER, SUM OVER PARTITION BY, AVG/SUM with ROWS/RANGE BETWEEN frames, LAG, LEAD, RANK, DENSE_RANK).
 
 UPDATE and DELETE statements with subqueries referencing other shadow tables shall also be correctly rewritten.
 
@@ -393,7 +393,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - INSERT ... SELECT with explicit column lists.
 - Multi-row INSERT and NULL value handling.
 - Configuration (ZtdConfig, unsupported behavior, behavior rules, ZTD toggle cycles).
-- Advanced query patterns: CASE expressions, LIKE, IN, BETWEEN, EXISTS/NOT EXISTS, COALESCE, window functions (ROW_NUMBER, SUM OVER).
+- Advanced query patterns: CASE expressions, LIKE, IN, BETWEEN, EXISTS/NOT EXISTS, COALESCE, window functions (ROW_NUMBER, SUM OVER, AVG/SUM with ROWS BETWEEN/RANGE BETWEEN frames, LAG, LEAD, RANK, DENSE_RANK).
 - Error recovery: shadow store remains consistent after transformer errors, SQL errors, and constraint violations; subsequent operations succeed.
 - CREATE TABLE LIKE (all platforms).
 - CREATE TABLE AS SELECT (MySQL and PostgreSQL; see 10.3 for SQLite limitation).
@@ -419,6 +419,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - RIGHT JOIN: correctly preserves unmatched rows from the right table with NULLs on the left; verified on all 4 adapters.
 - Recursive CTEs: `WITH RECURSIVE` without shadow table references works on all platforms. `WITH RECURSIVE` referencing shadow tables fails with syntax error on MySQL, returns empty on SQLite/PostgreSQL (see 3.3c, 10.3).
 - MySQLi statement methods: `ztdAffectedRows()` returns correct affected row counts for INSERT/UPDATE/DELETE, `get_result()` + `fetch_all()` for SELECT, `bind_result()` + `fetch()` for bound variable retrieval, `reset()` clears ZTD result and allows re-execute, `free_result()` allows re-execute; verified on MySQLi.
+- Window function FRAME clauses: ROWS BETWEEN (1 PRECEDING AND 1 FOLLOWING), ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW produce correct rolling averages, cumulative sums, and partitioned results from shadow store data; LAG/LEAD return correct previous/next values with NULLs at boundaries; RANK/DENSE_RANK produce correct rankings; window functions correctly reflect shadow mutations (UPDATE/DELETE); verified on all 4 adapters.
+- INSERT ON CONFLICT behavior: `INSERT ... ON CONFLICT(col) DO UPDATE SET ...` works correctly on SQLite and PostgreSQL; `INSERT ... ON CONFLICT(col) DO NOTHING` works on PostgreSQL but inserts both rows on SQLite (shadow store does not enforce PK constraints, see 10.3); `INSERT OR IGNORE` (SQLite-specific shorthand) correctly ignores duplicates.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

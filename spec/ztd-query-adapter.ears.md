@@ -16,6 +16,9 @@ When a user calls `ZtdMysqli::fromMysqli()` with an existing `mysqli` instance, 
 ### 1.4 Wrap Existing Connection (PDO)
 When a user calls `ZtdPdo::fromPdo()` with an existing `PDO` instance, the system shall create a ZTD-enabled wrapper that delegates to the inner connection.
 
+### 1.4a Static Factory (PDO)
+When a user calls `ZtdPdo::connect()` with a valid DSN and credentials, the system shall create a ZTD-enabled wrapper equivalent to `ZtdPdo::fromPdo(PDO::connect(...))`.
+
 ### 1.5 Auto-detection (PDO)
 When a user creates a `ZtdPdo` without specifying a `SessionFactory`, the system shall detect the appropriate factory from the PDO driver name (mysql, pgsql, sqlite).
 

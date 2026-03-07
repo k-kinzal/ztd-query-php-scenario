@@ -108,4 +108,16 @@ class AutoDetectionTest extends TestCase
 
         $method->invoke(null, $mockPdo);
     }
+
+    public function testConnectStaticMethod(): void
+    {
+        $pdo = ZtdPdo::connect(
+            MySQLContainer::getDsn(),
+            'root',
+            'root',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+
+        $this->assertTrue($pdo->isZtdEnabled());
+    }
 }

@@ -142,6 +142,18 @@ class StatementMethodsTest extends TestCase
         $this->assertIsArray($info);
     }
 
+    public function testStatementIterator(): void
+    {
+        $stmt = $this->pdo->query('SELECT id, name FROM stmt_methods_test ORDER BY id');
+        $rows = [];
+        foreach ($stmt as $row) {
+            $rows[] = $row;
+        }
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame('Bob', $rows[1]['name']);
+    }
+
     public static function tearDownAfterClass(): void
     {
         $raw = new PDO(

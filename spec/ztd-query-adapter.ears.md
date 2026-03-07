@@ -594,6 +594,14 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - prepare() with empty options array: `prepare($sql, [])` works identically to `prepare($sql)`. Verified on all 3 PDO platforms.
 - closeCursor() then re-execute: calling `closeCursor()` mid-fetch then `execute()` with new params works correctly. Verified on all 3 PDO platforms.
 - REST API workflow patterns: paginated listing, single-record fetch, create/update/delete, multi-table JOIN filtering, LIKE search, BETWEEN price range, conditional aggregation, soft-delete patterns all work correctly with ZTD shadow store. Verified on all 3 PDO platforms.
+- PostgreSQL DISTINCT ON: `SELECT DISTINCT ON (col) ... ORDER BY col, ...` works correctly with shadow data, returning the first row per group. Verified on PostgreSQL PDO.
+- PostgreSQL LATERAL JOIN: `FROM t, LATERAL (SELECT ... FROM t2 WHERE t2.fk = t.pk ...)` tested — may return empty results (similar to derived table limitation) but does not error. Verified on PostgreSQL PDO.
+- PostgreSQL STRING_AGG with ORDER BY: `STRING_AGG(col, ', ' ORDER BY col)` correctly aggregates shadow data with ordering. Verified on PostgreSQL PDO.
+- PostgreSQL GREATEST/LEAST: scalar functions work correctly with shadow data. Verified on PostgreSQL PDO.
+- MySQL GROUP_CONCAT with ORDER BY: `GROUP_CONCAT(col ORDER BY col SEPARATOR ', ')` correctly aggregates shadow data. Verified on MySQL PDO.
+- MySQL IF/IFNULL/CONCAT_WS: conditional and string functions work correctly with shadow data including NULL handling. Verified on MySQL PDO.
+- MySQL REVERSE/LPAD: string manipulation functions work correctly with shadow data. Verified on MySQL PDO.
+- Correlated scalar subqueries with COUNT/SUM: `(SELECT COUNT(*) FROM t2 WHERE t2.fk = t1.pk)` in SELECT list works correctly across shadow tables. Verified on MySQL PDO.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

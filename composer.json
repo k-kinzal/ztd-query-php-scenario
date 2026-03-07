@@ -1,0 +1,23 @@
+{
+    "name": "k-kinzal/ztd-query-php-scenario",
+    "autoload": {},
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "k-kinzal",
+            "email": "keen.flag7803@logn.in"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^10 || ^11",
+        "k-kinzal/ztd-query-mysqli-adapter": "^0.1",
+        "k-kinzal/ztd-query-pdo-adapter": "^0.1",
+        "k-kinzal/testcontainers-php": "^0.5"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

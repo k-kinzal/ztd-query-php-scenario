@@ -77,7 +77,7 @@ Query rewriting occurs at **prepare time**, not execute time. If ZTD mode is tog
 
 ### 3.3 Complex Queries
 When ZTD is enabled, the CTE rewriting shall correctly handle:
-- **JOINs** (INNER JOIN, LEFT JOIN) across multiple shadow tables.
+- **JOINs** (INNER JOIN, LEFT JOIN, FULL OUTER JOIN on PostgreSQL) across multiple shadow tables.
 - **Self-JOINs** where the same shadow table is referenced with different aliases.
 - **Aggregations** (COUNT, SUM, MIN, MAX) with GROUP BY and HAVING clauses.
 - **Subqueries** in WHERE clauses (e.g., `WHERE id IN (SELECT ...)`).
@@ -407,6 +407,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - INSERT DEFAULT VALUES: not supported on SQLite ZTD (throws "Insert statement has no values to project"); INSERT with partial columns (omitting columns with defaults) works.
 - JSON data: INSERT/SELECT/UPDATE with JSON data (text column or native JSON/JSONB type), JSON functions (json_extract on SQLite, JSON_EXTRACT/JSON_UNQUOTE on MySQL, ->> on PostgreSQL), JSON in WHERE clauses, prepared statements with JSON; verified on all 4 adapters.
 - CROSS JOIN: explicit CROSS JOIN and implicit cross join (comma-separated FROM) correctly produce cartesian product from shadow tables; mutations (DELETE) correctly reduce CROSS JOIN result set; verified on all 4 adapters.
+- FULL OUTER JOIN: correctly handles NULL-extended rows from both sides of the join; works with prepared statements; verified on PostgreSQL (not available on MySQL/SQLite).
+- MySQLi statement methods: `ztdAffectedRows()` returns correct affected row counts for INSERT/UPDATE/DELETE, `get_result()` + `fetch_all()` for SELECT, `bind_result()` + `fetch()` for bound variable retrieval, `reset()` clears ZTD result and allows re-execute, `free_result()` allows re-execute; verified on MySQLi.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

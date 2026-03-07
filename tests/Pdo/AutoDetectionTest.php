@@ -66,7 +66,6 @@ class AutoDetectionTest extends TestCase
         $raw = new PDO('sqlite::memory:');
         $ref = new \ReflectionClass(ZtdPdo::class);
         $method = $ref->getMethod('detectFactory');
-        $method->setAccessible(true);
 
         // Mock a PDO with an unsupported driver name by using a subclass
         $mockPdo = new class('sqlite::memory:') extends PDO {

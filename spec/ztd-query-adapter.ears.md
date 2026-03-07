@@ -46,7 +46,7 @@ When ZTD mode is disabled, the system shall pass queries directly to the underly
 ### 2.2 Isolation
 While ZTD mode is enabled, all write operations (INSERT, UPDATE, DELETE) shall be tracked in an in-memory shadow store and shall NOT modify the physical database.
 
-While ZTD mode is enabled, SELECT queries shall read from the shadow store merged with physical table data via CTE rewriting.
+While ZTD mode is enabled, SELECT queries shall read from the shadow store via CTE rewriting. The shadow store replaces the physical table entirely; data present only in the physical table is NOT visible through ZTD-enabled SELECT queries. When ZTD mode is disabled, SELECT queries read directly from the physical table.
 
 ### 2.3 Toggle
 The system shall provide `enableZtd()`, `disableZtd()`, and `isZtdEnabled()` methods to control and inspect ZTD mode.
@@ -57,12 +57,22 @@ Each ZTD adapter instance maintains its own session state. Shadow data is not sh
 ## 3. Read Operations
 
 ### 3.1 SELECT
-When ZTD is enabled and a SELECT query is executed, the system shall return results that include both physical table data and shadowed mutations.
+When ZTD is enabled and a SELECT query is executed, the system shall return results from the shadow store only. Physical table data is not included; the CTE replaces the table reference with shadow store contents.
 
 When ZTD is enabled and the result set is empty, the system shall return an empty result set (not false or null).
 
 ### 3.2 Prepared SELECT
 When a prepared SELECT statement with bound parameters is executed, the system shall rewrite the query and return correct results.
+
+### 3.3 Complex Queries
+When ZTD is enabled, the CTE rewriting shall correctly handle:
+- **JOINs** (INNER JOIN, LEFT JOIN) across multiple shadow tables.
+- **Aggregations** (COUNT, SUM) with GROUP BY and HAVING clauses.
+- **Subqueries** in WHERE clauses (e.g., `WHERE id IN (SELECT ...)`).
+- **ORDER BY** with LIMIT and OFFSET.
+- **DISTINCT** selection.
+
+UPDATE and DELETE statements with subqueries referencing other shadow tables shall also be correctly rewritten.
 
 ## 4. Write Operations
 
@@ -172,3 +182,21 @@ The `ZtdConfig` class accepts three parameters:
 
 ### 9.2 Default Configuration
 `ZtdConfig::default()` creates a config with `Exception` unsupported behavior and `Passthrough` unknown schema behavior.
+
+## 10. Platform Behavior
+
+### 10.1 Cross-Platform Consistency
+The following behaviors are verified as consistent across MySQL, PostgreSQL, and SQLite:
+- Basic CRUD operations (INSERT, UPDATE, DELETE, SELECT).
+- Shadow store isolation (ZTD-enabled writes do not modify the physical database).
+- Session isolation (shadow data is not shared between instances or persisted across lifecycle).
+- DDL operations (CREATE TABLE on existing table throws; CREATE TABLE on non-existent table creates in shadow; DROP TABLE clears shadow data).
+- Write result sets (exec() returns affected count; fetchAll() after write returns empty array).
+- Constraint non-enforcement (PRIMARY KEY, NOT NULL, UNIQUE, FOREIGN KEY not enforced in shadow store).
+- Prepared statement parameter binding.
+- Auto-detection of PDO driver.
+
+### 10.2 Platform-Specific Notes
+- **TRUNCATE**: Verified on MySQL only. PostgreSQL and SQLite TRUNCATE handling has not been tested.
+- **FOREIGN KEY constraints**: The foreign key constraint scenario uses a parent-child table relationship on MySQL and PostgreSQL. SQLite does not include the foreign key test because SQLite requires `PRAGMA foreign_keys = ON` to enforce them, which is outside ZTD scope.
+- **Unsupported SQL and Unknown Schema**: Behavior rules and unknown schema handling are verified on MySQL (both adapters). PostgreSQL and SQLite share the same PDO adapter code path.

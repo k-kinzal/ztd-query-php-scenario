@@ -272,6 +272,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Unsupported SQL handling (Exception, Ignore, Notice modes; behavior rules with prefix and regex patterns; transaction statement passthrough).
 - Transaction control (beginTransaction/commit, beginTransaction/rollback, quote).
 - DDL shadow-created table operations (INSERT/UPDATE/DELETE on shadow-created tables).
+- Statement methods (closeCursor, setFetchMode, bindColumn, columnCount, getIterator/foreach).
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

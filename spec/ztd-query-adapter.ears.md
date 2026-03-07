@@ -341,6 +341,12 @@ When an `ALTER TABLE` statement is executed with ZTD enabled, the system shall m
 - **ADD/DROP FOREIGN KEY**: No-op (foreign keys are metadata-only in ZTD).
 - Unsupported ALTER TABLE operations (e.g., ADD INDEX, ADD SPATIAL INDEX, PARTITION) throw `UnsupportedSqlException`.
 
+**Error handling (MySQL)**: ALTER TABLE error scenarios are properly handled:
+- **ADD COLUMN** with a column name that already exists throws `ColumnAlreadyExistsException`.
+- **DROP COLUMN** / **MODIFY COLUMN** / **CHANGE COLUMN** / **RENAME COLUMN** on a nonexistent column throws `ColumnNotFoundException`.
+- The shadow store remains intact after ALTER TABLE errors — previously inserted data is not lost.
+- After a successful ALTER TABLE ADD COLUMN followed by a failed duplicate ADD, subsequent INSERT must include the new column (schema has been updated).
+
 **SQLite** — Partially supported. The mutation resolver accepts ALTER TABLE (ADD/DROP/RENAME COLUMN, RENAME TO) without throwing exceptions, but the CTE rewriter does NOT reflect schema changes in query results:
 - ADD COLUMN: new column is silently dropped from SELECT results (not included in CTE)
 - DROP COLUMN: column still appears in SELECT results (CTE uses original schema)

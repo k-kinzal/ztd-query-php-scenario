@@ -455,6 +455,11 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - INSERT...SELECT with WHERE filtering: `INSERT INTO t SELECT ... FROM s WHERE condition` correctly filters shadow data before inserting; `INSERT INTO t SELECT ... FROM s WHERE col > (SELECT AVG(col) FROM s)` works on all platforms.
 - Correlated HAVING: `GROUP BY col HAVING COUNT(*) >= (SELECT min_count FROM t WHERE t.cat = p.cat)` works on SQLite.
 - Pagination after mutations: parameterized LIMIT/OFFSET correctly reflects INSERT/DELETE mutations in shadow store.
+- Conditional aggregation: `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` and `SUM(CASE WHEN ... THEN amount ELSE 0 END)` work correctly from shadow data for status counting and revenue breakdown; mutations correctly update conditional aggregation results; verified on all platforms.
+- PostgreSQL FILTER clause: `COUNT(*) FILTER (WHERE ...)` and `SUM(amount) FILTER (WHERE ...)` work correctly with shadow data.
+- COUNT DISTINCT: `COUNT(DISTINCT col)` works correctly from shadow data on all platforms.
+- Multi-column ORDER BY: `ORDER BY col1 ASC, col2 DESC` works correctly from shadow data on all platforms.
+- ORDER BY expression: `ORDER BY ABS(col - value)` and similar expressions work correctly.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

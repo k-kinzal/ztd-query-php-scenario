@@ -106,6 +106,10 @@ When an INSERT is executed with ZTD enabled, the system shall track the inserted
 
 Subsequent SELECT queries shall include the inserted rows.
 
+Multi-row INSERT (e.g., `INSERT INTO t VALUES (1, 'a'), (2, 'b')`) is supported. The affected row count reflects the total number of inserted rows.
+
+INSERT with NULL values is supported. NULL values are correctly stored in the shadow store and queryable via `IS NULL` / `IS NOT NULL`.
+
 ### 4.1a INSERT ... SELECT
 When an `INSERT ... SELECT` is executed with ZTD enabled, the system shall insert rows from the SELECT result (which reads from the shadow store) into the target table's shadow store.
 
@@ -333,6 +337,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Multi-table UPDATE/DELETE operations (UPDATE ... JOIN, DELETE ... JOIN on MySQL; UPDATE ... FROM, DELETE ... USING on PostgreSQL).
 - User-written CTE (WITH) queries work alongside ZTD CTE shadowing (MySQL and SQLite; see 10.3 for PostgreSQL limitation).
 - INSERT ... SELECT with explicit column lists.
+- Multi-row INSERT and NULL value handling.
+- Configuration (ZtdConfig, unsupported behavior, behavior rules, ZTD toggle cycles).
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

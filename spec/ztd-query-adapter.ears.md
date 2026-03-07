@@ -132,6 +132,28 @@ For `ZtdMysqli::query()`, the returned `mysqli_result` object from a write opera
 
 For `ZtdPdoStatement`, calling `fetchAll()` after a write operation returns an empty array because `hasResultSet()` is `false` for `WRITE_SIMULATED` queries.
 
+### 4.6 real_query (mysqli)
+When `real_query()` is called with ZTD enabled, write operations (INSERT, UPDATE, DELETE) shall be tracked in the shadow store, and `real_query()` shall return `true`.
+
+When `real_query()` is called with ZTD enabled for a SELECT query, `real_query()` shall return `true`, but `store_result()` shall return `false`. The CTE-rewritten query result is consumed internally and not available via `store_result()`. Use `query()` instead of `real_query()` + `store_result()` for SELECT queries in ZTD mode.
+
+### 4.7 insert_id (mysqli)
+When ZTD is enabled, accessing the `$mysqli->insert_id` property after an INSERT throws an `Error` ("Property access is not allowed yet") because the INSERT was simulated in the shadow store and never executed on the physical database.
+
+### 4.8 Transactions
+Transaction control methods (`begin_transaction()` / `beginTransaction()`, `commit()`, `rollBack()` / `rollback()`) are delegated directly to the underlying connection. They do not affect the shadow store.
+
+For `ZtdMysqli`, `savepoint()` and `release_savepoint()` are also delegated to the underlying connection.
+
+For `ZtdPdo`, `inTransaction()` reflects the state of the underlying connection.
+
+Shadow data remains visible after `commit()` or `rollBack()` because it is stored independently of the physical transaction state.
+
+### 4.9 Utility Methods
+`real_escape_string()` (mysqli) and `quote()` (PDO) are delegated to the underlying connection and work correctly in ZTD mode.
+
+`lastInsertId()` (PDO) is delegated to the underlying connection. Its value may not reflect shadow-simulated inserts.
+
 ## 5. DDL Operations
 
 ### 5.1 CREATE TABLE

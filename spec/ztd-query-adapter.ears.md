@@ -488,7 +488,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - DDL operations (CREATE TABLE on existing table throws; CREATE TABLE on non-existent table creates in shadow; DROP TABLE clears shadow data).
 - Write result sets (exec() returns affected count; fetchAll() after write returns empty array).
 - Constraint non-enforcement (PRIMARY KEY, NOT NULL, UNIQUE, FOREIGN KEY, DEFAULT not enforced in shadow store).
-- Prepared statement parameter binding (bindValue with PARAM_INT/PARAM_STR/PARAM_NULL types, bindParam by-reference with re-execute, execute with positional params array, execute with named params, re-execute with different params, execute_query with NULL, execute_query with UPDATE/DELETE/UPSERT/REPLACE params).
+- Prepared statement parameter binding (bindValue with PARAM_INT/PARAM_STR/PARAM_NULL types, bindParam by-reference with re-execute, execute with positional params array, execute with named params, re-execute with different params, execute_query with NULL, execute_query with UPDATE/DELETE params; execute_query with UPSERT/REPLACE does NOT update existing rows — see 4.2a, 4.2b).
 - Fetch methods (fetch, fetchAll with FETCH_ASSOC/FETCH_NUM/FETCH_BOTH/FETCH_OBJ, fetchColumn, fetchColumn with index, columnCount, rowCount after UPDATE, foreach iteration, setFetchMode, query() with fetch mode argument, fetch returns false when exhausted).
 - Schema reflection (adapter constructed after table reflects schema; adapter constructed before table fails UPDATE/DELETE with "requires primary keys").
 - Auto-detection of PDO driver (mysql, pgsql, sqlite all verified).
@@ -642,6 +642,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - **execute_query with UPDATE/DELETE**: MySQLi `execute_query()` (PHP 8.2+) correctly handles UPDATE and DELETE operations with parameters, including multi-row updates/deletes and affected row counts. Verified on MySQLi.
 - **execute_query UPSERT/REPLACE limitation**: MySQLi `execute_query()` with UPSERT (`ON DUPLICATE KEY UPDATE`) and REPLACE does NOT update/replace existing rows — the old row is retained. This contrasts with `prepare()` + `bind_param()` + `execute()` which works correctly. New row inserts via execute_query UPSERT/REPLACE work as expected. Verified on MySQLi.
 - **Prepared upsert limitation (cross-platform)**: PDO prepared `INSERT ... ON CONFLICT DO UPDATE` does NOT update existing rows on any platform (MySQL, PostgreSQL, SQLite). The `exec()` path works correctly on all platforms. Verified on all 3 PDO platforms.
+- **Schema-qualified table names (PostgreSQL)**: INSERT/UPDATE/DELETE with `public.tablename` syntax work correctly (mutation resolver strips schema prefix). SELECT with schema-qualified names returns empty (CTE rewriter limitation). Mixed usage works: insert via `public.tablename`, query via unqualified name. Verified on PostgreSQL PDO.
 
 ### 10.3 Cross-Platform Inconsistencies
 The following behaviors differ across platforms and may indicate areas for improvement:
@@ -657,6 +658,8 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **INSERT ... SELECT * (MySQL only)**: On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` ("INSERT column count does not match SELECT column count") because the MySQL InsertTransformer counts `SELECT *` as 1 column instead of expanding it. The workaround is to use explicit column lists: `INSERT INTO t (a, b) SELECT a, b FROM s`. On SQLite and PostgreSQL, `INSERT ... SELECT *` works correctly.
 
 - **User-written CTEs (PostgreSQL)**: On MySQL and SQLite, user-written CTE queries (e.g., `WITH cte AS (SELECT * FROM t) SELECT * FROM cte`) work correctly — table references inside the user's CTE are rewritten to read from the shadow store. On PostgreSQL, table references inside user CTEs are NOT rewritten, so the inner CTE reads from the physical table (empty) instead of the shadow store, returning 0 rows.
+
+- **Schema-qualified table names (PostgreSQL)**: When using `public.tablename` (or any `schema.tablename`) syntax, INSERT/UPDATE/DELETE work correctly — the mutation resolver strips the schema prefix and resolves to the unqualified table name in the shadow store. However, SELECT with schema-qualified names returns empty results because the CTE rewriter does not recognize `public.tablename` as a shadow table. The workaround is to use unqualified table names in SELECT queries. Mixed usage (INSERT via `public.tablename`, SELECT via `tablename`) works correctly.
 
 - **execute_query vs prepare+bind_param for UPSERT/REPLACE (MySQLi)**: MySQLi `prepare()` + `bind_param()` + `execute()` correctly handles UPSERT (`ON DUPLICATE KEY UPDATE`) and `REPLACE INTO` — existing rows are updated/replaced as expected. However, `execute_query()` (PHP 8.2+), which internally calls `prepare()` + `execute($params)`, does NOT update/replace existing rows. This suggests the array-param `execute()` path differs from the `bind_param()` path for mutation processing. UPDATE and DELETE operations work correctly via both paths.
 

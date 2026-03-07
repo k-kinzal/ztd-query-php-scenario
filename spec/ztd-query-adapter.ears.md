@@ -71,7 +71,7 @@ When a prepared SELECT statement with bound parameters is executed, the system s
 
 Prepared statements support the following binding methods:
 - **PDO**: `bindValue()` for value binding, `bindParam()` for by-reference binding, and `execute($params)` with positional or named parameter arrays.
-- **MySQLi**: `bind_param()` with type string and by-reference variables, `execute()` for execution, `execute_query()` (PHP 8.2+) as a shortcut, and `bind_result()` + `fetch()` for bound-variable result retrieval.
+- **MySQLi**: `bind_param()` with type string and by-reference variables, `execute()` for execution, `execute_query()` (PHP 8.2+) as a shortcut for SELECT/INSERT/UPDATE/DELETE, and `bind_result()` + `fetch()` for bound-variable result retrieval. **Note:** `execute_query()` correctly handles UPDATE and DELETE with parameters, but has limitations with UPSERT and REPLACE (see 4.2a, 4.2b).
 
 Query rewriting occurs at **prepare time**, not execute time. If ZTD mode is toggled between `prepare()` and `execute()`, the prepared query retains its original rewritten form.
 
@@ -203,12 +203,14 @@ When an `INSERT ... ON DUPLICATE KEY UPDATE` (MySQL) or `INSERT ... ON CONFLICT 
 
 When `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL) is executed and a duplicate exists, the insert is silently ignored. **Note**: On SQLite, `ON CONFLICT DO NOTHING` inserts both rows because the shadow store does not enforce PK constraints (see 10.3). Use `INSERT OR IGNORE` instead on SQLite.
 
-**Limitation (PDO prepared statements):** On the PDO adapter, `INSERT ... ON CONFLICT DO UPDATE` via `prepare()` + `execute()` does NOT update existing rows in the shadow store — the old row is retained unchanged. The same operation works correctly via `exec()`. Users should use `exec()` for upsert operations, or execute SELECT + conditional INSERT/UPDATE in application code (see 10.3). **Note:** The MySQLi adapter handles prepared UPSERT (`ON DUPLICATE KEY UPDATE`) correctly — the existing row is updated as expected.
+**Limitation (PDO prepared statements):** On the PDO adapter, `INSERT ... ON CONFLICT DO UPDATE` via `prepare()` + `execute()` does NOT update existing rows in the shadow store — the old row is retained unchanged. The same operation works correctly via `exec()`. Users should use `exec()` for upsert operations, or execute SELECT + conditional INSERT/UPDATE in application code (see 10.3). Verified on all 3 PDO platforms (MySQL, PostgreSQL, SQLite). **Note:** The MySQLi adapter handles prepared UPSERT (`ON DUPLICATE KEY UPDATE`) correctly via `prepare()` + `bind_param()` + `execute()` — the existing row is updated as expected. However, MySQLi `execute_query()` (PHP 8.2+) has the same limitation as PDO prepared statements — upsert does NOT update existing rows.
 
 ### 4.2b REPLACE
 When a `REPLACE INTO` statement (MySQL) is executed with ZTD enabled, the system shall delete any existing row with matching primary key and insert the new row in the shadow store.
 
-**Limitation (PDO prepared statements):** On the PDO adapter, `REPLACE INTO` via `prepare()` + `execute()` does NOT replace existing rows in the shadow store — the old row is retained unchanged. The same operation works correctly via `exec()` (see 10.3). **Note:** The MySQLi adapter handles prepared `REPLACE INTO` correctly — the existing row is replaced as expected.
+**Limitation (PDO prepared statements):** On the PDO adapter, `REPLACE INTO` via `prepare()` + `execute()` does NOT replace existing rows in the shadow store — the old row is retained unchanged. The same operation works correctly via `exec()` (see 10.3). Verified on all PDO platforms supporting REPLACE (MySQL, SQLite). **Note:** The MySQLi adapter handles prepared `REPLACE INTO` correctly via `prepare()` + `bind_param()` + `execute()` — the existing row is replaced as expected. However, MySQLi `execute_query()` (PHP 8.2+) has the same limitation — replace does NOT replace existing rows.
+
+SQLite additionally supports `INSERT OR REPLACE INTO` syntax as a synonym for `REPLACE INTO`. The same exec/prepared statement behavior applies.
 
 ### 4.2c Multi-Table UPDATE
 When a multi-table UPDATE statement is executed with ZTD enabled, the system shall update the target table rows in the shadow store based on the JOIN condition, without modifying the physical database.
@@ -486,7 +488,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - DDL operations (CREATE TABLE on existing table throws; CREATE TABLE on non-existent table creates in shadow; DROP TABLE clears shadow data).
 - Write result sets (exec() returns affected count; fetchAll() after write returns empty array).
 - Constraint non-enforcement (PRIMARY KEY, NOT NULL, UNIQUE, FOREIGN KEY, DEFAULT not enforced in shadow store).
-- Prepared statement parameter binding (bindValue with PARAM_INT/PARAM_STR/PARAM_NULL types, bindParam by-reference with re-execute, execute with positional params array, execute with named params, re-execute with different params, execute_query with NULL).
+- Prepared statement parameter binding (bindValue with PARAM_INT/PARAM_STR/PARAM_NULL types, bindParam by-reference with re-execute, execute with positional params array, execute with named params, re-execute with different params, execute_query with NULL, execute_query with UPDATE/DELETE/UPSERT/REPLACE params).
 - Fetch methods (fetch, fetchAll with FETCH_ASSOC/FETCH_NUM/FETCH_BOTH/FETCH_OBJ, fetchColumn, fetchColumn with index, columnCount, rowCount after UPDATE, foreach iteration, setFetchMode, query() with fetch mode argument, fetch returns false when exhausted).
 - Schema reflection (adapter constructed after table reflects schema; adapter constructed before table fails UPDATE/DELETE with "requires primary keys").
 - Auto-detection of PDO driver (mysql, pgsql, sqlite all verified).
@@ -636,6 +638,10 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - **CREATE TABLE AS SELECT**: Fully supported on MySQL and PostgreSQL. SQLite has limitations (see 5.1c).
 - **Unknown Schema**: Behavior rules and unknown schema handling are verified on all platforms. See 10.3 for cross-platform inconsistencies.
 - **Insert-ignore syntax**: MySQL uses `INSERT IGNORE INTO`, SQLite uses `INSERT OR IGNORE INTO`, PostgreSQL uses `INSERT ... ON CONFLICT (col) DO NOTHING`. All three syntaxes correctly skip duplicate PK rows in the shadow store. On SQLite, the standard SQL `ON CONFLICT DO NOTHING` syntax (without the `OR IGNORE` shorthand) does NOT skip duplicates (see 10.3). Verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO).
+- **SQLite conflict resolution syntax**: SQLite's `INSERT OR REPLACE INTO` syntax works correctly as a synonym for `REPLACE INTO` via `exec()`. Multiple replacements on the same PK correctly retain only the last value. Prepared `INSERT OR REPLACE` has the same limitation as prepared `REPLACE INTO` (old row retained, see 4.2b). Verified on SQLite PDO.
+- **execute_query with UPDATE/DELETE**: MySQLi `execute_query()` (PHP 8.2+) correctly handles UPDATE and DELETE operations with parameters, including multi-row updates/deletes and affected row counts. Verified on MySQLi.
+- **execute_query UPSERT/REPLACE limitation**: MySQLi `execute_query()` with UPSERT (`ON DUPLICATE KEY UPDATE`) and REPLACE does NOT update/replace existing rows — the old row is retained. This contrasts with `prepare()` + `bind_param()` + `execute()` which works correctly. New row inserts via execute_query UPSERT/REPLACE work as expected. Verified on MySQLi.
+- **Prepared upsert limitation (cross-platform)**: PDO prepared `INSERT ... ON CONFLICT DO UPDATE` does NOT update existing rows on any platform (MySQL, PostgreSQL, SQLite). The `exec()` path works correctly on all platforms. Verified on all 3 PDO platforms.
 
 ### 10.3 Cross-Platform Inconsistencies
 The following behaviors differ across platforms and may indicate areas for improvement:
@@ -651,6 +657,8 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **INSERT ... SELECT * (MySQL only)**: On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` ("INSERT column count does not match SELECT column count") because the MySQL InsertTransformer counts `SELECT *` as 1 column instead of expanding it. The workaround is to use explicit column lists: `INSERT INTO t (a, b) SELECT a, b FROM s`. On SQLite and PostgreSQL, `INSERT ... SELECT *` works correctly.
 
 - **User-written CTEs (PostgreSQL)**: On MySQL and SQLite, user-written CTE queries (e.g., `WITH cte AS (SELECT * FROM t) SELECT * FROM cte`) work correctly — table references inside the user's CTE are rewritten to read from the shadow store. On PostgreSQL, table references inside user CTEs are NOT rewritten, so the inner CTE reads from the physical table (empty) instead of the shadow store, returning 0 rows.
+
+- **execute_query vs prepare+bind_param for UPSERT/REPLACE (MySQLi)**: MySQLi `prepare()` + `bind_param()` + `execute()` correctly handles UPSERT (`ON DUPLICATE KEY UPDATE`) and `REPLACE INTO` — existing rows are updated/replaced as expected. However, `execute_query()` (PHP 8.2+), which internally calls `prepare()` + `execute($params)`, does NOT update/replace existing rows. This suggests the array-param `execute()` path differs from the `bind_param()` path for mutation processing. UPDATE and DELETE operations work correctly via both paths.
 
 - **Multi-table UPDATE/DELETE syntax**: MySQL uses `UPDATE t1 JOIN t2 ON ... SET ...` and `DELETE t1 FROM t1 JOIN t2 ON ...`. PostgreSQL uses `UPDATE t1 SET ... FROM t2 WHERE ...` and `DELETE FROM t1 USING t2 WHERE ...`. Both syntaxes are supported by their respective platform adapters.
 

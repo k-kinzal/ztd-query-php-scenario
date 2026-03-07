@@ -127,13 +127,26 @@ Derived tables (subqueries in the FROM clause) are NOT fully supported by the CT
 Database views are NOT rewritten by the CTE rewriter. Querying a view through ZTD returns empty results because the view's underlying query reads from physical tables, not the shadow store. This applies to all platforms.
 
 ### 3.4 Fetch Methods
-When ZTD is enabled, the following fetch methods shall return correct results from the shadow store:
+
+#### PDO Adapter
+When ZTD is enabled, the following PDO fetch methods shall return correct results from the shadow store:
 - `fetchAll()` with `FETCH_ASSOC`, `FETCH_NUM`, `FETCH_BOTH` modes.
 - `fetch()` for row-by-row iteration (returns `false` when no more rows).
 - `fetchColumn()` for retrieving a single column value.
 - `fetchObject()` for retrieving rows as `stdClass` objects.
 - `columnCount()` shall return the correct number of columns in the result set.
 - `getIterator()` / `foreach` iteration over a `ZtdPdoStatement` shall yield rows correctly.
+
+#### MySQLi Adapter
+When ZTD is enabled, the following MySQLi result methods shall return correct results from the shadow store:
+- `fetch_assoc()` returns an associative array (or `null` when no more rows).
+- `fetch_row()` returns a numeric array.
+- `fetch_object()` returns an `stdClass` object.
+- `fetch_array(MYSQLI_BOTH|MYSQLI_ASSOC|MYSQLI_NUM)` returns an array in the requested mode.
+- `fetch_all(MYSQLI_ASSOC|MYSQLI_NUM)` returns all rows at once.
+- `num_rows` property returns the number of rows in the result set.
+- `data_seek($offset)` repositions the result cursor, allowing re-reading of previously fetched rows.
+- `bind_result()` + `fetch()` returns `true` for each row and `null` when exhausted.
 
 Re-executing a prepared statement (calling `execute()` multiple times with different parameters) shall work correctly with ZTD-enabled queries.
 

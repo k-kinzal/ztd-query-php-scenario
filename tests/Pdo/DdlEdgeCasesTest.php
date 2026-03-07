@@ -113,4 +113,12 @@ class DdlEdgeCasesTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(0, $rows);
     }
+
+    public function testTruncateOnSqliteThrows(): void
+    {
+        // SQLite does not have native TRUNCATE TABLE syntax.
+        // ZTD should throw since TRUNCATE is unsupported on SQLite.
+        $this->expectException(\Throwable::class);
+        $this->pdo->exec('TRUNCATE TABLE existing_table');
+    }
 }

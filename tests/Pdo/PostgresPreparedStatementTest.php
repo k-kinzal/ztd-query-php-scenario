@@ -129,6 +129,25 @@ class PostgresPreparedStatementTest extends TestCase
         $this->assertSame('Bob', $rows[1]['name']);
     }
 
+    public function testQueryRewrittenAtPrepareTime(): void
+    {
+        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
+
+        // Prepare with ZTD enabled - query is rewritten at prepare time
+        $stmt = $this->pdo->prepare('SELECT * FROM prep_test WHERE id = ?');
+
+        // Disable ZTD before execute - the prepared query still uses the CTE rewrite
+        $this->pdo->disableZtd();
+        $stmt->execute([1]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Shadow data is visible because the query was rewritten at prepare time
+        $this->assertCount(1, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+
+        $this->pdo->enableZtd();
+    }
+
     public static function tearDownAfterClass(): void
     {
         $raw = new PDO(

@@ -375,12 +375,12 @@ The shadow store does NOT enforce database constraints. The following constraint
 
 This is by design - the shadow store is an in-memory simulation layer, not a full database engine. Constraint enforcement is deferred to the physical database when changes are eventually applied.
 
-## 8.5 Error Recovery
+### 8.2 Error Recovery
 
-### 8.5a Transformer Errors
+#### 8.2a Transformer Errors
 When malformed SQL is executed with ZTD enabled, the ztd-query transformer may throw `RuntimeException` before the query reaches the database engine. This differs from standard PDO/mysqli error propagation where `PDOException` or `mysqli_sql_exception` would be thrown.
 
-### 8.5b Shadow Store Consistency After Errors
+#### 8.2b Shadow Store Consistency After Errors
 When a SQL error occurs (either from the transformer or the database engine), the shadow store shall remain consistent. Previously inserted/updated/deleted shadow data is not rolled back or corrupted by a subsequent error.
 
 Subsequent valid operations after an error shall execute correctly against the intact shadow store.
@@ -405,7 +405,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Session isolation (shadow data is not shared between instances or persisted across lifecycle).
 - DDL operations (CREATE TABLE on existing table throws; CREATE TABLE on non-existent table creates in shadow; DROP TABLE clears shadow data).
 - Write result sets (exec() returns affected count; fetchAll() after write returns empty array).
-- Constraint non-enforcement (PRIMARY KEY, NOT NULL, UNIQUE, FOREIGN KEY not enforced in shadow store).
+- Constraint non-enforcement (PRIMARY KEY, NOT NULL, UNIQUE, FOREIGN KEY, DEFAULT not enforced in shadow store).
 - Prepared statement parameter binding (bindValue with PARAM_INT/PARAM_STR/PARAM_NULL types, bindParam by-reference with re-execute, execute with positional params array, execute with named params, re-execute with different params, execute_query with NULL).
 - Fetch methods (fetch, fetchAll with FETCH_ASSOC/FETCH_NUM/FETCH_BOTH/FETCH_OBJ, fetchColumn, fetchColumn with index, columnCount, rowCount after UPDATE, foreach iteration, setFetchMode, query() with fetch mode argument, fetch returns false when exhausted).
 - Schema reflection (adapter constructed after table reflects schema; adapter constructed before table fails UPDATE/DELETE with "requires primary keys").
@@ -433,11 +433,11 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - ZTD lifecycle: shadow data persists across enable/disable toggle cycles; physical data inserted while ZTD is off is not visible when ZTD is re-enabled.
 - Transaction isolation: shadow data persists after rollback (shadow store is independent of physical transaction state).
 - Query edge cases: COUNT(*) vs COUNT(col) with NULLs, SUM ignoring NULLs, ORDER BY with NULLs, LIMIT 0, LIMIT with OFFSET, self-referencing UPDATE (score = score + 10), string concatenation in UPDATE, DISTINCT with NULLs, GROUP BY HAVING, MIN/MAX on strings, multiple sequential UPDATEs to same row, insert-delete-insert same ID cycle.
-- Stress testing: 50 sequential INSERTs, bulk UPDATE, bulk DELETE with correct counts; verified on all platforms.
+- Stress testing: 50 sequential INSERTs, bulk UPDATE, bulk DELETE with correct counts; 200-row prepared INSERT with aggregation, 200-row bulk INSERT with GROUP BY category counts, interleaved INSERT/UPDATE/DELETE with intermediate reads at scale; verified on all platforms.
 - Utility methods: getAvailableDrivers(), lastInsertId(), errorCode(), errorInfo(), setAttribute()/getAttribute(), quote(); verified on all PDO platforms.
 - Realistic multi-step workflows: e-commerce order processing (create customer/products, add order items, calculate totals, update stock, complete order), user registration with tier upgrade, inventory reporting with LEFT JOINs and aggregations, order cancellation with stock restoration and item cleanup; verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO) with ZTD isolation confirmed (no data leaks to physical DB).
 - Advanced subquery patterns: nested subqueries (3 levels deep), scalar subqueries in SELECT, CASE in WHERE clause, EXISTS/NOT EXISTS correlated subqueries, UNION vs UNION ALL, 3-table JOINs; verified on all PDO platforms.
-- Prepared statements with complex queries: prepared JOINs with params, prepared aggregation with GROUP BY re-execute, prepared subqueries with params, prepared UPDATE/DELETE with params, prepared INSERT then query, named params in JOIN; verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO).
+- Prepared statements with complex queries: prepared JOINs with params, prepared IN/NOT IN clauses with params, prepared CASE WHEN expressions with params, prepared aggregation with GROUP BY re-execute, prepared subqueries with params, prepared UPDATE/DELETE with params, prepared INSERT then query, named params in JOIN; verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO).
 - Composite primary keys: tables with 2-column and 3-column composite PKs correctly support INSERT, UPDATE, DELETE, prepared statements, aggregations, self-JOINs, and partial PK match (WHERE on subset of PK columns); verified on all 4 adapters.
 - Derived tables (subqueries in FROM): CTE rewriter does not fully rewrite table references inside derived subqueries; returns empty on MySQL/PostgreSQL. SQLite partially supports derived tables in JOIN context (see 3.3a, 10.3).
 - Views: not rewritten by CTE rewriter; querying views through ZTD returns empty results on all platforms.

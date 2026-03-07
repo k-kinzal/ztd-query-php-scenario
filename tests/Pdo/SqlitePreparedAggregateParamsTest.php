@@ -1,0 +1,90 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Pdo;
+
+use PDO;
+use PHPUnit\Framework\TestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
+
+/**
+ * Tests prepared statements with parameters in HAVING, GROUP BY, and ORDER BY.
+ *
+ * KNOWN ISSUE (SQLite only): HAVING clause with prepared statement parameters
+ * returns empty results. See https://github.com/k-kinzal/ztd-query-php/issues/22
+ */
+class SqlitePreparedAggregateParamsTest extends TestCase
+{
+    private ZtdPdo $pdo;
+
+    protected function setUp(): void
+    {
+        $raw = new PDO('sqlite::memory:', null, null, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
+        $raw->exec('CREATE TABLE pap_orders (id INTEGER PRIMARY KEY, customer TEXT, product TEXT, amount REAL, status TEXT)');
+
+        $this->pdo = ZtdPdo::fromPdo($raw);
+
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (1, 'Alice', 'Widget', 50.0, 'completed')");
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (2, 'Alice', 'Gadget', 30.0, 'completed')");
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (3, 'Bob', 'Widget', 120.0, 'completed')");
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (4, 'Bob', 'Doohickey', 15.0, 'pending')");
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (5, 'Charlie', 'Gadget', 30.0, 'completed')");
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (6, 'Charlie', 'Widget', 50.0, 'pending')");
+    }
+
+    public function testGroupByWithWhereParam(): void
+    {
+        $stmt = $this->pdo->prepare('SELECT customer, SUM(amount) AS total FROM pap_orders WHERE status = ? GROUP BY customer ORDER BY total DESC');
+        $stmt->execute(['completed']);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(3, $rows);
+        $this->assertSame('Bob', $rows[0]['customer']);
+        $this->assertEqualsWithDelta(120.0, (float) $rows[0]['total'], 0.01);
+    }
+
+    public function testOrderByWithLimitParam(): void
+    {
+        $stmt = $this->pdo->prepare('SELECT customer, amount FROM pap_orders ORDER BY amount DESC LIMIT ?');
+        $stmt->execute([3]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(3, $rows);
+        $this->assertSame('Bob', $rows[0]['customer']);
+        $this->assertEqualsWithDelta(120.0, (float) $rows[0]['amount'], 0.01);
+    }
+
+    /**
+     * HAVING with prepared params returns empty on SQLite — issue #22.
+     */
+    public function testHavingWithParamReturnsEmpty(): void
+    {
+        $stmt = $this->pdo->prepare('SELECT customer, COUNT(*) AS order_count FROM pap_orders GROUP BY customer HAVING COUNT(*) >= ?');
+        $stmt->execute([2]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Bug: should return 3 customers but returns empty
+        $this->assertCount(0, $rows);
+    }
+
+    /**
+     * HAVING with literal values works correctly.
+     */
+    public function testHavingWithLiteralWorks(): void
+    {
+        $stmt = $this->pdo->query('SELECT customer, COUNT(*) AS order_count FROM pap_orders GROUP BY customer HAVING COUNT(*) >= 2');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $customers = array_column($rows, 'customer');
+        sort($customers);
+        $this->assertSame(['Alice', 'Bob', 'Charlie'], $customers);
+    }
+
+    public function testNamedParamsInWherePlusGroupBy(): void
+    {
+        $stmt = $this->pdo->prepare('SELECT customer, COUNT(*) AS cnt FROM pap_orders WHERE status = :status GROUP BY customer ORDER BY customer');
+        $stmt->execute([':status' => 'completed']);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(3, $rows);
+        $this->assertSame('Alice', $rows[0]['customer']);
+    }
+}

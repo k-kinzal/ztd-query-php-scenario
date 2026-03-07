@@ -450,6 +450,11 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - != operator: works identically to <> on all platforms.
 - HAVING without GROUP BY: aggregate conditions without GROUP BY (e.g., `HAVING COUNT(*) > N`) work correctly on all platforms.
 - SQLite-specific functions: typeof(), INSTR(), IIF(), printf(), HEX(), NULLIF(), CAST() all work correctly with shadow data.
+- Parameterized LIMIT/OFFSET: prepared statements with `LIMIT ? OFFSET ?` work on all platforms. On MySQL, params must use `PARAM_INT` (string-typed params cause syntax error "near '2' OFFSET '0'"). SQLite and PostgreSQL accept both string and integer-typed params.
+- Expression-based GROUP BY: `GROUP BY CASE WHEN ... THEN ... END`, `GROUP BY LENGTH(col)`, `GROUP BY SUBSTR(col, ...)` all work correctly from shadow store data; verified on all 4 adapters.
+- INSERT...SELECT with WHERE filtering: `INSERT INTO t SELECT ... FROM s WHERE condition` correctly filters shadow data before inserting; `INSERT INTO t SELECT ... FROM s WHERE col > (SELECT AVG(col) FROM s)` works on all platforms.
+- Correlated HAVING: `GROUP BY col HAVING COUNT(*) >= (SELECT min_count FROM t WHERE t.cat = p.cat)` works on SQLite.
+- Pagination after mutations: parameterized LIMIT/OFFSET correctly reflects INSERT/DELETE mutations in shadow store.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

@@ -93,6 +93,7 @@ When ZTD is enabled, the following fetch methods shall return correct results fr
 - `fetchColumn()` for retrieving a single column value.
 - `fetchObject()` for retrieving rows as `stdClass` objects.
 - `columnCount()` shall return the correct number of columns in the result set.
+- `getIterator()` / `foreach` iteration over a `ZtdPdoStatement` shall yield rows correctly.
 
 Re-executing a prepared statement (calling `execute()` multiple times with different parameters) shall work correctly with ZTD-enabled queries.
 
@@ -269,6 +270,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Complex queries: JOINs (INNER, LEFT), self-JOINs, aggregations (COUNT, SUM, MIN, MAX), GROUP BY/HAVING, subqueries, correlated subqueries, UNION, ORDER BY/LIMIT/OFFSET, DISTINCT.
 - UPDATE/DELETE with subqueries referencing other shadow tables.
 - Unsupported SQL handling (Exception, Ignore, Notice modes; behavior rules with prefix and regex patterns; transaction statement passthrough).
+- Transaction control (beginTransaction/commit, beginTransaction/rollback, quote).
+- DDL shadow-created table operations (INSERT/UPDATE/DELETE on shadow-created tables).
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

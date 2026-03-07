@@ -203,16 +203,16 @@ When an `INSERT ... ON DUPLICATE KEY UPDATE` (MySQL) or `INSERT ... ON CONFLICT 
 
 When `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL) is executed and a duplicate exists, the insert is silently ignored. **Note**: On SQLite, `ON CONFLICT DO NOTHING` inserts both rows because the shadow store does not enforce PK constraints (see 10.3). Use `INSERT OR IGNORE` instead on SQLite.
 
-### 4.2e INSERT IGNORE (MySQL)
-When an `INSERT IGNORE INTO` statement is executed with ZTD enabled, the system shall silently skip rows that would cause a duplicate primary key violation in the shadow store. Non-duplicate rows are inserted normally.
+### 4.2e INSERT IGNORE / Ignore-Duplicate Syntax
+When an `INSERT IGNORE INTO` (MySQL), `INSERT OR IGNORE INTO` (SQLite), or `INSERT ... ON CONFLICT (col) DO NOTHING` (PostgreSQL) statement is executed with ZTD enabled, the system shall silently skip rows that would cause a duplicate primary key violation in the shadow store. Non-duplicate rows are inserted normally.
 
-Batch `INSERT IGNORE` with mixed duplicate and non-duplicate rows correctly inserts only non-duplicate rows while skipping duplicates.
+Batch INSERT IGNORE with mixed duplicate and non-duplicate rows correctly inserts only non-duplicate rows while skipping duplicates.
 
-Prepared `INSERT IGNORE` via `prepare()` + `execute()` also correctly skips duplicates.
+Prepared ignore-duplicate INSERT via `prepare()` + `execute()` also correctly skips duplicates on all platforms.
 
-`INSERT IGNORE` does not affect subsequent INSERT operations — a normal INSERT after INSERT IGNORE works as expected.
+Ignore-duplicate INSERT does not affect subsequent INSERT operations — a normal INSERT after an ignore-duplicate INSERT works as expected.
 
-**Note**: SQLite uses `INSERT OR IGNORE` (different syntax) which is also handled correctly (see 10.1).
+**Note**: Each platform uses different syntax: MySQL uses `INSERT IGNORE INTO`, SQLite uses `INSERT OR IGNORE INTO`, and PostgreSQL uses `INSERT ... ON CONFLICT (col) DO NOTHING`. On SQLite, the standard SQL `INSERT ... ON CONFLICT DO NOTHING` does NOT correctly skip duplicates (see 10.3); use `INSERT OR IGNORE` instead.
 
 **Limitation (PDO prepared statements):** On the PDO adapter, `INSERT ... ON CONFLICT DO UPDATE` via `prepare()` + `execute()` does NOT update existing rows in the shadow store — the old row is retained unchanged. The same operation works correctly via `exec()`. Users should use `exec()` for upsert operations, or execute SELECT + conditional INSERT/UPDATE in application code (see 10.3). **Note:** The MySQLi adapter handles prepared UPSERT (`ON DUPLICATE KEY UPDATE`) correctly — the existing row is updated as expected.
 
@@ -611,8 +611,9 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - prepare() with empty options array: `prepare($sql, [])` works identically to `prepare($sql)`. Verified on all 3 PDO platforms.
 - closeCursor() then re-execute: calling `closeCursor()` mid-fetch then `execute()` with new params works correctly. Verified on all 3 PDO platforms.
 - REST API workflow patterns: paginated listing, single-record fetch, create/update/delete, multi-table JOIN filtering, LIKE search, BETWEEN price range, conditional aggregation, soft-delete patterns all work correctly with ZTD shadow store. Verified on all 3 PDO platforms.
-- ZTD toggle error resilience: errors during ZTD-enabled or ZTD-disabled operations do not corrupt the shadow store. Shadow data persists through toggle cycles even after errors. Prepared statements created with ZTD enabled survive toggle cycles (retain their CTE-rewritten form). Shadow-only tables (created via ZTD CREATE TABLE) are not accessible when ZTD is disabled (throw PDOException "no such table" on SQLite). On MySQL/PostgreSQL (where physical tables exist), shadow INSERT/UPDATE/DELETE changes are not visible when ZTD is disabled — physical DB retains original data. Multiple toggle cycles accumulate shadow data correctly. Verified on all 3 PDO platforms.
-- INSERT IGNORE (MySQL): `INSERT IGNORE INTO` silently skips duplicate PK rows in shadow store. Non-duplicate rows inserted normally. Batch INSERT IGNORE with mixed duplicates correctly skips only duplicate rows. Prepared INSERT IGNORE works correctly. Verified on MySQL PDO.
+- ZTD toggle error resilience: errors during ZTD-enabled or ZTD-disabled operations do not corrupt the shadow store. Shadow data persists through toggle cycles even after errors. Prepared statements created with ZTD enabled survive toggle cycles (retain their CTE-rewritten form). Shadow-only tables (created via ZTD CREATE TABLE) are not accessible when ZTD is disabled (throw PDOException "no such table" on SQLite). On MySQL/PostgreSQL (where physical tables exist), shadow INSERT/UPDATE/DELETE changes are not visible when ZTD is disabled — physical DB retains original data. Multiple toggle cycles accumulate shadow data correctly. Verified on all 3 PDO platforms and MySQLi.
+- INSERT IGNORE (MySQL): `INSERT IGNORE INTO` silently skips duplicate PK rows in shadow store. Non-duplicate rows inserted normally. Batch INSERT IGNORE with mixed duplicates correctly skips only duplicate rows. Prepared INSERT IGNORE works correctly. Verified on MySQL PDO and MySQLi.
+- INSERT ignore equivalents (cross-platform): PostgreSQL `INSERT ... ON CONFLICT (col) DO NOTHING` and SQLite `INSERT OR IGNORE INTO` both correctly skip duplicate PK rows in the shadow store. Prepared variants work correctly. Non-duplicate rows are inserted normally. Subsequent normal INSERT operations are unaffected. Physical isolation confirmed (shadow data does not leak to physical DB). Verified on PostgreSQL PDO and SQLite PDO.
 - PostgreSQL DISTINCT ON: `SELECT DISTINCT ON (col) ... ORDER BY col, ...` works correctly with shadow data, returning the first row per group. Verified on PostgreSQL PDO.
 - PostgreSQL LATERAL JOIN: `FROM t, LATERAL (SELECT ... FROM t2 WHERE t2.fk = t.pk ...)` tested — may return empty results (similar to derived table limitation) but does not error. Verified on PostgreSQL PDO.
 - PostgreSQL STRING_AGG with ORDER BY: `STRING_AGG(col, ', ' ORDER BY col)` correctly aggregates shadow data with ordering. Verified on PostgreSQL PDO.

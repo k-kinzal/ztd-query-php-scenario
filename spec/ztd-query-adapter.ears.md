@@ -400,7 +400,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 ### 10.3 Cross-Platform Inconsistencies
 The following behaviors differ across platforms and may indicate areas for improvement:
 
-- **Unknown schema UPDATE (Passthrough mode)**: On MySQL (both adapters), UPDATE on unreflected tables passes through to the physical database as documented. On PostgreSQL and SQLite (PDO adapter), the same operation throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of passing through. This means the `unknownSchemaBehavior: Passthrough` setting does not take effect for UPDATE operations on PostgreSQL and SQLite.
+- **Unknown schema UPDATE (Passthrough mode)**: On MySQL (MySQLi adapter and PDO adapter via `new ZtdPdo()` constructor), UPDATE on unreflected tables passes through to the physical database as documented. On MySQL via `ZtdPdo::fromPdo()`, PostgreSQL, and SQLite, the same operation throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of passing through. This means the `unknownSchemaBehavior: Passthrough` setting does not take effect for UPDATE operations when using `fromPdo()` or on PostgreSQL/SQLite.
 
 - **Unknown schema UPDATE (Exception mode)**: On MySQL, UPDATE on unreflected tables throws `ZtdPdoException` ("Unknown table"). On PostgreSQL and SQLite, it throws `RuntimeException` ("UPDATE simulation requires primary keys") — the exception type and message differ from MySQL.
 

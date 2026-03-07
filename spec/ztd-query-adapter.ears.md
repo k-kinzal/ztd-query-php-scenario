@@ -83,14 +83,19 @@ When ZTD is enabled, the CTE rewriting shall correctly handle:
 - **Subqueries** in WHERE clauses (e.g., `WHERE id IN (SELECT ...)`).
 - **Correlated subqueries** in SELECT list (e.g., `(SELECT COUNT(*) FROM t WHERE t.fk = u.id)`).
 - **UNION** queries combining results from shadow tables.
+- **EXCEPT** / **INTERSECT** set operations (SQLite and PostgreSQL only; see 3.3d).
 - **ORDER BY** with LIMIT and OFFSET.
 - **DISTINCT** selection.
 - **CASE** expressions (in SELECT and UPDATE SET clauses).
 - **LIKE** with wildcard patterns.
-- **IN** with literal value lists.
+- **IN** / **NOT IN** with literal value lists and subqueries.
 - **BETWEEN** range conditions.
 - **EXISTS** / **NOT EXISTS** correlated subqueries.
 - **COALESCE** and other SQL functions.
+- **String functions** (UPPER, LOWER, LENGTH, SUBSTR/SUBSTRING, REPLACE, TRIM, GROUP_CONCAT/STRING_AGG, CONCAT).
+- **Math functions** (ABS, ROUND, CEIL, FLOOR).
+- **JOIN ... USING** syntax (alternative to ON).
+- **Multiple user CTEs** (`WITH cte1 AS (...), cte2 AS (...) SELECT ...`).
 - **Window functions** (ROW_NUMBER, SUM OVER PARTITION BY, AVG/SUM with ROWS/RANGE BETWEEN frames, LAG, LEAD, RANK, DENSE_RANK).
 
 UPDATE and DELETE statements with subqueries referencing other shadow tables shall also be correctly rewritten.
@@ -104,6 +109,11 @@ User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CT
 - **MySQL**: The CTE rewriter prepends its own `WITH` clause before the `RECURSIVE` keyword, producing invalid SQL (syntax error). This applies to both MySQLi and PDO adapters.
 - **SQLite**: The query executes but returns empty results — table references inside the recursive CTE are not rewritten, so the query reads from the physical table (empty).
 - **PostgreSQL**: Same behavior as non-recursive user CTEs — returns empty results because table references inside CTEs are not rewritten (see 10.3).
+
+### 3.3d Set Operations (EXCEPT / INTERSECT)
+`EXCEPT` and `INTERSECT` set operations work correctly on **SQLite** and **PostgreSQL** — table references in both sides are rewritten to read from the shadow store.
+
+On **MySQL** (both MySQLi and PDO adapters), `EXCEPT` and `INTERSECT` throw `UnsupportedSqlException` ("Multi-statement SQL statement"). The MySQL CTE rewriter incorrectly parses these as multi-statement SQL. UNION works correctly on all platforms.
 
 ### 3.3a Derived Tables (Subqueries in FROM)
 Derived tables (subqueries in the FROM clause) are NOT fully supported by the CTE rewriter. Table references inside derived subqueries are generally not rewritten:
@@ -421,6 +431,14 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - MySQLi statement methods: `ztdAffectedRows()` returns correct affected row counts for INSERT/UPDATE/DELETE, `get_result()` + `fetch_all()` for SELECT, `bind_result()` + `fetch()` for bound variable retrieval, `reset()` clears ZTD result and allows re-execute, `free_result()` allows re-execute; verified on MySQLi.
 - Window function FRAME clauses: ROWS BETWEEN (1 PRECEDING AND 1 FOLLOWING), ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW produce correct rolling averages, cumulative sums, and partitioned results from shadow store data; LAG/LEAD return correct previous/next values with NULLs at boundaries; RANK/DENSE_RANK produce correct rankings; window functions correctly reflect shadow mutations (UPDATE/DELETE); verified on all 4 adapters.
 - INSERT ON CONFLICT behavior: `INSERT ... ON CONFLICT(col) DO UPDATE SET ...` works correctly on SQLite and PostgreSQL; `INSERT ... ON CONFLICT(col) DO NOTHING` works on PostgreSQL but inserts both rows on SQLite (shadow store does not enforce PK constraints, see 10.3); `INSERT OR IGNORE` (SQLite-specific shorthand) correctly ignores duplicates.
+- Set operations: UNION works on all platforms. EXCEPT and INTERSECT work on SQLite and PostgreSQL (see 3.3d, 10.3 for MySQL limitation).
+- String functions: UPPER, LOWER, LENGTH, SUBSTR/SUBSTRING, REPLACE, TRIM work on all platforms. GROUP_CONCAT (MySQL/SQLite), STRING_AGG (PostgreSQL), CONCAT (MySQL), `||` concatenation (PostgreSQL/SQLite) all work correctly with shadow data.
+- Math functions: ABS, ROUND, CEIL/CEILING, FLOOR work on all platforms with shadow data.
+- JOIN USING syntax: `JOIN ... USING (column)` works correctly alongside ZTD CTE rewriting on all 4 adapters.
+- Multiple user CTEs: `WITH cte1 AS (...), cte2 AS (...) SELECT ...` works on MySQL and SQLite.
+- NOT IN: `WHERE col NOT IN (literal_list)` and `WHERE col NOT IN (SELECT ...)` work on all platforms.
+- Aggregates on empty sets: COUNT returns 0, SUM/AVG/MIN/MAX return NULL on empty shadow result sets; verified on all 4 adapters.
+- Zero-match UPDATE/DELETE: operations matching no shadow rows return 0 affected rows without error; verified on all PDO platforms.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
@@ -470,6 +488,8 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **Recursive CTEs with shadow tables**: On MySQL, `WITH RECURSIVE` referencing a shadow table causes a syntax error because the CTE rewriter prepends `WITH ztd_shadow AS (...)` before the `RECURSIVE` keyword, producing `WITH ztd_shadow AS (...), RECURSIVE cat_tree AS (...)` — invalid SQL. On SQLite, the query executes but returns empty results (table references not rewritten). On PostgreSQL, same as SQLite (returns empty). Non-recursive `WITH` works on MySQL and SQLite but not PostgreSQL (documented separately). Users needing hierarchical queries with ZTD should use application-level recursion or disable ZTD for those queries.
 
 - **Derived tables in JOIN (SQLite vs MySQL/PostgreSQL)**: On SQLite, derived tables JOINed with regular tables work correctly — the CTE rewriter rewrites table references inside the derived subquery, and shadow mutations are visible. On MySQL and PostgreSQL, derived tables always return empty results regardless of JOIN context, because the CTE rewriter does not rewrite table references inside derived subqueries. Users relying on derived tables with ZTD should use direct JOINs or CTEs instead.
+
+- **EXCEPT / INTERSECT (MySQL)**: On MySQL (both MySQLi and PDO adapters), `EXCEPT` and `INTERSECT` throw `UnsupportedSqlException` ("Multi-statement SQL statement") because the MySQL CTE rewriter misparses the semicolon-free set operation as a multi-statement query. On SQLite and PostgreSQL, both operators work correctly with shadow data. Users needing EXCEPT/INTERSECT on MySQL should use NOT IN / IN subqueries instead, or disable ZTD for those queries.
 
 - **NULL sort order in ORDER BY**: MySQL and SQLite sort NULLs first in ASC order. PostgreSQL sorts NULLs last in ASC order. This is standard SQL behavior (not a ZTD issue), but tests should account for the difference.
 

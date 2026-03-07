@@ -69,7 +69,7 @@ When a prepared SELECT statement with bound parameters is executed, the system s
 
 Prepared statements support the following binding methods:
 - **PDO**: `bindValue()` for value binding, `bindParam()` for by-reference binding, and `execute($params)` with positional or named parameter arrays.
-- **MySQLi**: `bind_param()` with type string and by-reference variables, `execute()` for execution, and `execute_query()` (PHP 8.2+) as a shortcut.
+- **MySQLi**: `bind_param()` with type string and by-reference variables, `execute()` for execution, `execute_query()` (PHP 8.2+) as a shortcut, and `bind_result()` + `fetch()` for bound-variable result retrieval.
 
 Query rewriting occurs at **prepare time**, not execute time. If ZTD mode is toggled between `prepare()` and `execute()`, the prepared query retains its original rewritten form.
 
@@ -85,6 +85,8 @@ When ZTD is enabled, the CTE rewriting shall correctly handle:
 - **DISTINCT** selection.
 
 UPDATE and DELETE statements with subqueries referencing other shadow tables shall also be correctly rewritten.
+
+User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CTE shadowing.
 
 ### 3.4 Fetch Methods
 When ZTD is enabled, the following fetch methods shall return correct results from the shadow store:
@@ -103,6 +105,11 @@ Re-executing a prepared statement (calling `execute()` multiple times with diffe
 When an INSERT is executed with ZTD enabled, the system shall track the inserted rows in the shadow store without modifying the physical table.
 
 Subsequent SELECT queries shall include the inserted rows.
+
+### 4.1a INSERT ... SELECT
+When an `INSERT ... SELECT` is executed with ZTD enabled, the system shall insert rows from the SELECT result (which reads from the shadow store) into the target table's shadow store.
+
+On MySQL, `INSERT ... SELECT` requires explicit column lists on both sides (e.g., `INSERT INTO t (a, b) SELECT a, b FROM s`). Using `SELECT *` throws `RuntimeException` ("INSERT column count does not match SELECT column count") because the MySQL InsertTransformer counts `*` as 1 column instead of expanding it. On SQLite, `INSERT ... SELECT *` works correctly (see 10.3).
 
 ### 4.2 UPDATE
 When an UPDATE is executed with ZTD enabled, the system shall track the updated rows in the shadow store without modifying the physical table.
@@ -316,11 +323,14 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Statement methods (closeCursor, setFetchMode, bindColumn, columnCount, getIterator/foreach).
 - UPSERT operations (INSERT ... ON DUPLICATE KEY UPDATE on MySQL; INSERT ... ON CONFLICT on PostgreSQL).
 - Multi-table UPDATE/DELETE operations (UPDATE ... JOIN, DELETE ... JOIN) on MySQL (both adapters).
+- User-written CTE (WITH) queries work alongside ZTD CTE shadowing.
+- INSERT ... SELECT with explicit column lists.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
 - **FOREIGN KEY constraints**: The foreign key constraint scenario uses a parent-child table relationship on MySQL and PostgreSQL. SQLite does not include the foreign key test because SQLite requires `PRAGMA foreign_keys = ON` to enforce them, which is outside ZTD scope.
 - **Unsupported SQL**: Platform-specific unsupported SQL examples: MySQL uses `SET @var = 1`, PostgreSQL uses `SET search_path TO public`, SQLite uses `PRAGMA journal_mode=WAL`. All three platforms support behavior rules with prefix and regex patterns.
+- **ALTER TABLE**: Only supported on MySQL (via `AlterTableMutation`). Supports ADD/DROP/MODIFY/CHANGE/RENAME COLUMN, RENAME TABLE, ADD/DROP PRIMARY KEY. Not available on PostgreSQL or SQLite.
 - **Unknown Schema**: Behavior rules and unknown schema handling are verified on all platforms. See 10.3 for cross-platform inconsistencies.
 
 ### 10.3 Cross-Platform Inconsistencies
@@ -333,3 +343,5 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **Unknown schema DELETE**: On MySQL and SQLite, DELETE on unreflected tables in Passthrough mode passes through to the physical database. On PostgreSQL, DELETE in Exception mode throws `RuntimeException` ("Unknown table") rather than `ZtdPdoException`. On SQLite, DELETE in Exception mode also throws `RuntimeException` ("Unknown table") rather than `ZtdPdoException`.
 
 - **INSERT ... ON CONFLICT DO NOTHING (SQLite)**: On PostgreSQL, `ON CONFLICT DO NOTHING` correctly ignores duplicate inserts in the shadow store. On SQLite, the same syntax inserts both rows into the shadow store (the DO NOTHING clause is not processed, and the shadow store does not enforce PK constraints). `ON CONFLICT DO UPDATE` works correctly on both platforms.
+
+- **INSERT ... SELECT * (MySQL)**: On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` ("INSERT column count does not match SELECT column count") because the MySQL InsertTransformer counts `SELECT *` as 1 column instead of expanding it. The workaround is to use explicit column lists: `INSERT INTO t (a, b) SELECT a, b FROM s`. On SQLite, `INSERT ... SELECT *` works correctly.

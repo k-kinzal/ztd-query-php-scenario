@@ -137,6 +137,7 @@ When ZTD is enabled, the following PDO fetch methods shall return correct result
 - `fetch(PDO::FETCH_BOUND)` with `bindColumn()` populates bound variables from shadow store data.
 - `fetchColumn()` for retrieving a single column value (supports column index argument).
 - `fetchObject()` for retrieving rows as `stdClass` objects.
+- `fetch(PDO::FETCH_LAZY)` for lazy row objects with property access to column values.
 - `setFetchMode(PDO::FETCH_CLASS, ClassName)` and `setFetchMode(PDO::FETCH_INTO, $obj)` — see section 4.10.
 - `columnCount()` shall return the correct number of columns in the result set.
 - `getColumnMeta($index)` returns column metadata (name, table, etc.) from the shadow store result set.
@@ -584,6 +585,15 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - PDO error mode interactions: `ERRMODE_EXCEPTION` throws on invalid SQL, `ERRMODE_SILENT` returns false, `ERRMODE_WARNING` emits warning and returns false. Normal shadow operations work in all modes. Switching error modes mid-session takes effect immediately. Shadow store remains intact after errors in any mode. Verified on all 3 PDO platforms.
 - CASE WHEN in ORDER BY: `ORDER BY CASE role WHEN 'admin' THEN 1 WHEN 'moderator' THEN 2 ELSE 3 END, name` correctly sorts shadow data by custom priority. Works with both `query()` and `prepare()`+`execute()`. Verified on all 3 PDO platforms.
 - Interleaved prepared statements: multiple prepared statements on the same connection can be executed in interleaved fashion (prepare A, prepare B, execute A, execute B, re-execute A with different params). Each statement maintains its own CTE snapshot and result set independently. Verified on all 3 PDO platforms.
+- FETCH_LAZY: `fetch(PDO::FETCH_LAZY)` returns a lazy row object with property access to column values. Works correctly with shadow data including after mutations. Verified on all 3 PDO platforms.
+- exec() with SELECT: `exec()` on a SELECT query goes through ZTD rewriter and returns `rowCount()` (typically 0 on SQLite, may return actual row count on MySQL/PostgreSQL). Not an error. Verified on all 3 PDO platforms.
+- Very long string values: string values of 10,000+ characters stored and retrieved correctly through shadow store via prepared statements. Verified on all 3 PDO platforms.
+- Wide tables (20+ columns): tables with 20 columns correctly store and retrieve all column values through CTE rewriting. Verified on all 3 PDO platforms.
+- Empty string vs NULL: empty string (`''`) and NULL are correctly distinguished in shadow store — `IS NULL` does not match empty strings, `= ''` does not match NULL. Verified on all 3 PDO platforms.
+- PARAM_BOOL binding: `bindValue()` with `PDO::PARAM_BOOL` works for boolean-to-integer column comparisons on SQLite and MySQL. On PostgreSQL, PARAM_BOOL sends 't'/'f' strings which fail for INT columns — use PARAM_INT instead. Verified on all 3 PDO platforms.
+- prepare() with empty options array: `prepare($sql, [])` works identically to `prepare($sql)`. Verified on all 3 PDO platforms.
+- closeCursor() then re-execute: calling `closeCursor()` mid-fetch then `execute()` with new params works correctly. Verified on all 3 PDO platforms.
+- REST API workflow patterns: paginated listing, single-record fetch, create/update/delete, multi-table JOIN filtering, LIKE search, BETWEEN price range, conditional aggregation, soft-delete patterns all work correctly with ZTD shadow store. Verified on all 3 PDO platforms.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

@@ -227,10 +227,10 @@ When a `CREATE TABLE ... LIKE` statement is executed with ZTD enabled, the syste
 ### 5.1b CREATE TABLE ... AS SELECT
 When a `CREATE TABLE ... AS SELECT` statement is executed with ZTD enabled, the system shall create a shadow table with the columns from the SELECT result and populate it with the selected data.
 
-### 5.1c ALTER TABLE (MySQL only)
+### 5.1c ALTER TABLE
 When an `ALTER TABLE` statement is executed with ZTD enabled, the system shall modify the table definition in the shadow store's schema registry without modifying the physical table.
 
-Supported ALTER TABLE operations:
+**MySQL** — Fully supported. ALTER TABLE operations:
 - **ADD COLUMN**: Adds a new column to the shadow schema. Subsequent inserts/selects may use the new column.
 - **DROP COLUMN**: Removes a column from the shadow schema and from any existing shadow data rows.
 - **MODIFY COLUMN**: Changes the column type definition in the shadow schema.
@@ -239,10 +239,30 @@ Supported ALTER TABLE operations:
 - **RENAME TO**: Renames the table in the shadow store and schema registry.
 - **ADD PRIMARY KEY / DROP PRIMARY KEY**: Modifies the primary key definition in the shadow schema.
 - **ADD/DROP FOREIGN KEY**: No-op (foreign keys are metadata-only in ZTD).
+- Unsupported ALTER TABLE operations (e.g., ADD INDEX, ADD SPATIAL INDEX, PARTITION) throw `UnsupportedSqlException`.
 
-Unsupported ALTER TABLE operations (e.g., ADD INDEX, ADD SPATIAL INDEX, PARTITION) throw `UnsupportedSqlException`.
+**SQLite** — Partially supported. The mutation resolver accepts ALTER TABLE (ADD/DROP/RENAME COLUMN, RENAME TO) without throwing exceptions, but the CTE rewriter does NOT reflect schema changes in query results:
+- ADD COLUMN: new column is silently dropped from SELECT results (not included in CTE)
+- DROP COLUMN: column still appears in SELECT results (CTE uses original schema)
+- RENAME COLUMN: old column name is still used in SELECT results
+- Original columns continue to work normally after ALTER TABLE
 
-ALTER TABLE is currently only supported on MySQL. PostgreSQL and SQLite do not implement this mutation.
+**PostgreSQL** — Not supported. ALTER TABLE throws `ZtdPdoException` ("ALTER TABLE not yet supported for PostgreSQL").
+
+### 5.1d CREATE TABLE LIKE
+When a `CREATE TABLE ... LIKE` statement is executed with ZTD enabled, the system shall create a shadow table with the same schema as the source table. Subsequent CRUD operations on the new table shall work correctly.
+
+Supported on MySQL, PostgreSQL, and SQLite. PostgreSQL uses `CREATE TABLE t (LIKE source)` syntax.
+
+### 5.1e CREATE TABLE AS SELECT
+When a `CREATE TABLE ... AS SELECT` statement is executed with ZTD enabled, the system shall create a shadow table with the columns from the SELECT result and populate it with the selected data.
+
+**MySQL and PostgreSQL**: Fully supported. Subsequent SELECT on the created table returns the data.
+
+**SQLite**: Partially supported. The exec succeeds and the shadow table is created, but:
+- SELECT immediately after CTAS fails with "no such table" (CTE rewriter cannot build CTE without physical table)
+- INSERT into the created table works
+- After INSERT, SELECT works but returns only INSERTed rows — the original CTAS data is lost
 
 ### 5.2 DROP TABLE
 When a DROP TABLE statement is executed with ZTD enabled, the system shall clear the shadow data for the table.
@@ -358,12 +378,16 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Configuration (ZtdConfig, unsupported behavior, behavior rules, ZTD toggle cycles).
 - Advanced query patterns: CASE expressions, LIKE, IN, BETWEEN, EXISTS/NOT EXISTS, COALESCE, window functions (ROW_NUMBER, SUM OVER).
 - Error recovery: shadow store remains consistent after transformer errors, SQL errors, and constraint violations; subsequent operations succeed.
+- CREATE TABLE LIKE (all platforms).
+- CREATE TABLE AS SELECT (MySQL and PostgreSQL; see 10.3 for SQLite limitation).
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
 - **FOREIGN KEY constraints**: The foreign key constraint scenario uses a parent-child table relationship on MySQL and PostgreSQL. SQLite does not include the foreign key test because SQLite requires `PRAGMA foreign_keys = ON` to enforce them, which is outside ZTD scope.
 - **Unsupported SQL**: Platform-specific unsupported SQL examples: MySQL uses `SET @var = 1`, PostgreSQL uses `SET search_path TO public`, SQLite uses `PRAGMA journal_mode=WAL`. All three platforms support behavior rules with prefix and regex patterns.
-- **ALTER TABLE**: Only supported on MySQL (via `AlterTableMutation`). Supports ADD/DROP/MODIFY/CHANGE/RENAME COLUMN, RENAME TABLE, ADD/DROP PRIMARY KEY. Not available on PostgreSQL or SQLite.
+- **ALTER TABLE**: Fully supported on MySQL (via `AlterTableMutation`). SQLite accepts ALTER TABLE without error but CTE rewriter ignores schema changes (see 5.1c). PostgreSQL throws `ZtdPdoException` for ALTER TABLE.
+- **CREATE TABLE LIKE**: Verified on MySQL, PostgreSQL, and SQLite. PostgreSQL uses `CREATE TABLE t (LIKE source)` syntax.
+- **CREATE TABLE AS SELECT**: Fully supported on MySQL and PostgreSQL. SQLite has limitations (see 5.1e).
 - **Unknown Schema**: Behavior rules and unknown schema handling are verified on all platforms. See 10.3 for cross-platform inconsistencies.
 
 ### 10.3 Cross-Platform Inconsistencies
@@ -382,3 +406,7 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **User-written CTEs (PostgreSQL)**: On MySQL and SQLite, user-written CTE queries (e.g., `WITH cte AS (SELECT * FROM t) SELECT * FROM cte`) work correctly — table references inside the user's CTE are rewritten to read from the shadow store. On PostgreSQL, table references inside user CTEs are NOT rewritten, so the inner CTE reads from the physical table (empty) instead of the shadow store, returning 0 rows.
 
 - **Multi-table UPDATE/DELETE syntax**: MySQL uses `UPDATE t1 JOIN t2 ON ... SET ...` and `DELETE t1 FROM t1 JOIN t2 ON ...`. PostgreSQL uses `UPDATE t1 SET ... FROM t2 WHERE ...` and `DELETE FROM t1 USING t2 WHERE ...`. Both syntaxes are supported by their respective platform adapters.
+
+- **ALTER TABLE schema propagation (SQLite)**: On MySQL, ALTER TABLE fully updates the shadow schema and CTE rewriting reflects changes. On SQLite, ALTER TABLE is accepted without error but the CTE rewriter continues to use the original reflected schema — added columns are silently dropped from query results, dropped columns still appear, and renamed columns keep their old name.
+
+- **CREATE TABLE AS SELECT (SQLite)**: On MySQL and PostgreSQL, CTAS correctly creates and populates the shadow table for subsequent queries. On SQLite, CTAS creates the shadow table but SELECT immediately fails with "no such table". After a subsequent INSERT, SELECT works but only returns the INSERTed rows — the original CTAS data is lost.

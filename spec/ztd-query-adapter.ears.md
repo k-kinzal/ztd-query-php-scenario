@@ -175,8 +175,12 @@ When an `INSERT ... ON DUPLICATE KEY UPDATE` (MySQL) or `INSERT ... ON CONFLICT 
 
 When `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL) is executed and a duplicate exists, the insert is silently ignored. **Note**: On SQLite, `ON CONFLICT DO NOTHING` inserts both rows because the shadow store does not enforce PK constraints (see 10.3). Use `INSERT OR IGNORE` instead on SQLite.
 
+**Limitation (prepared statements):** `INSERT ... ON CONFLICT DO UPDATE` via `prepare()` + `execute()` does NOT update existing rows in the shadow store — the old row is retained unchanged. The same operation works correctly via `exec()`. Users should use `exec()` for upsert operations, or execute SELECT + conditional INSERT/UPDATE in application code (see 10.3).
+
 ### 4.2b REPLACE
 When a `REPLACE INTO` statement (MySQL) is executed with ZTD enabled, the system shall delete any existing row with matching primary key and insert the new row in the shadow store.
+
+**Limitation (prepared statements):** `REPLACE INTO` via `prepare()` + `execute()` does NOT replace existing rows in the shadow store — the old row is retained unchanged. The same operation works correctly via `exec()` (see 10.3).
 
 ### 4.2c Multi-Table UPDATE
 When a multi-table UPDATE statement is executed with ZTD enabled, the system shall update the target table rows in the shadow store based on the JOIN condition, without modifying the physical database.
@@ -332,6 +336,8 @@ For `ZtdMysqli`, transaction control should use the dedicated methods (`begin_tr
 If `unknownSchemaBehavior` is `Passthrough` (the default) and a write operation (UPDATE, DELETE) references an unreflected table, the system shall pass the operation directly to the underlying connection (breaking ZTD isolation for that operation).
 
 **Platform note:** This passthrough behavior is verified on MySQL via `new ZtdMysqli(...)` and `new ZtdPdo(...)` constructors. On MySQL via `ZtdPdo::fromPdo()`, PostgreSQL, and SQLite, UPDATE on unreflected tables throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of passing through — meaning `unknownSchemaBehavior: Passthrough` does NOT take effect for UPDATE operations with these constructors/platforms (see 10.3). DELETE on unreflected tables passes through on MySQL and SQLite, but throws `RuntimeException` on PostgreSQL.
+
+**Nuance (operation history):** On MySQL via `fromPdo()`, if no prior shadow operations have touched the unreflected table, Passthrough mode DOES pass UPDATE through to the physical database. However, once a shadow INSERT is executed on the table, the shadow store "knows" the table but lacks PK schema, causing subsequent UPDATE to throw `RuntimeException`. The behavior depends on operation history, not just configuration.
 
 SELECT and INSERT operations on unreflected tables pass through to the physical database or shadow store respectively, regardless of this setting.
 

@@ -225,7 +225,9 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - DDL operations (CREATE TABLE on existing table throws; CREATE TABLE on non-existent table creates in shadow; DROP TABLE clears shadow data).
 - Write result sets (exec() returns affected count; fetchAll() after write returns empty array).
 - Constraint non-enforcement (PRIMARY KEY, NOT NULL, UNIQUE, FOREIGN KEY not enforced in shadow store).
-- Prepared statement parameter binding.
+- Prepared statement parameter binding (bindValue, bindParam, execute with params array, re-execute, execute_query).
+- Fetch methods (fetch, fetchAll with FETCH_ASSOC/FETCH_NUM/FETCH_BOTH, fetchColumn, fetchObject, columnCount).
+- Schema reflection (adapter constructed after table reflects schema; adapter constructed before table fails UPDATE/DELETE with "requires primary keys").
 - Auto-detection of PDO driver (mysql, pgsql, sqlite all verified).
 - Complex queries: JOINs (INNER, LEFT), self-JOINs, aggregations (COUNT, SUM, MIN, MAX), GROUP BY/HAVING, subqueries, correlated subqueries, UNION, ORDER BY/LIMIT/OFFSET, DISTINCT.
 - UPDATE/DELETE with subqueries referencing other shadow tables.

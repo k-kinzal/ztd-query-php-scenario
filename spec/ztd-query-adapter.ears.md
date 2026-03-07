@@ -270,7 +270,27 @@ The following methods are delegated directly to the underlying connection withou
 
 For PDO, the following methods are delegated: `setAttribute()`, `getAttribute()`, `errorCode()`, `errorInfo()`.
 
-For `ZtdPdoStatement`, the following methods are delegated: `closeCursor()`, `setFetchMode()`, `bindColumn()`, `getColumnMeta()`, `errorCode()`, `errorInfo()`.
+For `ZtdPdoStatement`, the following methods are delegated: `closeCursor()`, `setFetchMode()`, `bindColumn()`, `getColumnMeta()`, `errorCode()`, `errorInfo()`, `debugDumpParams()`.
+
+**debugDumpParams() note**: Because ZTD rewrites queries at prepare time, `debugDumpParams()` outputs the rewritten SQL, not the original user SQL. INSERT statements appear as `SELECT ? AS "col", ...`, UPDATE/DELETE statements appear as `WITH "table" AS (...) SELECT ...`. This is correct behavior — it reflects what the database engine actually receives.
+
+### 4.10 FETCH_CLASS / FETCH_INTO
+When `setFetchMode(PDO::FETCH_CLASS, ClassName)` is called on a `ZtdPdoStatement`, subsequent `fetch()` calls return instances of the specified class with properties populated from the shadow store result.
+
+`fetchAll(PDO::FETCH_CLASS, ClassName)` returns an array of instances of the specified class.
+
+`setFetchMode(PDO::FETCH_CLASS, ClassName, [$constructorArgs])` passes constructor arguments to each instantiated object.
+
+`PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE` calls the constructor before setting properties (properties are set after constructor).
+
+`setFetchMode(PDO::FETCH_INTO, $object)` populates an existing object's properties from each fetched row.
+
+All FETCH_CLASS modes work correctly with shadow store data, including after shadow INSERT, UPDATE, and DELETE operations. Verified on all 3 PDO platforms.
+
+### 4.11 Statement Property Access (MySQLi)
+When a prepared statement is created via `ZtdMysqli::prepare()`, the ZTD adapter rewrites and executes the query internally. Accessing statement-level properties like `param_count` on the `ZtdMysqliStatement` throws `Error` ("ZtdMysqliStatement object is already closed") because the underlying statement lifecycle is managed internally.
+
+Use `ztdAffectedRows()` for affected row counts. `store_result()` works on prepared SELECT statements after `execute()`. `field_count` and `num_rows` work correctly on `mysqli_result` objects returned by `query()`.
 
 ## 5. DDL Operations
 
@@ -516,6 +536,9 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Prepared HAVING/GROUP BY with parameters: `GROUP BY ... HAVING aggregate >= ?` with bound parameters works correctly on MySQL and PostgreSQL (both PDO and MySQLi). On SQLite, HAVING with prepared params returns empty results (issue #22); HAVING with literal values works. `GROUP BY` with `WHERE` params (no HAVING) works on all platforms.
 - Prepared IN/NOT IN/CASE WHEN with parameters: `WHERE id IN (?, ?)`, `WHERE id NOT IN (?, ?)`, `WHERE category IN (:cat1, :cat2)`, `IN (SELECT ... WHERE price > ?)`, and `CASE WHEN price > ? THEN ... ELSE ... END` all work correctly with bound parameters; re-execute with different params works. Verified on all 4 adapters.
 - Prepared multi-table UPDATE/DELETE with parameters: MySQL `UPDATE ... JOIN ... SET ... WHERE col > ?` and `DELETE o FROM ... JOIN ... WHERE col = ?` with prepared params work correctly. PostgreSQL `UPDATE ... FROM ... WHERE col > ?` and `DELETE FROM ... USING ... WHERE col = ?` work correctly. JOIN SELECT with GROUP BY + HAVING + prepared params works on MySQL and PostgreSQL. Verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO).
+- debugDumpParams(): outputs rewritten SQL (not original user SQL) because ZTD rewrites at prepare time. INSERT shows as `SELECT ? AS "col", ...`, UPDATE/DELETE show as `WITH "table" AS (...) SELECT ...`. SELECT shows CTE-prepended form. Parameter metadata (Params count, position, type) is correctly reported. Works before and after execute, and after re-execution. Verified on all 3 PDO platforms.
+- FETCH_CLASS with custom classes: `setFetchMode(PDO::FETCH_CLASS, ClassName)`, `fetchAll(PDO::FETCH_CLASS, ClassName)`, constructor args, FETCH_PROPS_LATE, and FETCH_INTO all work correctly with shadow store data. Class instances are populated with correct column values from CTE-rewritten queries. Works with JOINs, prepared statements, and after shadow mutations. Verified on all 3 PDO platforms.
+- MySQLi statement introspection: `param_count` on `ZtdMysqliStatement` throws "already closed" because ZTD manages statement lifecycle internally. `affected_rows` and `insert_id` on `ZtdMysqli` throw "Property access is not allowed yet" (use `ztdAffectedRows()` instead). `field_count` and `num_rows` on `mysqli_result` work correctly. `errno`/`error` report 0/empty after success. `store_result()` on prepared SELECT works. Verified on MySQLi.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

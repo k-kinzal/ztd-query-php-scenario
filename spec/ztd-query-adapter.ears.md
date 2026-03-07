@@ -439,6 +439,9 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - NOT IN: `WHERE col NOT IN (literal_list)` and `WHERE col NOT IN (SELECT ...)` work on all platforms.
 - Aggregates on empty sets: COUNT returns 0, SUM/AVG/MIN/MAX return NULL on empty shadow result sets; verified on all 4 adapters.
 - Zero-match UPDATE/DELETE: operations matching no shadow rows return 0 affected rows without error; verified on all PDO platforms.
+- Date/time functions: DATE(), strftime() (SQLite), YEAR()/MONTH()/DATE_ADD()/DATE_FORMAT() (MySQL), TO_CHAR()/INTERVAL arithmetic (PostgreSQL) work correctly with shadow-stored date values. GROUP BY date parts works. Date comparisons in WHERE work. See 10.3 for PostgreSQL EXTRACT limitation.
+- Advanced window functions: NTILE, FIRST_VALUE, LAST_VALUE with ROWS BETWEEN UNBOUNDED frames, PARTITION BY with ROW_NUMBER and SUM OVER all work correctly from shadow store data; mutations (UPDATE category) correctly change partition groupings; verified on all 4 adapters.
+- NATURAL JOIN: works correctly with shadow data on SQLite; matches on shared column names.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
@@ -490,6 +493,8 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **Derived tables in JOIN (SQLite vs MySQL/PostgreSQL)**: On SQLite, derived tables JOINed with regular tables work correctly — the CTE rewriter rewrites table references inside the derived subquery, and shadow mutations are visible. On MySQL and PostgreSQL, derived tables always return empty results regardless of JOIN context, because the CTE rewriter does not rewrite table references inside derived subqueries. Users relying on derived tables with ZTD should use direct JOINs or CTEs instead.
 
 - **EXCEPT / INTERSECT (MySQL)**: On MySQL (both MySQLi and PDO adapters), `EXCEPT` and `INTERSECT` throw `UnsupportedSqlException` ("Multi-statement SQL statement") because the MySQL CTE rewriter misparses the semicolon-free set operation as a multi-statement query. On SQLite and PostgreSQL, both operators work correctly with shadow data. Users needing EXCEPT/INTERSECT on MySQL should use NOT IN / IN subqueries instead, or disable ZTD for those queries.
+
+- **PostgreSQL EXTRACT on shadow dates**: On PostgreSQL, `EXTRACT(YEAR FROM date_column)` returns 0 for DATE values stored in the shadow store. The CTE rewriter stores date values as strings, and PostgreSQL's `EXTRACT` function cannot parse them. MySQL `YEAR()`/`MONTH()`, SQLite `strftime()`, and PostgreSQL `TO_CHAR()` all work correctly on shadow-stored dates. Users should use `TO_CHAR(date_col, 'YYYY')` instead of `EXTRACT(YEAR FROM date_col)` on PostgreSQL.
 
 - **NULL sort order in ORDER BY**: MySQL and SQLite sort NULLs first in ASC order. PostgreSQL sorts NULLs last in ASC order. This is standard SQL behavior (not a ZTD issue), but tests should account for the difference.
 

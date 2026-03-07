@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(/.claude/**)",
+      "Edit(/.claude/**)",
+      "Read(/AGENTS.md)",
+      "Edit(/AGENTS.md)",
+      "Read(/CLAUDE.md)",
+      "Edit(/CLAUDE.md)",
+      "Bash(* .claude/*)",
+      "Bash(* .claude *)",
+      "Bash(* AGENTS.md*)",
+      "Bash(* CLAUDE.md*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/auto-commit.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

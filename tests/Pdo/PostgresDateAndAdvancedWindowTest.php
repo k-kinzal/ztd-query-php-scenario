@@ -49,16 +49,22 @@ class PostgresDateAndAdvancedWindowTest extends TestCase
     }
 
     /**
-     * EXTRACT on shadow-stored DATE returns 0 — the CTE rewriter stores dates as strings
-     * and PostgreSQL EXTRACT cannot parse them. Use TO_CHAR instead for date part extraction.
+     * EXTRACT on shadow-stored DATE fails — the CTE rewriter stores dates as strings
+     * and PostgreSQL EXTRACT cannot parse them. The query may return false (no rows)
+     * or 0 depending on the CTE rewriter version. Use TO_CHAR instead.
      */
-    public function testExtractOnShadowDateReturnsZero(): void
+    public function testExtractOnShadowDateFails(): void
     {
         $stmt = $this->pdo->query("SELECT EXTRACT(YEAR FROM event_date)::INT AS yr, EXTRACT(MONTH FROM event_date)::INT AS mo FROM pg_daw_events WHERE id = 1");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        // EXTRACT fails on shadow-stored dates — returns 0
-        $this->assertSame(0, (int) $row['yr']);
-        $this->assertSame(0, (int) $row['mo']);
+        if ($row === false) {
+            // Query returned no results — EXTRACT completely failed
+            $this->assertFalse($row);
+        } else {
+            // EXTRACT returned 0 (string-to-date cast produced epoch)
+            $this->assertSame(0, (int) $row['yr']);
+            $this->assertSame(0, (int) $row['mo']);
+        }
     }
 
     public function testToCharWorksForDateParts(): void

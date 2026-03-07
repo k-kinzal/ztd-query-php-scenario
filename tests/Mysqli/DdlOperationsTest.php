@@ -96,6 +96,30 @@ class DdlOperationsTest extends TestCase
         $this->assertCount(0, $rows);
     }
 
+    public function testUpdateOnShadowCreatedTable(): void
+    {
+        $this->mysqli->query('CREATE TABLE ddl_new (id INT PRIMARY KEY, name VARCHAR(255))');
+        $this->mysqli->query("INSERT INTO ddl_new (id, name) VALUES (1, 'original')");
+        $this->mysqli->query("UPDATE ddl_new SET name = 'updated' WHERE id = 1");
+
+        $result = $this->mysqli->query('SELECT name FROM ddl_new WHERE id = 1');
+        $row = $result->fetch_assoc();
+        $this->assertSame('updated', $row['name']);
+    }
+
+    public function testDeleteOnShadowCreatedTable(): void
+    {
+        $this->mysqli->query('CREATE TABLE ddl_new (id INT PRIMARY KEY, name VARCHAR(255))');
+        $this->mysqli->query("INSERT INTO ddl_new (id, name) VALUES (1, 'hello')");
+        $this->mysqli->query("INSERT INTO ddl_new (id, name) VALUES (2, 'world')");
+        $this->mysqli->query('DELETE FROM ddl_new WHERE id = 1');
+
+        $result = $this->mysqli->query('SELECT * FROM ddl_new');
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame(2, (int) $rows[0]['id']);
+    }
+
     protected function tearDown(): void
     {
         $this->mysqli->close();

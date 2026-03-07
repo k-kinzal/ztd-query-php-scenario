@@ -137,8 +137,10 @@ When `real_query()` is called with ZTD enabled, write operations (INSERT, UPDATE
 
 When `real_query()` is called with ZTD enabled for a SELECT query, `real_query()` shall return `true`, but `store_result()` shall return `false`. The CTE-rewritten query result is consumed internally and not available via `store_result()`. Use `query()` instead of `real_query()` + `store_result()` for SELECT queries in ZTD mode.
 
-### 4.7 insert_id (mysqli)
-When ZTD is enabled, accessing the `$mysqli->insert_id` property after an INSERT throws an `Error` ("Property access is not allowed yet") because the INSERT was simulated in the shadow store and never executed on the physical database.
+### 4.7 Property Access (mysqli)
+When ZTD is enabled, accessing mysqli properties (e.g., `$mysqli->insert_id`, `$mysqli->server_version`, `$mysqli->affected_rows`) via the `__get` magic method throws an `Error` ("Property access is not allowed yet") because the C-extension property handler takes precedence over `__get`. This applies to both `new ZtdMysqli(...)` and `ZtdMysqli::fromMysqli(...)`.
+
+Use the dedicated methods instead: `lastAffectedRows()` for affected row count; delegated methods like `get_server_info()`, `character_set_name()`, `stat()` for connection information.
 
 ### 4.8 Transactions
 Transaction control methods (`begin_transaction()` / `beginTransaction()`, `commit()`, `rollBack()` / `rollback()`) are delegated directly to the underlying connection. They do not affect the shadow store.
@@ -154,12 +156,22 @@ Shadow data remains visible after `commit()` or `rollBack()` because it is store
 
 `lastInsertId()` (PDO) is delegated to the underlying connection. Its value may not reflect shadow-simulated inserts.
 
+`escape_string()` (mysqli) is an alias for `real_escape_string()` and is delegated to the underlying connection.
+
+The following methods are delegated directly to the underlying connection without ZTD interception: `multi_query()`, `more_results()`, `next_result()`, `autocommit()`, `set_charset()`, `character_set_name()`, `get_charset()`, `select_db()`, `ping()`, `stat()`, `get_server_info()`, `get_connection_stats()`.
+
+`multi_query()` bypasses ZTD entirely — queries executed via `multi_query()` operate directly on the physical database.
+
+For PDO, the following methods are delegated: `setAttribute()`, `getAttribute()`, `errorCode()`, `errorInfo()`.
+
+For `ZtdPdoStatement`, the following methods are delegated: `closeCursor()`, `setFetchMode()`, `bindColumn()`, `getColumnMeta()`, `errorCode()`, `errorInfo()`.
+
 ## 5. DDL Operations
 
 ### 5.1 CREATE TABLE
 When a CREATE TABLE statement is executed with ZTD enabled and the table already exists physically, the system shall throw a `ZtdMysqliException`/`ZtdPdoException` with "Table already exists" error.
 
-When a CREATE TABLE statement is executed with ZTD enabled and the table does NOT exist physically, the system shall track the table schema in the shadow store. Subsequent INSERT/SELECT operations on the shadow-created table shall work.
+When a CREATE TABLE statement is executed with ZTD enabled and the table does NOT exist physically, the system shall track the table schema in the shadow store. Subsequent INSERT/SELECT/UPDATE/DELETE operations on the shadow-created table shall work correctly.
 
 ### 5.2 DROP TABLE
 When a DROP TABLE statement is executed with ZTD enabled, the system shall clear the shadow data for the table.

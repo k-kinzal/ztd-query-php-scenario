@@ -113,6 +113,16 @@ UPDATE operations require the table schema (including primary keys) to be known.
 - `Passthrough`: The UPDATE passes through to the physical database (breaking ZTD isolation).
 - `Exception`: A `ZtdMysqliException`/`ZtdPdoException` ("Unknown table") is thrown.
 
+### 4.2a UPSERT
+When an `INSERT ... ON DUPLICATE KEY UPDATE` (MySQL) or `INSERT ... ON CONFLICT DO UPDATE` (PostgreSQL) is executed with ZTD enabled, the system shall:
+- Insert the row if no duplicate primary key exists in the shadow store.
+- Update the matching row if a duplicate primary key exists in the shadow store.
+
+When `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL) is executed and a duplicate exists, the insert is silently ignored.
+
+### 4.2b REPLACE
+When a `REPLACE INTO` statement (MySQL) is executed with ZTD enabled, the system shall delete any existing row with matching primary key and insert the new row in the shadow store.
+
 ### 4.3 DELETE
 When a DELETE is executed with ZTD enabled, the system shall track the deletion in the shadow store without modifying the physical table.
 
@@ -176,6 +186,12 @@ For `ZtdPdoStatement`, the following methods are delegated: `closeCursor()`, `se
 When a CREATE TABLE statement is executed with ZTD enabled and the table already exists physically, the system shall throw a `ZtdMysqliException`/`ZtdPdoException` with "Table already exists" error.
 
 When a CREATE TABLE statement is executed with ZTD enabled and the table does NOT exist physically, the system shall track the table schema in the shadow store. Subsequent INSERT/SELECT/UPDATE/DELETE operations on the shadow-created table shall work correctly.
+
+### 5.1a CREATE TABLE ... LIKE
+When a `CREATE TABLE ... LIKE` statement is executed with ZTD enabled, the system shall create a shadow table with the same schema as the source table. Subsequent CRUD operations on the new table shall work correctly.
+
+### 5.1b CREATE TABLE ... AS SELECT
+When a `CREATE TABLE ... AS SELECT` statement is executed with ZTD enabled, the system shall create a shadow table with the columns from the SELECT result and populate it with the selected data.
 
 ### 5.2 DROP TABLE
 When a DROP TABLE statement is executed with ZTD enabled, the system shall clear the shadow data for the table.
@@ -273,6 +289,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Transaction control (beginTransaction/commit, beginTransaction/rollback, quote).
 - DDL shadow-created table operations (INSERT/UPDATE/DELETE on shadow-created tables).
 - Statement methods (closeCursor, setFetchMode, bindColumn, columnCount, getIterator/foreach).
+- UPSERT operations (INSERT ... ON DUPLICATE KEY UPDATE on MySQL; INSERT ... ON CONFLICT on PostgreSQL).
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

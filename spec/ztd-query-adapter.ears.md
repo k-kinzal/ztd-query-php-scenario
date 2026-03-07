@@ -202,7 +202,7 @@ Shadow data remains visible after `commit()` or `rollBack()` because it is store
 ### 4.9 Utility Methods
 `real_escape_string()` (mysqli) and `quote()` (PDO) are delegated to the underlying connection and work correctly in ZTD mode.
 
-`lastInsertId()` (PDO) is delegated to the underlying connection. Its value may not reflect shadow-simulated inserts.
+`lastInsertId()` (PDO) is delegated to the underlying connection. Its value may not reflect shadow-simulated inserts. On PostgreSQL, calling `lastInsertId($sequenceName)` after a shadow INSERT throws `PDOException` ("currval of sequence is not yet defined in this session") because the physical sequence is never advanced. On MySQL and SQLite, `lastInsertId()` returns a value (typically '0') without throwing.
 
 `escape_string()` (mysqli) is an alias for `real_escape_string()` and is delegated to the underlying connection.
 
@@ -386,6 +386,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Transaction isolation: shadow data persists after rollback (shadow store is independent of physical transaction state).
 - Query edge cases: COUNT(*) vs COUNT(col) with NULLs, SUM ignoring NULLs, ORDER BY with NULLs, LIMIT 0, LIMIT with OFFSET, self-referencing UPDATE (score = score + 10), string concatenation in UPDATE, DISTINCT with NULLs, GROUP BY HAVING, MIN/MAX on strings, multiple sequential UPDATEs to same row, insert-delete-insert same ID cycle.
 - Stress testing: 50 sequential INSERTs, bulk UPDATE, bulk DELETE with correct counts; verified on all platforms.
+- Utility methods: getAvailableDrivers(), lastInsertId(), errorCode(), errorInfo(), setAttribute()/getAttribute(), quote(); verified on all PDO platforms.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

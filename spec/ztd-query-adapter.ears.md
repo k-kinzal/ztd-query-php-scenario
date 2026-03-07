@@ -95,6 +95,15 @@ UPDATE and DELETE statements with subqueries referencing other shadow tables sha
 
 User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CTE shadowing on MySQL and SQLite. On PostgreSQL, table references inside user CTEs are not rewritten, causing the inner CTE to read from the physical table rather than the shadow store (see 10.3).
 
+### 3.3a Derived Tables (Subqueries in FROM)
+Derived tables (subqueries in the FROM clause) are NOT fully supported by the CTE rewriter. Table references inside derived subqueries are generally not rewritten:
+
+- **MySQL and PostgreSQL**: Derived tables always return empty results because inner table references read from the physical database. This applies both when the derived table is the sole FROM source and when it is JOINed with a regular table.
+- **SQLite**: Derived tables as sole FROM source return empty. However, when a derived table is JOINed with a regular table, table references inside the derived subquery ARE rewritten and return shadow data correctly. Mutations in the shadow store are reflected through derived table JOINs on SQLite.
+
+### 3.3b Views
+Database views are NOT rewritten by the CTE rewriter. Querying a view through ZTD returns empty results because the view's underlying query reads from physical tables, not the shadow store. This applies to all platforms.
+
 ### 3.4 Fetch Methods
 When ZTD is enabled, the following fetch methods shall return correct results from the shadow store:
 - `fetchAll()` with `FETCH_ASSOC`, `FETCH_NUM`, `FETCH_BOTH` modes.
@@ -391,6 +400,9 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Advanced subquery patterns: nested subqueries (3 levels deep), scalar subqueries in SELECT, CASE in WHERE clause, EXISTS/NOT EXISTS correlated subqueries, UNION vs UNION ALL, 3-table JOINs; verified on all PDO platforms.
 - Prepared statements with complex queries: prepared JOINs with params, prepared aggregation with GROUP BY re-execute, prepared subqueries with params, prepared UPDATE/DELETE with params, prepared INSERT then query, named params in JOIN; verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO).
 - Composite primary keys: tables with 2-column and 3-column composite PKs correctly support INSERT, UPDATE, DELETE, prepared statements, aggregations, self-JOINs, and partial PK match (WHERE on subset of PK columns); verified on all 4 adapters.
+- Derived tables (subqueries in FROM): CTE rewriter does not fully rewrite table references inside derived subqueries; returns empty on MySQL/PostgreSQL. SQLite partially supports derived tables in JOIN context (see 3.3a, 10.3).
+- Views: not rewritten by CTE rewriter; querying views through ZTD returns empty results on all platforms.
+- INSERT DEFAULT VALUES: not supported on SQLite ZTD (throws "Insert statement has no values to project"); INSERT with partial columns (omitting columns with defaults) works.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
@@ -436,6 +448,8 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **UPDATE with correlated subquery in SET clause**: `UPDATE t1 SET col = (SELECT SUM(col2) FROM t2 WHERE t2.fk = t1.pk)` works on MySQL. On SQLite, the CTE rewriter produces "near FROM: syntax error". On PostgreSQL, the CTE rewriter produces "column must appear in GROUP BY clause" error.
 
 - **DELETE without WHERE clause (SQLite)** (Issue #7): On MySQL and PostgreSQL, `DELETE FROM table` (without WHERE clause) correctly clears the shadow store. On SQLite, `DELETE FROM table` without a WHERE clause is silently ignored — the shadow store retains all rows. The workaround is to use `DELETE FROM table WHERE 1=1` which works correctly on all platforms.
+
+- **Derived tables in JOIN (SQLite vs MySQL/PostgreSQL)**: On SQLite, derived tables JOINed with regular tables work correctly — the CTE rewriter rewrites table references inside the derived subquery, and shadow mutations are visible. On MySQL and PostgreSQL, derived tables always return empty results regardless of JOIN context, because the CTE rewriter does not rewrite table references inside derived subqueries. Users relying on derived tables with ZTD should use direct JOINs or CTEs instead.
 
 - **NULL sort order in ORDER BY**: MySQL and SQLite sort NULLs first in ASC order. PostgreSQL sorts NULLs last in ASC order. This is standard SQL behavior (not a ZTD issue), but tests should account for the difference.
 

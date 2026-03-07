@@ -380,6 +380,10 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - CREATE TABLE AS SELECT (MySQL and PostgreSQL; see 10.3 for SQLite limitation).
 - Query rewriting at prepare time (toggling ZTD between prepare/execute retains rewritten query).
 - DDL edge cases: CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, TRUNCATE then INSERT cycles.
+- Data type handling: DATE, DATETIME/TIMESTAMP, DECIMAL/NUMERIC, INTEGER, and NULL values preserved correctly in shadow store.
+- Special character handling: quotes, newlines, Unicode, emoji, empty strings preserved correctly in shadow store (see 10.3 for MySQL backslash exception).
+- ZTD lifecycle: shadow data persists across enable/disable toggle cycles; physical data inserted while ZTD is off is not visible when ZTD is re-enabled.
+- Transaction isolation: shadow data persists after rollback (shadow store is independent of physical transaction state).
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

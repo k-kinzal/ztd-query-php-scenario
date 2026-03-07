@@ -306,10 +306,14 @@ If `unknownSchemaBehavior` is `EmptyResult` and a write operation (UPDATE, DELET
 
 Verified on MySQL (PDO adapter): the physical table remains unchanged after UPDATE/DELETE operations.
 
+**Platform note:** On PostgreSQL and SQLite, EmptyResult mode works correctly for DELETE operations (physical table unchanged). However, UPDATE operations throw `RuntimeException` ("UPDATE simulation requires primary keys") regardless of EmptyResult mode — the error occurs before the unknown schema behavior check.
+
 ### 7.4 Notice
 If `unknownSchemaBehavior` is `Notice` and a write operation (UPDATE, DELETE) references an unreflected table, the system shall emit a user notice/warning and return an empty result without modifying the physical database.
 
 Verified on MySQL (both adapters): a `E_USER_NOTICE` or `E_USER_WARNING` is triggered.
+
+**Platform note:** On PostgreSQL and SQLite, Notice mode works correctly for DELETE operations (notice emitted, physical table unchanged). However, UPDATE operations throw `RuntimeException` ("UPDATE simulation requires primary keys") regardless of Notice mode — the error occurs before the unknown schema behavior check.
 
 ## 8. Constraint Enforcement
 
@@ -374,9 +378,12 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Error recovery: shadow store remains consistent after transformer errors, SQL errors, and constraint violations; subsequent operations succeed.
 - CREATE TABLE LIKE (all platforms).
 - CREATE TABLE AS SELECT (MySQL and PostgreSQL; see 10.3 for SQLite limitation).
+- Query rewriting at prepare time (toggling ZTD between prepare/execute retains rewritten query).
+- DDL edge cases: CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, TRUNCATE then INSERT cycles.
 
 ### 10.2 Platform-Specific Notes
-- **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
+- **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
+- **multi_query() bypass**: Verified on MySQL (MySQLi). `multi_query()` bypasses ZTD entirely even when ZTD is enabled — writes go directly to the physical database and reads bypass the shadow store.
 - **FOREIGN KEY constraints**: The foreign key constraint scenario uses a parent-child table relationship on MySQL and PostgreSQL. SQLite does not include the foreign key test because SQLite requires `PRAGMA foreign_keys = ON` to enforce them, which is outside ZTD scope.
 - **Unsupported SQL**: Platform-specific unsupported SQL examples: MySQL uses `SET @var = 1`, PostgreSQL uses `SET search_path TO public`, SQLite uses `PRAGMA journal_mode=WAL`. All three platforms support behavior rules with prefix and regex patterns.
 - **ALTER TABLE**: Fully supported on MySQL (via `AlterTableMutation`). SQLite accepts ALTER TABLE without error but CTE rewriter ignores schema changes (see 5.1a). PostgreSQL throws `ZtdPdoException` for ALTER TABLE.
@@ -404,3 +411,5 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **ALTER TABLE schema propagation (SQLite)**: On MySQL, ALTER TABLE fully updates the shadow schema and CTE rewriting reflects changes. On SQLite, ALTER TABLE is accepted without error but the CTE rewriter continues to use the original reflected schema — added columns are silently dropped from query results, dropped columns still appear, and renamed columns keep their old name.
 
 - **CREATE TABLE AS SELECT (SQLite)**: On MySQL and PostgreSQL, CTAS correctly creates and populates the shadow table for subsequent queries. On SQLite, CTAS creates the shadow table but SELECT immediately fails with "no such table". After a subsequent INSERT, SELECT works but only returns the INSERTed rows — the original CTAS data is lost.
+
+- **Unknown schema EmptyResult/Notice modes (PostgreSQL/SQLite)**: On MySQL, all four `unknownSchemaBehavior` modes (Passthrough, Exception, EmptyResult, Notice) work correctly for both UPDATE and DELETE on unreflected tables. On PostgreSQL and SQLite, only DELETE operations respect EmptyResult and Notice modes. UPDATE operations throw `RuntimeException` ("UPDATE simulation requires primary keys") regardless of the configured behavior, because the error occurs in the ShadowStore before the unknown schema behavior check is applied.

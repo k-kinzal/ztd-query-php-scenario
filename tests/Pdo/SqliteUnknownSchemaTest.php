@@ -97,4 +97,63 @@ class SqliteUnknownSchemaTest extends TestCase
         $this->assertCount(1, $rows);
         $this->assertSame('shadow', $rows[0]['val']);
     }
+
+    public function testEmptyResultUpdateOnUnknownTableThrowsRuntimeException(): void
+    {
+        [$pdo] = $this->createAdapterThenTable(UnknownSchemaBehavior::EmptyResult);
+
+        // SQLite throws RuntimeException regardless of EmptyResult mode
+        // (same as Passthrough/Exception — the error comes from ShadowStore before
+        // the unknown schema behavior check)
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/primary keys/i');
+        $pdo->exec("UPDATE late_table SET val = 'updated' WHERE id = 1");
+    }
+
+    public function testEmptyResultDeleteOnUnknownTable(): void
+    {
+        [$pdo, $raw] = $this->createAdapterThenTable(UnknownSchemaBehavior::EmptyResult);
+
+        // EmptyResult mode: DELETE on unknown table should return without modifying physical data
+        $pdo->exec("DELETE FROM late_table WHERE id = 1");
+
+        // Physical table should be unchanged
+        $stmt = $raw->query('SELECT * FROM late_table');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('physical', $rows[0]['val']);
+    }
+
+    public function testNoticeUpdateOnUnknownTableThrowsRuntimeException(): void
+    {
+        [$pdo] = $this->createAdapterThenTable(UnknownSchemaBehavior::Notice);
+
+        // SQLite throws RuntimeException regardless of Notice mode
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/primary keys/i');
+        $pdo->exec("UPDATE late_table SET val = 'updated' WHERE id = 1");
+    }
+
+    public function testNoticeDeleteOnUnknownTable(): void
+    {
+        [$pdo, $raw] = $this->createAdapterThenTable(UnknownSchemaBehavior::Notice);
+
+        $noticeTriggered = false;
+        set_error_handler(function () use (&$noticeTriggered) {
+            $noticeTriggered = true;
+            return true;
+        }, E_USER_NOTICE | E_USER_WARNING);
+
+        try {
+            $pdo->exec("DELETE FROM late_table WHERE id = 1");
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertTrue($noticeTriggered);
+
+        // Physical table should be unchanged
+        $stmt = $raw->query('SELECT * FROM late_table');
+        $this->assertCount(1, $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
 }

@@ -57,6 +57,27 @@ class SqliteUpsertTest extends TestCase
         $this->assertCount(2, $rows);
     }
 
+    public function testReplaceIntoInserts(): void
+    {
+        $this->pdo->exec("REPLACE INTO upsert_test (id, val) VALUES (1, 'hello')");
+
+        $stmt = $this->pdo->query('SELECT * FROM upsert_test WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('hello', $rows[0]['val']);
+    }
+
+    public function testReplaceIntoReplaces(): void
+    {
+        $this->pdo->exec("INSERT INTO upsert_test (id, val) VALUES (1, 'original')");
+        $this->pdo->exec("REPLACE INTO upsert_test (id, val) VALUES (1, 'replaced')");
+
+        $stmt = $this->pdo->query('SELECT * FROM upsert_test WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('replaced', $rows[0]['val']);
+    }
+
     public function testUpsertIsolation(): void
     {
         $this->pdo->exec("INSERT INTO upsert_test (id, val) VALUES (1, 'hello') ON CONFLICT (id) DO UPDATE SET val = EXCLUDED.val");

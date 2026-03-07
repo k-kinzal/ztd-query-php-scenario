@@ -61,6 +61,30 @@ class SqliteDdlOperationsTest extends TestCase
         $this->assertCount(0, $rows);
     }
 
+    public function testUpdateOnShadowCreatedTable(): void
+    {
+        $this->pdo->exec('CREATE TABLE ddl_new (id INTEGER PRIMARY KEY, name TEXT)');
+        $this->pdo->exec("INSERT INTO ddl_new (id, name) VALUES (1, 'original')");
+        $this->pdo->exec("UPDATE ddl_new SET name = 'updated' WHERE id = 1");
+
+        $stmt = $this->pdo->query('SELECT name FROM ddl_new WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertSame('updated', $rows[0]['name']);
+    }
+
+    public function testDeleteOnShadowCreatedTable(): void
+    {
+        $this->pdo->exec('CREATE TABLE ddl_new (id INTEGER PRIMARY KEY, name TEXT)');
+        $this->pdo->exec("INSERT INTO ddl_new (id, name) VALUES (1, 'hello')");
+        $this->pdo->exec("INSERT INTO ddl_new (id, name) VALUES (2, 'world')");
+        $this->pdo->exec('DELETE FROM ddl_new WHERE id = 1');
+
+        $stmt = $this->pdo->query('SELECT * FROM ddl_new');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame(2, (int) $rows[0]['id']);
+    }
+
     public function testDeleteWithWhereDeletesShadowedRows(): void
     {
         $this->pdo->exec("INSERT INTO ddl_existing (id, val) VALUES (1, 'a')");

@@ -201,6 +201,23 @@ When a `CREATE TABLE ... LIKE` statement is executed with ZTD enabled, the syste
 ### 5.1b CREATE TABLE ... AS SELECT
 When a `CREATE TABLE ... AS SELECT` statement is executed with ZTD enabled, the system shall create a shadow table with the columns from the SELECT result and populate it with the selected data.
 
+### 5.1c ALTER TABLE (MySQL only)
+When an `ALTER TABLE` statement is executed with ZTD enabled, the system shall modify the table definition in the shadow store's schema registry without modifying the physical table.
+
+Supported ALTER TABLE operations:
+- **ADD COLUMN**: Adds a new column to the shadow schema. Subsequent inserts/selects may use the new column.
+- **DROP COLUMN**: Removes a column from the shadow schema and from any existing shadow data rows.
+- **MODIFY COLUMN**: Changes the column type definition in the shadow schema.
+- **CHANGE COLUMN**: Renames and/or changes the type of a column. Existing shadow data rows are updated with the new column name.
+- **RENAME COLUMN ... TO**: Renames a column in the shadow schema and existing data.
+- **RENAME TO**: Renames the table in the shadow store and schema registry.
+- **ADD PRIMARY KEY / DROP PRIMARY KEY**: Modifies the primary key definition in the shadow schema.
+- **ADD/DROP FOREIGN KEY**: No-op (foreign keys are metadata-only in ZTD).
+
+Unsupported ALTER TABLE operations (e.g., ADD INDEX, ADD SPATIAL INDEX, PARTITION) throw `UnsupportedSqlException`.
+
+ALTER TABLE is currently only supported on MySQL. PostgreSQL and SQLite do not implement this mutation.
+
 ### 5.2 DROP TABLE
 When a DROP TABLE statement is executed with ZTD enabled, the system shall clear the shadow data for the table.
 

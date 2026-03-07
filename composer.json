@@ -1,9 +1,11 @@
 {
     "name": "k-kinzal/ztd-query-php-scenario",
-    "description": "Executable PHPUnit scenarios and EARS specifications for ztd-query-php adapters.",
+    "description": "AI-operated scenario factory, example repository, and lightweight contract suite for ztd-query-php adapters.",
     "type": "project",
     "keywords": [
         "ztd-query",
+        "example",
+        "contract-testing",
         "phpunit",
         "testcontainers",
         "mysqli",

@@ -1,6 +1,6 @@
 # ztd-query-php-scenario
 
-AI-operated PHPUnit scenario factory and EARS specifications for digging into `ztd-query-php` behavior and improving adapter quality.
+AI-operated scenario factory, reference example, and lightweight consumer-driven contract suite for `ztd-query-php`.
 
 > [!IMPORTANT]
 > This repository is public for visibility, but it is **not** an intake point for external issues, feature requests, proposals, or pull requests.
@@ -16,6 +16,8 @@ This repository exists to:
 - exercise `k-kinzal/ztd-query-mysqli-adapter` and `k-kinzal/ztd-query-pdo-adapter` from a user perspective;
 - keep executable scenarios in PHPUnit so behavior changes are easy to detect;
 - capture the discovered behavior in EARS notation under [`spec/`](spec);
+- stay public as an example for people who want to build a similar scenario/spec repository;
+- act as a lightweight consumer-driven contract suite that the upstream `ztd-query-php` repository can pull and run;
 - turn high-quality, reproducible findings into upstream issues when needed.
 
 This repository is a companion scenario factory for `ztd-query-php`; it is not the library source repository.
@@ -27,6 +29,7 @@ Included here:
 - scenario tests for mysqli and PDO adapters;
 - platform coverage for MySQL, PostgreSQL, and SQLite;
 - user-facing specifications derived from the scenarios;
+- a reference shape for this style of scenario/spec repository;
 - version tracking for the currently verified adapter stack.
 
 Not handled here:
@@ -43,6 +46,15 @@ Not handled here:
 - [`tests/Support/`](tests/Support) - Testcontainers helpers and DSN utilities
 - [`spec/ztd-query-adapter.ears.md`](spec/ztd-query-adapter.ears.md) - EARS specification derived from the scenarios
 - [`composer.json`](composer.json) / [`composer.lock`](composer.lock) - version constraints and currently verified lockfile versions
+
+## Why this repository is public
+
+This repository is public for two practical reasons:
+
+1. it serves as a concrete example for anyone who wants to build a similar scenario-driven quality repository;
+2. it can be consumed from `ztd-query-php` as a lightweight contract-checking target.
+
+The second use is intentionally simple: pull this repository, install dependencies, run `vendor/bin/phpunit`, and compare the observed behavior with the expected consumer-facing scenarios and EARS specification.
 
 ## Verified stack
 
@@ -89,6 +101,14 @@ Notes:
 - The MySQL and PostgreSQL scenarios start reusable Testcontainers-managed containers.
 - SQLite scenarios run entirely in memory.
 - The repository intentionally keeps `minimum-stability: dev` so it can track the latest `ztd-query` work while preferring stable releases when available.
+
+## Contract-checking role
+
+This repository is not a formal contract-testing framework, but it is meant to play a similar role to lightweight consumer-driven contracts testing.
+
+- The consumer-facing expectations live in PHPUnit scenarios and EARS specs.
+- The upstream `ztd-query-php` repository can pull this repository and run the suite as an external expectation check.
+- When the suite fails, the mismatch is visible in user-perspective scenarios rather than only inside implementation-level tests.
 
 ## Working model
 

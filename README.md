@@ -1,15 +1,18 @@
 # ztd-query-php-scenario
 
-Executable PHPUnit scenarios and EARS specifications for digging into `ztd-query-php` behavior and improving adapter quality.
+AI-operated PHPUnit scenario factory and EARS specifications for digging into `ztd-query-php` behavior and improving adapter quality.
 
 > [!IMPORTANT]
 > This repository is public for visibility, but it is **not** an intake point for external issues, feature requests, proposals, or pull requests.
+> It is operated as an AI scenario factory, not as a human collaboration space.
+> GitHub pull requests are disabled for this repository.
 > If you find a reproducible problem in `ztd-query-php`, report it upstream at <https://github.com/k-kinzal/ztd-query-php/issues>.
 
 ## Purpose
 
 This repository exists to:
 
+- continuously generate and validate user-perspective scenarios around `ztd-query-php`;
 - exercise `k-kinzal/ztd-query-mysqli-adapter` and `k-kinzal/ztd-query-pdo-adapter` from a user perspective;
 - keep executable scenarios in PHPUnit so behavior changes are easy to detect;
 - capture the discovered behavior in EARS notation under [`spec/`](spec);
@@ -31,6 +34,7 @@ Not handled here:
 - external support requests;
 - external proposals or roadmap discussion;
 - external bug reports or pull requests;
+- human contribution workflows;
 - library implementation work that belongs in the upstream project.
 
 ## Repository layout
@@ -88,12 +92,13 @@ Notes:
 
 ## Working model
 
-The maintenance workflow for this repository is:
+The repository is maintained through an AI-driven workflow:
 
-1. capture or refine behavior with a PHPUnit scenario;
-2. sync the resulting expectation into the EARS specification;
-3. review the spec for contradictions or omissions;
-4. report only clear, reproducible upstream issues when the scenario exposes a real problem.
+1. generate or refine behavior coverage with a PHPUnit scenario;
+2. validate the scenario suite against the current adapter stack;
+3. sync the resulting expectation into the EARS specification;
+4. review the spec for contradictions or omissions;
+5. report only clear, reproducible upstream issues when the scenario factory exposes a real problem.
 
 This keeps the scenario suite as the executable source of truth and the specification as the human-readable counterpart.
 
@@ -102,4 +107,4 @@ This keeps the scenario suite as the executable source of truth and the specific
 - Upstream project: <https://github.com/k-kinzal/ztd-query-php>
 - Upstream issue tracker: <https://github.com/k-kinzal/ztd-query-php/issues>
 
-If you are not a maintainer of this repository, please use the upstream issue tracker instead of opening an issue or pull request here.
+Please do not open issues or pull requests here.

@@ -390,6 +390,8 @@ When a DROP TABLE statement is executed with ZTD enabled, the system shall clear
 
 After DROP TABLE, subsequent queries on that table shall fall through to the physical database (the physical table is not dropped).
 
+PostgreSQL-specific: `DROP TABLE ... CASCADE` and `DROP TABLE ... RESTRICT` are both supported — the CASCADE/RESTRICT modifiers are parsed but have no effect on shadow store behavior (no FK dependencies in shadow). `DROP TABLE IF EXISTS ... CASCADE` also works correctly. Verified on PostgreSQL PDO.
+
 ### 5.3 TRUNCATE
 When a TRUNCATE statement is executed with ZTD enabled, the system shall clear all shadowed data for the table.
 
@@ -644,10 +646,9 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - **execute_query with UPDATE/DELETE**: MySQLi `execute_query()` (PHP 8.2+) correctly handles UPDATE and DELETE operations with parameters, including multi-row updates/deletes and affected row counts. Verified on MySQLi.
 - **execute_query UPSERT/REPLACE limitation**: MySQLi `execute_query()` with UPSERT (`ON DUPLICATE KEY UPDATE`) and REPLACE does NOT update/replace existing rows — the old row is retained. This contrasts with `prepare()` + `bind_param()` + `execute()` which works correctly. New row inserts via execute_query UPSERT/REPLACE work as expected. Verified on MySQLi.
 - **Prepared upsert limitation (cross-platform)**: PDO prepared `INSERT ... ON CONFLICT DO UPDATE` does NOT update existing rows on any platform (MySQL, PostgreSQL, SQLite). The `exec()` path works correctly on all platforms. Verified on all 3 PDO platforms.
-- **Schema-qualified table names (PostgreSQL)**: INSERT/UPDATE/DELETE with `public.tablename` syntax work correctly (mutation resolver strips schema prefix). SELECT with schema-qualified names returns empty (CTE rewriter limitation). Mixed usage works: insert via `public.tablename`, query via unqualified name. Verified on PostgreSQL PDO.
-- **Doubled-quote escaping ('')**: MySQL (MySQLi and PDO) and SQLite correctly handle doubled single-quote escaping in INSERT/UPDATE/DELETE values and WHERE clauses. PostgreSQL has a bug (issue #25): `stripStringLiterals()` regex does not handle `''` escaping, causing `mapStrippedOffsetToOriginal()` to return incorrect offsets. This breaks WHERE clause extraction for UPDATE/DELETE with escaped quotes in SET values (e.g., `SET body = 'it''s updated' WHERE id = 1` fails with "column d does not exist"). Workaround: use prepared statements with parameter binding.
-- **ALTER TABLE exception types (MySQL)**: MySQL ALTER TABLE validation errors (ColumnAlreadyExistsException, ColumnNotFoundException) are thrown as raw core exceptions, NOT wrapped in ZtdMysqliException/ZtdPdoException. This is inconsistent with other ZTD operations that wrap exceptions. Verified on MySQL MySQLi adapter.
-- **ALTER TABLE error handling (SQLite vs MySQL)**: MySQL validates column existence for ADD/DROP/MODIFY/CHANGE/RENAME COLUMN and throws ColumnAlreadyExistsException or ColumnNotFoundException. SQLite silently ignores all of these conditions — ADD existing column, DROP/RENAME non-existent column all succeed without error. CREATE TABLE on existing shadow table throws on MySQL but not on SQLite CTAS.
+- **Schema-qualified table names (PostgreSQL)**: See 10.3 for details. INSERT/UPDATE/DELETE work; SELECT returns empty due to CTE rewriter limitation. Verified on PostgreSQL PDO.
+- **Doubled-quote escaping ('')**: MySQL and SQLite handle `''` escaping correctly. PostgreSQL has a parser bug (issue #25) — see 10.3 for details. Workaround: use prepared statements.
+- **ALTER TABLE exception types and error handling**: See 10.3 for cross-platform differences. MySQL validates column existence and throws raw core exceptions (ColumnAlreadyExistsException, ColumnNotFoundException — NOT wrapped in adapter exceptions). SQLite silently ignores all validation errors.
 
 ### 10.3 Cross-Platform Inconsistencies
 The following behaviors differ across platforms and may indicate areas for improvement:

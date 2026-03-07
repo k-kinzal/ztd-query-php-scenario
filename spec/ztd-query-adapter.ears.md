@@ -495,6 +495,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Column aliasing: AS in SELECT (simple and expression aliases), aggregate aliases (COUNT, SUM, AVG), alias in ORDER BY and HAVING, CASE expression aliases, COALESCE aliases with NULL fallback, multi-alias JOINs. Verified on all 4 adapters.
 - Batch processing workflow: multi-step shadow accumulation — seeding, conditional UPDATE with IN subquery, JOIN-based filtering, iterative balance updates (self-referencing arithmetic), cross-table aggregation after mutations, prepared statement batch updates with 20+ rows. Verified on all 4 adapters.
 - Shadow store DEFAULT non-enforcement: column DEFAULT values are NOT applied by the shadow store. INSERT with omitted columns receives NULL (not the default). Filed as issue #21.
+- UNION/EXCEPT/INTERSECT mutation reflection: UNION ALL, UNION (distinct), EXCEPT, and INTERSECT correctly reflect shadow store mutations (INSERT, UPDATE, DELETE). UNION with prepared statements and aggregation in UNION branches work correctly. Verified on all 4 adapters (EXCEPT/INTERSECT on SQLite and PostgreSQL only).
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

@@ -104,6 +104,15 @@ UPDATE and DELETE statements with subqueries referencing other shadow tables sha
 
 User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CTE shadowing on MySQL and SQLite. On PostgreSQL, table references inside user CTEs are not rewritten, causing the inner CTE to read from the physical table rather than the shadow store (see 10.3).
 
+### 3.3a Derived Tables (Subqueries in FROM)
+Derived tables (subqueries in the FROM clause) are NOT fully supported by the CTE rewriter. Table references inside derived subqueries are generally not rewritten:
+
+- **MySQL and PostgreSQL**: Derived tables always return empty results because inner table references read from the physical database. This applies both when the derived table is the sole FROM source and when it is JOINed with a regular table.
+- **SQLite**: Derived tables as sole FROM source return empty. However, when a derived table is JOINed with a regular table, table references inside the derived subquery ARE rewritten and return shadow data correctly. Mutations in the shadow store are reflected through derived table JOINs on SQLite.
+
+### 3.3b Views
+Database views are NOT rewritten by the CTE rewriter. Querying a view through ZTD returns empty results because the view's underlying query reads from physical tables, not the shadow store. This applies to all platforms.
+
 ### 3.3c Recursive CTEs
 `WITH RECURSIVE` queries that do NOT reference shadow tables (e.g., number series generation) work correctly on all platforms.
 
@@ -116,15 +125,6 @@ User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CT
 `EXCEPT` and `INTERSECT` set operations work correctly on **SQLite** and **PostgreSQL** — table references in both sides are rewritten to read from the shadow store.
 
 On **MySQL** (both MySQLi and PDO adapters), `EXCEPT` and `INTERSECT` throw `UnsupportedSqlException` ("Multi-statement SQL statement"). The MySQL CTE rewriter incorrectly parses these as multi-statement SQL. UNION works correctly on all platforms.
-
-### 3.3a Derived Tables (Subqueries in FROM)
-Derived tables (subqueries in the FROM clause) are NOT fully supported by the CTE rewriter. Table references inside derived subqueries are generally not rewritten:
-
-- **MySQL and PostgreSQL**: Derived tables always return empty results because inner table references read from the physical database. This applies both when the derived table is the sole FROM source and when it is JOINed with a regular table.
-- **SQLite**: Derived tables as sole FROM source return empty. However, when a derived table is JOINed with a regular table, table references inside the derived subquery ARE rewritten and return shadow data correctly. Mutations in the shadow store are reflected through derived table JOINs on SQLite.
-
-### 3.3b Views
-Database views are NOT rewritten by the CTE rewriter. Querying a view through ZTD returns empty results because the view's underlying query reads from physical tables, not the shadow store. This applies to all platforms.
 
 ### 3.4 Fetch Methods
 
@@ -390,10 +390,10 @@ This is by design - the shadow store is an in-memory simulation layer, not a ful
 
 ### 8.2 Error Recovery
 
-#### 8.2a Transformer Errors
+### 8.2a Transformer Errors
 When malformed SQL is executed with ZTD enabled, the ztd-query transformer may throw `RuntimeException` before the query reaches the database engine. This differs from standard PDO/mysqli error propagation where `PDOException` or `mysqli_sql_exception` would be thrown.
 
-#### 8.2b Shadow Store Consistency After Errors
+### 8.2b Shadow Store Consistency After Errors
 When a SQL error occurs (either from the transformer or the database engine), the shadow store shall remain consistent. Previously inserted/updated/deleted shadow data is not rolled back or corrupted by a subsequent error.
 
 Subsequent valid operations after an error shall execute correctly against the intact shadow store.

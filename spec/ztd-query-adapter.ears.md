@@ -49,7 +49,9 @@ When ZTD mode is disabled, the system shall pass queries directly to the underly
 ### 2.2 Isolation
 While ZTD mode is enabled, all write operations (INSERT, UPDATE, DELETE) shall be tracked in an in-memory shadow store and shall NOT modify the physical database.
 
-While ZTD mode is enabled, SELECT queries shall read from the shadow store via CTE rewriting. The shadow store replaces the physical table entirely; data present only in the physical table is NOT visible through ZTD-enabled SELECT queries. When ZTD mode is disabled, SELECT queries read directly from the physical table.
+While ZTD mode is enabled, SELECT queries on **reflected** tables shall read from the shadow store via CTE rewriting. The shadow store replaces the physical table entirely; data present only in the physical table is NOT visible through ZTD-enabled SELECT queries. When ZTD mode is disabled, SELECT queries read directly from the physical table.
+
+**Note:** SELECT queries on unreflected tables, views, and derived table subqueries may pass through to the physical database (see 3.3a, 3.3b, 7.1).
 
 ### 2.3 Toggle
 The system shall provide `enableZtd()`, `disableZtd()`, and `isZtdEnabled()` methods to control and inspect ZTD mode.
@@ -403,6 +405,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Derived tables (subqueries in FROM): CTE rewriter does not fully rewrite table references inside derived subqueries; returns empty on MySQL/PostgreSQL. SQLite partially supports derived tables in JOIN context (see 3.3a, 10.3).
 - Views: not rewritten by CTE rewriter; querying views through ZTD returns empty results on all platforms.
 - INSERT DEFAULT VALUES: not supported on SQLite ZTD (throws "Insert statement has no values to project"); INSERT with partial columns (omitting columns with defaults) works.
+- JSON data: INSERT/SELECT/UPDATE with JSON data (text column or native JSON/JSONB type), JSON functions (json_extract on SQLite, JSON_EXTRACT/JSON_UNQUOTE on MySQL, ->> on PostgreSQL), JSON in WHERE clauses, prepared statements with JSON; verified on all 4 adapters.
+- CROSS JOIN: explicit CROSS JOIN and implicit cross join (comma-separated FROM) correctly produce cartesian product from shadow tables; mutations (DELETE) correctly reduce CROSS JOIN result set; verified on all 4 adapters.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

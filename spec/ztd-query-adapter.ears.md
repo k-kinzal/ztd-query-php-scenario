@@ -442,6 +442,10 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Date/time functions: DATE(), strftime() (SQLite), YEAR()/MONTH()/DATE_ADD()/DATE_FORMAT() (MySQL), TO_CHAR()/INTERVAL arithmetic (PostgreSQL) work correctly with shadow-stored date values. GROUP BY date parts works. Date comparisons in WHERE work. See 10.3 for PostgreSQL EXTRACT limitation.
 - Advanced window functions: NTILE, FIRST_VALUE, LAST_VALUE with ROWS BETWEEN UNBOUNDED frames, PARTITION BY with ROW_NUMBER and SUM OVER all work correctly from shadow store data; mutations (UPDATE category) correctly change partition groupings; verified on all 4 adapters.
 - NATURAL JOIN: works correctly with shadow data on SQLite; matches on shared column names.
+- PostgreSQL-specific features: ILIKE (case-insensitive LIKE), `::` type casting, `||` string concatenation, POSITION(), GENERATE_SERIES (without shadow table), INSERT/UPDATE RETURNING clause — all work correctly with ZTD shadow data.
+- SQL comments: single-line (`--`) and block (`/* */`) comments preserved through CTE rewriting; verified on all 4 adapters.
+- INSERT without column list: `INSERT INTO t VALUES (...)` works correctly on all platforms.
+- Multi-table JOINs: 4-table and 5-table JOINs work correctly with shadow data; mutations on joined tables correctly affect JOIN results; verified on all 4 adapters.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

@@ -123,6 +123,14 @@ When `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL) is executed and a duplicat
 ### 4.2b REPLACE
 When a `REPLACE INTO` statement (MySQL) is executed with ZTD enabled, the system shall delete any existing row with matching primary key and insert the new row in the shadow store.
 
+### 4.2c Multi-Table UPDATE
+When a multi-table UPDATE statement (e.g., `UPDATE users u JOIN orders o ON u.id = o.user_id SET u.active = 0 WHERE o.amount > 150`) is executed with ZTD enabled, the system shall update the target table rows in the shadow store based on the JOIN condition, without modifying the physical database.
+
+Only rows matching the JOIN and WHERE conditions shall be updated; other rows remain unchanged.
+
+### 4.2d Multi-Table DELETE
+When a multi-table DELETE statement (e.g., `DELETE o FROM orders o JOIN users u ON o.user_id = u.id WHERE u.name = 'Bob'`) is executed with ZTD enabled, the system shall delete the specified rows from the shadow store based on the JOIN condition, without modifying the physical database.
+
 ### 4.3 DELETE
 When a DELETE is executed with ZTD enabled, the system shall track the deletion in the shadow store without modifying the physical table.
 
@@ -290,6 +298,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - DDL shadow-created table operations (INSERT/UPDATE/DELETE on shadow-created tables).
 - Statement methods (closeCursor, setFetchMode, bindColumn, columnCount, getIterator/foreach).
 - UPSERT operations (INSERT ... ON DUPLICATE KEY UPDATE on MySQL; INSERT ... ON CONFLICT on PostgreSQL).
+- Multi-table UPDATE/DELETE operations (UPDATE ... JOIN, DELETE ... JOIN) on MySQL (both adapters).
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

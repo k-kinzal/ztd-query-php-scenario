@@ -299,7 +299,22 @@ When `setFetchMode(PDO::FETCH_CLASS, ClassName)` is called on a `ZtdPdoStatement
 
 All FETCH_CLASS modes work correctly with shadow store data, including after shadow INSERT, UPDATE, and DELETE operations. Verified on all 3 PDO platforms.
 
-### 4.11 Statement Property Access (MySQLi)
+### 4.11 PDO Error Modes
+When `ATTR_ERRMODE` is set to `ERRMODE_EXCEPTION` (the default in most ZTD test scenarios), invalid SQL shall throw `PDOException`.
+
+When `ATTR_ERRMODE` is set to `ERRMODE_SILENT`, invalid SQL (e.g., querying a non-existent table) shall return `false` from `query()` instead of throwing. The shadow store remains intact — subsequent valid queries succeed.
+
+When `ATTR_ERRMODE` is set to `ERRMODE_WARNING`, invalid SQL shall emit a PHP warning and return `false`.
+
+Normal ZTD operations (INSERT, UPDATE, DELETE, SELECT on shadow tables) work correctly in all three error modes. Shadow data is not affected by the error mode setting.
+
+When `setAttribute(PDO::ATTR_ERRMODE, ...)` is called mid-session to switch error modes, the new mode takes effect immediately for subsequent operations. For example, switching from `ERRMODE_SILENT` to `ERRMODE_EXCEPTION` causes subsequent invalid queries to throw `PDOException` instead of returning `false`.
+
+Prepared statements also respect the current error mode — a prepared statement `execute()` on an invalid query in `ERRMODE_SILENT` returns `false` without throwing.
+
+Verified on all 3 PDO platforms.
+
+### 4.12 Statement Property Access (MySQLi)
 When a prepared statement is created via `ZtdMysqli::prepare()`, the ZTD adapter rewrites and executes the query internally. Accessing statement-level properties like `param_count` on the `ZtdMysqliStatement` throws `Error` ("ZtdMysqliStatement object is already closed") because the underlying statement lifecycle is managed internally.
 
 Use `ztdAffectedRows()` for affected row counts. `store_result()` works on prepared SELECT statements after `execute()`. `field_count` and `num_rows` work correctly on `mysqli_result` objects returned by `query()`.
@@ -566,6 +581,9 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - nextRowset(): delegates to underlying PDO driver. MySQL returns false (no additional result sets from CTE queries). SQLite and PostgreSQL throw PDOException "Driver does not support this function". Verified on all 3 PDO platforms.
 - MySQL backslash corruption: string values containing backslashes in shadow store are corrupted by CTE rewriter. `\t` → tab, `\n` → newline, `\b` → backspace, `\r` → carriage return. Double backslash `\\` also affected. Occurs with both exec() and prepared statements. SQLite and PostgreSQL not affected. Verified on MySQL PDO.
 - PostgreSQL BOOLEAN/BIGINT edge cases: BOOLEAN `true` via prepared statement works, but `false` fails on SELECT (CTE generates invalid `CAST('' AS BOOLEAN)`). BIGINT within int32 range works, values exceeding int32 fail (CTE generates `CAST(value AS integer)` instead of `bigint`). Verified on PostgreSQL PDO.
+- PDO error mode interactions: `ERRMODE_EXCEPTION` throws on invalid SQL, `ERRMODE_SILENT` returns false, `ERRMODE_WARNING` emits warning and returns false. Normal shadow operations work in all modes. Switching error modes mid-session takes effect immediately. Shadow store remains intact after errors in any mode. Verified on all 3 PDO platforms.
+- CASE WHEN in ORDER BY: `ORDER BY CASE role WHEN 'admin' THEN 1 WHEN 'moderator' THEN 2 ELSE 3 END, name` correctly sorts shadow data by custom priority. Works with both `query()` and `prepare()`+`execute()`. Verified on all 3 PDO platforms.
+- Interleaved prepared statements: multiple prepared statements on the same connection can be executed in interleaved fashion (prepare A, prepare B, execute A, execute B, re-execute A with different params). Each statement maintains its own CTE snapshot and result set independently. Verified on all 3 PDO platforms.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

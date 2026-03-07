@@ -497,6 +497,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - DDL shadow-created table operations (INSERT/UPDATE/DELETE on shadow-created tables).
 - Statement methods (closeCursor, setFetchMode, bindColumn, columnCount, getIterator/foreach).
 - UPSERT operations (INSERT ... ON DUPLICATE KEY UPDATE on MySQL; INSERT ... ON CONFLICT on PostgreSQL).
+- Insert-ignore operations (INSERT IGNORE on MySQL; INSERT OR IGNORE on SQLite; ON CONFLICT DO NOTHING on PostgreSQL).
 - Multi-table UPDATE/DELETE operations (UPDATE ... JOIN, DELETE ... JOIN on MySQL; UPDATE ... FROM, DELETE ... USING on PostgreSQL).
 - User-written CTE (WITH) queries work alongside ZTD CTE shadowing (MySQL and SQLite; see 10.3 for PostgreSQL limitation).
 - INSERT ... SELECT with explicit column lists.
@@ -614,8 +615,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - closeCursor() then re-execute: calling `closeCursor()` mid-fetch then `execute()` with new params works correctly. Verified on all 3 PDO platforms.
 - REST API workflow patterns: paginated listing, single-record fetch, create/update/delete, multi-table JOIN filtering, LIKE search, BETWEEN price range, conditional aggregation, soft-delete patterns all work correctly with ZTD shadow store. Verified on all 3 PDO platforms.
 - ZTD toggle error resilience: errors during ZTD-enabled or ZTD-disabled operations do not corrupt the shadow store. Shadow data persists through toggle cycles even after errors. Prepared statements created with ZTD enabled survive toggle cycles (retain their CTE-rewritten form). Shadow-only tables (created via ZTD CREATE TABLE) are not accessible when ZTD is disabled (throw PDOException "no such table" on SQLite). On MySQL/PostgreSQL (where physical tables exist), shadow INSERT/UPDATE/DELETE changes are not visible when ZTD is disabled — physical DB retains original data. Multiple toggle cycles accumulate shadow data correctly. Verified on all 3 PDO platforms and MySQLi.
-- INSERT IGNORE (MySQL): `INSERT IGNORE INTO` silently skips duplicate PK rows in shadow store. Non-duplicate rows inserted normally. Batch INSERT IGNORE with mixed duplicates correctly skips only duplicate rows. Prepared INSERT IGNORE works correctly. Verified on MySQL PDO and MySQLi.
-- INSERT ignore equivalents (cross-platform): PostgreSQL `INSERT ... ON CONFLICT (col) DO NOTHING` and SQLite `INSERT OR IGNORE INTO` both correctly skip duplicate PK rows in the shadow store. Prepared variants work correctly. Non-duplicate rows are inserted normally. Subsequent normal INSERT operations are unaffected. Physical isolation confirmed (shadow data does not leak to physical DB). Verified on PostgreSQL PDO and SQLite PDO.
+- Insert-ignore duplicate handling: `INSERT IGNORE INTO` (MySQL), `INSERT OR IGNORE INTO` (SQLite), and `INSERT ... ON CONFLICT (col) DO NOTHING` (PostgreSQL) all correctly skip duplicate PK rows in the shadow store. Non-duplicate rows are inserted normally. Batch INSERT IGNORE with mixed duplicates correctly skips only duplicate rows. Prepared insert-ignore works correctly. Subsequent normal INSERT operations are unaffected. Physical isolation confirmed (shadow data does not leak to physical DB). Verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO).
 - PostgreSQL DISTINCT ON: `SELECT DISTINCT ON (col) ... ORDER BY col, ...` works correctly with shadow data, returning the first row per group. Verified on PostgreSQL PDO.
 - PostgreSQL LATERAL JOIN: `FROM t, LATERAL (SELECT ... FROM t2 WHERE t2.fk = t.pk ...)` tested — may return empty results (similar to derived table limitation) but does not error. Verified on PostgreSQL PDO.
 - PostgreSQL STRING_AGG with ORDER BY: `STRING_AGG(col, ', ' ORDER BY col)` correctly aggregates shadow data with ordering. Verified on PostgreSQL PDO.
@@ -624,6 +624,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - MySQL IF/IFNULL/CONCAT_WS: conditional and string functions work correctly with shadow data including NULL handling. Verified on MySQL PDO.
 - MySQL REVERSE/LPAD: string manipulation functions work correctly with shadow data. Verified on MySQL PDO.
 - Correlated scalar subqueries with COUNT/SUM: `(SELECT COUNT(*) FROM t2 WHERE t2.fk = t1.pk)` in SELECT list works correctly across shadow tables. Verified on MySQL PDO.
+- ALTER TABLE advanced operations (MySQL): RENAME TABLE, CHANGE COLUMN with existing shadow data (column renamed in store), MODIFY COLUMN with existing data (type change, data preserved), DROP COLUMN removes data from shadow rows, ADD COLUMN then INSERT with new column, multiple sequential ALTER operations. Physical isolation confirmed (ALTER TABLE changes do not leak to physical table). ALTER TABLE error recovery: ColumnAlreadyExistsException for duplicate column, ColumnNotFoundException for nonexistent column, shadow store intact after errors. Verified on MySQL PDO and MySQLi.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
@@ -634,6 +635,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - **CREATE TABLE LIKE**: Verified on MySQL, PostgreSQL, and SQLite. PostgreSQL uses `CREATE TABLE t (LIKE source)` syntax.
 - **CREATE TABLE AS SELECT**: Fully supported on MySQL and PostgreSQL. SQLite has limitations (see 5.1c).
 - **Unknown Schema**: Behavior rules and unknown schema handling are verified on all platforms. See 10.3 for cross-platform inconsistencies.
+- **Insert-ignore syntax**: MySQL uses `INSERT IGNORE INTO`, SQLite uses `INSERT OR IGNORE INTO`, PostgreSQL uses `INSERT ... ON CONFLICT (col) DO NOTHING`. All three syntaxes correctly skip duplicate PK rows in the shadow store. On SQLite, the standard SQL `ON CONFLICT DO NOTHING` syntax (without the `OR IGNORE` shorthand) does NOT skip duplicates (see 10.3). Verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO).
 
 ### 10.3 Cross-Platform Inconsistencies
 The following behaviors differ across platforms and may indicate areas for improvement:

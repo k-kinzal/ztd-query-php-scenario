@@ -51,7 +51,7 @@ While ZTD mode is enabled, all write operations (INSERT, UPDATE, DELETE) shall b
 
 While ZTD mode is enabled, SELECT queries on **reflected** tables shall read from the shadow store via CTE rewriting. The shadow store replaces the physical table entirely; data present only in the physical table is NOT visible through ZTD-enabled SELECT queries. When ZTD mode is disabled, SELECT queries read directly from the physical table.
 
-**Note:** SELECT queries on unreflected tables, views, and derived table subqueries may pass through to the physical database (see 3.3a, 3.3b, 7.1).
+**Note:** SELECT queries on unreflected tables, views, and derived table subqueries may pass through to the physical database (see 3.3a, 3.3b).
 
 ### 2.3 Toggle
 The system shall provide `enableZtd()`, `disableZtd()`, and `isZtdEnabled()` methods to control and inspect ZTD mode.
@@ -331,7 +331,7 @@ For `ZtdMysqli`, transaction control should use the dedicated methods (`begin_tr
 ### 7.1 Passthrough (default)
 If `unknownSchemaBehavior` is `Passthrough` (the default) and a write operation (UPDATE, DELETE) references an unreflected table, the system shall pass the operation directly to the underlying connection (breaking ZTD isolation for that operation).
 
-**Platform note:** This passthrough behavior is verified on MySQL (both adapters). On PostgreSQL and SQLite, UPDATE on unreflected tables throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of passing through (see 10.3). DELETE on unreflected tables passes through on MySQL and SQLite, but throws `RuntimeException` on PostgreSQL.
+**Platform note:** This passthrough behavior is verified on MySQL via `new ZtdMysqli(...)` and `new ZtdPdo(...)` constructors. On MySQL via `ZtdPdo::fromPdo()`, PostgreSQL, and SQLite, UPDATE on unreflected tables throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of passing through — meaning `unknownSchemaBehavior: Passthrough` does NOT take effect for UPDATE operations with these constructors/platforms (see 10.3). DELETE on unreflected tables passes through on MySQL and SQLite, but throws `RuntimeException` on PostgreSQL.
 
 SELECT and INSERT operations on unreflected tables pass through to the physical database or shadow store respectively, regardless of this setting.
 

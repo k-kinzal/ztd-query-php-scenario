@@ -309,6 +309,16 @@ The shadow store does NOT enforce database constraints. The following constraint
 
 This is by design - the shadow store is an in-memory simulation layer, not a full database engine. Constraint enforcement is deferred to the physical database when changes are eventually applied.
 
+## 8.5 Error Recovery
+
+### 8.5a Transformer Errors
+When malformed SQL is executed with ZTD enabled, the ztd-query transformer may throw `RuntimeException` before the query reaches the database engine. This differs from standard PDO/mysqli error propagation where `PDOException` or `mysqli_sql_exception` would be thrown.
+
+### 8.5b Shadow Store Consistency After Errors
+When a SQL error occurs (either from the transformer or the database engine), the shadow store shall remain consistent. Previously inserted/updated/deleted shadow data is not rolled back or corrupted by a subsequent error.
+
+Subsequent valid operations after an error shall execute correctly against the intact shadow store.
+
 ## 9. Configuration
 
 ### 9.1 ZtdConfig
@@ -346,6 +356,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - INSERT ... SELECT with explicit column lists.
 - Multi-row INSERT and NULL value handling.
 - Configuration (ZtdConfig, unsupported behavior, behavior rules, ZTD toggle cycles).
+- Advanced query patterns: CASE expressions, LIKE, IN, BETWEEN, EXISTS/NOT EXISTS, COALESCE, window functions (ROW_NUMBER, SUM OVER).
+- Error recovery: shadow store remains consistent after transformer errors, SQL errors, and constraint violations; subsequent operations succeed.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
@@ -365,7 +377,7 @@ The following behaviors differ across platforms and may indicate areas for impro
 
 - **INSERT ... ON CONFLICT DO NOTHING (SQLite)**: On PostgreSQL, `ON CONFLICT DO NOTHING` correctly ignores duplicate inserts in the shadow store. On SQLite, the same syntax inserts both rows into the shadow store (the DO NOTHING clause is not processed, and the shadow store does not enforce PK constraints). `ON CONFLICT DO UPDATE` works correctly on both platforms.
 
-- **INSERT ... SELECT * (MySQL)**: On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` ("INSERT column count does not match SELECT column count") because the MySQL InsertTransformer counts `SELECT *` as 1 column instead of expanding it. The workaround is to use explicit column lists: `INSERT INTO t (a, b) SELECT a, b FROM s`. On SQLite, `INSERT ... SELECT *` works correctly.
+- **INSERT ... SELECT * (MySQL only)**: On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` ("INSERT column count does not match SELECT column count") because the MySQL InsertTransformer counts `SELECT *` as 1 column instead of expanding it. The workaround is to use explicit column lists: `INSERT INTO t (a, b) SELECT a, b FROM s`. On SQLite and PostgreSQL, `INSERT ... SELECT *` works correctly.
 
 - **User-written CTEs (PostgreSQL)**: On MySQL and SQLite, user-written CTE queries (e.g., `WITH cte AS (SELECT * FROM t) SELECT * FROM cte`) work correctly — table references inside the user's CTE are rewritten to read from the shadow store. On PostgreSQL, table references inside user CTEs are NOT rewritten, so the inner CTE reads from the physical table (empty) instead of the shadow store, returning 0 rows.
 

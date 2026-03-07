@@ -130,12 +130,24 @@ On **MySQL** (both MySQLi and PDO adapters), `EXCEPT` and `INTERSECT` throw `Uns
 
 #### PDO Adapter
 When ZTD is enabled, the following PDO fetch methods shall return correct results from the shadow store:
-- `fetchAll()` with `FETCH_ASSOC`, `FETCH_NUM`, `FETCH_BOTH` modes.
+- `fetchAll()` with `FETCH_ASSOC`, `FETCH_NUM`, `FETCH_BOTH`, `FETCH_OBJ`, `FETCH_COLUMN`, `FETCH_CLASS`, `FETCH_FUNC` modes.
+- `fetchAll()` with combined modes: `FETCH_GROUP|FETCH_ASSOC`, `FETCH_UNIQUE|FETCH_ASSOC`, `FETCH_GROUP|FETCH_COLUMN`, `FETCH_KEY_PAIR`.
+- `fetchAll(PDO::FETCH_FUNC, callable)` invokes the callback for each row and returns transformed results.
 - `fetch()` for row-by-row iteration (returns `false` when no more rows).
-- `fetchColumn()` for retrieving a single column value.
+- `fetch(PDO::FETCH_BOUND)` with `bindColumn()` populates bound variables from shadow store data.
+- `fetchColumn()` for retrieving a single column value (supports column index argument).
 - `fetchObject()` for retrieving rows as `stdClass` objects.
+- `setFetchMode(PDO::FETCH_CLASS, ClassName)` and `setFetchMode(PDO::FETCH_INTO, $obj)` — see section 4.10.
 - `columnCount()` shall return the correct number of columns in the result set.
+- `getColumnMeta($index)` returns column metadata (name, table, etc.) from the shadow store result set.
 - `getIterator()` / `foreach` iteration over a `ZtdPdoStatement` shall yield rows correctly.
+- `query($sql, $mode, $arg)` accepts a fetch mode as second argument (e.g., `query($sql, PDO::FETCH_COLUMN, 0)`).
+
+**PDO Attribute Interactions:**
+- `ATTR_DEFAULT_FETCH_MODE`: Connection-level default fetch mode is respected by ZTD statements. `setFetchMode()` on a statement overrides the connection-level default.
+- `ATTR_EMULATE_PREPARES`: Both `true` and `false` work correctly with ZTD shadow store on all platforms. ZTD performs its own query rewriting regardless of this setting.
+- `ATTR_STRINGIFY_FETCHES`: Affects type coercion of values returned from shadow store queries. When `true`, numeric values are returned as strings.
+- `ATTR_CASE`: Column name case is preserved through CTE rewriting (`CASE_NATURAL`).
 
 #### MySQLi Adapter
 When ZTD is enabled, the following MySQLi result methods shall return correct results from the shadow store:
@@ -539,6 +551,14 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - debugDumpParams(): outputs rewritten SQL (not original user SQL) because ZTD rewrites at prepare time. INSERT shows as `SELECT ? AS "col", ...`, UPDATE/DELETE show as `WITH "table" AS (...) SELECT ...`. SELECT shows CTE-prepended form. Parameter metadata (Params count, position, type) is correctly reported. Works before and after execute, and after re-execution. Verified on all 3 PDO platforms.
 - FETCH_CLASS with custom classes: `setFetchMode(PDO::FETCH_CLASS, ClassName)`, `fetchAll(PDO::FETCH_CLASS, ClassName)`, constructor args, FETCH_PROPS_LATE, and FETCH_INTO all work correctly with shadow store data. Class instances are populated with correct column values from CTE-rewritten queries. Works with JOINs, prepared statements, and after shadow mutations. Verified on all 3 PDO platforms.
 - MySQLi statement introspection: `param_count` on `ZtdMysqliStatement` throws "already closed" because ZTD manages statement lifecycle internally. `affected_rows` and `insert_id` on `ZtdMysqli` throw "Property access is not allowed yet" (use `ztdAffectedRows()` instead). `field_count` and `num_rows` on `mysqli_result` work correctly. `errno`/`error` report 0/empty after success. `store_result()` on prepared SELECT works. Verified on MySQLi.
+- bindColumn() and FETCH_BOUND: `bindColumn()` by column number and by column name, with `fetch(PDO::FETCH_BOUND)` iteration, works correctly with shadow store data. bindColumn with type hint (PDO::PARAM_INT, PDO::PARAM_STR) works. After shadow INSERT and UPDATE, bound variables reflect current shadow state. Verified on all 3 PDO platforms.
+- FETCH_FUNC callback: `fetchAll(PDO::FETCH_FUNC, callable)` correctly transforms each row via the callback, including after shadow mutations and with prepared statements. Verified on SQLite.
+- PDO attribute interactions: `ATTR_EMULATE_PREPARES` (both true/false), `ATTR_STRINGIFY_FETCHES`, `ATTR_DEFAULT_FETCH_MODE`, `ATTR_CASE` all work correctly with ZTD shadow store. Attribute changes mid-session take effect for subsequent queries. Verified on SQLite and MySQL.
+- exec() return values and rowCount(): `exec()` returns correct affected row counts for INSERT (1 or multi-row), UPDATE (matched rows), DELETE (deleted rows), and zero-match operations. `rowCount()` on prepared statements returns correct counts. Sequential operations return independent counts. Consistent across all 4 adapters.
+- ORM-style statement reuse: prepare-once/execute-many with batch INSERT, SELECT with different params, bindValue/bindParam reuse, paginated queries with LIMIT/OFFSET reuse, find-by-ID pattern, multiple coexisting prepared statements used interleaved. Verified on SQLite.
+- DDL mid-session lifecycle: DROP TABLE clears shadow data. On SQLite (shadow-created tables), querying after DROP throws "no such table" and INSERT throws "Cannot determine columns". On MySQL (physically existing tables), querying after DROP falls through to physical DB (0 rows). DROP+CREATE cycle works on both platforms but behavior differs. Cross-table shadow isolation preserved after DROP. Verified on SQLite and MySQL.
+- Error boundary resilience: Shadow store remains intact after invalid SQL, missing table queries, prepare errors, and multiple consecutive errors. Write operations succeed after errors. Mid-workflow error recovery (successful op → error → successful op) maintains shadow consistency. Error code cleared after successful recovery. Verified on SQLite.
+- Prepare-time mutation visibility: Prepared SELECT does not see post-prepare INSERT/UPDATE/DELETE (CTE snapshot frozen). New prepare() after mutation sees latest state. Two prepared statements hold different snapshots (before and after mutation). JOIN prepared before mutation uses frozen snapshot. Re-executed DELETE uses frozen snapshot (reports affected rows for already-deleted rows). query() always sees latest state. Verified on SQLite.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.

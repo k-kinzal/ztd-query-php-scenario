@@ -448,6 +448,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - Multi-table JOINs: 4-table and 5-table JOINs work correctly with shadow data; mutations on joined tables correctly affect JOIN results; verified on all 4 adapters.
 - MySQL-specific functions: IF(), IFNULL(), FIND_IN_SET(), CONCAT_WS(), REVERSE(), LPAD() all work correctly with shadow data.
 - != operator: works identically to <> on all platforms.
+- HAVING without GROUP BY: aggregate conditions without GROUP BY (e.g., `HAVING COUNT(*) > N`) work correctly on all platforms.
+- SQLite-specific functions: typeof(), INSTR(), IIF(), printf(), HEX(), NULLIF(), CAST() all work correctly with shadow data.
 
 ### 10.2 Platform-Specific Notes
 - **TRUNCATE**: Verified on MySQL and PostgreSQL. SQLite does not have native TRUNCATE TABLE syntax and attempting `TRUNCATE TABLE` throws an exception; `DELETE FROM table` (DML) is the equivalent but follows regular DELETE processing through ZTD.
@@ -505,5 +507,7 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **NULL sort order in ORDER BY**: MySQL and SQLite sort NULLs first in ASC order. PostgreSQL sorts NULLs last in ASC order. This is standard SQL behavior (not a ZTD issue), but tests should account for the difference.
 
 - **ON DUPLICATE KEY UPDATE self-referencing expression (MySQL)**: When using `INSERT ... ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)`, the shadow store loses the original row's column value. Instead of computing `old_value + new_value`, the `stock` reference in the SET clause does not resolve to the existing row's value. Simple replacement (e.g., `stock = VALUES(stock)`) works correctly. Users needing increment-style upserts should read the current value first and compute the new value in application code.
+
+- **Upsert via prepared statements (MySQL and PostgreSQL)**: `REPLACE INTO` (MySQL) and `INSERT ... ON CONFLICT DO UPDATE` (PostgreSQL) via **prepared statements** (`prepare()` + `execute()`) do not update existing rows in the shadow store — the old row is retained unchanged. The same operations work correctly via `exec()` (non-prepared). Users should use `exec()` for upsert operations, or execute SELECT + conditional INSERT/UPDATE in application code.
 
 - **Unknown schema EmptyResult/Notice modes (PostgreSQL/SQLite)**: On MySQL, all four `unknownSchemaBehavior` modes (Passthrough, Exception, EmptyResult, Notice) work correctly for both UPDATE and DELETE on unreflected tables. On PostgreSQL and SQLite, only DELETE operations respect EmptyResult and Notice modes. UPDATE operations throw `RuntimeException` ("UPDATE simulation requires primary keys") regardless of the configured behavior, because the error occurs in the ShadowStore before the unknown schema behavior check is applied.

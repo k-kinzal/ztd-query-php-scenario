@@ -6,6 +6,12 @@ This file is for agents to understand the context of the project.
 
 The objective of this project is to utilize k-kinzal/ztd-query-mysqli-adapter and k-kinzal/ztd-query-pdo-adapter from a user perspective.
 
+## Something important
+
+- Have you covered all the patterns that ztd-query-php satisfies?
+- Does it comprehensively cover everything that ztd-query-php supports?
+- Is it designed to be compatible with new versions when they are released?
+
 ## What You Should Do
 
 - Create user scenarios using PHPUnit.

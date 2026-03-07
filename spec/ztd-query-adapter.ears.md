@@ -77,7 +77,7 @@ Query rewriting occurs at **prepare time**, not execute time. If ZTD mode is tog
 
 ### 3.3 Complex Queries
 When ZTD is enabled, the CTE rewriting shall correctly handle:
-- **JOINs** (INNER JOIN, LEFT JOIN, FULL OUTER JOIN on PostgreSQL) across multiple shadow tables.
+- **JOINs** (INNER JOIN, LEFT JOIN, RIGHT JOIN, FULL OUTER JOIN on PostgreSQL) across multiple shadow tables.
 - **Self-JOINs** where the same shadow table is referenced with different aliases.
 - **Aggregations** (COUNT, SUM, MIN, MAX) with GROUP BY and HAVING clauses.
 - **Subqueries** in WHERE clauses (e.g., `WHERE id IN (SELECT ...)`).
@@ -96,6 +96,14 @@ When ZTD is enabled, the CTE rewriting shall correctly handle:
 UPDATE and DELETE statements with subqueries referencing other shadow tables shall also be correctly rewritten.
 
 User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CTE shadowing on MySQL and SQLite. On PostgreSQL, table references inside user CTEs are not rewritten, causing the inner CTE to read from the physical table rather than the shadow store (see 10.3).
+
+### 3.3c Recursive CTEs
+`WITH RECURSIVE` queries that do NOT reference shadow tables (e.g., number series generation) work correctly on all platforms.
+
+`WITH RECURSIVE` queries that reference shadow tables are NOT supported:
+- **MySQL**: The CTE rewriter prepends its own `WITH` clause before the `RECURSIVE` keyword, producing invalid SQL (syntax error). This applies to both MySQLi and PDO adapters.
+- **SQLite**: The query executes but returns empty results — table references inside the recursive CTE are not rewritten, so the query reads from the physical table (empty).
+- **PostgreSQL**: Same behavior as non-recursive user CTEs — returns empty results because table references inside CTEs are not rewritten (see 10.3).
 
 ### 3.3a Derived Tables (Subqueries in FROM)
 Derived tables (subqueries in the FROM clause) are NOT fully supported by the CTE rewriter. Table references inside derived subqueries are generally not rewritten:
@@ -408,6 +416,8 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - JSON data: INSERT/SELECT/UPDATE with JSON data (text column or native JSON/JSONB type), JSON functions (json_extract on SQLite, JSON_EXTRACT/JSON_UNQUOTE on MySQL, ->> on PostgreSQL), JSON in WHERE clauses, prepared statements with JSON; verified on all 4 adapters.
 - CROSS JOIN: explicit CROSS JOIN and implicit cross join (comma-separated FROM) correctly produce cartesian product from shadow tables; mutations (DELETE) correctly reduce CROSS JOIN result set; verified on all 4 adapters.
 - FULL OUTER JOIN: correctly handles NULL-extended rows from both sides of the join; works with prepared statements; verified on PostgreSQL (not available on MySQL/SQLite).
+- RIGHT JOIN: correctly preserves unmatched rows from the right table with NULLs on the left; verified on all 4 adapters.
+- Recursive CTEs: `WITH RECURSIVE` without shadow table references works on all platforms. `WITH RECURSIVE` referencing shadow tables fails with syntax error on MySQL, returns empty on SQLite/PostgreSQL (see 3.3c, 10.3).
 - MySQLi statement methods: `ztdAffectedRows()` returns correct affected row counts for INSERT/UPDATE/DELETE, `get_result()` + `fetch_all()` for SELECT, `bind_result()` + `fetch()` for bound variable retrieval, `reset()` clears ZTD result and allows re-execute, `free_result()` allows re-execute; verified on MySQLi.
 
 ### 10.2 Platform-Specific Notes
@@ -454,6 +464,8 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **UPDATE with correlated subquery in SET clause**: `UPDATE t1 SET col = (SELECT SUM(col2) FROM t2 WHERE t2.fk = t1.pk)` works on MySQL. On SQLite, the CTE rewriter produces "near FROM: syntax error". On PostgreSQL, the CTE rewriter produces "column must appear in GROUP BY clause" error.
 
 - **DELETE without WHERE clause (SQLite)** (Issue #7): On MySQL and PostgreSQL, `DELETE FROM table` (without WHERE clause) correctly clears the shadow store. On SQLite, `DELETE FROM table` without a WHERE clause is silently ignored — the shadow store retains all rows. The workaround is to use `DELETE FROM table WHERE 1=1` which works correctly on all platforms.
+
+- **Recursive CTEs with shadow tables**: On MySQL, `WITH RECURSIVE` referencing a shadow table causes a syntax error because the CTE rewriter prepends `WITH ztd_shadow AS (...)` before the `RECURSIVE` keyword, producing `WITH ztd_shadow AS (...), RECURSIVE cat_tree AS (...)` — invalid SQL. On SQLite, the query executes but returns empty results (table references not rewritten). On PostgreSQL, same as SQLite (returns empty). Non-recursive `WITH` works on MySQL and SQLite but not PostgreSQL (documented separately). Users needing hierarchical queries with ZTD should use application-level recursion or disable ZTD for those queries.
 
 - **Derived tables in JOIN (SQLite vs MySQL/PostgreSQL)**: On SQLite, derived tables JOINed with regular tables work correctly — the CTE rewriter rewrites table references inside the derived subquery, and shadow mutations are visible. On MySQL and PostgreSQL, derived tables always return empty results regardless of JOIN context, because the CTE rewriter does not rewrite table references inside derived subqueries. Users relying on derived tables with ZTD should use direct JOINs or CTEs instead.
 

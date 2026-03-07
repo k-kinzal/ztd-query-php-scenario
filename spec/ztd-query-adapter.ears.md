@@ -83,6 +83,13 @@ When ZTD is enabled, the CTE rewriting shall correctly handle:
 - **UNION** queries combining results from shadow tables.
 - **ORDER BY** with LIMIT and OFFSET.
 - **DISTINCT** selection.
+- **CASE** expressions (in SELECT and UPDATE SET clauses).
+- **LIKE** with wildcard patterns.
+- **IN** with literal value lists.
+- **BETWEEN** range conditions.
+- **EXISTS** / **NOT EXISTS** correlated subqueries.
+- **COALESCE** and other SQL functions.
+- **Window functions** (ROW_NUMBER, SUM OVER PARTITION BY).
 
 UPDATE and DELETE statements with subqueries referencing other shadow tables shall also be correctly rewritten.
 

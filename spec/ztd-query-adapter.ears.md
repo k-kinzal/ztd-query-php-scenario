@@ -151,6 +151,8 @@ When an `INSERT ... SELECT` is executed with ZTD enabled, the system shall inser
 
 On MySQL, `INSERT ... SELECT` requires explicit column lists on both sides (e.g., `INSERT INTO t (a, b) SELECT a, b FROM s`). Using `SELECT *` throws `RuntimeException` ("INSERT column count does not match SELECT column count") because the MySQL InsertTransformer counts `*` as 1 column instead of expanding it. On SQLite, `INSERT ... SELECT *` works correctly (see 10.3).
 
+**Limitation**: `INSERT ... SELECT` with LEFT JOIN + GROUP BY + aggregation does NOT work in ZTD mode. On SQLite and PostgreSQL, the rows are inserted but all column values are NULL. On MySQL, it throws a column-not-found error (see 10.3). The workaround is to SELECT first, then INSERT the results manually in application code.
+
 ### 4.2 UPDATE
 When an UPDATE is executed with ZTD enabled, the system shall track the updated rows in the shadow store without modifying the physical table.
 
@@ -165,7 +167,7 @@ When an `INSERT ... ON DUPLICATE KEY UPDATE` (MySQL) or `INSERT ... ON CONFLICT 
 - Insert the row if no duplicate primary key exists in the shadow store.
 - Update the matching row if a duplicate primary key exists in the shadow store.
 
-When `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL) is executed and a duplicate exists, the insert is silently ignored.
+When `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL) is executed and a duplicate exists, the insert is silently ignored. **Note**: On SQLite, `ON CONFLICT DO NOTHING` inserts both rows because the shadow store does not enforce PK constraints (see 10.3). Use `INSERT OR IGNORE` instead on SQLite.
 
 ### 4.2b REPLACE
 When a `REPLACE INTO` statement (MySQL) is executed with ZTD enabled, the system shall delete any existing row with matching primary key and insert the new row in the shadow store.
@@ -192,6 +194,8 @@ When a DELETE is executed with ZTD enabled, the system shall track the deletion 
 Subsequent SELECT queries shall not include the deleted rows.
 
 DELETE operations on unreflected tables follow the same `unknownSchemaBehavior` rules as UPDATE (see 4.2).
+
+**Limitation (SQLite)**: `DELETE FROM table` without a WHERE clause is silently ignored on SQLite — the shadow store retains all rows. The workaround is to use `DELETE FROM table WHERE 1=1` which works correctly on all platforms (see 10.3).
 
 ### 4.4 Affected Row Count
 After a write operation via `ZtdMysqli::query()`, `lastAffectedRows()` shall return the number of rows affected by the ZTD-simulated operation.
@@ -409,7 +413,7 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - CREATE TABLE AS SELECT (MySQL and PostgreSQL; see 10.3 for SQLite limitation).
 - Query rewriting at prepare time (toggling ZTD between prepare/execute retains rewritten query).
 - DDL edge cases: CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, TRUNCATE then INSERT cycles.
-- Data type handling: DATE, DATETIME/TIMESTAMP, DECIMAL/NUMERIC, INTEGER, and NULL values preserved correctly in shadow store.
+- Data type handling: DATE, DATETIME/TIMESTAMP, TIME, DECIMAL/NUMERIC, INTEGER, FLOAT/DOUBLE, and NULL values preserved correctly in shadow store. TIME columns support comparisons, BETWEEN, and UPDATE operations. See 10.3 for BLOB/BINARY and PostgreSQL BOOLEAN/BIGINT limitations.
 - Special character handling: quotes, newlines, Unicode, emoji, empty strings preserved correctly in shadow store (see 10.3 for MySQL backslash exception).
 - ZTD lifecycle: shadow data persists across enable/disable toggle cycles; physical data inserted while ZTD is off is not visible when ZTD is re-enabled.
 - Transaction isolation: shadow data persists after rollback (shadow store is independent of physical transaction state).

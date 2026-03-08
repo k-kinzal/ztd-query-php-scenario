@@ -31,7 +31,7 @@ Version: ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1
 | 8.2.30 | 1347 | 1173 | 129 | 12 |
 | 8.3.30 | 1347 | 1173 | 129 | 12 |
 | 8.4.18 | 1347 | 1180 | 122 | 12 |
-| 8.5.1 (local) | 1605 | 1445 | 116 | 11 |
+| 8.5.1 (local) | 1712 | 1557 | 111 | 11 |
 
 Errors are ZTD CTE rewriter bugs (SQL syntax errors in generated queries), not test or adapter issues.
 
@@ -77,7 +77,7 @@ docker run --rm ztd-test-php81 --filter 'Tests\\Pdo\\Sqlite'
 | [07-unknown-schema.ears.md](07-unknown-schema.ears.md) | 7. Unknown Schema | SPEC-7.1 – SPEC-7.4 | Passthrough, Exception, EmptyResult, Notice modes |
 | [08-constraints.ears.md](08-constraints.ears.md) | 8. Constraints | SPEC-8.1 – SPEC-8.3 | Shadow store constraint behavior, error recovery, trigger behavior |
 | [09-configuration.ears.md](09-configuration.ears.md) | 9. Configuration | SPEC-9.1 – SPEC-9.2 | ZtdConfig, default configuration |
-| [10-platform-notes.ears.md](10-platform-notes.ears.md) | 10. Platform Notes | SPEC-10.2.1 – SPEC-10.2.55 | Platform-specific behavioral notes |
+| [10-platform-notes.ears.md](10-platform-notes.ears.md) | 10. Platform Notes | SPEC-10.2.1 – SPEC-10.2.57 | Platform-specific behavioral notes |
 | [11-known-issues.ears.md](11-known-issues.ears.md) | 11. Known Issues | SPEC-11.x | Cross-platform inconsistencies with issue tags |
 
 ## Supporting Files

@@ -2,7 +2,7 @@
 
 This repository exists to find user-facing problems in `ztd-query-php` before they reach users.
 
-## Purpose
+## Goal
 
 - Build and maintain user-facing scenarios and specifications for `k-kinzal/ztd-query-mysqli-adapter` and `k-kinzal/ztd-query-pdo-adapter`.
 - Make expected behavior explicit.

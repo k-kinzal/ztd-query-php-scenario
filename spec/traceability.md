@@ -171,6 +171,12 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.55 | `*UpsertWorkflowTest` | V | V | V | V | V |
 | SPEC-10.2.56 | `Pdo/PostgresUpdateFromJoinTest`, `Pdo/SqliteUpdateFromJoinTest` | — | — | V | K | P |
 | SPEC-10.2.57 | `Pdo/PostgresPivotReportTest` | — | — | V | — | V |
+| SPEC-10.2.58 | `*ReservationBookingTest` | V | V | V | V | V |
+| SPEC-10.2.59 | `*LoyaltyPointsTest` | V | V | V | V | V |
+| SPEC-10.2.60 | `*ContentVersioningTest` | V | V | V | V | V |
+| SPEC-10.2.61 | `*ShoppingCartCheckoutTest` | V | V | V | V | V |
+| SPEC-10.2.62 | `*SurveyResultsTest` | V | V | V | V | V |
+| SPEC-10.2.63 | `*NotificationInboxTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -212,6 +218,12 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.18 | `*DateIntervalTest` | V | V | V | V | Date arithmetic, BETWEEN, GROUP BY month, intervals |
 | SPEC-3.1 | `*MultiColumnSortingTest` | V | V | V | V | Multi-column ORDER BY, CASE sort, NULL ordering |
 | SPEC-4.2a | `*UpsertWorkflowTest` | V | V | V | V | Idempotent writes, read-modify-write, batch upsert |
+| SPEC-3.3 | `*ReservationBookingTest` | V | V | V | V | Anti-join availability, 3-table JOIN, conditional aggregation |
+| SPEC-3.3 | `*LoyaltyPointsTest` | V | V | V | V | Running balance, tier CASE, window function, earn/redeem |
+| SPEC-3.3 | `*ContentVersioningTest` | V | V | V | V | Correlated MAX subquery, version comparison, draft/publish |
+| SPEC-4.1 | `*ShoppingCartCheckoutTest` | V | V | V | V | Multi-step checkout, cart aggregation, stock management |
+| SPEC-3.3 | `*SurveyResultsTest` | V | V | V | V | Response distribution, percentage calc, conditional aggregation |
+| SPEC-4.2 | `*NotificationInboxTest` | V | V | V | V | Batch UPDATE, unread counts, 3-table JOIN, priority filter |
 
 ## 11. Known Issues (Selected)
 

@@ -503,3 +503,57 @@ Workaround: wrap the expression in `CAST(... AS numeric)`: `ROUND(CAST(expr AS n
 - **SQLite**: `INSERT OR REPLACE INTO`, `INSERT OR IGNORE INTO`. PDO `exec()` works; PDO prepared does not. Note: `ON CONFLICT DO NOTHING` inserts both rows on SQLite (see [SPEC-11.SQLITE-ON-CONFLICT](11-known-issues.ears.md)); use `INSERT OR IGNORE` instead.
 
 Verified patterns: idempotent write (replace existing), skip-if-exists, check-then-insert pattern, upsert counter (read-modify-write increment), batch upsert (multiple sequential upserts), verify old data replaced not accumulated, read-modify-write preserving non-updated columns, physical isolation.
+
+## SPEC-10.2.58 Reservation/booking system workflow
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ReservationBookingTest`, `Pdo/MysqlReservationBookingTest`, `Pdo/PostgresReservationBookingTest`, `Pdo/SqliteReservationBookingTest`
+
+A reservation/booking system workflow using venues, time slots, and reservations works correctly through ZTD shadow store on all platforms. The scenario exercises anti-join availability checking, status transition guards, and aggregate utilization reporting.
+
+Verified patterns: LEFT JOIN anti-join to find available (unreserved) slots, prepared statement availability query with venue and time range filters, book-and-verify workflow (INSERT then confirm slot unavailable), status transitions with guards (pending → confirmed → cancelled, invalid transition rejected), cancel-and-rebook cycle (cancel frees slot, new booking takes it), venue utilization report (3-table JOIN with COUNT DISTINCT and CASE conditional aggregation), customer booking history via prepared 3-table JOIN, physical isolation.
+
+## SPEC-10.2.59 Loyalty points system workflow
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/LoyaltyPointsTest`, `Pdo/MysqlLoyaltyPointsTest`, `Pdo/PostgresLoyaltyPointsTest`, `Pdo/SqliteLoyaltyPointsTest`
+
+A loyalty points system using members, point transactions, and rewards catalog works correctly through ZTD shadow store on all platforms. The scenario exercises running balance calculations, tier promotion via aggregate thresholds, and earn/redeem transaction interleaving.
+
+Verified patterns: SUM aggregate for member point balances, tier calculation using CASE expression on SUM aggregate, tier promotion (earn points then UPDATE tier), earn/redeem interleaving with balance verification after each transaction, HAVING-based qualification (find members qualifying for rewards by tier and balance), window function running total (SUM() OVER PARTITION BY ORDER BY), conditional aggregation earn-vs-redeem summary (CASE WHEN in SUM), DELETE transaction and verify balance recalculation, available rewards lookup via prepared statement with scalar subquery in WHERE, physical isolation.
+
+## SPEC-10.2.60 Content versioning (draft/publish) workflow
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ContentVersioningTest`, `Pdo/MysqlContentVersioningTest`, `Pdo/PostgresContentVersioningTest`, `Pdo/SqliteContentVersioningTest`
+
+A content versioning system using articles and article versions works correctly through ZTD shadow store on all platforms. The scenario exercises latest-version lookup via correlated MAX subquery, status-based filtering, and version rollback.
+
+Verified patterns: latest version per article using correlated MAX subquery in WHERE, status-based filtering (draft, published, archived), publish workflow (draft → published with guard), create new version and verify it becomes latest, version comparison (side-by-side query of specific versions), rollback (create new version from previous content), article summary report (JOIN with COUNT and MAX aggregate), prepared statement with correlated MAX subquery for author lookup, archive workflow (published → archived), physical isolation.
+
+## SPEC-10.2.61 Shopping cart and checkout workflow
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ShoppingCartCheckoutTest`, `Pdo/MysqlShoppingCartCheckoutTest`, `Pdo/PostgresShoppingCartCheckoutTest`, `Pdo/SqliteShoppingCartCheckoutTest`
+
+A shopping cart and checkout workflow using products, cart items, orders, and order items works correctly through ZTD shadow store on all platforms. The scenario exercises multi-table JOIN with aggregate totals, multi-step checkout (calculate total, create order, transfer cart items, clear cart), stock management, and category-level revenue reporting.
+
+Verified patterns: cart contents via JOIN with computed line totals (price × quantity), prepared statement cart total (SUM aggregate with JOIN), add-to-cart and verify updated total, multi-step checkout workflow (calculate → create order → create order items → delete cart), stock decrement via UPDATE after order, category revenue report (GROUP BY with multi-table JOIN), order status transitions with guards (pending → confirmed → shipped, invalid transition rejected), physical isolation.
+
+## SPEC-10.2.62 Survey and poll results workflow
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SurveyResultsTest`, `Pdo/MysqlSurveyResultsTest`, `Pdo/PostgresSurveyResultsTest`, `Pdo/SqliteSurveyResultsTest`
+
+A survey and poll results workflow using surveys, questions, and responses works correctly through ZTD shadow store on all platforms. The scenario exercises response distribution analysis, percentage calculations via conditional aggregation, average ratings with platform-specific CAST, and correlated subqueries for completion statistics.
+
+Verified patterns: response count per question (LEFT JOIN GROUP BY COUNT), response distribution (GROUP BY answer value), average rating with CAST (DECIMAL on MySQL, NUMERIC on PostgreSQL, REAL on SQLite), yes/no percentage via conditional aggregation (COUNT CASE WHEN / COUNT), survey completion rate with correlated subquery for question count, prepared statement filter by specific answer, submit response and verify in results, physical isolation.
+
+## SPEC-10.2.63 Notification inbox workflow
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/NotificationInboxTest`, `Pdo/MysqlNotificationInboxTest`, `Pdo/PostgresNotificationInboxTest`, `Pdo/SqliteNotificationInboxTest`
+
+A notification inbox workflow using users, notifications, and notification preferences works correctly through ZTD shadow store on all platforms. The scenario exercises batch UPDATE operations, unread count calculations, priority-based filtering, and multi-table JOIN with preference checks.
+
+Verified patterns: unread count per user (LEFT JOIN with conditional COUNT), unread-by-priority breakdown (GROUP BY with conditional aggregation), mark single notification as read (UPDATE with guard), batch mark-all-as-read for user (UPDATE WHERE user_id AND is_read = 0), prepared statement notification lookup with priority filter, delete old read notifications (DELETE with date and status condition), user preference summary (JOIN with conditional aggregation on enabled/disabled), 3-table JOIN (notifications + users + preferences for push-enabled users with unread notifications), physical isolation.

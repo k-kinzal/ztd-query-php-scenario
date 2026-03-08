@@ -110,6 +110,46 @@ class MysqlErrorRecoveryTest extends TestCase
         $this->assertSame('Alice Updated', $rows[0]['name']);
     }
 
+    public function testDeleteAfterFailedQuery(): void
+    {
+        $this->pdo->exec("INSERT INTO mysql_recovery_test (id, name, score) VALUES (1, 'Alice', 100)");
+        $this->pdo->exec("INSERT INTO mysql_recovery_test (id, name, score) VALUES (2, 'Bob', 85)");
+
+        // Cause an error
+        try {
+            $this->pdo->exec('DELETE FROM nonexistent_table WHERE id = 1');
+        } catch (\Throwable $e) {
+            // Expected
+        }
+
+        // Valid delete should still work
+        $this->pdo->exec('DELETE FROM mysql_recovery_test WHERE id = 1');
+
+        $stmt = $this->pdo->query('SELECT * FROM mysql_recovery_test ORDER BY id');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('Bob', $rows[0]['name']);
+    }
+
+    public function testPreparedStatementErrorRecovery(): void
+    {
+        $this->pdo->exec("INSERT INTO mysql_recovery_test (id, name, score) VALUES (1, 'Alice', 100)");
+
+        // Attempt to prepare invalid SQL (unknown table)
+        try {
+            $this->pdo->prepare('SELECT * FROM nonexistent_table WHERE id = ?');
+        } catch (\Throwable $e) {
+            // Expected
+        }
+
+        // Valid prepared statement should work
+        $stmt = $this->pdo->prepare('SELECT * FROM mysql_recovery_test WHERE id = ?');
+        $stmt->execute([1]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+    }
+
     public static function tearDownAfterClass(): void
     {
         $raw = new PDO(

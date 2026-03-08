@@ -89,6 +89,26 @@ class MysqlAlterTableTest extends TestCase
         $this->assertSame('Charlie', $rows[0]['full_name']);
     }
 
+    public function testModifyColumn(): void
+    {
+        $this->pdo->exec('ALTER TABLE mysql_pdo_alter_test MODIFY COLUMN name TEXT');
+
+        $stmt = $this->pdo->query('SELECT * FROM mysql_pdo_alter_test WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertSame('Alice', $rows[0]['name']);
+    }
+
+    public function testChangeColumn(): void
+    {
+        $this->pdo->exec('ALTER TABLE mysql_pdo_alter_test CHANGE COLUMN name full_name VARCHAR(500)');
+
+        $this->pdo->exec("INSERT INTO mysql_pdo_alter_test (id, full_name) VALUES (3, 'Charlie Brown')");
+
+        $stmt = $this->pdo->query('SELECT * FROM mysql_pdo_alter_test WHERE id = 3');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertSame('Charlie Brown', $rows[0]['full_name']);
+    }
+
     public function testAlterTableIsolation(): void
     {
         $this->pdo->exec('ALTER TABLE mysql_pdo_alter_test ADD COLUMN extra VARCHAR(255)');

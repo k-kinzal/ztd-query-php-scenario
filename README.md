@@ -103,7 +103,6 @@ This section states the structural gaps between the vision and the current archi
 - **Version tracking** works for tests that extend the abstract base classes. Standalone tests that extend `TestCase` directly record `"dbVersion": "pending"`.
 - **Baseline comparison** is partially manual. A capture tool (`scripts/capture-baseline.php`) produces `baseline.json`, but no automated diff/classification tool exists yet.
 - **Shared:standalone ratio is inverted.** 5 scenario traits provide shared cross-platform coverage; ~700 standalone files implement their own setup. The architecture incentivizes standalone tests over shared scenarios.
-- **Platform ambiguity in PDO tests.** 22 standalone files in `tests/Pdo/` still lack a platform prefix because their `Mysql*`-prefixed trait-based counterparts already occupy those names. The standalone files contain additional test methods not yet migrated to shared traits.
 
 ## Issue reporting
 

@@ -89,6 +89,15 @@ class MysqlStatementMethodsTest extends TestCase
         $this->assertSame('Alice', $name);
     }
 
+    public function testGetColumnMetaReturnsColumnInfo(): void
+    {
+        $stmt = $this->pdo->query('SELECT id, name, amount FROM mysql_stmt_test WHERE id = 1');
+        $meta = $stmt->getColumnMeta(0);
+
+        $this->assertIsArray($meta);
+        $this->assertSame('id', $meta['name']);
+    }
+
     public function testColumnCountReturnsCorrectCount(): void
     {
         $stmt = $this->pdo->query('SELECT id, name, amount FROM mysql_stmt_test WHERE id = 1');
@@ -107,6 +116,19 @@ class MysqlStatementMethodsTest extends TestCase
         $this->assertSame('Bob', $rows[1]['name']);
     }
 
+    public function testErrorCodeAndErrorInfo(): void
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM mysql_stmt_test WHERE id = ?');
+        $stmt->execute([1]);
+
+        // After successful execution, error code should be '00000'
+        $this->assertSame('00000', $stmt->errorCode());
+
+        $info = $stmt->errorInfo();
+        $this->assertIsArray($info);
+        $this->assertSame('00000', $info[0]);
+    }
+
     public function testQueryWithFetchMode(): void
     {
         $stmt = $this->pdo->query('SELECT id, name FROM mysql_stmt_test ORDER BY id', PDO::FETCH_NUM);
@@ -114,6 +136,23 @@ class MysqlStatementMethodsTest extends TestCase
         $this->assertIsArray($row);
         $this->assertArrayHasKey(0, $row);
         $this->assertArrayHasKey(1, $row);
+    }
+
+    public function testGetAttributeAndSetAttribute(): void
+    {
+        $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        $mode = $this->pdo->getAttribute(PDO::ATTR_DEFAULT_FETCH_MODE);
+        $this->assertSame(PDO::FETCH_ASSOC, $mode);
+    }
+
+    public function testErrorCodeAndErrorInfoOnConnection(): void
+    {
+        $code = $this->pdo->errorCode();
+        // Initial error code may be null or '00000'
+        $this->assertTrue($code === null || $code === '00000' || $code === '');
+
+        $info = $this->pdo->errorInfo();
+        $this->assertIsArray($info);
     }
 
     public static function tearDownAfterClass(): void

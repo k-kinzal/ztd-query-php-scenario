@@ -70,6 +70,55 @@ class MysqlDdlEdgeCasesTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function testCreateTableIfNotExistsOnNewTable(): void
+    {
+        $this->pdo->exec('CREATE TABLE IF NOT EXISTS mysql_pdo_ddl_edge_new (id INT PRIMARY KEY, name VARCHAR(255))');
+
+        $this->pdo->exec("INSERT INTO mysql_pdo_ddl_edge_new (id, name) VALUES (1, 'hello')");
+        $stmt = $this->pdo->query('SELECT * FROM mysql_pdo_ddl_edge_new WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('hello', $rows[0]['name']);
+    }
+
+    public function testDropTableIfExistsOnExistingTable(): void
+    {
+        $this->pdo->exec("INSERT INTO mysql_pdo_ddl_edge (id, val) VALUES (1, 'test')");
+
+        // Should succeed
+        $this->pdo->exec('DROP TABLE IF EXISTS mysql_pdo_ddl_edge');
+
+        // Shadow data should be cleared
+        $stmt = $this->pdo->query('SELECT * FROM mysql_pdo_ddl_edge');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(0, $rows);
+    }
+
+    public function testDropTableWithoutIfExistsOnNonExistentTableThrows(): void
+    {
+        $this->expectException(\Throwable::class);
+        $this->pdo->exec('DROP TABLE mysql_pdo_nonexistent_ddl_table');
+    }
+
+    public function testCreateDropCreateCycle(): void
+    {
+        // Create shadow table
+        $this->pdo->exec('CREATE TABLE mysql_pdo_ddl_cycle (id INT PRIMARY KEY, val VARCHAR(255))');
+        $this->pdo->exec("INSERT INTO mysql_pdo_ddl_cycle (id, val) VALUES (1, 'first')");
+
+        // Drop it
+        $this->pdo->exec('DROP TABLE IF EXISTS mysql_pdo_ddl_cycle');
+
+        // Recreate it
+        $this->pdo->exec('CREATE TABLE mysql_pdo_ddl_cycle (id INT PRIMARY KEY, val VARCHAR(255))');
+        $this->pdo->exec("INSERT INTO mysql_pdo_ddl_cycle (id, val) VALUES (2, 'second')");
+
+        $stmt = $this->pdo->query('SELECT * FROM mysql_pdo_ddl_cycle');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('second', $rows[0]['val']);
+    }
+
     public function testTruncateIsolation(): void
     {
         // Insert into shadow

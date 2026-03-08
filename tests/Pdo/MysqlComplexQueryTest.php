@@ -204,6 +204,56 @@ class MysqlComplexQueryTest extends TestCase
         $this->assertSame('Bob', $rows[1]['name']);
     }
 
+    public function testCountAggregation(): void
+    {
+        $this->pdo->exec("INSERT INTO mysql_cq_users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
+        $this->pdo->exec("INSERT INTO mysql_cq_users (id, name, department) VALUES (2, 'Bob', 'Engineering')");
+        $this->pdo->exec("INSERT INTO mysql_cq_users (id, name, department) VALUES (3, 'Charlie', 'Sales')");
+
+        $stmt = $this->pdo->query('SELECT COUNT(*) AS cnt FROM mysql_cq_users');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertSame(3, (int) $rows[0]['cnt']);
+    }
+
+    public function testLimitWithOffset(): void
+    {
+        $this->pdo->exec("INSERT INTO mysql_cq_users (id, name, department) VALUES (1, 'Alice', 'A')");
+        $this->pdo->exec("INSERT INTO mysql_cq_users (id, name, department) VALUES (2, 'Bob', 'B')");
+        $this->pdo->exec("INSERT INTO mysql_cq_users (id, name, department) VALUES (3, 'Charlie', 'C')");
+
+        $stmt = $this->pdo->query('SELECT name FROM mysql_cq_users ORDER BY id LIMIT 2 OFFSET 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Bob', $rows[0]['name']);
+        $this->assertSame('Charlie', $rows[1]['name']);
+    }
+
+    public function testJoinWithAggregationOnShadowData(): void
+    {
+        $this->pdo->exec("INSERT INTO mysql_cq_users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
+        $this->pdo->exec("INSERT INTO mysql_cq_users (id, name, department) VALUES (2, 'Bob', 'Sales')");
+        $this->pdo->exec("INSERT INTO mysql_cq_orders (id, user_id, amount, status) VALUES (1, 1, 100.00, 'completed')");
+        $this->pdo->exec("INSERT INTO mysql_cq_orders (id, user_id, amount, status) VALUES (2, 1, 200.00, 'completed')");
+        $this->pdo->exec("INSERT INTO mysql_cq_orders (id, user_id, amount, status) VALUES (3, 2, 50.00, 'pending')");
+
+        $stmt = $this->pdo->query(
+            'SELECT u.name, COUNT(o.id) AS order_count, SUM(o.amount) AS total '
+            . 'FROM mysql_cq_users u INNER JOIN mysql_cq_orders o ON u.id = o.user_id '
+            . 'GROUP BY u.id, u.name ORDER BY u.name'
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame(2, (int) $rows[0]['order_count']);
+        $this->assertSame(300.0, (float) $rows[0]['total']);
+        $this->assertSame('Bob', $rows[1]['name']);
+        $this->assertSame(1, (int) $rows[1]['order_count']);
+        $this->assertSame(50.0, (float) $rows[1]['total']);
+    }
+
     public function testCorrelatedSubquery(): void
     {
         $this->pdo->exec("INSERT INTO mysql_cq_users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
@@ -268,6 +318,30 @@ class MysqlComplexQueryTest extends TestCase
 
         $this->assertSame(50.0, (float) $rows[0]['min_amt']);
         $this->assertSame(200.0, (float) $rows[0]['max_amt']);
+    }
+
+    public function testZtdSelectReadsOnlyFromShadowStore(): void
+    {
+        // Insert physical data via raw connection
+        $raw = new PDO(
+            MySQLContainer::getDsn(),
+            'root',
+            'root',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+        $raw->exec("INSERT INTO mysql_cq_users (id, name, department) VALUES (1, 'Alice', 'Engineering')");
+
+        // Physical data is visible with ZTD disabled (passthrough)
+        $this->pdo->disableZtd();
+        $stmt = $this->pdo->query('SELECT * FROM mysql_cq_users');
+        $this->assertCount(1, $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'Physical data visible with ZTD disabled');
+        $this->pdo->enableZtd();
+
+        // With ZTD enabled, SELECT reads only from the shadow store.
+        $stmt = $this->pdo->query('SELECT * FROM mysql_cq_users');
+        $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'ZTD SELECT reads only from shadow store; physical data is not visible');
     }
 
     public static function tearDownAfterClass(): void

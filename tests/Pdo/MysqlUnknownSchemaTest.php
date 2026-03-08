@@ -150,6 +150,29 @@ class MysqlUnknownSchemaTest extends TestCase
         $this->assertCount(1, $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
+    public function testNoticeUpdateOnUnknownTable(): void
+    {
+        [$pdo, $raw] = $this->createAdapterThenTable(UnknownSchemaBehavior::Notice);
+
+        $noticeTriggered = false;
+        set_error_handler(function () use (&$noticeTriggered) {
+            $noticeTriggered = true;
+            return true;
+        }, E_USER_NOTICE | E_USER_WARNING);
+
+        try {
+            $pdo->exec("UPDATE mysql_unknown_test SET val = 'updated' WHERE id = 1");
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertTrue($noticeTriggered);
+
+        $stmt = $raw->query("SELECT val FROM mysql_unknown_test WHERE id = 1");
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $this->assertSame('physical', $row['val']);
+    }
+
     public function testNoticeDeleteOnUnknownTable(): void
     {
         [$pdo, $raw] = $this->createAdapterThenTable(UnknownSchemaBehavior::Notice);

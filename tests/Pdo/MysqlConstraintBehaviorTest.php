@@ -73,6 +73,27 @@ class MysqlConstraintBehaviorTest extends TestCase
         $this->assertCount(2, $rows);
     }
 
+    public function testForeignKeyNotEnforcedInShadow(): void
+    {
+        // Shadow store does not enforce FOREIGN KEY constraints
+        $raw = new PDO(
+            MySQLContainer::getDsn(),
+            'root',
+            'root',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+        $raw->exec('DROP TABLE IF EXISTS mysql_constraint_child');
+        $raw->exec('CREATE TABLE mysql_constraint_child (id INT PRIMARY KEY, parent_id INT, FOREIGN KEY (parent_id) REFERENCES mysql_constraint_test(id))');
+
+        $this->pdo->exec("INSERT INTO mysql_constraint_child (id, parent_id) VALUES (1, 999)");
+
+        $stmt = $this->pdo->query('SELECT * FROM mysql_constraint_child WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertSame(999, (int) $rows[0]['parent_id']);
+
+        $raw->exec('DROP TABLE IF EXISTS mysql_constraint_child');
+    }
+
     public static function tearDownAfterClass(): void
     {
         $raw = new PDO(

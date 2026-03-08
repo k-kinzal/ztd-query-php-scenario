@@ -92,6 +92,21 @@ class MysqlUnsupportedSqlTest extends TestCase
         $this->assertIsInt($result);
     }
 
+    public function testBehaviorRulesWithRegexPattern(): void
+    {
+        $config = new ZtdConfig(
+            unsupportedBehavior: UnsupportedSqlBehavior::Exception,
+            behaviorRules: [
+                '/^SET\s+/i' => UnsupportedSqlBehavior::Ignore,
+            ],
+        );
+        $pdo = $this->createPdo($config);
+
+        // SET matched by regex should be ignored
+        $result = $pdo->exec('SET @bar = 42');
+        $this->assertIsInt($result);
+    }
+
     public function testTransactionStatementsPassthrough(): void
     {
         $config = new ZtdConfig(

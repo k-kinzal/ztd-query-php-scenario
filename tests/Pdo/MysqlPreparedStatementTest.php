@@ -89,6 +89,61 @@ class MysqlPreparedStatementTest extends AbstractMysqlPdoTestCase
         $this->assertSame('Alice', $obj->name);
     }
 
+    public function testExecuteWithNamedParameterArray(): void
+    {
+        $stmt = $this->pdo->prepare('INSERT INTO prep_test (id, name, score) VALUES (:id, :name, :score)');
+        $stmt->execute([':id' => 1, ':name' => 'Bob', ':score' => 85]);
+
+        $stmt = $this->pdo->query('SELECT * FROM prep_test WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertCount(1, $rows);
+        $this->assertSame('Bob', $rows[0]['name']);
+    }
+
+    public function testFetchNum(): void
+    {
+        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
+
+        $stmt = $this->pdo->query('SELECT id, name, score FROM prep_test WHERE id = 1');
+        $rows = $stmt->fetchAll(PDO::FETCH_NUM);
+
+        $this->assertCount(1, $rows);
+        $this->assertSame(1, (int) $rows[0][0]);
+        $this->assertSame('Alice', $rows[0][1]);
+    }
+
+    public function testFetchBoth(): void
+    {
+        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
+
+        $stmt = $this->pdo->query('SELECT id, name FROM prep_test WHERE id = 1');
+        $row = $stmt->fetch(PDO::FETCH_BOTH);
+
+        // FETCH_BOTH returns both numeric and associative keys
+        $this->assertSame(1, (int) $row['id']);
+        $this->assertSame(1, (int) $row[0]);
+        $this->assertSame('Alice', $row['name']);
+        $this->assertSame('Alice', $row[1]);
+    }
+
+    public function testPreparedDeleteRowCount(): void
+    {
+        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
+        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (2, 'Bob', 85)");
+
+        $stmt = $this->pdo->prepare('DELETE FROM prep_test WHERE id = ?');
+        $stmt->execute([1]);
+
+        $this->assertSame(1, $stmt->rowCount());
+
+        // Verify deletion in shadow store
+        $stmt = $this->pdo->query('SELECT * FROM prep_test');
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertCount(1, $rows);
+        $this->assertSame('Bob', $rows[0]['name']);
+    }
+
     public function testQueryRewrittenAtPrepareTime(): void
     {
         $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");

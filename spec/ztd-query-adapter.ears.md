@@ -841,3 +841,25 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **ALTER TABLE ADD COLUMN with shadow store (MySQL)**: On MySQL, ALTER TABLE modifies the physical table directly. Unlike SQLite where new columns fail with "no such column" in CTE, MySQL can successfully query new columns because the physical table has them. INSERT with new columns and SELECT of original columns both work correctly after ALTER. Verified on MySQL (PDO and MySQLi).
 
 - **MySQLi vs PDO adapter behavioral differences**: The MySQLi adapter correctly handles two scenarios that are buggy on the PDO adapter: (1) **Prepared REPLACE INTO** — MySQLi correctly replaces existing rows; PDO retains the old row. (2) **Prepared INSERT + exec UPDATE** (issue #23) — MySQLi correctly applies the UPDATE; PDO ignores it and retains the original INSERT values. These differences mean the MySQLi adapter is more reliable for workflows that combine prepared INSERT with subsequent UPDATE/DELETE.
+
+- **DELETE without WHERE clause (cross-platform)**: On **MySQL** and **PostgreSQL** (both PDO and MySQLi adapters), `DELETE FROM table` (without WHERE) correctly clears the shadow store. On **SQLite**, `DELETE FROM table` without WHERE is silently ignored — all rows remain. The workaround `DELETE FROM table WHERE 1=1` works correctly on all platforms. Verified on all 4 adapters.
+
+- **Database views through ZTD**: Views are NOT rewritten by the CTE rewriter. When ZTD is enabled, querying a view reads directly from the physical database, not the shadow store. Shadow mutations on the base table are NOT visible through the view. This is consistent across all platforms (SQLite, MySQL, PostgreSQL) and both adapters. Users should query base tables directly for shadow data visibility.
+
+- **EXCEPT/INTERSECT on MySQL**: On MySQL (both MySQLi and PDO adapters), `EXCEPT` and `INTERSECT` throw exceptions because the CTE rewriter misparses them as multi-statement queries. UNION works correctly. Workaround: use `NOT IN` subquery for EXCEPT semantics and `IN` subquery for INTERSECT semantics. Verified on MySQL (PDO and MySQLi).
+
+- **Prepared statement CTE snapshot frozen at prepare time**: Prepared statements capture the shadow store state (CTE VALUES) at `prepare()` time. INSERT, UPDATE, or DELETE executed between `prepare()` and `execute()` are NOT visible to the prepared statement. Re-executing the same prepared statement after shadow changes still uses the original stale snapshot. To see updated data, a fresh `prepare()` call is needed. Verified on SQLite, MySQL (PDO and MySQLi).
+
+- **Statement reuse after ZTD mode toggle**: Prepared statements retain their prepare-time rewriting regardless of subsequent ZTD mode changes. A statement prepared with ZTD enabled continues to use CTE rewriting even after `disableZtd()`. A statement prepared with ZTD disabled reads physical data even after `enableZtd()`. Multiple toggles between prepare and execute do not affect the statement. Verified on SQLite.
+
+- **SAVEPOINT commands not supported**: SAVEPOINT, RELEASE SAVEPOINT, and ROLLBACK TO SAVEPOINT are not supported. On SQLite, all three throw exceptions. Shadow data is unaffected by failed SAVEPOINT commands. Verified on SQLite.
+
+- **Behavior rule configuration**: `ZtdConfig::behaviorRules` accepts `array<string, UnsupportedSqlBehavior>` where keys are patterns. Prefix patterns match case-insensitively. Regex patterns (starting with `/`) use `preg_match()`. Rules are evaluated in order — first matching rule wins. Broad prefix rules should be placed AFTER specific rules to avoid shadowing. Shadow INSERT/SELECT operations continue to work correctly regardless of behavior rules. Verified on MySQL PDO.
+
+- **CREATE TABLE IF NOT EXISTS**: `CREATE TABLE IF NOT EXISTS` on an existing table is a no-op — existing shadow data is preserved. On a new table, it correctly creates the table for subsequent ZTD operations. `CREATE TABLE` (without IF NOT EXISTS) on an existing table throws an error. Verified on SQLite.
+
+- **INSERT...SELECT with computed columns (SQLite limitation)**: On SQLite, `INSERT...SELECT` with computed expressions (e.g., `price * 2`) inserts the correct number of rows but computed column values become NULL. Direct column references transfer correctly. Filtered WHERE clauses in the SELECT work correctly. Verified on SQLite.
+
+- **LIKE with ESCAPE clause**: LIKE pattern matching with `ESCAPE` character works correctly in CTE-rewritten shadow queries. `LIKE '%!%%' ESCAPE '!'` correctly matches literal `%` characters. `LIKE '%!_%' ESCAPE '!'` correctly matches literal `_` characters. LIKE with prepared statement parameter binding also works. Verified on SQLite.
+
+- **Explicit NULL vs omitted columns**: Both explicit `INSERT INTO t (id, name) VALUES (1, NULL)` and column omission `INSERT INTO t (id) VALUES (1)` result in NULL in the shadow store. Database DEFAULT values are NOT applied because ZTD rewrites INSERT to CTE-based SELECT. `IS NULL` / `IS NOT NULL` comparisons work correctly for both cases. Verified on SQLite.

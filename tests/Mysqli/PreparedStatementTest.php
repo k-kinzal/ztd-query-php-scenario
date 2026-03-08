@@ -4,58 +4,21 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Scenarios\PreparedStatementScenario;
+use Tests\Support\AbstractMysqliTestCase;
 
-class PreparedStatementTest extends TestCase
+class PreparedStatementTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
+    use PreparedStatementScenario;
 
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return 'CREATE TABLE prep_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS prep_test');
-        $raw->query('CREATE TABLE prep_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)');
-        $raw->close();
-
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-    }
-
-    public function testPreparedInsertAndSelect(): void
-    {
-        $stmt = $this->mysqli->prepare('INSERT INTO prep_test (id, name, score) VALUES (?, ?, ?)');
-        $id = 1;
-        $name = 'Alice';
-        $score = 100;
-        $stmt->bind_param('isi', $id, $name, $score);
-        $stmt->execute();
-
-        $result = $this->mysqli->query('SELECT * FROM prep_test WHERE id = 1');
-        $row = $result->fetch_assoc();
-
-        $this->assertSame('Alice', $row['name']);
-        $this->assertSame(100, (int) $row['score']);
+        return ['prep_test'];
     }
 
     public function testPreparedSelectWithGetResult(): void
@@ -105,32 +68,6 @@ class PreparedStatementTest extends TestCase
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('Bob', $rows[0]['name']);
-    }
-
-    public function testReExecutePreparedStatement(): void
-    {
-        $stmt = $this->mysqli->prepare('INSERT INTO prep_test (id, name, score) VALUES (?, ?, ?)');
-        $id = 0;
-        $name = '';
-        $score = 0;
-        $stmt->bind_param('isi', $id, $name, $score);
-
-        $id = 1;
-        $name = 'Alice';
-        $score = 100;
-        $stmt->execute();
-
-        $id = 2;
-        $name = 'Bob';
-        $score = 85;
-        $stmt->execute();
-
-        $result = $this->mysqli->query('SELECT * FROM prep_test ORDER BY id');
-        $rows = $result->fetch_all(MYSQLI_ASSOC);
-
-        $this->assertCount(2, $rows);
-        $this->assertSame('Alice', $rows[0]['name']);
-        $this->assertSame('Bob', $rows[1]['name']);
     }
 
     public function testExecuteQueryMethod(): void
@@ -188,23 +125,5 @@ class PreparedStatementTest extends TestCase
         $this->assertSame('Alice', $rows[0]['name']);
 
         $this->mysqli->enableZtd();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS prep_test');
-        $raw->close();
     }
 }

@@ -84,15 +84,22 @@ class SpecificFeaturesTest extends TestCase
     }
 
     /**
-     * ON DUPLICATE KEY UPDATE with self-referencing expression loses old value.
+     * ON DUPLICATE KEY UPDATE with self-referencing expression should increment stock.
      */
-    public function testInsertOnDuplicateKeyUpdateIncrementLosesOldValue(): void
+    public function testInsertOnDuplicateKeyUpdateIncrement(): void
     {
         $this->mysqli->query("INSERT INTO mi_msf_products (id, name, stock, price, tags) VALUES (1, 'Widget', 10, 9.99, 'hardware,small') ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)");
 
         $result = $this->mysqli->query('SELECT stock FROM mi_msf_products WHERE id = 1');
-        // Expected: 60 (50 + 10), Actual: shadow store loses original stock value
-        $this->assertNotSame(60, (int) $result->fetch_assoc()['stock']);
+        $stock = (int) $result->fetch_assoc()['stock'];
+        // Expected: 60 (50 + 10)
+        if ($stock !== 60) {
+            $this->markTestIncomplete(
+                'ON DUPLICATE KEY UPDATE with self-referencing expression loses old value. '
+                . 'Expected stock 60 (50 + 10), got ' . $stock
+            );
+        }
+        $this->assertSame(60, $stock);
     }
 
     public function testInsertOnDuplicateKeyUpdateMultipleColumns(): void

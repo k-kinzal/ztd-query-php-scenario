@@ -13,10 +13,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * SQLite doesn't support TRUNCATE statement. The equivalent is DELETE FROM table.
  *
- * Known limitation: DELETE FROM table (without WHERE) does NOT delete shadow rows.
- * Workaround: Use DELETE FROM table WHERE 1=1 instead.
- *
- * This test verifies both the limitation and the workaround.
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/7
  */
 class SqliteTruncateReinsertWorkflowTest extends TestCase
 {
@@ -32,18 +29,25 @@ class SqliteTruncateReinsertWorkflowTest extends TestCase
     }
 
     /**
-     * DELETE FROM table WITHOUT WHERE does NOT clear shadow store (known limitation).
+     * DELETE FROM table without WHERE should clear all rows.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/7
      */
-    public function testDeleteWithoutWhereDoesNotClearShadow(): void
+    public function testDeleteWithoutWhereClearsShadow(): void
     {
         $this->pdo->exec("INSERT INTO trunc_test (id, name, score) VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO trunc_test (id, name, score) VALUES (2, 'Bob', 80)");
 
         $this->pdo->exec('DELETE FROM trunc_test');
 
-        // Shadow store still has rows — DELETE without WHERE is a no-op
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM trunc_test');
-        $this->assertSame(2, (int) $stmt->fetchColumn(), 'DELETE without WHERE does not clear shadow (limitation)');
+        $count = (int) $stmt->fetchColumn();
+        if ($count !== 0) {
+            $this->markTestIncomplete(
+                'Issue #7: DELETE without WHERE silently ignored on SQLite. Expected 0, got ' . $count
+            );
+        }
+        $this->assertSame(0, $count);
     }
 
     /**

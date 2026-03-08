@@ -75,17 +75,23 @@ class MysqlSpecificFeaturesTest extends TestCase
     }
 
     /**
-     * ON DUPLICATE KEY UPDATE with self-referencing expression (stock = stock + VALUES(stock))
-     * does not work correctly in ZTD shadow store — the existing row's stock value is lost.
+     * ON DUPLICATE KEY UPDATE with self-referencing expression should increment stock.
      */
-    public function testInsertOnDuplicateKeyUpdateIncrementLosesOldValue(): void
+    public function testInsertOnDuplicateKeyUpdateIncrement(): void
     {
         $this->pdo->exec("INSERT INTO mysql_msf_products (id, name, stock, price, tags) VALUES (1, 'Widget', 10, 9.99, 'hardware,small') ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)");
 
         $stmt = $this->pdo->query("SELECT stock FROM mysql_msf_products WHERE id = 1");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        // Expected: 60 (50 + 10), Actual: shadow store loses original stock value
-        $this->assertNotSame(60, (int) $row['stock']);
+        $stock = (int) $row['stock'];
+        // Expected: 60 (50 + 10)
+        if ($stock !== 60) {
+            $this->markTestIncomplete(
+                'ON DUPLICATE KEY UPDATE with self-referencing expression loses old value. '
+                . 'Expected stock 60 (50 + 10), got ' . $stock
+            );
+        }
+        $this->assertSame(60, $stock);
     }
 
     public function testInsertOnDuplicateKeyUpdateMultipleColumns(): void

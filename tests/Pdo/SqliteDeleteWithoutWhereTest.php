@@ -11,8 +11,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 /**
  * Tests DELETE without WHERE clause behavior on SQLite.
  *
- * Discovery: On SQLite, DELETE FROM table (without WHERE) is silently ignored
- * in the shadow store. Workaround: DELETE FROM table WHERE 1=1.
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/7
  */
 class SqliteDeleteWithoutWhereTest extends TestCase
 {
@@ -30,15 +29,23 @@ class SqliteDeleteWithoutWhereTest extends TestCase
     }
 
     /**
-     * DELETE without WHERE is silently ignored on SQLite.
+     * DELETE without WHERE should delete all rows.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/7
      */
-    public function testDeleteWithoutWhereIgnored(): void
+    public function testDeleteWithoutWhere(): void
     {
         $this->pdo->exec('DELETE FROM dww_test');
 
-        // Shadow store retains all rows
+        // Expected: DELETE without WHERE should delete all rows
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM dww_test');
-        $this->assertSame(3, (int) $stmt->fetchColumn());
+        $count = (int) $stmt->fetchColumn();
+        if ($count !== 0) {
+            $this->markTestIncomplete(
+                'Issue #7: DELETE without WHERE silently ignored on SQLite. Expected 0, got ' . $count
+            );
+        }
+        $this->assertSame(0, $count);
     }
 
     /**

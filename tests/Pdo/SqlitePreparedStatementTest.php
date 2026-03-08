@@ -5,21 +5,21 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Scenarios\PreparedStatementScenario;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
-class SqlitePreparedStatementTest extends TestCase
+class SqlitePreparedStatementTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    use PreparedStatementScenario;
 
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE prep_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)');
+        return 'CREATE TABLE prep_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)';
+    }
 
-        $this->pdo = ZtdPdo::fromPdo($raw);
+    protected function getTableNames(): array
+    {
+        return ['prep_test'];
     }
 
     public function testBindParamWithByReference(): void
@@ -84,31 +84,6 @@ class SqlitePreparedStatementTest extends TestCase
 
         $this->assertIsObject($obj);
         $this->assertSame('Alice', $obj->name);
-    }
-
-    public function testPreparedUpdateRowCount(): void
-    {
-        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
-        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (2, 'Bob', 85)");
-
-        $stmt = $this->pdo->prepare('UPDATE prep_test SET score = ? WHERE score < ?');
-        $stmt->execute([0, 95]);
-
-        $this->assertSame(1, $stmt->rowCount());
-    }
-
-    public function testReExecutePreparedStatement(): void
-    {
-        $stmt = $this->pdo->prepare('INSERT INTO prep_test (id, name, score) VALUES (?, ?, ?)');
-        $stmt->execute([1, 'Alice', 100]);
-        $stmt->execute([2, 'Bob', 85]);
-
-        $stmt = $this->pdo->query('SELECT * FROM prep_test ORDER BY id');
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $this->assertCount(2, $rows);
-        $this->assertSame('Alice', $rows[0]['name']);
-        $this->assertSame('Bob', $rows[1]['name']);
     }
 
     public function testQueryRewrittenAtPrepareTime(): void

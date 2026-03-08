@@ -13,9 +13,6 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests SAVEPOINT behavior on MySQL PDO with ZTD.
- *
- * On MySQL, SAVEPOINT and RELEASE SAVEPOINT throw errors.
- * ROLLBACK TO SAVEPOINT throws "Statement type not supported."
  */
 class MysqlSavepointBehaviorTest extends TestCase
 {
@@ -43,32 +40,45 @@ class MysqlSavepointBehaviorTest extends TestCase
     }
 
     /**
-     * SAVEPOINT throws on MySQL.
+     * SAVEPOINT should be supported on MySQL.
      */
-    public function testSavepointThrows(): void
+    public function testSavepointSupported(): void
     {
-        $this->expectException(\Throwable::class);
-        $this->pdo->exec('SAVEPOINT sp1');
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->assertTrue(true);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete(
+                'SAVEPOINT not yet supported on MySQL: ' . $e->getMessage()
+            );
+        }
     }
 
     /**
-     * ROLLBACK TO SAVEPOINT throws on MySQL.
+     * ROLLBACK TO SAVEPOINT should be supported on MySQL.
      */
-    public function testRollbackToSavepointThrows(): void
+    public function testRollbackToSavepointSupported(): void
     {
-        $this->expectException(\Throwable::class);
-        $this->pdo->exec('ROLLBACK TO SAVEPOINT sp1');
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->pdo->exec('ROLLBACK TO SAVEPOINT sp1');
+            $this->assertTrue(true);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete(
+                'ROLLBACK TO SAVEPOINT not yet supported on MySQL: ' . $e->getMessage()
+            );
+        }
     }
 
     /**
-     * Shadow data unaffected by failed SAVEPOINT.
+     * Shadow data should remain intact regardless of SAVEPOINT support.
      */
-    public function testShadowDataUnaffected(): void
+    public function testShadowDataIntact(): void
     {
         try {
             $this->pdo->exec('SAVEPOINT sp1');
         } catch (\Throwable $e) {
-            // Expected
+            // SAVEPOINT may not be supported yet
         }
 
         $stmt = $this->pdo->query('SELECT name FROM pdo_msp_test WHERE id = 1');

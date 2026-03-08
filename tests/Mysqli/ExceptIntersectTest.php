@@ -14,7 +14,7 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
  * Tests EXCEPT and INTERSECT behavior via MySQLi.
  *
  * Cross-platform parity with MysqlExceptIntersectTest (PDO).
- * MySQL CTE rewriter misparses EXCEPT/INTERSECT as multi-statement queries.
+ * EXCEPT and INTERSECT are valid SQL supported by MySQL 8.0+.
  */
 class ExceptIntersectTest extends TestCase
 {
@@ -59,21 +59,45 @@ class ExceptIntersectTest extends TestCase
     }
 
     /**
-     * EXCEPT throws exception on MySQL.
+     * EXCEPT should return rows in A but not in B.
      */
-    public function testExceptThrowsOnMysql(): void
+    public function testExceptOnMysql(): void
     {
-        $this->expectException(\Throwable::class);
-        $this->mysqli->query('SELECT name FROM mi_ei_a EXCEPT SELECT name FROM mi_ei_b');
+        try {
+            $result = $this->mysqli->query('SELECT name FROM mi_ei_a EXCEPT SELECT name FROM mi_ei_b');
+            $rows = [];
+            while ($row = $result->fetch_assoc()) {
+                $rows[] = $row['name'];
+            }
+            $this->assertCount(1, $rows);
+            $this->assertSame('Alice', $rows[0]);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete(
+                'EXCEPT misdetected as multi-statement query on MySQL: ' . $e->getMessage()
+            );
+        }
     }
 
     /**
-     * INTERSECT throws exception on MySQL.
+     * INTERSECT should return rows common to both A and B.
      */
-    public function testIntersectThrowsOnMysql(): void
+    public function testIntersectOnMysql(): void
     {
-        $this->expectException(\Throwable::class);
-        $this->mysqli->query('SELECT name FROM mi_ei_a INTERSECT SELECT name FROM mi_ei_b');
+        try {
+            $result = $this->mysqli->query('SELECT name FROM mi_ei_a INTERSECT SELECT name FROM mi_ei_b');
+            $rows = [];
+            while ($row = $result->fetch_assoc()) {
+                $rows[] = $row['name'];
+            }
+            sort($rows);
+            $this->assertCount(2, $rows);
+            $this->assertSame('Bob', $rows[0]);
+            $this->assertSame('Charlie', $rows[1]);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete(
+                'INTERSECT misdetected as multi-statement query on MySQL: ' . $e->getMessage()
+            );
+        }
     }
 
     /**

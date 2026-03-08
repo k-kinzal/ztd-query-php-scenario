@@ -5,39 +5,21 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Scenarios\PreparedStatementScenario;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
-class PostgresPreparedStatementTest extends TestCase
+class PostgresPreparedStatementTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
+    use PreparedStatementScenario;
 
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return 'CREATE TABLE prep_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS prep_test');
-        $raw->exec('CREATE TABLE prep_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)');
-
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['prep_test'];
     }
 
     public function testBindParamWithByReference(): void
@@ -104,31 +86,6 @@ class PostgresPreparedStatementTest extends TestCase
         $this->assertSame('Alice', $obj->name);
     }
 
-    public function testPreparedUpdateRowCount(): void
-    {
-        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
-        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (2, 'Bob', 85)");
-
-        $stmt = $this->pdo->prepare('UPDATE prep_test SET score = ? WHERE score < ?');
-        $stmt->execute([0, 95]);
-
-        $this->assertSame(1, $stmt->rowCount());
-    }
-
-    public function testReExecutePreparedStatement(): void
-    {
-        $stmt = $this->pdo->prepare('INSERT INTO prep_test (id, name, score) VALUES (?, ?, ?)');
-        $stmt->execute([1, 'Alice', 100]);
-        $stmt->execute([2, 'Bob', 85]);
-
-        $stmt = $this->pdo->query('SELECT * FROM prep_test ORDER BY id');
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $this->assertCount(2, $rows);
-        $this->assertSame('Alice', $rows[0]['name']);
-        $this->assertSame('Bob', $rows[1]['name']);
-    }
-
     public function testQueryRewrittenAtPrepareTime(): void
     {
         $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
@@ -146,16 +103,5 @@ class PostgresPreparedStatementTest extends TestCase
         $this->assertSame('Alice', $rows[0]['name']);
 
         $this->pdo->enableZtd();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS prep_test');
     }
 }

@@ -91,24 +91,28 @@ class PostgresOnConflictWhereTest extends TestCase
      * the row. But ZTD's UpsertMutation ignores the WHERE clause and always
      * updates, which is a semantic difference.
      *
-     * Known limitation: UpsertMutation does not evaluate ON CONFLICT WHERE clause.
+     * ON CONFLICT DO UPDATE with WHERE condition NOT met should NOT update.
      */
     public function testOnConflictDoUpdateWhereConditionNotMet(): void
     {
         $this->pdo->exec("INSERT INTO pg_ocw_test (id, name, score) VALUES (1, 'Alice', 50)");
 
-        // WHERE score >= 80 — condition is NOT met (score=50 < 80)
+        // WHERE score >= 80 -- condition is NOT met (score=50 < 80)
         // Native PostgreSQL: row should NOT be updated
-        // ZTD shadow: UpsertMutation ignores WHERE, updates anyway
         $this->pdo->exec("INSERT INTO pg_ocw_test (id, name, score) VALUES (1, 'Alice V2', 95) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, score = EXCLUDED.score WHERE pg_ocw_test.score >= 80");
 
         $stmt = $this->pdo->query('SELECT name, score FROM pg_ocw_test WHERE id = 1');
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Limitation: UpsertMutation updates regardless of WHERE clause
-        // Native PostgreSQL would keep 'Alice' (50), ZTD returns 'Alice V2' (95)
-        $this->assertSame('Alice V2', $row['name'], 'ZTD updates despite WHERE condition not met (limitation)');
-        $this->assertSame(95, (int) $row['score'], 'Score updated despite WHERE condition not met (limitation)');
+        // Expected: WHERE condition not met, so row should NOT be updated
+        if ($row['name'] !== 'Alice') {
+            $this->markTestIncomplete(
+                'UpsertMutation does not evaluate ON CONFLICT WHERE clause. '
+                . 'Expected row unchanged (Alice, 50), got (' . $row['name'] . ', ' . $row['score'] . ')'
+            );
+        }
+        $this->assertSame('Alice', $row['name']);
+        $this->assertSame(50, (int) $row['score']);
     }
 
     /**

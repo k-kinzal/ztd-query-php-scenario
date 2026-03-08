@@ -11,11 +11,11 @@ use Tests\Support\MySQLContainer;
 use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
 /**
- * Tests backslash character corruption in MySQL shadow store via MySQLi.
+ * Tests backslash character handling in MySQL shadow store via MySQLi.
  *
  * Cross-platform parity with MysqlBackslashCorruptionTest (PDO).
- * MySQL's CTE rewriter embeds values as string literals without escaping
- * backslashes, causing escape sequence interpretation.
+ *
+ * @see spec 10.3
  */
 class BackslashCorruptionTest extends TestCase
 {
@@ -50,9 +50,11 @@ class BackslashCorruptionTest extends TestCase
     }
 
     /**
-     * Backslash-t is corrupted to tab character.
+     * Backslash-t should be preserved in shadow store.
+     *
+     * @see spec 10.3
      */
-    public function testBackslashTCorrupted(): void
+    public function testBackslashTPreserved(): void
     {
         $stmt = $this->mysqli->prepare('INSERT INTO mi_bslash_test VALUES (?, ?)');
         $id = 1;
@@ -63,9 +65,14 @@ class BackslashCorruptionTest extends TestCase
         $result = $this->mysqli->query('SELECT path FROM mi_bslash_test WHERE id = 1');
         $retrieved = $result->fetch_assoc()['path'];
 
-        // MySQL CTE rewriter corrupts \t to tab, \te to tab+'e'
-        // The retrieved value will NOT match the original
-        $this->assertNotSame('C:\test\temp', $retrieved);
+        // Expected: backslash characters should be preserved
+        if ($retrieved !== 'C:\test\temp') {
+            $this->markTestIncomplete(
+                'Backslash corruption: CTE rewriter does not escape backslashes in string literals. '
+                . 'Expected C:\test\temp, got ' . var_export($retrieved, true)
+            );
+        }
+        $this->assertSame('C:\test\temp', $retrieved);
     }
 
     /**

@@ -110,8 +110,14 @@ class ExecuteQueryInsertSetTest extends TestCase
 
         $result = $this->mysqli->query('SELECT name FROM mi_eqis_test WHERE id = 1');
         $name = $result->fetch_assoc()['name'];
-        // execute_query upsert may not update (known execute_query limitation)
-        $this->assertContains($name, ['Alice', 'Alice V2']);
+        // Expected: upsert should update the name
+        if ($name !== 'Alice V2') {
+            $this->markTestIncomplete(
+                'execute_query upsert does not update existing row. '
+                . 'Expected "Alice V2", got ' . var_export($name, true)
+            );
+        }
+        $this->assertSame('Alice V2', $name);
     }
 
     /**

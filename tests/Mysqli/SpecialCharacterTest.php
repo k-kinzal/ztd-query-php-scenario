@@ -80,13 +80,14 @@ class SpecialCharacterTest extends TestCase
         $result = $this->mysqli->query('SELECT val FROM mysqli_char_test WHERE id = 1');
         $row = $result->fetch_assoc();
 
-        // KNOWN ISSUE: Backslash characters are corrupted in the shadow store.
-        // The CTE rewriter embeds the value as a string literal in the generated SQL,
-        // but does not escape backslashes. MySQL interprets \t as tab and \f as just 'f'
-        // (MySQL only recognizes \n, \r, \t, \b, \0, \\, \' as escape sequences;
-        // unrecognized sequences like \f drop the backslash).
-        // Expected: 'path\to\file' but actual: "path<tab>ofile"
-        $this->assertSame("path\tofile", $row['val']);
+        // Expected: backslash characters should be preserved
+        if ($row['val'] !== 'path\\to\\file') {
+            $this->markTestIncomplete(
+                'Backslash corruption on MySQLi: CTE rewriter does not escape backslashes. '
+                . 'Expected path\\to\\file, got ' . var_export($row['val'], true)
+            );
+        }
+        $this->assertSame('path\\to\\file', $row['val']);
     }
 
     public function testNewlineViaPrepared(): void

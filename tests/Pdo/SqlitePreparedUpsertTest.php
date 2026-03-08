@@ -11,8 +11,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 /**
  * Tests prepared statement UPSERT (ON CONFLICT DO UPDATE) on SQLite PDO.
  *
- * PDO adapter limitation: prepared UPSERT does NOT update existing rows.
- * This is consistent with MySQL and PostgreSQL PDO behavior.
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/23
  */
 class SqlitePreparedUpsertTest extends TestCase
 {
@@ -42,10 +41,11 @@ class SqlitePreparedUpsertTest extends TestCase
     }
 
     /**
-     * PDO limitation: prepared ON CONFLICT DO UPDATE does NOT update existing rows.
-     * Consistent with MySQL and PostgreSQL PDO behavior.
+     * Prepared ON CONFLICT DO UPDATE should update existing rows.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testPreparedUpsertDoesNotUpdateExisting(): void
+    public function testPreparedUpsertUpdatesExisting(): void
     {
         $this->pdo->exec("INSERT INTO sq_ups (id, name, score) VALUES (1, 'Original', 50)");
 
@@ -56,8 +56,13 @@ class SqlitePreparedUpsertTest extends TestCase
 
         $select = $this->pdo->query('SELECT name FROM sq_ups WHERE id = 1');
         $row = $select->fetch(PDO::FETCH_ASSOC);
-        // Bug: should be 'Updated' but old row is retained
-        $this->assertSame('Original', $row['name']);
+        if ($row['name'] !== 'Updated') {
+            $this->markTestIncomplete(
+                'Issue #23: prepared ON CONFLICT DO UPDATE does not update existing rows on SQLite PDO. '
+                . 'Expected "Updated", got ' . var_export($row['name'], true)
+            );
+        }
+        $this->assertSame('Updated', $row['name']);
     }
 
     /**
@@ -103,9 +108,11 @@ class SqlitePreparedUpsertTest extends TestCase
     }
 
     /**
-     * PDO limitation: prepared INSERT OR REPLACE does NOT replace existing rows.
+     * Prepared INSERT OR REPLACE should replace existing rows.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testPreparedInsertOrReplaceDoesNotReplaceExisting(): void
+    public function testPreparedInsertOrReplaceReplacesExisting(): void
     {
         $this->pdo->exec("INSERT INTO sq_ups (id, name, score) VALUES (1, 'Original', 50)");
 
@@ -113,7 +120,13 @@ class SqlitePreparedUpsertTest extends TestCase
         $stmt->execute([1, 'Replaced', 999]);
 
         $select = $this->pdo->query('SELECT name FROM sq_ups WHERE id = 1');
-        // Bug: should be 'Replaced' but old row is retained
-        $this->assertSame('Original', $select->fetchColumn());
+        $name = $select->fetchColumn();
+        if ($name !== 'Replaced') {
+            $this->markTestIncomplete(
+                'Issue #23: prepared INSERT OR REPLACE does not replace existing rows on SQLite PDO. '
+                . 'Expected "Replaced", got ' . var_export($name, true)
+            );
+        }
+        $this->assertSame('Replaced', $name);
     }
 }

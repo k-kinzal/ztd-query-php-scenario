@@ -56,15 +56,24 @@ class SqlitePreparedAggregateParamsTest extends TestCase
     }
 
     /**
-     * HAVING with prepared params returns empty on SQLite — issue #22.
+     * HAVING with prepared params should return matching groups.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/22
      */
-    public function testHavingWithParamReturnsEmpty(): void
+    public function testHavingWithParam(): void
     {
         $stmt = $this->pdo->prepare('SELECT customer, COUNT(*) AS order_count FROM pap_orders GROUP BY customer HAVING COUNT(*) >= ?');
         $stmt->execute([2]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        // Bug: should return 3 customers but returns empty
-        $this->assertCount(0, $rows);
+        // Expected: all 3 customers have 2 orders each
+        if (count($rows) === 0) {
+            $this->markTestIncomplete(
+                'Issue #22: HAVING with prepared params returns empty on SQLite. Expected 3 rows, got 0'
+            );
+        }
+        $customers = array_column($rows, 'customer');
+        sort($customers);
+        $this->assertSame(['Alice', 'Bob', 'Charlie'], $customers);
     }
 
     /**

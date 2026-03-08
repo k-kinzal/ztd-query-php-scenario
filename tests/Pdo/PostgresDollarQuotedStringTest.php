@@ -90,21 +90,24 @@ class PostgresDollarQuotedStringTest extends TestCase
     }
 
     /**
-     * Bug: UPDATE with escaped single quotes in SET value breaks WHERE clause parsing.
-     *
-     * The PgSqlParser::stripStringLiterals() regex does not handle '' (doubled
-     * single quote) escaping correctly. It treats 'it''s updated' as two separate
-     * string literals ('it' and 's updated'), consuming the character between them.
-     * This causes 'WHERE id = 4' to become 'WHERE d = 4'.
+     * UPDATE with escaped single quotes in SET value should work.
      *
      * @see https://github.com/k-kinzal/ztd-query-php/issues/25
      */
-    public function testUpdateWithEscapedQuotesInSetBreaksWhere(): void
+    public function testUpdateWithEscapedQuotesInSet(): void
     {
         $this->pdo->exec("INSERT INTO pg_dq_test (id, body, notes) VALUES (4, 'original', 'note')");
 
-        $this->expectException(\ZtdQuery\Adapter\Pdo\ZtdPdoException::class);
-        $this->pdo->exec("UPDATE pg_dq_test SET body = 'it''s updated' WHERE id = 4");
+        try {
+            $this->pdo->exec("UPDATE pg_dq_test SET body = 'it''s updated' WHERE id = 4");
+
+            $stmt = $this->pdo->query('SELECT body FROM pg_dq_test WHERE id = 4');
+            $this->assertSame("it's updated", $stmt->fetchColumn());
+        } catch (\ZtdQuery\Adapter\Pdo\ZtdPdoException $e) {
+            $this->markTestIncomplete(
+                'Issue #25: UPDATE with escaped single quotes in SET value breaks WHERE clause parsing. ' . $e->getMessage()
+            );
+        }
     }
 
     /**

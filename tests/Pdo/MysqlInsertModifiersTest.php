@@ -75,11 +75,9 @@ class MysqlInsertModifiersTest extends TestCase
     }
 
     /**
-     * ON DUPLICATE KEY UPDATE with self-referencing expression.
-     * Known limitation: self-referencing (counter = counter + 1) loses
-     * the original value — counter becomes 0 instead of 2.
+     * ON DUPLICATE KEY UPDATE with self-referencing expression should increment.
      */
-    public function testOnDuplicateKeySelfRefLosesValue(): void
+    public function testOnDuplicateKeySelfRefIncrements(): void
     {
         $this->pdo->exec(
             "INSERT INTO mysql_im_test VALUES (1, 'Alice', 1)
@@ -88,8 +86,14 @@ class MysqlInsertModifiersTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT counter FROM mysql_im_test WHERE id = 1');
         $counter = (int) $stmt->fetchColumn();
-        // Self-referencing loses value — counter becomes 0 (not 2)
-        $this->assertEquals(0, $counter);
+        // Expected: counter should be 2 (original 1 + 1)
+        if ($counter !== 2) {
+            $this->markTestIncomplete(
+                'ON DUPLICATE KEY UPDATE with self-referencing expression loses old value. '
+                . 'Expected counter 2, got ' . $counter
+            );
+        }
+        $this->assertSame(2, $counter);
     }
 
     /**

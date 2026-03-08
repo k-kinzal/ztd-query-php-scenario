@@ -9,12 +9,10 @@ use PHPUnit\Framework\TestCase;
 use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
- * Documents bug: rows inserted via prepared statements cannot be updated/deleted
- * on the PDO adapter (issue #23).
+ * Tests that rows inserted via prepared statements can be updated/deleted
+ * on the PDO adapter.
  *
- * UPDATE/DELETE operations report affected rows, but data doesn't change.
- * Rows inserted via exec() work correctly.
- * MySQLi adapter is NOT affected.
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/23
  */
 class SqlitePreparedInsertUpdateBugTest extends TestCase
 {
@@ -49,9 +47,11 @@ class SqlitePreparedInsertUpdateBugTest extends TestCase
     }
 
     /**
-     * Bug: prepared INSERT + exec UPDATE — update does not take effect.
+     * Prepared INSERT + exec UPDATE should update the row.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testPreparedInsertThenExecUpdateFails(): void
+    public function testPreparedInsertThenExecUpdate(): void
     {
         $stmt = $this->pdo->prepare('INSERT INTO bug_test (id, name, score) VALUES (?, ?, ?)');
         $stmt->execute([1, 'Alice', 100]);
@@ -59,14 +59,21 @@ class SqlitePreparedInsertUpdateBugTest extends TestCase
         $this->pdo->exec("UPDATE bug_test SET score = 200 WHERE id = 1");
 
         $row = $this->pdo->query('SELECT score FROM bug_test WHERE id = 1')->fetch(PDO::FETCH_ASSOC);
-        // Bug: should be 200, but old value is retained
-        $this->assertSame(100, (int) $row['score']);
+        $score = (int) $row['score'];
+        if ($score !== 200) {
+            $this->markTestIncomplete(
+                'Issue #23: prepared INSERT rows cannot be updated. Expected score 200, got ' . $score
+            );
+        }
+        $this->assertSame(200, $score);
     }
 
     /**
-     * Bug: prepared INSERT + prepared UPDATE — update does not take effect.
+     * Prepared INSERT + prepared UPDATE should update the row.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testPreparedInsertThenPreparedUpdateFails(): void
+    public function testPreparedInsertThenPreparedUpdate(): void
     {
         $ins = $this->pdo->prepare('INSERT INTO bug_test (id, name, score) VALUES (?, ?, ?)');
         $ins->execute([1, 'Alice', 100]);
@@ -75,14 +82,21 @@ class SqlitePreparedInsertUpdateBugTest extends TestCase
         $upd->execute([200, 1]);
 
         $row = $this->pdo->query('SELECT score FROM bug_test WHERE id = 1')->fetch(PDO::FETCH_ASSOC);
-        // Bug: should be 200, but old value is retained
-        $this->assertSame(100, (int) $row['score']);
+        $score = (int) $row['score'];
+        if ($score !== 200) {
+            $this->markTestIncomplete(
+                'Issue #23: prepared INSERT rows cannot be updated via prepared UPDATE. Expected score 200, got ' . $score
+            );
+        }
+        $this->assertSame(200, $score);
     }
 
     /**
-     * Bug: prepared INSERT + DELETE — delete does not take effect.
+     * Prepared INSERT + DELETE should delete the row.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testPreparedInsertThenDeleteFails(): void
+    public function testPreparedInsertThenDelete(): void
     {
         $ins = $this->pdo->prepare('INSERT INTO bug_test (id, name, score) VALUES (?, ?, ?)');
         $ins->execute([1, 'Alice', 100]);
@@ -91,14 +105,20 @@ class SqlitePreparedInsertUpdateBugTest extends TestCase
         $this->pdo->exec("DELETE FROM bug_test WHERE id = 1");
 
         $cnt = (int) $this->pdo->query('SELECT COUNT(*) FROM bug_test')->fetchColumn();
-        // Bug: should be 1 (Alice deleted), but both rows persist
-        $this->assertSame(2, $cnt);
+        if ($cnt !== 1) {
+            $this->markTestIncomplete(
+                'Issue #23: prepared INSERT rows cannot be deleted. Expected count 1, got ' . $cnt
+            );
+        }
+        $this->assertSame(1, $cnt);
     }
 
     /**
-     * Mixed: exec INSERT works, prepared INSERT cannot be updated.
+     * Mixed: both exec and prepared INSERT rows should be updatable.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testMixedInsertUpdateSelectivelyFails(): void
+    public function testMixedInsertUpdateBothUpdated(): void
     {
         $this->pdo->exec("INSERT INTO bug_test VALUES (1, 'ExecAlice', 100)");
 
@@ -110,9 +130,18 @@ class SqlitePreparedInsertUpdateBugTest extends TestCase
         $row1 = $this->pdo->query('SELECT score FROM bug_test WHERE id = 1')->fetch(PDO::FETCH_ASSOC);
         $row2 = $this->pdo->query('SELECT score FROM bug_test WHERE id = 2')->fetch(PDO::FETCH_ASSOC);
 
-        // exec-inserted row gets updated
-        $this->assertSame(999, (int) $row1['score']);
-        // prepared-inserted row does NOT get updated
-        $this->assertSame(200, (int) $row2['score']);
+        $score1 = (int) $row1['score'];
+        $score2 = (int) $row2['score'];
+
+        // Both rows should be updated to 999
+        if ($score2 !== 999) {
+            $this->markTestIncomplete(
+                'Issue #23: prepared INSERT rows not updatable. '
+                . 'exec-inserted row score: ' . $score1 . ', prepared-inserted row score: ' . $score2
+                . ' (both should be 999)'
+            );
+        }
+        $this->assertSame(999, $score1);
+        $this->assertSame(999, $score2);
     }
 }

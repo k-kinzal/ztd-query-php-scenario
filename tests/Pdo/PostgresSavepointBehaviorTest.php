@@ -13,9 +13,6 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests SAVEPOINT behavior on PostgreSQL PDO with ZTD.
- *
- * On PostgreSQL, SAVEPOINT commands silently pass through.
- * Shadow store does NOT participate in savepoints.
  */
 class PostgresSavepointBehaviorTest extends TestCase
 {
@@ -60,9 +57,9 @@ class PostgresSavepointBehaviorTest extends TestCase
     }
 
     /**
-     * Shadow data persists after ROLLBACK TO SAVEPOINT.
+     * ROLLBACK TO SAVEPOINT should undo shadow INSERT.
      */
-    public function testShadowDataPersistsAfterRollbackToSavepoint(): void
+    public function testRollbackToSavepointUndoesShadowInsert(): void
     {
         $this->pdo->beginTransaction();
         $this->pdo->exec('SAVEPOINT sp1');
@@ -72,11 +69,16 @@ class PostgresSavepointBehaviorTest extends TestCase
         $this->pdo->exec('ROLLBACK TO SAVEPOINT sp1');
         $this->pdo->commit();
 
-        // Shadow data persists despite savepoint rollback
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_pgsp_test');
         $count = (int) $stmt->fetchColumn();
-        // Shadow INSERT may persist since shadow doesn't participate in savepoints
-        $this->assertGreaterThanOrEqual(1, $count);
+        // Expected: Bob's INSERT was rolled back, so count should be 1 (Alice only)
+        if ($count !== 1) {
+            $this->markTestIncomplete(
+                'Shadow store does not participate in savepoints. '
+                . 'Expected count 1 after ROLLBACK TO SAVEPOINT, got ' . $count
+            );
+        }
+        $this->assertSame(1, $count);
     }
 
     /**

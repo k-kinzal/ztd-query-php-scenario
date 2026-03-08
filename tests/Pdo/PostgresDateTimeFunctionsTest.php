@@ -65,15 +65,21 @@ class PostgresDateTimeFunctionsTest extends TestCase
     /**
      * EXTRACT(YEAR FROM ...) — known to return 0 for shadow dates.
      */
-    public function testExtractReturnsZeroForShadowDates(): void
+    /**
+     * EXTRACT should return correct year from shadow-stored dates.
+     */
+    public function testExtractReturnsCorrectYearForShadowDates(): void
     {
         $stmt = $this->pdo->query(
             "SELECT EXTRACT(YEAR FROM event_date::DATE) AS yr FROM pg_dt_events WHERE id = 1"
         );
         $value = (int) $stmt->fetchColumn();
-        // EXTRACT returns 0 for shadow-stored dates (known limitation)
-        // or may return correct value if date casting works
-        $this->assertContains($value, [0, 2024]);
+        if ($value === 0) {
+            $this->markTestIncomplete(
+                'EXTRACT returns 0 for shadow-stored dates. Expected 2024, got 0'
+            );
+        }
+        $this->assertSame(2024, $value);
     }
 
     /**

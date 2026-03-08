@@ -14,10 +14,6 @@ use ZtdQuery\Adapter\Pdo\ZtdPdoException;
 
 /**
  * Tests ALTER TABLE behavior with the shadow store on PostgreSQL PDO.
- *
- * Discovery: ALTER TABLE is NOT supported by ZTD on PostgreSQL.
- * All ALTER TABLE statements throw ZtdPdoException with
- * "ALTER TABLE not yet supported for PostgreSQL SQL statement."
  */
 class PostgresAlterTableAfterDataTest extends TestCase
 {
@@ -49,21 +45,30 @@ class PostgresAlterTableAfterDataTest extends TestCase
     }
 
     /**
-     * ALTER TABLE ADD COLUMN throws ZtdPdoException on PostgreSQL.
+     * ALTER TABLE ADD COLUMN should work on PostgreSQL.
      */
-    public function testAlterTableThrowsUnsupportedException(): void
+    public function testAlterTableAddColumn(): void
     {
         $this->pdo->exec("INSERT INTO evolve_pg VALUES (1, 'Alice')");
 
-        $this->expectException(ZtdPdoException::class);
-        $this->expectExceptionMessage('ALTER TABLE not yet supported');
-        $this->pdo->exec('ALTER TABLE evolve_pg ADD COLUMN score INT');
+        try {
+            $this->pdo->exec('ALTER TABLE evolve_pg ADD COLUMN score INT');
+        } catch (ZtdPdoException $e) {
+            $this->markTestIncomplete(
+                'ALTER TABLE not yet supported on PostgreSQL: ' . $e->getMessage()
+            );
+        }
+
+        // If ALTER TABLE succeeds, verify new column is usable
+        $this->pdo->exec("INSERT INTO evolve_pg (id, name, score) VALUES (2, 'Bob', 100)");
+        $stmt = $this->pdo->query('SELECT COUNT(*) FROM evolve_pg');
+        $this->assertSame(2, (int) $stmt->fetchColumn());
     }
 
     /**
-     * Shadow data remains intact after ALTER TABLE error.
+     * Shadow data should remain intact after ALTER TABLE.
      */
-    public function testShadowIntactAfterAlterTableError(): void
+    public function testShadowIntactAfterAlterTable(): void
     {
         $this->pdo->exec("INSERT INTO evolve_pg VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO evolve_pg VALUES (2, 'Bob')");
@@ -71,7 +76,7 @@ class PostgresAlterTableAfterDataTest extends TestCase
         try {
             $this->pdo->exec('ALTER TABLE evolve_pg ADD COLUMN score INT');
         } catch (ZtdPdoException $e) {
-            // Expected
+            // ALTER TABLE not yet supported — but shadow data should still be intact
         }
 
         $stmt = $this->pdo->query('SELECT name FROM evolve_pg WHERE id = 1');

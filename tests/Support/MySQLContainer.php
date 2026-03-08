@@ -16,6 +16,18 @@ class MySQLContainer extends GenericContainer
     protected static $IMAGE = 'mysql:8.0';
     protected static $AUTO_REMOVE_ON_EXIT = true;
 
+    /**
+     * Resolve the container image from MYSQL_IMAGE env var.
+     * Call before creating the container instance.
+     */
+    public static function resolveImage(): void
+    {
+        $image = getenv('MYSQL_IMAGE');
+        if ($image !== false && $image !== '') {
+            static::$IMAGE = $image;
+        }
+    }
+
     protected static $EXPOSED_PORTS = [3306];
 
     protected static $ENVIRONMENTS = [

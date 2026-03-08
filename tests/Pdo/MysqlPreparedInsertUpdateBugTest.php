@@ -12,7 +12,9 @@ use Tests\Support\MySQLContainer;
 use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
- * Confirms PDO prepared INSERT + UPDATE bug on MySQL (issue #23).
+ * Tests PDO prepared INSERT + UPDATE behavior on MySQL.
+ *
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/23
  */
 class MysqlPreparedInsertUpdateBugTest extends TestCase
 {
@@ -53,9 +55,11 @@ class MysqlPreparedInsertUpdateBugTest extends TestCase
     }
 
     /**
-     * Bug: prepared INSERT + exec UPDATE — update does not take effect.
+     * Prepared INSERT + exec UPDATE should update the row.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testPreparedInsertThenUpdateFails(): void
+    public function testPreparedInsertThenUpdate(): void
     {
         $stmt = $this->pdo->prepare('INSERT INTO prep_ins_bug (id, name, score) VALUES (?, ?, ?)');
         $stmt->execute([1, 'Alice', 100]);
@@ -63,8 +67,13 @@ class MysqlPreparedInsertUpdateBugTest extends TestCase
         $this->pdo->exec("UPDATE prep_ins_bug SET score = 200 WHERE id = 1");
 
         $row = $this->pdo->query('SELECT score FROM prep_ins_bug WHERE id = 1')->fetch(PDO::FETCH_ASSOC);
-        // Bug: should be 200
-        $this->assertSame(100, (int) $row['score']);
+        $score = (int) $row['score'];
+        if ($score !== 200) {
+            $this->markTestIncomplete(
+                'Issue #23: prepared INSERT rows cannot be updated on MySQL. Expected score 200, got ' . $score
+            );
+        }
+        $this->assertSame(200, $score);
     }
 
     public static function tearDownAfterClass(): void

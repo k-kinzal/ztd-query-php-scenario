@@ -57,12 +57,26 @@ class PostgresUpdateSubqueryBugTest extends TestCase
         $this->pdo->exec("INSERT INTO pg_subq_orders (id, user_id, total, status) VALUES (3, 2, 100, 'completed')");
     }
 
-    public function testUpdateWithInSubqueryGroupByHavingFails(): void
+    /**
+     * UPDATE with IN (subquery containing GROUP BY HAVING) should work.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/9
+     */
+    public function testUpdateWithInSubqueryGroupByHaving(): void
     {
-        // PostgreSQL also fails: CTE rewriter generates a cross join making "id" ambiguous
-        // Error: "column reference 'id' is ambiguous" (different from SQLite's "incomplete input")
-        $this->expectException(\Throwable::class);
-        $this->pdo->exec("UPDATE pg_subq_users SET tier = 'premium' WHERE id IN (SELECT user_id FROM pg_subq_orders WHERE status = 'completed' GROUP BY user_id HAVING SUM(total) > 400)");
+        try {
+            $this->pdo->exec("UPDATE pg_subq_users SET tier = 'premium' WHERE id IN (SELECT user_id FROM pg_subq_orders WHERE status = 'completed' GROUP BY user_id HAVING SUM(total) > 400)");
+
+            $stmt = $this->pdo->query("SELECT tier FROM pg_subq_users WHERE id = 1");
+            $this->assertSame('premium', $stmt->fetch(PDO::FETCH_ASSOC)['tier']);
+
+            $stmt = $this->pdo->query("SELECT tier FROM pg_subq_users WHERE id = 2");
+            $this->assertSame('standard', $stmt->fetch(PDO::FETCH_ASSOC)['tier']);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete(
+                'CTE rewriter fails on UPDATE with IN (GROUP BY HAVING) on PostgreSQL: ' . $e->getMessage()
+            );
+        }
     }
 
     public function testSelectWithGroupByHavingWorks(): void

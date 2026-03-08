@@ -87,25 +87,22 @@ class SqliteDiagnosticQueriesTest extends TestCase
     }
 
     /**
-     * SELECT with inline subquery in column list.
+     * SELECT with inline subquery in column list should return correct data.
      *
-     * Known limitation on SQLite: scalar subqueries in column list
-     * reference the physical table (empty), causing the outer query
-     * to return no rows or NULL for the subquery column.
-     * This is related to Issue #13 (derived tables not rewritten).
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/13
      */
-    public function testSelectWithInlineSubqueryLimitation(): void
+    public function testSelectWithInlineSubquery(): void
     {
         $stmt = $this->pdo->query('SELECT name, (SELECT MAX(score) FROM diag_test) AS max_score FROM diag_test WHERE id = 1');
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        // On SQLite, the scalar subquery references physical table → returns NULL or no rows
-        // This is a known limitation where inner subqueries don't read from shadow
-        if ($row === false) {
-            $this->assertTrue(true, 'Inline subquery returns no rows (known limitation)');
-        } else {
-            // If it works, verify correctness
-            $this->assertSame('Alice', $row['name']);
+        if ($row === false || $row['max_score'] === null) {
+            $this->markTestIncomplete(
+                'Issue #13: scalar subqueries in column list reference the physical table instead of shadow. '
+                . 'Expected row with max_score, got ' . var_export($row, true)
+            );
         }
+        $this->assertSame('Alice', $row['name']);
+        $this->assertNotNull($row['max_score']);
     }
 
     /**

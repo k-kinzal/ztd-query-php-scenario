@@ -118,10 +118,10 @@ class SqlitePrepareOptionsAndCursorTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // tools=2, electronics=2 both have >= 2 items
-        // SQLite has known issue with HAVING + prepared params (#22), so handle both cases
         if (count($rows) === 0) {
-            // Known SQLite HAVING issue — skip
-            $this->markTestSkipped('SQLite HAVING with prepared params returns empty (issue #22)');
+            $this->markTestIncomplete(
+                'Issue #22: HAVING with prepared params returns empty on SQLite'
+            );
         }
 
         $this->assertCount(2, $rows);

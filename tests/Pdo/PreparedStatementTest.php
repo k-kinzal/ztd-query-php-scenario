@@ -5,39 +5,21 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Scenarios\PreparedStatementScenario;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
-class PreparedStatementTest extends TestCase
+class PreparedStatementTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
+    use PreparedStatementScenario;
 
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return 'CREATE TABLE prep_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS prep_test');
-        $raw->exec('CREATE TABLE prep_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)');
-
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['prep_test'];
     }
 
     public function testBindParamWithByReference(): void
@@ -52,19 +34,6 @@ class PreparedStatementTest extends TestCase
 
         $this->assertCount(1, $rows);
         $this->assertSame('Alice', $rows[0]['name']);
-    }
-
-    public function testExecuteWithPositionalParameterArray(): void
-    {
-        $stmt = $this->pdo->prepare('INSERT INTO prep_test (id, name, score) VALUES (?, ?, ?)');
-        $stmt->execute([1, 'Alice', 100]);
-
-        $stmt = $this->pdo->query('SELECT * FROM prep_test WHERE id = 1');
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $this->assertCount(1, $rows);
-        $this->assertSame('Alice', $rows[0]['name']);
-        $this->assertSame(100, (int) $rows[0]['score']);
     }
 
     public function testExecuteWithNamedParameterArray(): void
@@ -146,18 +115,6 @@ class PreparedStatementTest extends TestCase
         $this->assertSame('Alice', $row[1]);
     }
 
-    public function testPreparedUpdateRowCount(): void
-    {
-        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
-        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (2, 'Bob', 85)");
-        $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (3, 'Charlie', 70)");
-
-        $stmt = $this->pdo->prepare('UPDATE prep_test SET score = ? WHERE score < ?');
-        $stmt->execute([0, 90]);
-
-        $this->assertSame(2, $stmt->rowCount());
-    }
-
     public function testPreparedDeleteRowCount(): void
     {
         $this->pdo->exec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
@@ -173,20 +130,6 @@ class PreparedStatementTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('Bob', $rows[0]['name']);
-    }
-
-    public function testReExecutePreparedStatement(): void
-    {
-        $stmt = $this->pdo->prepare('INSERT INTO prep_test (id, name, score) VALUES (?, ?, ?)');
-        $stmt->execute([1, 'Alice', 100]);
-        $stmt->execute([2, 'Bob', 85]);
-
-        $stmt = $this->pdo->query('SELECT * FROM prep_test ORDER BY id');
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $this->assertCount(2, $rows);
-        $this->assertSame('Alice', $rows[0]['name']);
-        $this->assertSame('Bob', $rows[1]['name']);
     }
 
     public function testColumnCount(): void
@@ -214,16 +157,5 @@ class PreparedStatementTest extends TestCase
         $this->assertSame('Alice', $rows[0]['name']);
 
         $this->pdo->enableZtd();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS prep_test');
     }
 }

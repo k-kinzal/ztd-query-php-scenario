@@ -4,67 +4,23 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Scenarios\TransactionScenario;
+use Tests\Support\AbstractMysqliTestCase;
 use Tests\Support\MySQLContainer;
 use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
-class TransactionTest extends TestCase
+class TransactionTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
+    use TransactionScenario;
 
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return 'CREATE TABLE tx_test (id INT PRIMARY KEY, val VARCHAR(255))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS tx_test');
-        $raw->query('CREATE TABLE tx_test (id INT PRIMARY KEY, val VARCHAR(255))');
-        $raw->close();
-
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-    }
-
-    public function testBeginTransactionAndCommit(): void
-    {
-        $this->assertTrue($this->mysqli->begin_transaction());
-        $this->mysqli->query("INSERT INTO tx_test (id, val) VALUES (1, 'hello')");
-        $this->assertTrue($this->mysqli->commit());
-
-        // Shadow data should still be visible
-        $result = $this->mysqli->query('SELECT * FROM tx_test WHERE id = 1');
-        $row = $result->fetch_assoc();
-        $this->assertSame('hello', $row['val']);
-    }
-
-    public function testBeginTransactionAndRollback(): void
-    {
-        $this->mysqli->query("INSERT INTO tx_test (id, val) VALUES (1, 'before_tx')");
-
-        $this->assertTrue($this->mysqli->begin_transaction());
-        $this->assertTrue($this->mysqli->rollback());
-
-        // Shadow data from before transaction should still be visible
-        $result = $this->mysqli->query('SELECT * FROM tx_test WHERE id = 1');
-        $row = $result->fetch_assoc();
-        $this->assertSame('before_tx', $row['val']);
+        return ['tx_test'];
     }
 
     public function testSavepointAndRelease(): void
@@ -128,23 +84,5 @@ class TransactionTest extends TestCase
         $escaped = $this->mysqli->real_escape_string("it's a test");
         $this->assertIsString($escaped);
         $this->assertStringContainsString("\\'", $escaped);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS tx_test');
-        $raw->close();
     }
 }

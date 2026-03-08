@@ -63,18 +63,25 @@ class PostgresTypeHandlingTest extends TestCase
     }
 
     /**
-     * Bug: PostgreSQL BOOLEAN FALSE is stored as empty string in the shadow store.
-     * The CTE rewriter then attempts CAST('' AS BOOLEAN) which PostgreSQL rejects.
+     * PostgreSQL BOOLEAN FALSE should be stored and retrieved correctly.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/6
      */
-    public function testBooleanFalseThrowsOnPostgres(): void
+    public function testBooleanFalseWorks(): void
     {
         $this->pdo->exec("INSERT INTO type_test (id, bool_val) VALUES (1, TRUE)");
 
-        $this->expectException(\PDOException::class);
-        $this->expectExceptionMessage('invalid input syntax for type boolean');
-        // Inserting FALSE causes the CTE rebuild to fail on the next query
-        $this->pdo->exec("INSERT INTO type_test (id, bool_val) VALUES (2, FALSE)");
-        $this->pdo->query('SELECT * FROM type_test');
+        try {
+            $this->pdo->exec("INSERT INTO type_test (id, bool_val) VALUES (2, FALSE)");
+            $stmt = $this->pdo->query('SELECT bool_val FROM type_test WHERE id = 2');
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            // FALSE should be stored correctly
+            $this->assertTrue(in_array($row['bool_val'], [false, 'f', '0', 0, ''], true));
+        } catch (\PDOException $e) {
+            $this->markTestIncomplete(
+                'Issue #6: BOOLEAN FALSE stored as empty string, CAST(\'\' AS BOOLEAN) fails. ' . $e->getMessage()
+            );
+        }
     }
 
     public function testDateStringStorage(): void

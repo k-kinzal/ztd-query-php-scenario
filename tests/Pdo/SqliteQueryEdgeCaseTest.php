@@ -156,18 +156,26 @@ class SqliteQueryEdgeCaseTest extends TestCase
         $this->assertSame('Charlie', $row['last']);
     }
 
-    public function testDeleteAllWithoutWhereDoesNotWork(): void
+    /**
+     * DELETE without WHERE should clear all rows.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/7
+     */
+    public function testDeleteAllWithoutWhere(): void
     {
-        // KNOWN LIMITATION: DELETE without WHERE clause does not clear the shadow store.
-        // The CTE rewriter apparently requires a WHERE clause to track deletions.
         $this->pdo->exec("INSERT INTO edge_test (id, name, score) VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO edge_test (id, name, score) VALUES (2, 'Bob', 85)");
 
         $this->pdo->exec('DELETE FROM edge_test');
 
-        // Shadow store still returns the rows — DELETE without WHERE is not applied
         $stmt = $this->pdo->query('SELECT COUNT(*) as cnt FROM edge_test');
-        $this->assertSame(2, (int) $stmt->fetch(PDO::FETCH_ASSOC)['cnt']);
+        $count = (int) $stmt->fetch(PDO::FETCH_ASSOC)['cnt'];
+        if ($count !== 0) {
+            $this->markTestIncomplete(
+                'Issue #7: DELETE without WHERE silently ignored on SQLite. Expected 0, got ' . $count
+            );
+        }
+        $this->assertSame(0, $count);
     }
 
     public function testDeleteAllWithWhereOneEqualsOne(): void

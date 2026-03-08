@@ -14,9 +14,6 @@ use ZtdQuery\Adapter\Pdo\ZtdPdoException;
 
 /**
  * Tests savepoint behavior with ZTD on MySQL PDO.
- *
- * MySQL rewriter treats SAVEPOINT/RELEASE as unparseable SQL and throws.
- * ROLLBACK TO SAVEPOINT throws "Statement type not supported."
  */
 class MysqlSavepointTest extends TestCase
 {
@@ -49,27 +46,60 @@ class MysqlSavepointTest extends TestCase
         $this->pdo->exec("INSERT INTO sp_test VALUES (1, 'Alice')");
     }
 
-    public function testSavepointThrowsUnparseableException(): void
+    /**
+     * SAVEPOINT should be supported on MySQL.
+     */
+    public function testSavepointSupported(): void
     {
         $this->pdo->beginTransaction();
 
-        $this->expectException(ZtdPdoException::class);
-        $this->expectExceptionMessage('Empty or unparseable SQL');
-        $this->pdo->exec('SAVEPOINT sp1');
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->pdo->commit();
+            $this->assertTrue(true);
+        } catch (ZtdPdoException $e) {
+            $this->markTestIncomplete(
+                'SAVEPOINT not yet supported on MySQL PDO: ' . $e->getMessage()
+            );
+        }
     }
 
-    public function testReleaseSavepointThrowsUnparseableException(): void
+    /**
+     * RELEASE SAVEPOINT should be supported on MySQL.
+     */
+    public function testReleaseSavepointSupported(): void
     {
-        $this->expectException(ZtdPdoException::class);
-        $this->expectExceptionMessage('Empty or unparseable SQL');
-        $this->pdo->exec('RELEASE SAVEPOINT sp1');
+        $this->pdo->beginTransaction();
+
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->pdo->exec('RELEASE SAVEPOINT sp1');
+            $this->pdo->commit();
+            $this->assertTrue(true);
+        } catch (ZtdPdoException $e) {
+            $this->markTestIncomplete(
+                'RELEASE SAVEPOINT not yet supported on MySQL PDO: ' . $e->getMessage()
+            );
+        }
     }
 
-    public function testRollbackToSavepointThrowsUnsupportedSqlException(): void
+    /**
+     * ROLLBACK TO SAVEPOINT should be supported on MySQL.
+     */
+    public function testRollbackToSavepointSupported(): void
     {
-        $this->expectException(ZtdPdoException::class);
-        $this->expectExceptionMessage('Statement type not supported');
-        $this->pdo->exec('ROLLBACK TO SAVEPOINT sp1');
+        $this->pdo->beginTransaction();
+
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->pdo->exec('ROLLBACK TO SAVEPOINT sp1');
+            $this->pdo->commit();
+            $this->assertTrue(true);
+        } catch (ZtdPdoException $e) {
+            $this->markTestIncomplete(
+                'ROLLBACK TO SAVEPOINT not yet supported on MySQL PDO: ' . $e->getMessage()
+            );
+        }
     }
 
     public static function tearDownAfterClass(): void

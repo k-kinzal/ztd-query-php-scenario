@@ -15,6 +15,18 @@ class PostgreSQLContainer extends GenericContainer
 
     protected static $IMAGE = 'postgres:16';
     protected static $AUTO_REMOVE_ON_EXIT = true;
+
+    /**
+     * Resolve the container image from POSTGRES_IMAGE env var.
+     * Call before creating the container instance.
+     */
+    public static function resolveImage(): void
+    {
+        $image = getenv('POSTGRES_IMAGE');
+        if ($image !== false && $image !== '') {
+            static::$IMAGE = $image;
+        }
+    }
     protected static $EXPOSED_PORTS = [5432];
     protected static $ENVIRONMENTS = [
         'POSTGRES_USER' => 'test',

@@ -64,6 +64,11 @@ class MysqlSpecialCharacterTest extends TestCase
         $this->assertSame('say "hello"', $rows[0]['val']);
     }
 
+    /**
+     * Backslash characters in values should be preserved.
+     *
+     * @see spec 10.3
+     */
     public function testBackslashInValue(): void
     {
         $stmt = $this->pdo->prepare('INSERT INTO mysql_char_test (id, val) VALUES (?, ?)');
@@ -72,12 +77,13 @@ class MysqlSpecialCharacterTest extends TestCase
         $stmt = $this->pdo->query('SELECT val FROM mysql_char_test WHERE id = 1');
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // KNOWN ISSUE: Backslash characters are corrupted on MySQL.
-        // The CTE rewriter embeds the value as a string literal without escaping
-        // backslashes. MySQL interprets \t as tab, and unrecognized escape sequences
-        // like \f drop the backslash. This affects both MySQLi and PDO adapters.
-        // SQLite and PostgreSQL handle backslashes correctly.
-        $this->assertSame("path\tofile", $rows[0]['val']);
+        if ($rows[0]['val'] !== 'path\\to\\file') {
+            $this->markTestIncomplete(
+                'Backslash corruption on MySQL: CTE rewriter does not escape backslashes. '
+                . 'Expected path\\to\\file, got ' . var_export($rows[0]['val'], true)
+            );
+        }
+        $this->assertSame('path\\to\\file', $rows[0]['val']);
     }
 
     public function testNewlineInValue(): void
@@ -163,9 +169,15 @@ class MysqlSpecialCharacterTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT val FROM mysql_char_test WHERE id = 1');
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        // KNOWN ISSUE: Backslash is corrupted — \b is interpreted as backspace (0x08)
-        // by MySQL (recognized escape sequence).
-        $this->assertSame("it's \"quoted\" with" . chr(8) . "ackslash", $rows[0]['val']);
+        // Expected: backslash should be preserved
+        $expected = "it's \"quoted\" with\\backslash";
+        if ($rows[0]['val'] !== $expected) {
+            $this->markTestIncomplete(
+                'Backslash corruption on MySQL: \\b interpreted as backspace. '
+                . 'Expected ' . var_export($expected, true) . ', got ' . var_export($rows[0]['val'], true)
+            );
+        }
+        $this->assertSame($expected, $rows[0]['val']);
     }
 
     public static function tearDownAfterClass(): void

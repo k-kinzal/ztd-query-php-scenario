@@ -95,19 +95,25 @@ class SqliteConflictResolutionTest extends TestCase
     }
 
     /**
-     * PDO limitation: prepared INSERT OR REPLACE does NOT replace existing rows.
-     * This is consistent with MySQL PDO behavior for prepared REPLACE.
-     * The exec() path works correctly (tested above).
+     * Prepared INSERT OR REPLACE should replace existing rows.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testPreparedInsertOrReplaceDoesNotReplaceExisting(): void
+    public function testPreparedInsertOrReplaceReplacesExisting(): void
     {
         $stmt = $this->pdo->prepare('INSERT OR REPLACE INTO cr_test VALUES (?, ?, ?)');
 
-        // Replace existing — old row is retained (PDO limitation)
         $stmt->execute([1, 'PrepAlice', 99]);
 
         $check = $this->pdo->query('SELECT name FROM cr_test WHERE id = 1');
-        $this->assertSame('Alice', $check->fetchColumn());
+        $name = $check->fetchColumn();
+        if ($name !== 'PrepAlice') {
+            $this->markTestIncomplete(
+                'Issue #23: prepared INSERT OR REPLACE does not replace existing rows. '
+                . 'Expected "PrepAlice", got ' . var_export($name, true)
+            );
+        }
+        $this->assertSame('PrepAlice', $name);
     }
 
     public function testPreparedInsertOrReplaceInsertsNew(): void

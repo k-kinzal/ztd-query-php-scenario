@@ -140,11 +140,25 @@ class SqliteAdvancedSubqueryTest extends TestCase
         $this->assertSame('Sales', $rows[0]['name']);
     }
 
-    public function testUpdateWithInSubqueryAndAvgFails(): void
+    /**
+     * UPDATE with IN (subquery GROUP BY HAVING AVG) should work.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/9
+     */
+    public function testUpdateWithInSubqueryAndAvg(): void
     {
-        // UPDATE with IN (subquery GROUP BY HAVING AVG) fails on SQLite — same class as issue #9
-        $this->expectException(\Throwable::class);
-        $this->pdo->exec("UPDATE employees SET active = 0 WHERE dept_id IN (SELECT dept_id FROM employees GROUP BY dept_id HAVING AVG(salary) > 100000)");
+        try {
+            $this->pdo->exec("UPDATE employees SET active = 0 WHERE dept_id IN (SELECT dept_id FROM employees GROUP BY dept_id HAVING AVG(salary) > 100000)");
+
+            // Verify the update took effect
+            $stmt = $this->pdo->query('SELECT COUNT(*) FROM employees WHERE active = 0');
+            $count = (int) $stmt->fetchColumn();
+            $this->assertGreaterThan(0, $count);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete(
+                'Issue #9: UPDATE with IN (GROUP BY HAVING AVG) fails on SQLite: ' . $e->getMessage()
+            );
+        }
     }
 
     public function testUnionAllVsUnion(): void

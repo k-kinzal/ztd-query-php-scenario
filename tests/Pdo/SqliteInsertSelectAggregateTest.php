@@ -10,9 +10,6 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests INSERT...SELECT with aggregate functions through ZTD shadow store.
- *
- * Known limitation: Computed columns (COUNT, SUM, etc.) become NULL in shadow.
- * Direct column references transfer correctly.
  */
 class SqliteInsertSelectAggregateTest extends TestCase
 {
@@ -33,9 +30,9 @@ class SqliteInsertSelectAggregateTest extends TestCase
     }
 
     /**
-     * INSERT...SELECT with GROUP BY — computed columns become NULL on SQLite.
+     * INSERT...SELECT with GROUP BY should transfer computed columns correctly.
      */
-    public function testInsertSelectAggregateComputedColumnsNull(): void
+    public function testInsertSelectAggregateComputedColumns(): void
     {
         $this->pdo->exec(
             'INSERT INTO isa_summary (category, order_count, total_amount)
@@ -45,12 +42,18 @@ class SqliteInsertSelectAggregateTest extends TestCase
         $stmt = $this->pdo->query('SELECT * FROM isa_summary ORDER BY category');
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Rows are inserted but aggregate columns are NULL (known SQLite limitation)
         $this->assertCount(2, $rows);
         $this->assertSame('Books', $rows[0]['category']);
-        // COUNT(*) and SUM(amount) become NULL
-        $this->assertNull($rows[0]['order_count']);
-        $this->assertNull($rows[0]['total_amount']);
+        // Expected: aggregate values should be correctly stored
+        if ($rows[0]['order_count'] === null || $rows[0]['total_amount'] === null) {
+            $this->markTestIncomplete(
+                'Computed columns (COUNT, SUM) become NULL in shadow store during INSERT...SELECT. '
+                . 'order_count: ' . var_export($rows[0]['order_count'], true)
+                . ', total_amount: ' . var_export($rows[0]['total_amount'], true)
+            );
+        }
+        $this->assertSame(2, (int) $rows[0]['order_count']);
+        $this->assertEqualsWithDelta(55.0, (float) $rows[0]['total_amount'], 0.01);
     }
 
     /**
@@ -96,9 +99,9 @@ class SqliteInsertSelectAggregateTest extends TestCase
     }
 
     /**
-     * INSERT...SELECT from same table (self-referencing) — computed values NULL.
+     * INSERT...SELECT from same table with computed expressions should preserve values.
      */
-    public function testInsertSelectSameTableComputedNull(): void
+    public function testInsertSelectSameTableComputed(): void
     {
         $raw = new PDO('sqlite::memory:');
         $raw->exec('CREATE TABLE isa_self (id INT PRIMARY KEY, value INT)');
@@ -107,19 +110,28 @@ class SqliteInsertSelectAggregateTest extends TestCase
         $pdo->exec("INSERT INTO isa_self VALUES (1, 100)");
         $pdo->exec("INSERT INTO isa_self VALUES (2, 200)");
 
-        // Computed expression (id + 10, value * 2) — values may be NULL
+        // Computed expression (id + 10, value * 2) — should produce correct values
         $pdo->exec('INSERT INTO isa_self (id, value) SELECT id + 10, value * 2 FROM isa_self');
 
         $stmt = $pdo->query('SELECT COUNT(*) FROM isa_self');
         $count = (int) $stmt->fetchColumn();
-        // At least 2 more rows should be inserted
-        $this->assertGreaterThanOrEqual(4, $count);
+        $this->assertSame(4, $count);
 
-        // The computed id (id + 10) is NULL, so rows with non-NULL id won't find them
-        // Query by IS NULL to find the inserted rows with NULL computed ids
-        $stmt = $pdo->query('SELECT COUNT(*) FROM isa_self WHERE id IS NULL');
-        $nullIdCount = (int) $stmt->fetchColumn();
-        $this->assertGreaterThanOrEqual(2, $nullIdCount);
+        // Check that computed IDs are correct (11 and 12)
+        $stmt = $pdo->query('SELECT id FROM isa_self WHERE id = 11');
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row === false) {
+            // Check if they ended up as NULL
+            $stmt = $pdo->query('SELECT COUNT(*) FROM isa_self WHERE id IS NULL');
+            $nullCount = (int) $stmt->fetchColumn();
+            if ($nullCount > 0) {
+                $this->markTestIncomplete(
+                    'Computed columns in INSERT...SELECT become NULL. '
+                    . $nullCount . ' rows have NULL id instead of computed values'
+                );
+            }
+        }
+        $this->assertNotFalse($row, 'Row with computed id=11 should exist');
     }
 
     /**

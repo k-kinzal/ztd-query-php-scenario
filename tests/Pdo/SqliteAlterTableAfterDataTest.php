@@ -11,11 +11,8 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 /**
  * Tests ALTER TABLE ADD COLUMN behavior with the shadow store on SQLite PDO.
  *
- * Discovery: ALTER TABLE ADD COLUMN does NOT update the reflected schema.
- * The CTE rewriter uses the schema from CREATE TABLE time.
- * - INSERT with new column values succeeds (goes to shadow store)
- * - SELECT referencing the new column fails ("no such column")
- * - Queries using only original columns still work
+ * ALTER TABLE ADD COLUMN should update the reflected schema so that
+ * new columns are queryable.
  */
 class SqliteAlterTableAfterDataTest extends TestCase
 {
@@ -31,16 +28,23 @@ class SqliteAlterTableAfterDataTest extends TestCase
     }
 
     /**
-     * SELECT referencing the new column fails after ALTER TABLE ADD COLUMN.
+     * SELECT referencing the new column should work after ALTER TABLE ADD COLUMN.
      */
-    public function testSelectNewColumnFailsAfterAlter(): void
+    public function testSelectNewColumnWorksAfterAlter(): void
     {
         $this->pdo->exec("INSERT INTO evolve VALUES (1, 'Alice')");
         $this->pdo->exec('ALTER TABLE evolve ADD COLUMN score INT');
 
-        $this->expectException(\PDOException::class);
-        $this->expectExceptionMessage('no such column: score');
-        $this->pdo->query('SELECT name, score FROM evolve WHERE id = 1');
+        try {
+            $stmt = $this->pdo->query('SELECT name, score FROM evolve WHERE id = 1');
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->assertSame('Alice', $row['name']);
+        } catch (\PDOException $e) {
+            $this->markTestIncomplete(
+                'ALTER TABLE ADD COLUMN does not update reflected schema on SQLite. '
+                . 'New column not visible in CTE rewriter: ' . $e->getMessage()
+            );
+        }
     }
 
     /**
@@ -74,15 +78,23 @@ class SqliteAlterTableAfterDataTest extends TestCase
     }
 
     /**
-     * Even ALTER TABLE BEFORE any data — new column still not in reflected schema.
+     * ALTER TABLE before data insertion - new column should be visible.
      */
-    public function testAlterBeforeInsertNewColumnStillNotVisible(): void
+    public function testAlterBeforeInsertNewColumnVisible(): void
     {
         $this->pdo->exec('ALTER TABLE evolve ADD COLUMN score INT');
         $this->pdo->exec("INSERT INTO evolve (id, name, score) VALUES (1, 'Alice', 95)");
 
-        $this->expectException(\PDOException::class);
-        $this->expectExceptionMessage('no such column: score');
-        $this->pdo->query('SELECT name, score FROM evolve WHERE id = 1');
+        try {
+            $stmt = $this->pdo->query('SELECT name, score FROM evolve WHERE id = 1');
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->assertSame('Alice', $row['name']);
+            $this->assertSame(95, (int) $row['score']);
+        } catch (\PDOException $e) {
+            $this->markTestIncomplete(
+                'ALTER TABLE ADD COLUMN does not update reflected schema on SQLite (even before data). '
+                . 'New column not visible: ' . $e->getMessage()
+            );
+        }
     }
 }

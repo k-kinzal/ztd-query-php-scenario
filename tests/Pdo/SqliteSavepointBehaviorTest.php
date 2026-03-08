@@ -10,9 +10,6 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests SAVEPOINT behavior on SQLite with ZTD.
- *
- * SAVEPOINT, RELEASE SAVEPOINT, and ROLLBACK TO SAVEPOINT are not supported.
- * On SQLite, all three throw UnsupportedSqlException.
  */
 class SqliteSavepointBehaviorTest extends TestCase
 {
@@ -28,41 +25,61 @@ class SqliteSavepointBehaviorTest extends TestCase
     }
 
     /**
-     * SAVEPOINT throws exception.
+     * SAVEPOINT should be supported.
      */
-    public function testSavepointThrows(): void
+    public function testSavepointSupported(): void
     {
-        $this->expectException(\Throwable::class);
-        $this->pdo->exec('SAVEPOINT sp1');
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->assertTrue(true);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete(
+                'SAVEPOINT not yet supported on SQLite: ' . $e->getMessage()
+            );
+        }
     }
 
     /**
-     * RELEASE SAVEPOINT throws exception.
+     * RELEASE SAVEPOINT should be supported.
      */
-    public function testReleaseSavepointThrows(): void
+    public function testReleaseSavepointSupported(): void
     {
-        $this->expectException(\Throwable::class);
-        $this->pdo->exec('RELEASE SAVEPOINT sp1');
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->pdo->exec('RELEASE SAVEPOINT sp1');
+            $this->assertTrue(true);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete(
+                'RELEASE SAVEPOINT not yet supported on SQLite: ' . $e->getMessage()
+            );
+        }
     }
 
     /**
-     * ROLLBACK TO SAVEPOINT throws exception.
+     * ROLLBACK TO SAVEPOINT should be supported.
      */
-    public function testRollbackToSavepointThrows(): void
+    public function testRollbackToSavepointSupported(): void
     {
-        $this->expectException(\Throwable::class);
-        $this->pdo->exec('ROLLBACK TO SAVEPOINT sp1');
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->pdo->exec('ROLLBACK TO SAVEPOINT sp1');
+            $this->assertTrue(true);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete(
+                'ROLLBACK TO SAVEPOINT not yet supported on SQLite: ' . $e->getMessage()
+            );
+        }
     }
 
     /**
-     * Shadow data unaffected by failed SAVEPOINT commands.
+     * Shadow data should remain intact regardless of SAVEPOINT support.
      */
-    public function testShadowDataUnaffectedByFailedSavepoint(): void
+    public function testShadowDataIntactAfterSavepoint(): void
     {
         try {
             $this->pdo->exec('SAVEPOINT sp1');
         } catch (\Throwable $e) {
-            // Expected
+            // SAVEPOINT may not be supported yet
         }
 
         // Shadow data still intact

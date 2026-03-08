@@ -12,15 +12,12 @@ use Tests\Support\MySQLContainer;
 use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
- * Tests backslash corruption in MySQL shadow store (documented in spec 10.3).
+ * Tests backslash handling in MySQL shadow store.
  *
- * Discovery: Backslash characters in string values inserted via prepared statements
- * are corrupted in the shadow store. The CTE rewriter embeds values as string literals
- * without escaping backslashes, causing MySQL to interpret escape sequences:
- * \t → tab, \n → newline, \b → backspace, \r → carriage return, \0 → null byte, \\ → single backslash.
- * Unrecognized sequences like \f drop the backslash.
- *
+ * Backslash characters in string values should be preserved correctly.
  * This does NOT affect SQLite or PostgreSQL.
+ *
+ * @see spec 10.3
  */
 class MysqlBackslashCorruptionTest extends TestCase
 {
@@ -52,57 +49,77 @@ class MysqlBackslashCorruptionTest extends TestCase
     }
 
     /**
-     * Backslash-t is corrupted to tab character in shadow store.
+     * Backslash-t should be preserved in shadow store.
+     *
+     * @see spec 10.3
      */
-    public function testBackslashTCorruptedToTab(): void
+    public function testBackslashTPreserved(): void
     {
         $this->pdo->exec("INSERT INTO bs_test_m VALUES (1, 'C:\\temp\\file.txt')");
 
         $stmt = $this->pdo->query('SELECT path FROM bs_test_m WHERE id = 1');
         $path = $stmt->fetchColumn();
 
-        // On MySQL, \t becomes tab - path is corrupted
-        $this->assertNotSame('C:\\temp\\file.txt', $path);
-        $this->assertStringContainsString("\t", $path); // tab character
+        // Expected: backslash characters should be preserved
+        if ($path !== 'C:\\temp\\file.txt') {
+            $this->markTestIncomplete(
+                'Backslash corruption: CTE rewriter does not escape backslashes in string literals. '
+                . 'Expected C:\\temp\\file.txt, got ' . var_export($path, true)
+            );
+        }
+        $this->assertSame('C:\\temp\\file.txt', $path);
     }
 
     /**
-     * Backslash-n is corrupted to newline in shadow store.
+     * Backslash-n should be preserved in shadow store.
+     *
+     * @see spec 10.3
      */
-    public function testBackslashNCorruptedToNewline(): void
+    public function testBackslashNPreserved(): void
     {
         $this->pdo->exec("INSERT INTO bs_test_m VALUES (1, 'line1\\nline2')");
 
         $stmt = $this->pdo->query('SELECT path FROM bs_test_m WHERE id = 1');
         $path = $stmt->fetchColumn();
 
-        // \n becomes actual newline
-        $this->assertNotSame('line1\\nline2', $path);
-        $this->assertStringContainsString("\n", $path);
+        // Expected: literal \n should be preserved, not converted to newline
+        if ($path !== 'line1\\nline2') {
+            $this->markTestIncomplete(
+                'Backslash corruption: \\n converted to newline. '
+                . 'Expected line1\\nline2, got ' . var_export($path, true)
+            );
+        }
+        $this->assertSame('line1\\nline2', $path);
     }
 
     /**
-     * Double backslash: the corruption affects even escaped backslashes.
-     * In SQL: 'path\\to\\file' stores path\to\file.
-     * But CTE rewriter re-embeds without escaping, so \t → tab, \f → drops backslash.
+     * Double backslash should be preserved correctly.
+     *
+     * @see spec 10.3
      */
-    public function testDoubleBackslashAlsoCorrupted(): void
+    public function testDoubleBackslashPreserved(): void
     {
         $this->pdo->exec("INSERT INTO bs_test_m VALUES (1, 'path\\\\to\\\\file')");
 
         $stmt = $this->pdo->query('SELECT path FROM bs_test_m WHERE id = 1');
         $path = $stmt->fetchColumn();
 
-        // The value 'path\to\file' gets re-embedded in CTE as 'path\to\file'
-        // MySQL interprets \t as tab and \f drops the backslash
-        $this->assertNotSame('path\\to\\file', $path);
-        $this->assertStringContainsString("\t", $path); // \t → tab
+        // Expected: SQL 'path\\to\\file' stores path\to\file, which should be preserved
+        if ($path !== 'path\\to\\file') {
+            $this->markTestIncomplete(
+                'Backslash corruption: double backslash not preserved correctly. '
+                . 'Expected path\\to\\file, got ' . var_export($path, true)
+            );
+        }
+        $this->assertSame('path\\to\\file', $path);
     }
 
     /**
-     * Prepared statement with backslash also corrupted.
+     * Prepared statement with backslash should preserve values.
+     *
+     * @see spec 10.3
      */
-    public function testPreparedStatementBackslashCorrupted(): void
+    public function testPreparedStatementBackslashPreserved(): void
     {
         $stmt = $this->pdo->prepare('INSERT INTO bs_test_m (id, path) VALUES (?, ?)');
         $stmt->execute([1, "C:\\new\\test"]);
@@ -110,8 +127,14 @@ class MysqlBackslashCorruptionTest extends TestCase
         $sel = $this->pdo->query('SELECT path FROM bs_test_m WHERE id = 1');
         $path = $sel->fetchColumn();
 
-        // \n in the middle of path becomes newline
-        $this->assertStringContainsString("\n", $path);
+        // Expected: prepared statement values should be preserved exactly
+        if ($path !== "C:\\new\\test") {
+            $this->markTestIncomplete(
+                'Backslash corruption in prepared statement: '
+                . 'Expected C:\\new\\test, got ' . var_export($path, true)
+            );
+        }
+        $this->assertSame("C:\\new\\test", $path);
     }
 
     public static function tearDownAfterClass(): void

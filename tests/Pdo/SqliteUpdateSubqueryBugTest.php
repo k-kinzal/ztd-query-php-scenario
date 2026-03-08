@@ -42,12 +42,26 @@ class SqliteUpdateSubqueryBugTest extends TestCase
         $this->assertSame('premium', $stmt->fetch(PDO::FETCH_ASSOC)['tier']);
     }
 
+    /**
+     * UPDATE with IN (subquery containing GROUP BY HAVING) should work.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/9
+     */
     public function testUpdateWithInSubqueryGroupByHaving(): void
     {
-        // UPDATE with IN (subquery with GROUP BY HAVING) — may cause CTE rewriter issues
-        // This is a potential bug: the CTE rewriter produces incomplete SQL on SQLite
-        $this->expectException(\Throwable::class);
-        $this->pdo->exec("UPDATE users SET tier = 'premium' WHERE id IN (SELECT user_id FROM orders WHERE status = 'completed' GROUP BY user_id HAVING SUM(total) > 400)");
+        try {
+            $this->pdo->exec("UPDATE users SET tier = 'premium' WHERE id IN (SELECT user_id FROM orders WHERE status = 'completed' GROUP BY user_id HAVING SUM(total) > 400)");
+
+            $stmt = $this->pdo->query("SELECT tier FROM users WHERE id = 1");
+            $this->assertSame('premium', $stmt->fetch(PDO::FETCH_ASSOC)['tier']);
+
+            $stmt = $this->pdo->query("SELECT tier FROM users WHERE id = 2");
+            $this->assertSame('standard', $stmt->fetch(PDO::FETCH_ASSOC)['tier']);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete(
+                'CTE rewriter produces incomplete SQL for UPDATE with IN (GROUP BY HAVING) on SQLite: ' . $e->getMessage()
+            );
+        }
     }
 
     public function testSelectWithGroupByHavingWorks(): void

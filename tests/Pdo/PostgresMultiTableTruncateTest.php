@@ -80,9 +80,9 @@ class PostgresMultiTableTruncateTest extends TestCase
      * only captures the first table. This means the second table might
      * NOT be truncated in the shadow store.
      *
-     * Known limitation: Only the first table is truncated in shadow.
+     * Multi-table TRUNCATE should truncate all listed tables.
      */
-    public function testMultiTableTruncateOnlyAffectsFirstTable(): void
+    public function testMultiTableTruncateAllTables(): void
     {
         $this->pdo->exec('TRUNCATE pg_mtt_alpha, pg_mtt_beta');
 
@@ -91,19 +91,20 @@ class PostgresMultiTableTruncateTest extends TestCase
         $alphaCount = (int) $stmt->fetchColumn();
         $this->assertSame(0, $alphaCount, 'First table should be truncated');
 
-        // Second table — if ZTD only captures first table, beta still has data
+        // Second table should also be truncated
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_mtt_beta');
         $betaCount = (int) $stmt->fetchColumn();
-
-        // This documents the limitation: second table is NOT truncated
-        // If this starts passing with 0, it means the bug is fixed
-        $this->assertSame(2, $betaCount, 'Second table is NOT truncated due to extractTruncateTable limitation');
+        if ($betaCount !== 0) {
+            $this->markTestIncomplete(
+                'Multi-table TRUNCATE only truncates the first table in shadow. '
+                . 'Expected beta count 0, got ' . $betaCount
+            );
+        }
+        $this->assertSame(0, $betaCount);
     }
 
     /**
-     * Multi-table TRUNCATE with three tables.
-     *
-     * Same limitation: only the first table is truncated.
+     * Multi-table TRUNCATE with three tables should truncate all.
      */
     public function testMultiTableTruncateThreeTables(): void
     {
@@ -114,16 +115,23 @@ class PostgresMultiTableTruncateTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_mtt_beta');
         $betaCount = (int) $stmt->fetchColumn();
-        // Documents limitation: only first table is truncated
-        $this->assertSame(2, $betaCount, 'Second table NOT truncated (limitation)');
 
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_mtt_gamma');
         $gammaCount = (int) $stmt->fetchColumn();
-        $this->assertSame(1, $gammaCount, 'Third table NOT truncated (limitation)');
+
+        if ($betaCount !== 0 || $gammaCount !== 0) {
+            $this->markTestIncomplete(
+                'Multi-table TRUNCATE only truncates the first table. '
+                . 'Beta count: ' . $betaCount . ', gamma count: ' . $gammaCount
+                . ' (both should be 0)'
+            );
+        }
+        $this->assertSame(0, $betaCount);
+        $this->assertSame(0, $gammaCount);
     }
 
     /**
-     * TRUNCATE TABLE with TABLE keyword and comma-separated list.
+     * TRUNCATE TABLE with TABLE keyword and comma-separated list should truncate all.
      */
     public function testMultiTableTruncateWithTableKeyword(): void
     {
@@ -134,7 +142,13 @@ class PostgresMultiTableTruncateTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_mtt_beta');
         $betaCount = (int) $stmt->fetchColumn();
-        $this->assertSame(2, $betaCount, 'Second table NOT truncated (limitation)');
+        if ($betaCount !== 0) {
+            $this->markTestIncomplete(
+                'Multi-table TRUNCATE TABLE only truncates the first table. '
+                . 'Expected beta count 0, got ' . $betaCount
+            );
+        }
+        $this->assertSame(0, $betaCount);
     }
 
     /**

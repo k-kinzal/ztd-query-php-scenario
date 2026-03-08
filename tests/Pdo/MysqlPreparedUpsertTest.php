@@ -14,8 +14,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 /**
  * Tests prepared statement UPSERT (ON DUPLICATE KEY UPDATE) and REPLACE on MySQL PDO.
  *
- * PDO adapter limitation: prepared UPSERT/REPLACE does NOT update existing rows.
- * This contrasts with the MySQLi adapter which handles them correctly.
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/23
  */
 class MysqlPreparedUpsertTest extends TestCase
 {
@@ -60,9 +59,11 @@ class MysqlPreparedUpsertTest extends TestCase
     }
 
     /**
-     * PDO limitation: prepared UPSERT does NOT update existing rows.
+     * Prepared UPSERT should update existing rows.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testPreparedUpsertDoesNotUpdateExisting(): void
+    public function testPreparedUpsertUpdatesExisting(): void
     {
         $this->pdo->exec("INSERT INTO pdo_upsert_test (id, name, score) VALUES (1, 'Original', 50)");
 
@@ -73,14 +74,21 @@ class MysqlPreparedUpsertTest extends TestCase
 
         $select = $this->pdo->query('SELECT name FROM pdo_upsert_test WHERE id = 1');
         $row = $select->fetch(PDO::FETCH_ASSOC);
-        // Bug: should be 'Updated' but old row is retained
-        $this->assertSame('Original', $row['name']);
+        if ($row['name'] !== 'Updated') {
+            $this->markTestIncomplete(
+                'Issue #23: prepared UPSERT does not update existing rows on MySQL PDO. '
+                . 'Expected "Updated", got ' . var_export($row['name'], true)
+            );
+        }
+        $this->assertSame('Updated', $row['name']);
     }
 
     /**
-     * PDO limitation: prepared REPLACE does NOT replace existing rows.
+     * Prepared REPLACE should replace existing rows.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testPreparedReplaceDoesNotReplaceExisting(): void
+    public function testPreparedReplaceReplacesExisting(): void
     {
         $this->pdo->exec("INSERT INTO pdo_upsert_test (id, name, score) VALUES (1, 'Original', 50)");
 
@@ -89,8 +97,13 @@ class MysqlPreparedUpsertTest extends TestCase
 
         $select = $this->pdo->query('SELECT name FROM pdo_upsert_test WHERE id = 1');
         $row = $select->fetch(PDO::FETCH_ASSOC);
-        // Bug: should be 'Replaced' but old row is retained
-        $this->assertSame('Original', $row['name']);
+        if ($row['name'] !== 'Replaced') {
+            $this->markTestIncomplete(
+                'Issue #23: prepared REPLACE does not replace existing rows on MySQL PDO. '
+                . 'Expected "Replaced", got ' . var_export($row['name'], true)
+            );
+        }
+        $this->assertSame('Replaced', $row['name']);
     }
 
     /**

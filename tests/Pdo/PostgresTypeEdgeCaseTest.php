@@ -14,9 +14,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 /**
  * Tests PostgreSQL-specific type edge cases with ZTD shadow store.
  *
- * Documents known limitations:
- * - BOOLEAN false: CTE rewriter generates invalid CAST('' AS BOOLEAN)
- * - BIGINT overflow: CTE rewriter generates CAST(value AS integer) instead of bigint
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/6
  */
 class PostgresTypeEdgeCaseTest extends TestCase
 {
@@ -61,16 +59,24 @@ class PostgresTypeEdgeCaseTest extends TestCase
     }
 
     /**
-     * BOOLEAN false via prepared statement fails on SELECT.
-     * CTE rewriter generates CAST('' AS BOOLEAN) which is invalid PostgreSQL.
+     * BOOLEAN false via prepared statement should work on SELECT.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/6
      */
-    public function testBooleanFalseFailsOnSelect(): void
+    public function testBooleanFalseWorksOnSelect(): void
     {
         $stmt = $this->pdo->prepare('INSERT INTO pg_type_edge (id, flag, big_num) VALUES (?, ?, ?)');
         $stmt->execute([2, false, 0]);
 
-        $this->expectException(\PDOException::class);
-        $this->pdo->query('SELECT flag FROM pg_type_edge WHERE id = 2');
+        try {
+            $sel = $this->pdo->query('SELECT flag FROM pg_type_edge WHERE id = 2');
+            $row = $sel->fetch(PDO::FETCH_ASSOC);
+            $this->assertNotFalse($row);
+        } catch (\PDOException $e) {
+            $this->markTestIncomplete(
+                'Issue #6: BOOLEAN false generates invalid CAST(\'\' AS BOOLEAN). ' . $e->getMessage()
+            );
+        }
     }
 
     /**
@@ -87,16 +93,23 @@ class PostgresTypeEdgeCaseTest extends TestCase
     }
 
     /**
-     * BIGINT values exceeding integer range fail on SELECT.
-     * CTE rewriter generates CAST(value AS integer) instead of CAST(value AS bigint).
+     * BIGINT values exceeding integer range should work on SELECT.
      */
-    public function testBigintOverflowFailsOnSelect(): void
+    public function testBigintOverflowWorksOnSelect(): void
     {
         $stmt = $this->pdo->prepare('INSERT INTO pg_type_edge (id, flag, big_num) VALUES (?, ?, ?)');
         $stmt->execute([4, true, 9999999999]); // exceeds int32
 
-        $this->expectException(\PDOException::class);
-        $this->pdo->query('SELECT big_num FROM pg_type_edge WHERE id = 4');
+        try {
+            $sel = $this->pdo->query('SELECT big_num FROM pg_type_edge WHERE id = 4');
+            $val = $sel->fetchColumn();
+            $this->assertSame('9999999999', (string) $val);
+        } catch (\PDOException $e) {
+            $this->markTestIncomplete(
+                'BIGINT overflow: CTE rewriter generates CAST(value AS integer) instead of bigint. '
+                . $e->getMessage()
+            );
+        }
     }
 
     /**

@@ -14,7 +14,6 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 /**
  * Tests DELETE without WHERE clause on MySQL PDO.
  *
- * Unlike SQLite where DELETE without WHERE is silently ignored,
  * MySQL correctly clears the shadow store.
  */
 class MysqlDeleteWithoutWhereTest extends TestCase

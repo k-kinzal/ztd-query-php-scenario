@@ -11,9 +11,6 @@ use ZtdQuery\Adapter\Pdo\ZtdPdoException;
 
 /**
  * Tests savepoint (nested transaction) behavior with ZTD on SQLite PDO.
- *
- * Discovery: SAVEPOINT, RELEASE SAVEPOINT, and ROLLBACK TO SAVEPOINT
- * are not supported SQL statements in ZTD mode and throw ZtdPdoException.
  */
 class SqliteSavepointTest extends TestCase
 {
@@ -29,27 +26,60 @@ class SqliteSavepointTest extends TestCase
         $this->pdo->exec("INSERT INTO sp_test VALUES (1, 'Alice')");
     }
 
-    public function testSavepointThrowsUnsupportedSqlException(): void
+    /**
+     * SAVEPOINT should be supported.
+     */
+    public function testSavepointSupported(): void
     {
         $this->pdo->beginTransaction();
 
-        $this->expectException(ZtdPdoException::class);
-        $this->expectExceptionMessage('Statement type not supported');
-        $this->pdo->exec('SAVEPOINT sp1');
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->pdo->commit();
+            $this->assertTrue(true);
+        } catch (ZtdPdoException $e) {
+            $this->markTestIncomplete(
+                'SAVEPOINT not yet supported on SQLite: ' . $e->getMessage()
+            );
+        }
     }
 
-    public function testReleaseSavepointThrowsUnsupportedSqlException(): void
+    /**
+     * RELEASE SAVEPOINT should be supported.
+     */
+    public function testReleaseSavepointSupported(): void
     {
-        $this->expectException(ZtdPdoException::class);
-        $this->expectExceptionMessage('Statement type not supported');
-        $this->pdo->exec('RELEASE SAVEPOINT sp1');
+        $this->pdo->beginTransaction();
+
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->pdo->exec('RELEASE SAVEPOINT sp1');
+            $this->pdo->commit();
+            $this->assertTrue(true);
+        } catch (ZtdPdoException $e) {
+            $this->markTestIncomplete(
+                'RELEASE SAVEPOINT not yet supported on SQLite: ' . $e->getMessage()
+            );
+        }
     }
 
-    public function testRollbackToSavepointThrowsUnsupportedSqlException(): void
+    /**
+     * ROLLBACK TO SAVEPOINT should be supported.
+     */
+    public function testRollbackToSavepointSupported(): void
     {
-        $this->expectException(ZtdPdoException::class);
-        $this->expectExceptionMessage('Statement type not supported');
-        $this->pdo->exec('ROLLBACK TO SAVEPOINT sp1');
+        $this->pdo->beginTransaction();
+
+        try {
+            $this->pdo->exec('SAVEPOINT sp1');
+            $this->pdo->exec('ROLLBACK TO SAVEPOINT sp1');
+            $this->pdo->commit();
+            $this->assertTrue(true);
+        } catch (ZtdPdoException $e) {
+            $this->markTestIncomplete(
+                'ROLLBACK TO SAVEPOINT not yet supported on SQLite: ' . $e->getMessage()
+            );
+        }
     }
 
     public function testBeginTransactionCommitWorks(): void
@@ -62,7 +92,10 @@ class SqliteSavepointTest extends TestCase
         $this->assertSame(2, (int) $stmt->fetch(PDO::FETCH_ASSOC)['cnt']);
     }
 
-    public function testRollbackDoesNotUndoShadowInsert(): void
+    /**
+     * Rollback should undo the INSERT.
+     */
+    public function testRollbackUndoesShadowInsert(): void
     {
         $this->pdo->beginTransaction();
         $this->pdo->exec("INSERT INTO sp_test VALUES (2, 'Bob')");
@@ -70,7 +103,13 @@ class SqliteSavepointTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) AS cnt FROM sp_test');
         $cnt = (int) $stmt->fetch(PDO::FETCH_ASSOC)['cnt'];
-        // Shadow data persists after rollback — shadow store is not transactional
-        $this->assertSame(2, $cnt);
+        // Expected: rollback should undo the INSERT, leaving only Alice
+        if ($cnt !== 1) {
+            $this->markTestIncomplete(
+                'Shadow store does not participate in transactions. '
+                . 'Expected count 1 after rollback, got ' . $cnt
+            );
+        }
+        $this->assertSame(1, $cnt);
     }
 }

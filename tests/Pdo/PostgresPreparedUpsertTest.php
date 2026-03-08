@@ -14,7 +14,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 /**
  * Tests prepared statement UPSERT (ON CONFLICT DO UPDATE) on PostgreSQL PDO.
  *
- * PDO adapter limitation: prepared UPSERT does NOT update existing rows.
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/23
  */
 class PostgresPreparedUpsertTest extends TestCase
 {
@@ -59,9 +59,11 @@ class PostgresPreparedUpsertTest extends TestCase
     }
 
     /**
-     * PDO limitation: prepared ON CONFLICT DO UPDATE does NOT update existing rows.
+     * Prepared ON CONFLICT DO UPDATE should update existing rows.
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/23
      */
-    public function testPreparedUpsertDoesNotUpdateExisting(): void
+    public function testPreparedUpsertUpdatesExisting(): void
     {
         $this->pdo->exec("INSERT INTO pdo_upsert_test (id, name, score) VALUES (1, 'Original', 50)");
 
@@ -72,8 +74,13 @@ class PostgresPreparedUpsertTest extends TestCase
 
         $select = $this->pdo->query('SELECT name FROM pdo_upsert_test WHERE id = 1');
         $row = $select->fetch(PDO::FETCH_ASSOC);
-        // Bug: should be 'Updated' but old row is retained
-        $this->assertSame('Original', $row['name']);
+        if ($row['name'] !== 'Updated') {
+            $this->markTestIncomplete(
+                'Issue #23: prepared ON CONFLICT DO UPDATE does not update existing rows on PostgreSQL PDO. '
+                . 'Expected "Updated", got ' . var_export($row['name'], true)
+            );
+        }
+        $this->assertSame('Updated', $row['name']);
     }
 
     /**

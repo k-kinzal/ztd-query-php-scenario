@@ -1,64 +1,41 @@
 # ztd-query-php-scenario
 
-AI-operated scenario factory, reference example, and lightweight consumer-driven contract suite for `ztd-query-php`.
+Independent user-perspective verification for `ztd-query-php`.
+
+This repository is an external assurance layer for `ztd-query-php`. It is AI-maintained and public so that the current behavioral baseline, executable scenarios, written specifications, and discovered problems remain visible outside the library repository.
 
 > [!IMPORTANT]
-> This repository is public for visibility, but it is **not** an intake point for external issues, feature requests, proposals, or pull requests.
-> It is operated as an AI scenario factory, not as a human collaboration space.
-> GitHub pull requests are disabled for this repository.
+> This repository is not the `ztd-query-php` source repository and is not an intake point for external issues, feature requests, proposals, or pull requests.
 > If you find a reproducible problem in `ztd-query-php`, report it upstream at <https://github.com/k-kinzal/ztd-query-php/issues>.
 
-## Purpose
+## What this repository does
 
-This repository exists to:
+- Verifies `k-kinzal/ztd-query-mysqli-adapter` and `k-kinzal/ztd-query-pdo-adapter` from a user perspective
+- Makes expected behavior explicit through executable scenarios and written specifications
+- Detects bugs, regressions, unsupported cases, and high-friction usage before they reach users
+- Keeps a versioned behavioral baseline that can be compared across releases
 
-- continuously generate and validate user-perspective scenarios around `ztd-query-php`;
-- exercise `k-kinzal/ztd-query-mysqli-adapter` and `k-kinzal/ztd-query-pdo-adapter` from a user perspective;
-- keep executable scenarios in PHPUnit so behavior changes are easy to detect;
-- capture the discovered behavior in EARS notation under [`spec/`](spec);
-- stay public as an example for people who want to build a similar scenario/spec repository;
-- act as a lightweight consumer-driven contract suite that the upstream `ztd-query-php` repository can pull and run;
-- turn high-quality, reproducible findings into upstream issues when needed.
+This is not a formal certification program. It is an independently maintained external verification target.
 
-This repository is a companion scenario factory for `ztd-query-php`; it is not the library source repository.
+## What it contains
 
-## Repository scope
+- [`tests/`](tests) for executable user-facing scenarios
+- [`tests/Scenarios/`](tests/Scenarios) for shared scenario logic
+- [`tests/Support/`](tests/Support) for Testcontainers helpers and test infrastructure
+- [`tests/Mysqli/`](tests/Mysqli) for MySQLi-specific coverage
+- [`tests/Pdo/`](tests/Pdo) for PDO coverage for MySQL, PostgreSQL, and SQLite
+- [`spec/`](spec) for written specifications derived from verified behavior
+- [`composer.json`](composer.json) and [`composer.lock`](composer.lock) for dependency constraints and installed versions
 
-Included here:
+When a new `ztd-query` version is released, the new results are compared with the previous verified baseline so this repository can show:
 
-- scenario tests for mysqli and PDO adapters;
-- platform coverage for MySQL, PostgreSQL, and SQLite;
-- user-facing specifications derived from the scenarios;
-- a reference shape for this style of scenario/spec repository;
-- version tracking for the currently verified adapter stack.
+- which scenarios still hold;
+- which scenarios no longer hold;
+- whether each change looks like a bug, an intentional behavior change, newly supported behavior, or an outdated scenario/spec.
 
-Not handled here:
+## Verified baseline
 
-- external support requests;
-- external proposals or roadmap discussion;
-- external bug reports or pull requests;
-- human contribution workflows;
-- library implementation work that belongs in the upstream project.
-
-## Repository layout
-
-- [`tests/`](tests) - executable user scenarios
-- [`tests/Support/`](tests/Support) - Testcontainers helpers and DSN utilities
-- [`spec/ztd-query-adapter.ears.md`](spec/ztd-query-adapter.ears.md) - EARS specification derived from the scenarios
-- [`composer.json`](composer.json) / [`composer.lock`](composer.lock) - version constraints and currently verified lockfile versions
-
-## Why this repository is public
-
-This repository is public for two practical reasons:
-
-1. it serves as a concrete example for anyone who wants to build a similar scenario-driven quality repository;
-2. it can be consumed from `ztd-query-php` as a lightweight contract-checking target.
-
-The second use is intentionally simple: pull this repository, install dependencies, run `vendor/bin/phpunit`, and compare the observed behavior with the expected consumer-facing scenarios and EARS specification.
-
-## Verified stack
-
-The scenario factory follows version ranges in `composer.json` and records the currently verified versions from `composer.lock`.
+The repository tracks both the supported version range and the currently verified baseline.
 
 | Component | Constraint | Currently verified |
 | --- | --- | --- |
@@ -69,20 +46,26 @@ The scenario factory follows version ranges in `composer.json` and records the c
 | `k-kinzal/testcontainers-php` | `^0.5` | `v0.5.1` |
 | `phpunit/phpunit` | `^10 \|\| ^11` | `11.5.55` |
 
-Runtime and container targets reflected by the current scenarios:
+Runtime targets covered by this repository:
 
 - PHP `8.1` to `8.5`
+- MySQL `5.6` to `9.1`
+- PostgreSQL `14` to `18`
+- SQLite `3`
+
+Current default execution environment:
+
 - MySQL container image `mysql:8.0`
 - PostgreSQL container image `postgres:16`
 - SQLite in-memory via `sqlite::memory:`
 
-## Running the scenarios
+## Running the suite
 
 ### Prerequisites
 
-- PHP 8.1 or later
+- PHP `8.1` or later
 - Composer
-- Docker (required for the MySQL and PostgreSQL scenarios run through Testcontainers)
+- Docker for MySQL and PostgreSQL scenarios
 
 ### Install dependencies
 
@@ -90,41 +73,31 @@ Runtime and container targets reflected by the current scenarios:
 composer install
 ```
 
-### Run the full suite
+### Run all scenarios
 
 ```bash
 vendor/bin/phpunit
 ```
 
-Notes:
+### Run against different database versions
 
-- The MySQL and PostgreSQL scenarios start reusable Testcontainers-managed containers.
-- SQLite scenarios run entirely in memory.
-- The repository intentionally keeps `minimum-stability: dev` so it can track the latest `ztd-query` work while preferring stable releases when available.
+```bash
+MYSQL_IMAGE=mysql:5.7 vendor/bin/phpunit
+MYSQL_IMAGE=mysql:9.1 vendor/bin/phpunit
+POSTGRES_IMAGE=postgres:14 vendor/bin/phpunit
+POSTGRES_IMAGE=postgres:18 vendor/bin/phpunit
+```
 
-## Contract-checking role
+### Check dependency updates
 
-This repository is not a formal contract-testing framework, but it is meant to play a similar role to lightweight consumer-driven contracts testing.
+```bash
+composer outdated 'k-kinzal/*' --direct
+composer show -l -D
+```
 
-- The consumer-facing expectations live in PHPUnit scenarios and EARS specs.
-- The upstream `ztd-query-php` repository can pull this repository and run the suite as an external expectation check.
-- When the suite fails, the mismatch is visible in user-perspective scenarios rather than only inside implementation-level tests.
-
-## Working model
-
-The repository is maintained through an AI-driven workflow:
-
-1. generate or refine behavior coverage with a PHPUnit scenario;
-2. validate the scenario suite against the current adapter stack;
-3. sync the resulting expectation into the EARS specification;
-4. review the spec for contradictions or omissions;
-5. report only clear, reproducible upstream issues when the scenario factory exposes a real problem.
-
-This keeps the scenario suite as the executable source of truth and the specification as the human-readable counterpart.
-
-## Upstream routing
+## Issue reporting
 
 - Upstream project: <https://github.com/k-kinzal/ztd-query-php>
-- Upstream issue tracker: <https://github.com/k-kinzal/ztd-query-php/issues>
+- Upstream issues: <https://github.com/k-kinzal/ztd-query-php/issues>
 
-Please do not open issues or pull requests here.
+Please do not open issues or pull requests in this repository.

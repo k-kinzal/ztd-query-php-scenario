@@ -1,43 +1,66 @@
 # AGENTS
 
-This file is for agents to understand the context of the project.
+This repository exists to find user-facing problems in `ztd-query-php` before they reach users.
 
-## Project Goal
+## Purpose
 
-The objective of this project is to utilize k-kinzal/ztd-query-mysqli-adapter and k-kinzal/ztd-query-pdo-adapter from a user perspective.
-Let's identify potential problems in advance to proactively resolve the issues that users of ztd-query-php might encounter.
+- Build and maintain user-facing scenarios and specifications for `k-kinzal/ztd-query-mysqli-adapter` and `k-kinzal/ztd-query-pdo-adapter`.
+- Make expected behavior explicit.
+- Detect bugs, regressions, unsupported cases, and high-friction usage early.
 
-## Something important
+## Priorities
 
-- Have you covered all the patterns that ztd-query-php satisfies?
-- Does it comprehensively cover everything that ztd-query-php supports?
-- Is it designed to be compatible with new versions when they are released?
+- Focus on user-visible behavior, not internal implementation details.
+- Treat scenarios and specifications as the primary deliverables.
+- Make adapter and platform differences explicit.
+- Keep the repository internally consistent: verified behavior and written specifications must not conflict.
 
-## What You Should Do
+## Version Baseline
 
-- Create user scenarios using PHPUnit.
-- Document the specifications identified through those scenarios in the "spec" directory using EARS (Easy Approach to Requirements Syntax) notation.
-   - Periodically review the specs to ensure there are no contradictions or omissions.
-- Clearly specify the version of ztd-query for both adapters.
-- Always keep up with the latest version of ztd-query.
+- Always state the supported version range.
+- Always state the currently verified versions for both adapters.
+- Treat the currently verified versions as the behavioral baseline of this repository.
+- When a new `ztd-query` version is released, compare results against the previous baseline.
+- For each changed scenario, determine whether the change is:
+  - a regression or bug;
+  - an intentional behavior change;
+  - newly supported behavior; or
+  - an outdated scenario or specification.
+- When the baseline changes, sync the version information in repository docs and specs.
 
-## When You Find an Issue
+## Working Rules
 
-- Definition of an "Issue":
-   - Unable to achieve the expected behavior.
-   - High effort to use or poor usability.
-      - Please note that ztd-query aims for "SIMPLE," not "EASY." Keep this distinction in mind.
-- Report issues at https://github.com/k-kinzal/ztd-query-php/issues.
-- Research past issues before reporting to avoid duplicates.
-- Note that you should report "issues," not "proposals."
-- Issues must be clear and reproducible.
+- Review existing scenarios, specifications, and known issues before adding coverage.
+- Add or update a scenario first, verify the behavior, then update the specification.
+- Prefer shared coverage where behavior should be common, and platform-specific coverage where behavior differs.
+- Cover real user patterns, not only narrow syntax cases.
+- When updating a specification section, review nearby statements and remove contradictions.
 
-## Tech Stack
+## Issue Rules
+
+Treat the following as issue candidates:
+
+- expected behavior cannot be achieved;
+- normal usage requires too much effort;
+- usability is poor enough to create likely user trouble.
+
+Before reporting upstream:
+
+- confirm the behavior with a clear reproduction in this repository;
+- check existing upstream issues first;
+- report issues, not proposals.
+
+Report upstream issues at <https://github.com/k-kinzal/ztd-query-php/issues>.
+
+## Current Repository Conventions
+
+- Scenarios are currently maintained under `tests/`.
+- Specifications are currently maintained under `spec/`.
+- The repository currently uses PHPUnit for executable scenarios and EARS notation for written specifications.
+
+## Runtime Targets
 
 - PHP 8.1 - 8.5
 - MySQL 5.6 - 9.1
 - PostgreSQL 14 - 18
 - SQLite 3
-- k-kinzal/ztd-query-mysqli-adapter
-- k-kinzal/ztd-query-pdo-adapter
-- k-kinzal/testcontainers-php

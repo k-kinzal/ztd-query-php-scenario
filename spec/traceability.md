@@ -38,9 +38,9 @@ Maps SPEC-IDs to test classes and verified versions.
 
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
-| SPEC-3.1 | `Scenarios/BasicCrudScenario` (all), `*CursorPaginationTest`, `*SoftDeletePatternTest`, `*DecimalPrecisionTest` | V | V | V | V | V |
-| SPEC-3.2 | `Scenarios/PreparedStatementScenario` (all), `*PreparedStatementTest`, `Mysqli/StatementReusePatternTest`, `*CursorPaginationTest`, `*OptimisticLockingTest` | V | V | V | V | V |
-| SPEC-3.3 | `Scenarios/JoinAndSubqueryScenario` (all), `*ComplexQueryTest`, `*AdvancedQueryPatternsTest`, `*SubqueryPositionsTest` | V | V | V | V | V |
+| SPEC-3.1 | `Scenarios/BasicCrudScenario` (all), `*CursorPaginationTest`, `*SoftDeletePatternTest`, `*DecimalPrecisionTest`, `*OffsetPaginationTest`, `*TypeRoundtripTest` | V | V | V | V | V |
+| SPEC-3.2 | `Scenarios/PreparedStatementScenario` (all), `*PreparedStatementTest`, `Mysqli/StatementReusePatternTest`, `*CursorPaginationTest`, `*OptimisticLockingTest`, `*PreparedInListTest`, `*OffsetPaginationTest` | V | V | V | V | V |
+| SPEC-3.3 | `Scenarios/JoinAndSubqueryScenario` (all), `*ComplexQueryTest`, `*AdvancedQueryPatternsTest`, `*SubqueryPositionsTest`, `*DateTimeFunctionsTest` | V | V | V | V | V |
 | SPEC-3.3a | `*DerivedTableAndViewTest` | V | V | V | V | K |
 | SPEC-3.3b | `*ViewThroughZtdTest` | V | V | V | V | K |
 | SPEC-3.3c | `*RecursiveCteAndRightJoinTest` | V | V | V | V | K |
@@ -52,7 +52,7 @@ Maps SPEC-IDs to test classes and verified versions.
 
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
-| SPEC-4.1 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all), `*BatchInsertTest`, `*DecimalPrecisionTest` | V | V | V | V | V |
+| SPEC-4.1 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all), `*BatchInsertTest`, `*DecimalPrecisionTest`, `*TypeRoundtripTest` | V | V | V | V | V |
 | SPEC-4.1a | `*InsertSelectUpsertTest`, `*InsertSubqueryPatternsTest` | V | V | V | V | P |
 | SPEC-4.2 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all), `*OptimisticLockingTest`, `*SoftDeletePatternTest`, `*DecimalPrecisionTest` | V | V | V | V | V |
 | SPEC-4.2a | `*UpsertTest`, `*PreparedUpsertTest`, `Mysqli/InsertModifiersTest` | V | V | V | V | P |
@@ -112,6 +112,13 @@ Maps SPEC-IDs to test classes and verified versions.
 |---------|-------------|----|----|----|----|--------|
 | SPEC-9.1 | `*ConfigurationTest` | V | V | V | V | V |
 | SPEC-9.2 | `*ConfigurationTest` | V | V | V | V | V |
+
+## 10. Platform Notes (Selected)
+
+| SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
+|---------|-------------|----|----|----|----|--------|
+| SPEC-10.2.17 | `Pdo/MysqlOffsetPaginationTest` | — | V | — | — | V |
+| SPEC-10.2.18 | `*DateTimeFunctionsTest` | V | V | V | V | V |
 
 ## Legend
 

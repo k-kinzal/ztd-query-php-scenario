@@ -101,3 +101,21 @@ IF(), IFNULL(), FIND_IN_SET(), CONCAT_WS(), REVERSE(), LPAD(), GROUP_CONCAT with
 **Platforms:** SQLite-PDO
 
 typeof(), INSTR(), IIF(), printf(), HEX(), NULLIF(), CAST(), GLOB operator — all work correctly with shadow data. NATURAL JOIN works.
+
+## SPEC-10.2.17 Prepared LIMIT/OFFSET on MySQL PDO
+**Status:** Verified
+**Platforms:** MySQL-PDO
+
+MySQL requires integer types for LIMIT and OFFSET parameters. When using `execute($params)` with positional arrays, PDO sends all values as strings, causing `Syntax error ... near ''3' OFFSET '0''`. Workaround: use `bindValue($pos, $val, PDO::PARAM_INT)` for LIMIT/OFFSET parameters. MySQLi, PostgreSQL, and SQLite are not affected.
+
+## SPEC-10.2.18 Date/time functions through shadow store
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+
+Platform-specific date/time functions work correctly with CTE shadow data:
+
+- **MySQL**: DATE_FORMAT(), YEAR(), MONTH(), DAY(), HOUR(), MINUTE(), DATEDIFF(), CURDATE(). Date comparison with BETWEEN and `>=` works. GROUP BY with DATE_FORMAT() works.
+- **PostgreSQL**: TO_CHAR() works correctly. EXTRACT(YEAR FROM ...) returns 0 for shadow dates (see [SPEC-11.PG-EXTRACT](11-known-issues.ears.md)). Date comparison and ordering work.
+- **SQLite**: strftime(), date(), julianday(), date modifiers ('+1 month') all work correctly with shadow data. Date comparison and ordering work.
+
+Date values survive INSERT, UPDATE, and SELECT roundtrip. Prepared statements with date range parameters work on all platforms.

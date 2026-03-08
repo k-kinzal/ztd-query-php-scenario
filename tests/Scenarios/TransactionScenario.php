@@ -7,6 +7,8 @@ namespace Tests\Scenarios;
 /**
  * Shared transaction scenario for all platforms.
  *
+ * @spec SPEC-4.8
+ *
  * Requires table: tx_test (id INT/INTEGER PRIMARY KEY, val VARCHAR/TEXT)
  * Provided by the concrete test class via getTableDDL().
  *
@@ -21,6 +23,7 @@ trait TransactionScenario
     abstract protected function ztdCommit(): bool;
     abstract protected function ztdRollBack(): bool;
 
+    /** @spec SPEC-4.8 */
     public function testBeginTransactionAndCommit(): void
     {
         $this->assertTrue($this->ztdBeginTransaction());
@@ -34,6 +37,7 @@ trait TransactionScenario
         $this->assertSame('hello', $rows[0]['val']);
     }
 
+    /** @spec SPEC-4.8 */
     public function testBeginTransactionAndRollback(): void
     {
         $this->ztdExec("INSERT INTO tx_test (id, val) VALUES (1, 'before_tx')");
@@ -47,6 +51,7 @@ trait TransactionScenario
         $this->assertSame('before_tx', $rows[0]['val']);
     }
 
+    /** @spec SPEC-4.8 */
     public function testDataVisibleAfterCommit(): void
     {
         $this->ztdBeginTransaction();

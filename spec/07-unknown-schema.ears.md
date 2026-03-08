@@ -1,0 +1,41 @@
+# 7. Unknown Schema
+
+## SPEC-7.1 Passthrough (default)
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
+**Tests:** `Mysqli/UnknownSchemaTest`, `Pdo/MysqlUnknownSchemaTest`, `Pdo/PostgresUnknownSchemaTest`, `Pdo/SqliteUnknownSchemaTest`, `Pdo/UnknownSchemaTest`
+
+If `unknownSchemaBehavior` is `Passthrough` (the default) and a write operation references an unreflected table, the system shall pass the operation directly to the underlying connection.
+
+**Platform inconsistency:** This passthrough behavior is verified on MySQL via `new ZtdMysqli(...)` and `new ZtdPdo(...)` constructors. On MySQL via `ZtdPdo::fromPdo()`, PostgreSQL, and SQLite, UPDATE on unreflected tables throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of passing through. See [SPEC-11.UNKNOWN-UPDATE](11-known-issues.ears.md).
+
+## SPEC-7.2 Exception
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
+**Tests:** `Mysqli/UnknownSchemaTest`, `Pdo/MysqlUnknownSchemaTest`, `Pdo/PostgresUnknownSchemaTest`, `Pdo/SqliteUnknownSchemaTest`
+
+If `unknownSchemaBehavior` is `Exception`, write operations on unreflected tables shall throw `ZtdMysqliException`/`ZtdPdoException` ("Unknown table").
+
+**Platform inconsistency:** On PostgreSQL and SQLite, UPDATE throws `RuntimeException` ("UPDATE simulation requires primary keys") instead.
+
+## SPEC-7.3 EmptyResult
+**Status:** Partially Verified
+**Platforms:** MySQL-PDO (full); PostgreSQL-PDO, SQLite-PDO (DELETE only)
+**Tested versions:** ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
+**Tests:** `Pdo/MysqlUnknownSchemaTest`, `Pdo/PostgresUnknownSchemaTest`, `Pdo/SqliteUnknownSchemaTest`
+
+If `unknownSchemaBehavior` is `EmptyResult`, write operations shall return an empty result without modifying the physical database.
+
+**Platform inconsistency:** On PostgreSQL and SQLite, UPDATE throws `RuntimeException` regardless of EmptyResult mode.
+
+## SPEC-7.4 Notice
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO (full); PostgreSQL-PDO, SQLite-PDO (DELETE only)
+**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
+**Tests:** `Mysqli/UnknownSchemaTest`, `Pdo/MysqlUnknownSchemaTest`, `Pdo/PostgresUnknownSchemaTest`, `Pdo/SqliteUnknownSchemaTest`
+
+If `unknownSchemaBehavior` is `Notice`, write operations shall emit a user notice/warning and return an empty result.
+
+**Platform inconsistency:** On PostgreSQL and SQLite, UPDATE throws `RuntimeException` regardless of Notice mode.

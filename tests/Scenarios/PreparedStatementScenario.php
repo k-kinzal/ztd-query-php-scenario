@@ -7,6 +7,8 @@ namespace Tests\Scenarios;
 /**
  * Shared prepared statement scenario for all platforms.
  *
+ * @spec SPEC-3.2, SPEC-4.1, SPEC-4.2, SPEC-4.3, SPEC-4.4
+ *
  * Requires table: prep_test (id INT/INTEGER PRIMARY KEY, name VARCHAR/TEXT, score INT/INTEGER)
  * Provided by the concrete test class via getTableDDL().
  */
@@ -16,6 +18,7 @@ trait PreparedStatementScenario
     abstract protected function ztdQuery(string $sql): array;
     abstract protected function ztdPrepareAndExecute(string $sql, array $params): array;
 
+    /** @spec SPEC-3.2, SPEC-4.1 */
     public function testPreparedInsertAndSelect(): void
     {
         $this->ztdPrepareAndExecute(
@@ -30,6 +33,7 @@ trait PreparedStatementScenario
         $this->assertSame(100, (int) $rows[0]['score']);
     }
 
+    /** @spec SPEC-3.2 */
     public function testPreparedSelectWithParameter(): void
     {
         $this->ztdExec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
@@ -45,6 +49,7 @@ trait PreparedStatementScenario
         $this->assertSame('Bob', $rows[1]['name']);
     }
 
+    /** @spec SPEC-4.2, SPEC-4.4 */
     public function testPreparedUpdateRowCount(): void
     {
         $this->ztdExec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
@@ -58,6 +63,7 @@ trait PreparedStatementScenario
         $this->assertCount(2, $rows);
     }
 
+    /** @spec SPEC-4.3 */
     public function testPreparedDeleteAndVerify(): void
     {
         $this->ztdExec("INSERT INTO prep_test (id, name, score) VALUES (1, 'Alice', 100)");
@@ -70,6 +76,7 @@ trait PreparedStatementScenario
         $this->assertSame('Bob', $rows[0]['name']);
     }
 
+    /** @spec SPEC-3.2, SPEC-4.1 */
     public function testReExecutePreparedStatement(): void
     {
         $this->ztdPrepareAndExecute(

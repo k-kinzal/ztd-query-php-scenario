@@ -7,6 +7,8 @@ namespace Tests\Scenarios;
 /**
  * Shared JOIN and subquery scenario for all platforms.
  *
+ * @spec SPEC-3.3
+ *
  * Requires tables:
  *   - users (id INT/INTEGER PRIMARY KEY, name VARCHAR/TEXT, dept_id INT/INTEGER)
  *   - departments (id INT/INTEGER PRIMARY KEY, dept_name VARCHAR/TEXT)
@@ -27,6 +29,7 @@ trait JoinAndSubqueryScenario
         $this->ztdExec("INSERT INTO users (id, name, dept_id) VALUES (4, 'Diana', NULL)");
     }
 
+    /** @spec SPEC-3.3 */
     public function testInnerJoin(): void
     {
         $this->seedJoinData();
@@ -44,6 +47,7 @@ trait JoinAndSubqueryScenario
         $this->assertSame('Marketing', $rows[2]['dept_name']);
     }
 
+    /** @spec SPEC-3.3 */
     public function testLeftJoin(): void
     {
         $this->seedJoinData();
@@ -61,6 +65,7 @@ trait JoinAndSubqueryScenario
         $this->assertNull($diana[0]['dept_name']);
     }
 
+    /** @spec SPEC-3.3 */
     public function testSubqueryInWhere(): void
     {
         $this->seedJoinData();
@@ -76,6 +81,7 @@ trait JoinAndSubqueryScenario
         $this->assertSame('Bob', $rows[1]['name']);
     }
 
+    /** @spec SPEC-3.3 */
     public function testScalarSubqueryInSelect(): void
     {
         $this->seedJoinData();
@@ -93,6 +99,7 @@ trait JoinAndSubqueryScenario
         $this->assertSame(1, (int) $rows[1]['user_count']);
     }
 
+    /** @spec SPEC-3.3 */
     public function testExistsSubquery(): void
     {
         $this->seedJoinData();
@@ -108,6 +115,7 @@ trait JoinAndSubqueryScenario
         $this->assertSame('Marketing', $rows[1]['dept_name']);
     }
 
+    /** @spec SPEC-3.3 */
     public function testJoinWithAggregation(): void
     {
         $this->seedJoinData();

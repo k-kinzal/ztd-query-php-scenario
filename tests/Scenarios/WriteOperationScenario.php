@@ -7,6 +7,8 @@ namespace Tests\Scenarios;
 /**
  * Shared write operation scenario for all platforms.
  *
+ * @spec SPEC-4.1, SPEC-4.2, SPEC-4.4
+ *
  * Requires table: products (id INT/INTEGER PRIMARY KEY, name VARCHAR/TEXT, price INT/INTEGER)
  * Provided by the concrete test class via getTableDDL().
  */
@@ -18,6 +20,7 @@ trait WriteOperationScenario
     abstract protected function disableZtd(): void;
     abstract protected function enableZtd(): void;
 
+    /** @spec SPEC-4.1 */
     public function testMultiRowInsert(): void
     {
         $this->ztdExec(
@@ -35,6 +38,7 @@ trait WriteOperationScenario
         $this->assertSame('Doohickey', $rows[2]['name']);
     }
 
+    /** @spec SPEC-4.1 */
     public function testBatchInsertInLoop(): void
     {
         for ($i = 1; $i <= 10; $i++) {
@@ -47,6 +51,7 @@ trait WriteOperationScenario
         $this->assertSame(10, (int) $rows[0]['cnt']);
     }
 
+    /** @spec SPEC-4.1 */
     public function testNullInsertAndQuery(): void
     {
         $this->ztdExec("INSERT INTO products (id, name, price) VALUES (1, NULL, NULL)");
@@ -56,6 +61,7 @@ trait WriteOperationScenario
         $this->assertNull($rows[0]['name']);
     }
 
+    /** @spec SPEC-4.1, SPEC-3.1 */
     public function testNullComparisonIsNull(): void
     {
         $this->ztdExec("INSERT INTO products (id, name, price) VALUES (1, 'Widget', 100)");
@@ -70,6 +76,7 @@ trait WriteOperationScenario
         $this->assertSame(1, (int) $rows[0]['id']);
     }
 
+    /** @spec SPEC-3.3 */
     public function testAggregateOverShadowStore(): void
     {
         $this->ztdExec("INSERT INTO products (id, name, price) VALUES (1, 'A', 100)");
@@ -81,6 +88,7 @@ trait WriteOperationScenario
         $this->assertSame(600, (int) $rows[0]['total']);
     }
 
+    /** @spec SPEC-4.2 */
     public function testUpdateMultipleRows(): void
     {
         $this->ztdExec("INSERT INTO products (id, name, price) VALUES (1, 'A', 100)");
@@ -95,6 +103,7 @@ trait WriteOperationScenario
         $this->assertSame('B', $rows[1]['name']);
     }
 
+    /** @spec SPEC-2.2 */
     public function testWriteIsolation(): void
     {
         $this->ztdExec("INSERT INTO products (id, name, price) VALUES (1, 'Widget', 100)");
@@ -110,6 +119,7 @@ trait WriteOperationScenario
         $this->enableZtd();
     }
 
+    /** @spec SPEC-3.2, SPEC-4.1 */
     public function testPreparedInsertAndVerify(): void
     {
         $this->ztdPrepareAndExecute(

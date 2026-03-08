@@ -307,11 +307,9 @@ The following methods are delegated directly to the underlying connection withou
 
 `select_db()` changes the physical connection's active database but does NOT update the ZTD session's schema reflection or shadow store. Shadow data from the original database persists after `select_db()`.
 
-`stmt_init()` returns a raw `mysqli_stmt`, NOT a `ZtdMysqliStatement`. All queries prepared via `stmt_init()` bypass ZTD entirely.
+`stmt_init()` returns a raw `mysqli_stmt` (NOT a `ZtdMysqliStatement`), meaning queries prepared via `stmt_init()` bypass ZTD entirely — writes go to the physical database and reads come from the physical database. Users should use `ZtdMysqli::prepare()` instead.
 
 `insert_id` on ZtdMysqli throws `Error` ("Property access is not allowed yet") because the parent constructor is not called. There is no `lastInsertId()` method equivalent on the MySQLi adapter. On ZtdMysqliStatement, `insert_id` delegates to the inner stmt and returns 0 for shadow INSERTs.
-
-`stmt_init()` returns a raw `mysqli_stmt` (NOT a `ZtdMysqliStatement`), meaning queries prepared via `stmt_init()` bypass ZTD entirely — writes go to the physical database and reads come from the physical database. Users should use `ZtdMysqli::prepare()` instead.
 
 For PDO, the following methods are delegated: `setAttribute()`, `getAttribute()`, `errorCode()`, `errorInfo()`.
 

@@ -10,7 +10,7 @@ When ZTD is enabled and a SELECT query is executed, the system shall return resu
 
 When ZTD is enabled and the result set is empty, the system shall return an empty result set (not false or null).
 
-**Verified behavior:** Aggregates on empty sets return correct values (COUNT → 0, SUM/AVG/MIN/MAX → NULL). Zero-match UPDATE/DELETE returns 0 affected rows without error.
+**Verified behavior:** Aggregates on empty sets return correct values (COUNT → 0, SUM/AVG/MIN/MAX → NULL). Zero-match UPDATE/DELETE returns 0 affected rows without error. Cursor-based (keyset) pagination (WHERE id > ? ORDER BY id LIMIT N) works correctly — page traversal, mid-dataset inserts/deletes, and descending cursor all return expected results. DECIMAL precision is preserved through shadow store for financial calculations (SUM, arithmetic in UPDATE SET, comparison in WHERE). IS NULL / IS NOT NULL filtering on nullable columns (soft delete pattern) works correctly.
 
 ## SPEC-3.2 Prepared SELECT
 **Status:** Verified

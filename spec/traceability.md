@@ -3,7 +3,7 @@
 Maps SPEC-IDs to test classes and verified versions.
 
 **Last updated:** 2026-03-08
-**Verified environment:** PHP 8.3, MySQL 8.0, PostgreSQL 16, SQLite 3.x, ztd-query-pdo-adapter v0.1.1, ztd-query-mysqli-adapter v0.1.1
+**Verified environment:** PHP 8.3–8.5, MySQL 8.0, PostgreSQL 16, SQLite 3.x, ztd-query-pdo-adapter v0.1.1, ztd-query-mysqli-adapter v0.1.1
 
 ## How to read this matrix
 
@@ -38,8 +38,8 @@ Maps SPEC-IDs to test classes and verified versions.
 
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
-| SPEC-3.1 | `Scenarios/BasicCrudScenario` (all) | V | V | V | V | V |
-| SPEC-3.2 | `Scenarios/PreparedStatementScenario` (all), `*PreparedStatementTest`, `Mysqli/StatementReusePatternTest` | V | V | V | V | V |
+| SPEC-3.1 | `Scenarios/BasicCrudScenario` (all), `*CursorPaginationTest`, `*SoftDeletePatternTest`, `*DecimalPrecisionTest` | V | V | V | V | V |
+| SPEC-3.2 | `Scenarios/PreparedStatementScenario` (all), `*PreparedStatementTest`, `Mysqli/StatementReusePatternTest`, `*CursorPaginationTest`, `*OptimisticLockingTest` | V | V | V | V | V |
 | SPEC-3.3 | `Scenarios/JoinAndSubqueryScenario` (all), `*ComplexQueryTest`, `*AdvancedQueryPatternsTest`, `*SubqueryPositionsTest` | V | V | V | V | V |
 | SPEC-3.3a | `*DerivedTableAndViewTest` | V | V | V | V | K |
 | SPEC-3.3b | `*ViewThroughZtdTest` | V | V | V | V | K |
@@ -52,16 +52,16 @@ Maps SPEC-IDs to test classes and verified versions.
 
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
-| SPEC-4.1 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all), `*BatchInsertTest` | V | V | V | V | V |
+| SPEC-4.1 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all), `*BatchInsertTest`, `*DecimalPrecisionTest` | V | V | V | V | V |
 | SPEC-4.1a | `*InsertSelectUpsertTest`, `*InsertSubqueryPatternsTest` | V | V | V | V | P |
-| SPEC-4.2 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all) | V | V | V | V | V |
+| SPEC-4.2 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all), `*OptimisticLockingTest`, `*SoftDeletePatternTest`, `*DecimalPrecisionTest` | V | V | V | V | V |
 | SPEC-4.2a | `*UpsertTest`, `*PreparedUpsertTest`, `Mysqli/InsertModifiersTest` | V | V | V | V | P |
 | SPEC-4.2b | `*HavingAndReplaceTest`, `*ReplaceMultiRowTest`, `*ConflictResolutionTest`, `Mysqli/InsertModifiersTest` | V | V | — | V | P |
 | SPEC-4.2c | `*MultiTableOperationsTest` | V | V | V | — | V |
 | SPEC-4.2d | `*MultiTableDeleteTest`, `*MultiTableOperationsTest` | V | V | V | — | P |
 | SPEC-4.2e | `*InsertIgnoreTest`, `Mysqli/InsertModifiersTest` | V | V | V | V | V |
 | SPEC-4.3 | `Scenarios/BasicCrudScenario` (all), `*DeleteWithoutWhereTest` | V | V | V | V | V |
-| SPEC-4.4 | `*ExecReturnValueTest`, `*RowCountTest` | V | V | V | V | V |
+| SPEC-4.4 | `*ExecReturnValueTest`, `*RowCountTest`, `*OptimisticLockingTest` | V | V | V | V | V |
 | SPEC-4.5 | `*WriteResultSetTest` | V | V | V | V | V |
 | SPEC-4.6 | `Mysqli/RealQueryTest` | V | — | — | — | V |
 | SPEC-4.7 | `Mysqli/StatementIntrospectionTest`, `Mysqli/InsertIdBehaviorTest` | V | — | — | — | V |

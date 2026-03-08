@@ -48,7 +48,7 @@ Subsequent SELECT queries shall reflect the updated values.
 
 UPDATE operations require the table schema (including primary keys) to be known. If the schema was not reflected at session creation time, the behavior depends on `unknownSchemaBehavior` (see [SPEC-7.1](07-unknown-schema.ears.md)).
 
-**Verified behavior:** Self-referencing UPDATE (SET col = col + N) works. CASE expressions in UPDATE SET work. String concatenation in SET works. Multiple sequential UPDATEs to same row work. MySQL DELETE/UPDATE with ORDER BY + LIMIT works.
+**Verified behavior:** Self-referencing UPDATE (SET col = col + N) works. CASE expressions in UPDATE SET work. String concatenation in SET works. Multiple sequential UPDATEs to same row work. MySQL DELETE/UPDATE with ORDER BY + LIMIT works. Optimistic locking pattern (UPDATE WHERE version = N, check affected rows, bump version) works correctly — stale version matches 0 rows. Soft delete pattern (UPDATE SET deleted_at = timestamp, then filter with IS NULL/IS NOT NULL) works correctly.
 
 ## SPEC-4.2a UPSERT
 **Status:** Partially Verified

@@ -5,44 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statement edge cases in ZTD mode on MySQL via PDO:
  * parameter types, NULL binding, re-execution, named params.
+ * @spec pending
  */
-class MysqlPreparedEdgeCaseTest extends TestCase
+class MysqlPreparedEdgeCaseTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_prep_edge');
-        $raw->exec('CREATE TABLE mysql_prep_edge (id INT PRIMARY KEY, name VARCHAR(255), score INT, active TINYINT(1))');
+        return 'CREATE TABLE mysql_prep_edge (id INT PRIMARY KEY, name VARCHAR(255), score INT, active TINYINT(1))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_prep_edge'];
     }
+
 
     public function testBindParamNullType(): void
     {
@@ -132,16 +113,5 @@ class MysqlPreparedEdgeCaseTest extends TestCase
 
         $select->execute([2]);
         $this->assertSame('Bob', $select->fetch(PDO::FETCH_ASSOC)['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_prep_edge');
     }
 }

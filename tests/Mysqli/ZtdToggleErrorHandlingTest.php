@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests error handling across ZTD toggle boundaries on MySQLi:
@@ -16,39 +12,24 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
  * - State consistency after toggle + error
  * - Prepared statements created with ZTD on/off and executed across toggles
  * - Shadow data visibility vs physical data across toggles
+ * @spec pending
  */
-class ZtdToggleErrorHandlingTest extends TestCase
+class ZtdToggleErrorHandlingTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_zte_users');
-        $raw->query('CREATE TABLE mi_zte_users (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->query("INSERT INTO mi_zte_users VALUES (1, 'Alice')");
-        $raw->query("INSERT INTO mi_zte_users VALUES (2, 'Bob')");
-        $raw->close();
+        return 'CREATE TABLE mi_zte_users (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_zte_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         // Populate shadow store with same data as physical
         $this->mysqli->query("INSERT INTO mi_zte_users VALUES (1, 'Alice')");
@@ -155,27 +136,5 @@ class ZtdToggleErrorHandlingTest extends TestCase
         $this->mysqli->disableZtd();
         $result = $this->mysqli->query('SELECT name FROM mi_zte_users WHERE id = 1');
         $this->assertSame('Alice', $result->fetch_assoc()['name']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_zte_users');
-            $raw->close();
-        } catch (\Exception $e) {
-            // Container may be unavailable during cleanup
-        }
     }
 }

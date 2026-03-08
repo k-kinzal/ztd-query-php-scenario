@@ -5,49 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests INSERT ... SELECT subquery patterns on MySQL PDO.
  * MySQL handles computed columns and GROUP BY aggregation correctly,
  * unlike SQLite/PostgreSQL where they produce NULLs.
+ * @spec SPEC-4.1a
  */
-class MysqlInsertSubqueryPatternsTest extends TestCase
+class MysqlInsertSubqueryPatternsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_isp_stats');
-        $raw->exec('DROP TABLE IF EXISTS mysql_isp_archive');
-        $raw->exec('DROP TABLE IF EXISTS mysql_isp_products');
-        $raw->exec('CREATE TABLE mysql_isp_products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))');
-        $raw->exec('CREATE TABLE mysql_isp_archive (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))');
-        $raw->exec('CREATE TABLE mysql_isp_stats (category VARCHAR(30) PRIMARY KEY, product_count INT, avg_price DECIMAL(10,2))');
+        return [
+            'CREATE TABLE mysql_isp_products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))',
+            'CREATE TABLE mysql_isp_archive (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))',
+            'CREATE TABLE mysql_isp_stats (category VARCHAR(30) PRIMARY KEY, product_count INT, avg_price DECIMAL(10,2))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_isp_stats', 'mysql_isp_archive', 'mysql_isp_products'];
     }
+
 
     public function testInsertSelectWithWhereFilter(): void
     {
@@ -129,18 +110,5 @@ class MysqlInsertSubqueryPatternsTest extends TestCase
         $stmt = $this->pdo->query("SELECT price FROM mysql_isp_archive WHERE id = 1");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertEqualsWithDelta(99.99, (float) $row['price'], 0.01);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_isp_stats');
-        $raw->exec('DROP TABLE IF EXISTS mysql_isp_archive');
-        $raw->exec('DROP TABLE IF EXISTS mysql_isp_products');
     }
 }

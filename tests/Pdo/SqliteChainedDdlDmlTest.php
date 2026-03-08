@@ -5,26 +5,42 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests chained DDL → DML operation sequences on SQLite.
  *
  * Verifies that complex sequences of CREATE, DROP, INSERT, UPDATE, DELETE,
  * and SELECT maintain shadow store consistency.
+ * @spec pending
  */
-class SqliteChainedDdlDmlTest extends TestCase
+class SqliteChainedDdlDmlTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE chain_t1 (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->exec('CREATE TABLE chain_t2 (id INT PRIMARY KEY, ref_id INT, value INT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE chain_t1 (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE chain_t2 (id INT PRIMARY KEY, ref_id INT, value INT)',
+            'CREATE TABLE → INSERT → SELECT.
+     */
+    public function testDropCreateInsert(): void
+    {
+        $this->pdo->exec("INSERT INTO chain_t1 VALUES (1,',
+            'CREATE TABLE chain_t1 (id INT PRIMARY KEY, label VARCHAR(50))',
+            'CREATE TABLE → INSERT → DROP → CREATE same name → INSERT different schema.
+     */
+    public function testRecreateWithDifferentSchema(): void
+    {
+        $this->pdo->exec("INSERT INTO chain_t1 VALUES (1,',
+            'CREATE TABLE chain_t1 (id INT PRIMARY KEY, score INT, grade VARCHAR(2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['chain_t1', 'chain_t2'];
+    }
+
 
     /**
      * INSERT → SELECT → UPDATE → SELECT cycle.

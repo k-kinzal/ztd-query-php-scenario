@@ -5,31 +5,41 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests how CTE snapshotting at prepare time affects visibility of mutations
  * that occur between prepare() and execute(), and between multiple execute() calls.
+ * @spec pending
  */
-class SqlitePrepareTimeMutationVisibilityTest extends TestCase
+class SqlitePrepareTimeMutationVisibilityTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE vis_users (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE vis_orders (id INT PRIMARY KEY, user_id INT, amount INT)',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['vis_users', 'vis_orders'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE vis_users (id INT PRIMARY KEY, name VARCHAR(50))');
         $this->pdo->exec('CREATE TABLE vis_orders (id INT PRIMARY KEY, user_id INT, amount INT)');
-
         $this->pdo->exec("INSERT INTO vis_users VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO vis_users VALUES (2, 'Bob')");
         $this->pdo->exec("INSERT INTO vis_orders VALUES (1, 1, 100)");
         $this->pdo->exec("INSERT INTO vis_orders VALUES (2, 1, 200)");
-    }
+
+        }
 
     public function testPreparedSelectDoesNotSeePostPrepareInsert(): void
     {

@@ -4,28 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests lastInsertId() behavior with ZTD shadow operations on SQLite.
  *
  * Since shadow INSERTs don't physically write to the database,
  * lastInsertId() may not reflect shadow-only inserts.
+ * @spec pending
  */
-class SqliteLastInsertIdTest extends TestCase
+class SqliteLastInsertIdTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_lid_test (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE sl_lid_test (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_lid_test'];
+    }
+
 
     /**
      * lastInsertId after shadow INSERT.

@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests LIMIT/OFFSET syntax variations on SQLite ZTD.
@@ -15,24 +14,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *   LIMIT x OFFSET y (traditional)
  *   LIMIT x, y (MySQL-compatible, x is offset, y is limit)
  * SQLite 3.35+ does NOT support OFFSET...FETCH (SQL:2012) syntax.
+ * @spec pending
  */
-class SqliteOffsetFetchTest extends TestCase
+class SqliteOffsetFetchTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE of_test (id INTEGER PRIMARY KEY, name TEXT, score INT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        for ($i = 1; $i <= 10; $i++) {
-            $this->pdo->exec("INSERT INTO of_test (id, name, score) VALUES ($i, 'User_$i', " . ($i * 10) . ")");
-        }
+        return 'CREATE TABLE of_test (id INTEGER PRIMARY KEY, name TEXT, score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['of_test'];
+    }
+
 
     /**
      * Traditional LIMIT/OFFSET.

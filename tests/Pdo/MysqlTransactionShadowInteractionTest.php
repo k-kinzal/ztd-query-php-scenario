@@ -5,44 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests that the ZTD shadow store is independent of physical transaction state (MySQL PDO).
  * Shadow data persists after rollback; commit does not flush shadow to physical.
+ * @spec SPEC-4.8
  */
-class MysqlTransactionShadowInteractionTest extends TestCase
+class MysqlTransactionShadowInteractionTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_txs_items');
-        $raw->exec('CREATE TABLE mysql_txs_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))');
+        return 'CREATE TABLE mysql_txs_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_txs_items'];
     }
+
 
     public function testShadowDataPersistsAfterRollback(): void
     {
@@ -116,16 +97,5 @@ class MysqlTransactionShadowInteractionTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame('Prepared', $rows[0]['name']);
         $this->assertSame('Also Prepared', $rows[1]['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_txs_items');
     }
 }

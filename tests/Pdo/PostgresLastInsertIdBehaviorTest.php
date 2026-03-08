@@ -6,11 +6,7 @@ namespace Tests\Pdo;
 
 use PDO;
 use PDOException;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests lastInsertId() behavior with ZTD on PostgreSQL.
@@ -23,25 +19,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * On PostgreSQL, calling lastInsertId() when the sequence hasn't been
  * advanced in the current session throws a PDOException — unlike MySQL
  * which returns "0".
+ * @spec SPEC-4.7
  */
-class PostgresLastInsertIdBehaviorTest extends TestCase
+class PostgresLastInsertIdBehaviorTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_lid_test');
-        $raw->exec('CREATE TABLE pg_lid_test (id SERIAL PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE pg_lid_test (id SERIAL PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        return ['pg_lid_test'];
     }
+
 
     /**
      * lastInsertId() with sequence name throws PDOException after shadow INSERT.
@@ -130,14 +121,5 @@ class PostgresLastInsertIdBehaviorTest extends TestCase
         // The physical row from testLastInsertIdWorksWithZtdDisabled may exist,
         // but this specific row (id=1, name='Alice') should not be in the physical table
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_lid_test');
-        } catch (\Exception $e) {
-        }
     }
 }

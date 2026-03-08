@@ -7,6 +7,7 @@ namespace Tests\Mysqli;
 use Tests\Scenarios\PreparedStatementScenario;
 use Tests\Support\AbstractMysqliTestCase;
 
+/** @spec SPEC-3.2 */
 class PreparedStatementTest extends AbstractMysqliTestCase
 {
     use PreparedStatementScenario;

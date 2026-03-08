@@ -13,6 +13,7 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqliException;
 use ZtdQuery\Config\UnsupportedSqlBehavior;
 use ZtdQuery\Config\ZtdConfig;
 
+/** @spec SPEC-6.1 */
 class UnsupportedSqlTest extends TestCase
 {
     public static function setUpBeforeClass(): void

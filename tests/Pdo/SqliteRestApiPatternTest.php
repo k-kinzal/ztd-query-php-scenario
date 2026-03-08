@@ -5,45 +5,54 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests common REST API / controller-layer query patterns.
  * These simulate typical CRUD operations in web frameworks like Laravel/Symfony.
+ * @spec pending
  */
-class SqliteRestApiPatternTest extends TestCase
+class SqliteRestApiPatternTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE api_products (id INT PRIMARY KEY, name VARCHAR(100), price DECIMAL(10,2), stock INT, active INT DEFAULT 1)',
+            'CREATE TABLE api_categories (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE api_product_categories (product_id INT, category_id INT, PRIMARY KEY (product_id, category_id))',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['api_products', 'api_categories', 'api_product_categories'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE api_products (id INT PRIMARY KEY, name VARCHAR(100), price DECIMAL(10,2), stock INT, active INT DEFAULT 1)');
         $this->pdo->exec('CREATE TABLE api_categories (id INT PRIMARY KEY, name VARCHAR(50))');
         $this->pdo->exec('CREATE TABLE api_product_categories (product_id INT, category_id INT, PRIMARY KEY (product_id, category_id))');
-
         // Seed categories
         $this->pdo->exec("INSERT INTO api_categories VALUES (1, 'Electronics')");
         $this->pdo->exec("INSERT INTO api_categories VALUES (2, 'Books')");
         $this->pdo->exec("INSERT INTO api_categories VALUES (3, 'Clothing')");
-
         // Seed products
         $this->pdo->exec("INSERT INTO api_products VALUES (1, 'Laptop', 999.99, 50, 1)");
         $this->pdo->exec("INSERT INTO api_products VALUES (2, 'PHP Book', 29.99, 100, 1)");
         $this->pdo->exec("INSERT INTO api_products VALUES (3, 'T-Shirt', 19.99, 200, 1)");
         $this->pdo->exec("INSERT INTO api_products VALUES (4, 'Headphones', 79.99, 75, 1)");
         $this->pdo->exec("INSERT INTO api_products VALUES (5, 'Old Widget', 5.00, 0, 0)");
-
         // Seed mappings
         $this->pdo->exec('INSERT INTO api_product_categories VALUES (1, 1)');
         $this->pdo->exec('INSERT INTO api_product_categories VALUES (2, 2)');
         $this->pdo->exec('INSERT INTO api_product_categories VALUES (3, 3)');
         $this->pdo->exec('INSERT INTO api_product_categories VALUES (4, 1)');
-    }
+
+        }
 
     /**
      * GET /api/products - List active products with pagination

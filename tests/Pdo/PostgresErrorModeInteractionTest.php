@@ -5,31 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractPostgresPdoTestCase;
 use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests interaction between PDO error modes and ZTD shadow store on PostgreSQL.
+ * @spec SPEC-4.11
  */
-class PostgresErrorModeInteractionTest extends TestCase
+class PostgresErrorModeInteractionTest extends AbstractPostgresPdoTestCase
 {
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS err_mode_pg');
-        $raw->exec('CREATE TABLE err_mode_pg (id INT PRIMARY KEY, name VARCHAR(50))');
+        return 'CREATE TABLE err_mode_pg (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['err_mode_pg'];
+    }
+
 
     public function testErrmodeSilentReturnsFalseOnInvalidQuery(): void
     {
@@ -85,16 +79,5 @@ class PostgresErrorModeInteractionTest extends TestCase
 
         $this->expectException(\PDOException::class);
         $pdo->query('SELECT * FROM nonexistent_xyz');
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS err_mode_pg');
     }
 }

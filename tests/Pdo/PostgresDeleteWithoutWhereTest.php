@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests DELETE without WHERE clause on PostgreSQL PDO.
  *
  * Like MySQL, PostgreSQL correctly clears the shadow store.
+ * @spec SPEC-4.3
  */
 class PostgresDeleteWithoutWhereTest extends TestCase
 {

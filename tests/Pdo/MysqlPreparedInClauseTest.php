@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statements with IN and NOT IN clauses on MySQL PDO.
+ * @spec pending
  */
-class MysqlPreparedInClauseTest extends TestCase
+class MysqlPreparedInClauseTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pic_items');
-        $raw->exec('CREATE TABLE pic_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), price DECIMAL(10,2))');
+        return 'CREATE TABLE pic_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), price DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pic_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (1, 'Widget', 'A', 10.0)");
         $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (2, 'Gadget', 'B', 25.0)");
@@ -82,16 +68,5 @@ class MysqlPreparedInClauseTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertSame('cheap', $rows[0]['tier']); // Doohickey
         $this->assertSame('expensive', $rows[1]['tier']); // Gadget
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pic_items');
     }
 }

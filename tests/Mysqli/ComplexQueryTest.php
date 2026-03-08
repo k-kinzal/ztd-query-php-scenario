@@ -4,47 +4,26 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractMysqliTestCase;
 use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
-class ComplexQueryTest extends TestCase
+/** @spec SPEC-3.3 */
+class ComplexQueryTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return [
+            'CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255))',
+            'CREATE TABLE orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(50))',
+            'CREATE TABLE order_items (id INT PRIMARY KEY, order_id INT, product VARCHAR(255), qty INT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS order_items');
-        $raw->query('DROP TABLE IF EXISTS orders');
-        $raw->query('DROP TABLE IF EXISTS users');
-        $raw->query('CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255))');
-        $raw->query('CREATE TABLE orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(50))');
-        $raw->query('CREATE TABLE order_items (id INT PRIMARY KEY, order_id INT, product VARCHAR(255), qty INT)');
-        $raw->close();
-
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['order_items', 'orders', 'users'];
     }
+
 
     public function testJoinWithShadowData(): void
     {
@@ -343,25 +322,5 @@ class ComplexQueryTest extends TestCase
         $result = $this->mysqli->query('SELECT * FROM users');
         $this->assertSame(0, $result->num_rows,
             'ZTD SELECT reads only from shadow store; physical data is not visible');
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS order_items');
-        $raw->query('DROP TABLE IF EXISTS orders');
-        $raw->query('DROP TABLE IF EXISTS users');
-        $raw->close();
     }
 }

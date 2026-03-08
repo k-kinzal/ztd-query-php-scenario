@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests UPDATE with subquery in SET clause on SQLite.
@@ -15,28 +12,23 @@ use ZtdQuery\Adapter\Pdo\ZtdPdoException;
  * Non-correlated scalar subqueries in SET work correctly.
  * Correlated subqueries (referencing the outer table being updated)
  * fail with a syntax error because the CTE rewriter generates invalid SQL.
+ * @spec pending
  */
-class SqliteUpdateWithSubqueryInSetTest extends TestCase
+class SqliteUpdateWithSubqueryInSetTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_updsub_products (id INTEGER PRIMARY KEY, name TEXT, price REAL, category_id INTEGER)');
-        $raw->exec('CREATE TABLE sl_updsub_categories (id INTEGER PRIMARY KEY, name TEXT, avg_price REAL)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sl_updsub_categories VALUES (1, 'Electronics', 0)");
-        $this->pdo->exec("INSERT INTO sl_updsub_categories VALUES (2, 'Books', 0)");
-
-        $this->pdo->exec("INSERT INTO sl_updsub_products VALUES (1, 'Laptop', 1000.00, 1)");
-        $this->pdo->exec("INSERT INTO sl_updsub_products VALUES (2, 'Phone', 500.00, 1)");
-        $this->pdo->exec("INSERT INTO sl_updsub_products VALUES (3, 'Novel', 15.00, 2)");
-        $this->pdo->exec("INSERT INTO sl_updsub_products VALUES (4, 'Textbook', 85.00, 2)");
+        return [
+            'CREATE TABLE sl_updsub_products (id INTEGER PRIMARY KEY, name TEXT, price REAL, category_id INTEGER)',
+            'CREATE TABLE sl_updsub_categories (id INTEGER PRIMARY KEY, name TEXT, avg_price REAL)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_updsub_products', 'sl_updsub_categories'];
+    }
+
 
     /**
      * UPDATE SET col = (non-correlated scalar subquery) works.

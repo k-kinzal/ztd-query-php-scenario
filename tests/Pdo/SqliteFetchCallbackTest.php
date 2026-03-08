@@ -5,27 +5,39 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests fetchAll with FETCH_FUNC callback mode and other advanced fetch patterns on SQLite ZTD.
+ * @spec pending
  */
-class SqliteFetchCallbackTest extends TestCase
+class SqliteFetchCallbackTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE cb_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE grp_test (id INT PRIMARY KEY, category VARCHAR(10), amount INT)',
+            'CREATE TABLE gc_test (id INT PRIMARY KEY, category VARCHAR(10), name VARCHAR(50))',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['cb_test', 'grp_test', 'gc_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE cb_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO cb_test VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO cb_test VALUES (2, 'Bob', 85)");
         $this->pdo->exec("INSERT INTO cb_test VALUES (3, 'Charlie', 70)");
-    }
+
+        }
 
     public function testFetchAllWithFetchFunc(): void
     {

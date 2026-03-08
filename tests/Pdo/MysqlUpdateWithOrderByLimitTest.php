@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests UPDATE with ORDER BY and LIMIT on MySQL PDO ZTD.
@@ -17,32 +13,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * MySQL supports: UPDATE t SET ... WHERE ... ORDER BY ... LIMIT n
  * This allows updating only the first N rows matching a condition,
  * sorted by the specified order.
+ * @spec pending
  */
-class MysqlUpdateWithOrderByLimitTest extends TestCase
+class MysqlUpdateWithOrderByLimitTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-            'root',
-            'root',
-        );
-        $raw->exec('DROP TABLE IF EXISTS pdo_uol_test');
-        $raw->exec('CREATE TABLE pdo_uol_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, status VARCHAR(20))');
+        return 'CREATE TABLE pdo_uol_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, status VARCHAR(20))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_uol_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-            'root',
-            'root',
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pdo_uol_test (id, name, score, status) VALUES (1, 'Alice', 90, 'active')");
         $this->pdo->exec("INSERT INTO pdo_uol_test (id, name, score, status) VALUES (2, 'Bob', 80, 'active')");
@@ -113,18 +101,5 @@ class MysqlUpdateWithOrderByLimitTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM pdo_uol_test WHERE status = 'changed'");
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-                'root',
-                'root',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pdo_uol_test');
-        } catch (\Exception $e) {
-        }
     }
 }

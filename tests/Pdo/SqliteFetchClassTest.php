@@ -5,29 +5,40 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
+use Tests\Support\AbstractSqlitePdoTestCase;
 use Tests\Support\UserDto;
 use Tests\Support\UserDtoWithConstructor;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests PDO::FETCH_CLASS with custom user-defined classes on SQLite ZTD.
+ * @spec SPEC-4.10
  */
-class SqliteFetchClassTest extends TestCase
+class SqliteFetchClassTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE fc_class (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE fc_dept (id INT PRIMARY KEY, dept VARCHAR(50))',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['fc_class', 'fc_dept'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE fc_class (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO fc_class VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO fc_class VALUES (2, 'Bob', 85)");
         $this->pdo->exec("INSERT INTO fc_class VALUES (3, 'Charlie', 70)");
-    }
+
+        }
 
     public function testFetchClassWithSimpleDto(): void
     {

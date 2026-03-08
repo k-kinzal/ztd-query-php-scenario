@@ -5,37 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared statements with complex queries on SQLite:
  * JOINs with parameters, aggregations with bindings, subqueries with params.
+ * @spec SPEC-3.3
  */
-class SqlitePreparedComplexQueryTest extends TestCase
+class SqlitePreparedComplexQueryTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, role TEXT)');
-        $raw->exec('CREATE TABLE tasks (id INTEGER PRIMARY KEY, user_id INTEGER, title TEXT, priority INTEGER, done INTEGER DEFAULT 0)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO users (id, name, role) VALUES (1, 'Alice', 'admin')");
-        $this->pdo->exec("INSERT INTO users (id, name, role) VALUES (2, 'Bob', 'user')");
-        $this->pdo->exec("INSERT INTO users (id, name, role) VALUES (3, 'Charlie', 'user')");
-
-        $this->pdo->exec("INSERT INTO tasks (id, user_id, title, priority, done) VALUES (1, 1, 'Deploy', 1, 0)");
-        $this->pdo->exec("INSERT INTO tasks (id, user_id, title, priority, done) VALUES (2, 1, 'Review', 2, 1)");
-        $this->pdo->exec("INSERT INTO tasks (id, user_id, title, priority, done) VALUES (3, 2, 'Test', 1, 0)");
-        $this->pdo->exec("INSERT INTO tasks (id, user_id, title, priority, done) VALUES (4, 2, 'Write docs', 3, 0)");
-        $this->pdo->exec("INSERT INTO tasks (id, user_id, title, priority, done) VALUES (5, 3, 'Fix bug', 1, 1)");
+        return [
+            'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, role TEXT)',
+            'CREATE TABLE tasks (id INTEGER PRIMARY KEY, user_id INTEGER, title TEXT, priority INTEGER, done INTEGER DEFAULT 0)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['users', 'tasks'];
+    }
+
 
     public function testPreparedJoinWithParam(): void
     {

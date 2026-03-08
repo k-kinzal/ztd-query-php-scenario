@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests INSERT ... SELECT with conflict resolution on SQLite ZTD.
@@ -18,25 +17,23 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * These combine INSERT...SELECT with conflict handling, similar to MySQL's
  * INSERT...SELECT...ON DUPLICATE KEY UPDATE.
+ * @spec pending
  */
-class SqliteInsertSelectConflictTest extends TestCase
+class SqliteInsertSelectConflictTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE isc_source (id INTEGER PRIMARY KEY, name TEXT, score INT)');
-        $raw->exec('CREATE TABLE isc_target (id INTEGER PRIMARY KEY, name TEXT, score INT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO isc_source (id, name, score) VALUES (1, 'Alice', 90)");
-        $this->pdo->exec("INSERT INTO isc_source (id, name, score) VALUES (2, 'Bob', 80)");
-        $this->pdo->exec("INSERT INTO isc_source (id, name, score) VALUES (3, 'Charlie', 70)");
+        return [
+            'CREATE TABLE isc_source (id INTEGER PRIMARY KEY, name TEXT, score INT)',
+            'CREATE TABLE isc_target (id INTEGER PRIMARY KEY, name TEXT, score INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['isc_source', 'isc_target'];
+    }
+
 
     /**
      * Basic INSERT ... SELECT — all new rows.

@@ -5,42 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests UNION with LIMIT/OFFSET on MySQL PDO.
  *
  * Cross-platform parity with SqliteSetOperationsWithLimitTest
  * and PostgresSetOperationsWithLimitTest.
+ * @spec pending
  */
-class MysqlSetOperationsWithLimitTest extends TestCase
+class MysqlSetOperationsWithLimitTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_mset_a');
-        $raw->exec('DROP TABLE IF EXISTS pdo_mset_b');
-        $raw->exec('CREATE TABLE pdo_mset_a (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->exec('CREATE TABLE pdo_mset_b (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return [
+            'CREATE TABLE pdo_mset_a (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE pdo_mset_b (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_mset_a', 'pdo_mset_b'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pdo_mset_a VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO pdo_mset_a VALUES (2, 'Bob', 80)");
         $this->pdo->exec("INSERT INTO pdo_mset_a VALUES (3, 'Charlie', 70)");
-
         $this->pdo->exec("INSERT INTO pdo_mset_b VALUES (4, 'Bob', 80)");
         $this->pdo->exec("INSERT INTO pdo_mset_b VALUES (5, 'Diana', 60)");
         $this->pdo->exec("INSERT INTO pdo_mset_b VALUES (6, 'Eve', 50)");
@@ -104,15 +99,5 @@ class MysqlSetOperationsWithLimitTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_mset_a');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_mset_a');
-            $raw->exec('DROP TABLE IF EXISTS pdo_mset_b');
-        } catch (\Exception $e) {
-        }
     }
 }

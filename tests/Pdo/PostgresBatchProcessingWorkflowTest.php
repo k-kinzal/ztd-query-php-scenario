@@ -5,45 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests batch processing workflow on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresBatchProcessingWorkflowTest extends TestCase
+class PostgresBatchProcessingWorkflowTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS bp_transactions');
-        $raw->exec('DROP TABLE IF EXISTS bp_accounts');
-        $raw->exec('CREATE TABLE bp_accounts (id INT PRIMARY KEY, name VARCHAR(50), balance DECIMAL(10,2), status VARCHAR(20))');
-        $raw->exec('CREATE TABLE bp_transactions (id INT PRIMARY KEY, account_id INT, amount DECIMAL(10,2), type VARCHAR(20), processed INT DEFAULT 0)');
+        return [
+            'CREATE TABLE bp_accounts (id INT PRIMARY KEY, name VARCHAR(50), balance DECIMAL(10,2), status VARCHAR(20))',
+            'CREATE TABLE bp_transactions (id INT PRIMARY KEY, account_id INT, amount DECIMAL(10,2), type VARCHAR(20), processed INT DEFAULT 0)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['bp_transactions', 'bp_accounts'];
     }
+
 
     public function testBatchDebitCreditProcessing(): void
     {
@@ -95,17 +77,5 @@ class PostgresBatchProcessingWorkflowTest extends TestCase
 
         $stmt = $this->pdo->query("SELECT SUM(balance) AS total FROM bp_accounts");
         $this->assertEqualsWithDelta(22050.00, (float) $stmt->fetch(PDO::FETCH_ASSOC)['total'], 0.01);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS bp_transactions');
-        $raw->exec('DROP TABLE IF EXISTS bp_accounts');
     }
 }

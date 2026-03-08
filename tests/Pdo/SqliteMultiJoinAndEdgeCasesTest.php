@@ -5,30 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests multi-table JOINs (4+ tables), INSERT without column list,
  * HAVING without GROUP BY, != operator, and SQL comments on SQLite.
+ * @spec pending
  */
-class SqliteMultiJoinAndEdgeCasesTest extends TestCase
+class SqliteMultiJoinAndEdgeCasesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT)');
-        $raw->exec('CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept_id INTEGER, manager_id INTEGER)');
-        $raw->exec('CREATE TABLE projects (id INTEGER PRIMARY KEY, title TEXT, dept_id INTEGER)');
-        $raw->exec('CREATE TABLE assignments (employee_id INTEGER, project_id INTEGER, hours INTEGER)');
-        $raw->exec('CREATE TABLE reviews (id INTEGER PRIMARY KEY, employee_id INTEGER, score INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT)',
+            'CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept_id INTEGER, manager_id INTEGER)',
+            'CREATE TABLE projects (id INTEGER PRIMARY KEY, title TEXT, dept_id INTEGER)',
+            'CREATE TABLE assignments (employee_id INTEGER, project_id INTEGER, hours INTEGER)',
+            'CREATE TABLE reviews (id INTEGER PRIMARY KEY, employee_id INTEGER, score INTEGER)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['departments', 'employees', 'projects', 'assignments', 'reviews'];
+    }
+
 
     public function testFourTableJoin(): void
     {

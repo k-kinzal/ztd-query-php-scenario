@@ -5,48 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests a data migration workflow on MySQL PDO: INSERT...SELECT with transformations,
  * subqueries in SELECT/WHERE, and complex aggregation patterns.
+ * @spec pending
  */
-class MysqlDataMigrationWorkflowTest extends TestCase
+class MysqlDataMigrationWorkflowTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_dm_user_stats');
-        $raw->exec('DROP TABLE IF EXISTS mysql_dm_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_dm_users');
-        $raw->exec('CREATE TABLE mysql_dm_users (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), tier VARCHAR(20), created_date DATE)');
-        $raw->exec('CREATE TABLE mysql_dm_orders (id INT PRIMARY KEY, user_id INT, product VARCHAR(50), amount DECIMAL(10,2), status VARCHAR(20), created_date DATE)');
-        $raw->exec('CREATE TABLE mysql_dm_user_stats (user_id INT PRIMARY KEY, total_orders INT, total_spent DECIMAL(10,2), last_order_date DATE)');
+        return [
+            'CREATE TABLE mysql_dm_users (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), tier VARCHAR(20), created_date DATE)',
+            'CREATE TABLE mysql_dm_orders (id INT PRIMARY KEY, user_id INT, product VARCHAR(50), amount DECIMAL(10,2), status VARCHAR(20), created_date DATE)',
+            'CREATE TABLE mysql_dm_user_stats (user_id INT PRIMARY KEY, total_orders INT, total_spent DECIMAL(10,2), last_order_date DATE)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_dm_user_stats', 'mysql_dm_orders', 'mysql_dm_users'];
     }
+
 
     /**
      * INSERT...SELECT with LEFT JOIN + GROUP BY + aggregation throws a column-not-found
@@ -161,18 +142,5 @@ class MysqlDataMigrationWorkflowTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('Bob', $rows[0]['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_dm_user_stats');
-        $raw->exec('DROP TABLE IF EXISTS mysql_dm_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_dm_users');
     }
 }

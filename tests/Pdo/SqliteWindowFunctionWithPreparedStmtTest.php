@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests window functions with prepared statements on SQLite.
@@ -14,25 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Window functions combined with parameter binding are common
  * in dynamic analytics queries. Tests whether the CTE rewriter
  * handles window function queries via the prepare path.
+ * @spec pending
  */
-class SqliteWindowFunctionWithPreparedStmtTest extends TestCase
+class SqliteWindowFunctionWithPreparedStmtTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_wfprep_test (id INTEGER PRIMARY KEY, name TEXT, dept TEXT, salary INTEGER)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sl_wfprep_test VALUES (1, 'Alice', 'Engineering', 90000)");
-        $this->pdo->exec("INSERT INTO sl_wfprep_test VALUES (2, 'Bob', 'Engineering', 85000)");
-        $this->pdo->exec("INSERT INTO sl_wfprep_test VALUES (3, 'Charlie', 'Sales', 70000)");
-        $this->pdo->exec("INSERT INTO sl_wfprep_test VALUES (4, 'Diana', 'Sales', 75000)");
-        $this->pdo->exec("INSERT INTO sl_wfprep_test VALUES (5, 'Eve', 'Engineering', 95000)");
+        return 'CREATE TABLE sl_wfprep_test (id INTEGER PRIMARY KEY, name TEXT, dept TEXT, salary INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_wfprep_test'];
+    }
+
 
     /**
      * ROW_NUMBER with WHERE parameter.

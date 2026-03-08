@@ -5,58 +5,39 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests advanced SQL query patterns in ZTD mode on MySQL via PDO:
  * CASE, LIKE, IN, BETWEEN, EXISTS, COALESCE, window functions.
+ * @spec SPEC-3.3
  */
-class MysqlAdvancedQueryPatternsTest extends TestCase
+class MysqlAdvancedQueryPatternsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_adv_employees');
-        $raw->exec('CREATE TABLE mysql_pdo_adv_employees (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), score INT)');
-
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_adv_departments');
-        $raw->exec('CREATE TABLE mysql_pdo_adv_departments (id INT PRIMARY KEY, emp_id INT, dept_name VARCHAR(255))');
-
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_adv_bonus');
-        $raw->exec('CREATE TABLE mysql_pdo_adv_bonus (id INT PRIMARY KEY, emp_id INT, amount INT)');
-
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_adv_profiles');
-        $raw->exec('CREATE TABLE mysql_pdo_adv_profiles (id INT PRIMARY KEY, employee_id INT, nickname VARCHAR(255))');
+        return [
+            'CREATE TABLE mysql_pdo_adv_employees (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), score INT)',
+            'CREATE TABLE mysql_pdo_adv_departments (id INT PRIMARY KEY, emp_id INT, dept_name VARCHAR(255))',
+            'CREATE TABLE mysql_pdo_adv_bonus (id INT PRIMARY KEY, emp_id INT, amount INT)',
+            'CREATE TABLE mysql_pdo_adv_profiles (id INT PRIMARY KEY, employee_id INT, nickname VARCHAR(255))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_pdo_adv_employees', 'mysql_pdo_adv_departments', 'mysql_pdo_adv_bonus', 'mysql_pdo_adv_profiles'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec('DELETE FROM mysql_pdo_adv_employees');
         $this->pdo->exec('DELETE FROM mysql_pdo_adv_departments');
         $this->pdo->exec('DELETE FROM mysql_pdo_adv_bonus');
         $this->pdo->exec('DELETE FROM mysql_pdo_adv_profiles');
-
         $this->pdo->exec("INSERT INTO mysql_pdo_adv_employees (id, name, department, score) VALUES (1, 'Alice', 'Engineering', 90)");
         $this->pdo->exec("INSERT INTO mysql_pdo_adv_employees (id, name, department, score) VALUES (2, 'Bob', 'Sales', 60)");
         $this->pdo->exec("INSERT INTO mysql_pdo_adv_employees (id, name, department, score) VALUES (3, 'Charlie', 'Engineering', 110)");
@@ -226,19 +207,5 @@ class MysqlAdvancedQueryPatternsTest extends TestCase
         $this->assertSame(120, (int) $rows[2]['score']);  // Charlie: 110 + 10
         $this->assertSame(80, (int) $rows[3]['score']);   // Diana: 75 + 5
         $this->assertSame(60, (int) $rows[4]['score']);   // Eve: 55 + 5
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_adv_profiles');
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_adv_bonus');
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_adv_departments');
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_adv_employees');
     }
 }

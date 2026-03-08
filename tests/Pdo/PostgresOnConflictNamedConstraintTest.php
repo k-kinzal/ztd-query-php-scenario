@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL ON CONFLICT with named constraints vs column lists.
@@ -19,25 +15,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * 2. ON CONFLICT ON CONSTRAINT constraint_name DO UPDATE ... — by constraint name
  *
  * This tests whether the CTE rewriter correctly handles both forms.
+ * @spec pending
  */
-class PostgresOnConflictNamedConstraintTest extends TestCase
+class PostgresOnConflictNamedConstraintTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_oncn_test');
-        $raw->exec('CREATE TABLE pg_oncn_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, CONSTRAINT uq_name UNIQUE (name))');
+        return 'CREATE TABLE pg_oncn_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, CONSTRAINT uq_name UNIQUE (name))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        return ['pg_oncn_test'];
     }
+
 
     /**
      * ON CONFLICT (column_list) DO UPDATE — standard form.
@@ -141,14 +132,5 @@ class PostgresOnConflictNamedConstraintTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_oncn_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_oncn_test');
-        } catch (\Exception $e) {
-        }
     }
 }

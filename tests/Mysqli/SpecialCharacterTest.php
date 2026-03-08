@@ -4,46 +4,30 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests that the shadow store correctly handles special characters,
  * Unicode, and edge-case string values via MySQLi adapter.
+ * @spec pending
  */
-class SpecialCharacterTest extends TestCase
+class SpecialCharacterTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mysqli_char_test');
-        $raw->query('CREATE TABLE mysqli_char_test (id INT PRIMARY KEY, val VARCHAR(1000)) CHARACTER SET utf8mb4');
-        $raw->close();
+        return 'CREATE TABLE mysqli_char_test (id INT PRIMARY KEY, val VARCHAR(1000)) CHARACTER SET utf8mb4';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysqli_char_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
+
         $this->mysqli->set_charset('utf8mb4');
     }
 
@@ -153,23 +137,5 @@ class SpecialCharacterTest extends TestCase
         $result = $this->mysqli->query('SELECT val FROM mysqli_char_test WHERE id = 1');
         $row = $result->fetch_assoc();
         $this->assertSame("SELECT * FROM users; DROP TABLE users;--", $row['val']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mysqli_char_test');
-        $raw->close();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
     }
 }

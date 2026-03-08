@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests fetchColumn(), closeCursor(), and FETCH_CLASS on PostgreSQL ZTD PDO.
+ * @spec pending
  */
-class PostgresFetchColumnAndCursorTest extends TestCase
+class PostgresFetchColumnAndCursorTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS fc_test_pg');
-        $raw->exec('CREATE TABLE fc_test_pg (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE fc_test_pg (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['fc_test_pg'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO fc_test_pg VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO fc_test_pg VALUES (2, 'Bob', 85)");
@@ -110,16 +96,5 @@ class PostgresFetchColumnAndCursorTest extends TestCase
         $stmt = $this->pdo->query('SELECT id, name FROM fc_test_pg ORDER BY id');
         $pairs = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
         $this->assertSame([1 => 'Alice', 2 => 'Bob', 3 => 'Charlie'], $pairs);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS fc_test_pg');
     }
 }

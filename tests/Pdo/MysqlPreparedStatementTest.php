@@ -10,6 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statement patterns in ZTD mode on MySQL via PDO.
+ * @spec SPEC-3.2
  */
 class MysqlPreparedStatementTest extends AbstractMysqlPdoTestCase
 {

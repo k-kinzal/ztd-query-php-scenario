@@ -4,46 +4,29 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests interoperability between shadow-created tables and reflected tables (MySQLi).
+ * @spec pending
  */
-class ShadowCreatedTableInteropTest extends TestCase
+class ShadowCreatedTableInteropTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_sci_users');
-        $raw->query('CREATE TABLE mi_sci_users (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20))');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_sci_users (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20))',
+            'CREATE TABLE mi_sci_scores (user_id INT PRIMARY KEY, score INT)',
+            'CREATE TABLE mi_sci_blacklist (user_id INT PRIMARY KEY)',
+            'CREATE TABLE mi_sci_deactivate (user_id INT PRIMARY KEY)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_sci_users', 'mi_sci_scores', 'mi_sci_blacklist', 'mi_sci_deactivate'];
     }
+
 
     public function testJoinReflectedAndShadowCreatedTable(): void
     {
@@ -99,23 +82,5 @@ class ShadowCreatedTableInteropTest extends TestCase
 
         $result = $this->mysqli->query("SELECT status FROM mi_sci_users WHERE id = 2");
         $this->assertSame('deactivated', $result->fetch_assoc()['status']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_sci_users');
-        $raw->close();
     }
 }

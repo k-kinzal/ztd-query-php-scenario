@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests conditional aggregation, multi-column ORDER BY, and COUNT DISTINCT on MySQL PDO.
+ * @spec pending
  */
-class MysqlConditionalAggregationTest extends TestCase
+class MysqlConditionalAggregationTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_ca_orders');
-        $raw->exec('CREATE TABLE mysql_ca_orders (id INT PRIMARY KEY, customer VARCHAR(50), status VARCHAR(20), amount DECIMAL(10,2), region VARCHAR(20))');
+        return 'CREATE TABLE mysql_ca_orders (id INT PRIMARY KEY, customer VARCHAR(50), status VARCHAR(20), amount DECIMAL(10,2), region VARCHAR(20))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_ca_orders'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_ca_orders VALUES (1, 'Alice', 'completed', 100, 'north')");
         $this->pdo->exec("INSERT INTO mysql_ca_orders VALUES (2, 'Bob', 'completed', 200, 'south')");
@@ -105,16 +91,5 @@ class MysqlConditionalAggregationTest extends TestCase
         ");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame(4, (int) $row['completed']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_ca_orders');
     }
 }

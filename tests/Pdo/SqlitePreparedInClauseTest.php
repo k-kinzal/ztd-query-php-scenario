@@ -5,32 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared statements with IN clause, NOT IN clause, and
  * CASE WHEN with parameters — common user patterns for dynamic filtering.
+ * @spec pending
  */
-class SqlitePreparedInClauseTest extends TestCase
+class SqlitePreparedInClauseTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE pic_items (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (1, 'Widget', 'A', 10.0)");
-        $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (2, 'Gadget', 'B', 25.0)");
-        $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (3, 'Doohickey', 'A', 5.0)");
-        $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (4, 'Thingamajig', 'C', 50.0)");
-        $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (5, 'Whatchamacallit', 'B', 15.0)");
+        return 'CREATE TABLE pic_items (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pic_items'];
+    }
+
 
     public function testInClauseWithTwoParams(): void
     {

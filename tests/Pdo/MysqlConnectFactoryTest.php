@@ -13,6 +13,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests ZtdPdo::connect() static factory method on MySQL (requires PHP 8.4+).
+ * @spec SPEC-1.4a
  */
 class MysqlConnectFactoryTest extends TestCase
 {

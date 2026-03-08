@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests REPLACE INTO with multiple rows in a single statement on MySQL PDO.
@@ -19,33 +14,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * 2. Inserting all new rows
  *
  * This test verifies that multi-row REPLACE works correctly via PDO.
+ * @spec SPEC-4.2b
  */
-class MysqlReplaceMultiRowTest extends TestCase
+class MysqlReplaceMultiRowTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-            'root',
-            'root',
-        );
-        $raw->exec('DROP TABLE IF EXISTS pdo_rmr_test');
-        $raw->exec('CREATE TABLE pdo_rmr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE pdo_rmr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-            'root',
-            'root',
-        );
+        return ['pdo_rmr_test'];
     }
+
 
     /**
      * Multi-row REPLACE inserts all rows when none exist.
@@ -109,18 +91,5 @@ class MysqlReplaceMultiRowTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_rmr_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-                'root',
-                'root',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pdo_rmr_test');
-        } catch (\Exception $e) {
-        }
     }
 }

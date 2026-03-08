@@ -17,6 +17,7 @@ use ZtdQuery\Config\ZtdConfig;
  * Tests ZtdPdo::fromPdo() behavior on MySQL.
  * Documents differences between fromPdo() and new ZtdPdo() constructor,
  * particularly around unknown schema handling.
+ * @spec SPEC-1.4
  */
 class MysqlFromPdoBehaviorTest extends TestCase
 {

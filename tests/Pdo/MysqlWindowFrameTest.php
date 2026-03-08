@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests window functions with FRAME clauses (ROWS/RANGE BETWEEN) on MySQL PDO.
+ * @spec pending
  */
-class MysqlWindowFrameTest extends TestCase
+class MysqlWindowFrameTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_wf_sales');
-        $raw->exec('CREATE TABLE mysql_wf_sales (id INT PRIMARY KEY, month VARCHAR(10), amount DECIMAL(10,2))');
+        return 'CREATE TABLE mysql_wf_sales (id INT PRIMARY KEY, month VARCHAR(10), amount DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_wf_sales'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_wf_sales (id, month, amount) VALUES (1, '2024-01', 100)");
         $this->pdo->exec("INSERT INTO mysql_wf_sales (id, month, amount) VALUES (2, '2024-02', 200)");
@@ -120,16 +106,5 @@ class MysqlWindowFrameTest extends TestCase
         $this->assertCount(4, $rows);
         $this->assertEqualsWithDelta(100.0, (float) $rows[0]['cumulative'], 0.01);
         $this->assertEqualsWithDelta(600.0, (float) $rows[1]['cumulative'], 0.01);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_wf_sales');
     }
 }

@@ -5,36 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests INSERT with SQL expressions in VALUES clause on PostgreSQL.
  *
  * The InsertTransformer converts VALUES to SELECT expressions for CTE.
  * PostgreSQL-specific functions (||, INITCAP, etc.) are tested.
+ * @spec pending
  */
-class PostgresInsertExpressionValuesTest extends TestCase
+class PostgresInsertExpressionValuesTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_expr_test');
-        $raw->exec('CREATE TABLE pg_expr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, label VARCHAR(50))');
+        return 'CREATE TABLE pg_expr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, label VARCHAR(50))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        return ['pg_expr_test'];
     }
+
 
     /**
      * INSERT with arithmetic expression.
@@ -130,14 +121,5 @@ class PostgresInsertExpressionValuesTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_expr_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_expr_test');
-        } catch (\Exception $e) {
-        }
     }
 }

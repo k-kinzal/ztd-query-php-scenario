@@ -4,45 +4,25 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests debugDumpParams() on ZtdPdoStatement with PostgreSQL PDO.
  * Confirms ZTD rewrites are visible in debug output.
+ * @spec pending
  */
-class PostgresDebugDumpParamsTest extends TestCase
+class PostgresDebugDumpParamsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ddp_pg');
-        $raw->exec('CREATE TABLE ddp_pg (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE ddp_pg (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['ddp_pg'];
     }
+
 
     public function testDebugDumpParamsOnSelect(): void
     {
@@ -99,16 +79,5 @@ class PostgresDebugDumpParamsTest extends TestCase
 
         $this->assertIsString($output);
         $this->assertStringContainsString('Params:', $output);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ddp_pg');
     }
 }

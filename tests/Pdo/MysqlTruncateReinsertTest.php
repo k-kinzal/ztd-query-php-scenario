@@ -4,40 +4,30 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests TRUNCATE TABLE + re-insert workflow on MySQL PDO.
  *
  * TRUNCATE clears the shadow store, then new INSERTs populate cleanly.
+ * @spec SPEC-5.3
  */
-class MysqlTruncateReinsertTest extends TestCase
+class MysqlTruncateReinsertTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_mtr_test');
-        $raw->exec('CREATE TABLE pdo_mtr_test (id INT PRIMARY KEY, name VARCHAR(50))');
+        return 'CREATE TABLE pdo_mtr_test (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_mtr_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pdo_mtr_test VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO pdo_mtr_test VALUES (2, 'Bob')");
@@ -96,14 +86,5 @@ class MysqlTruncateReinsertTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_mtr_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_mtr_test');
-        } catch (\Exception $e) {
-        }
     }
 }

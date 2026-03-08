@@ -5,42 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
-class PostgresConstraintBehaviorTest extends TestCase
+/** @spec SPEC-8.1 */
+class PostgresConstraintBehaviorTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS constraint_child');
-        $raw->exec('DROP TABLE IF EXISTS constraint_test');
-        $raw->exec('CREATE TABLE constraint_test (id INT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE)');
-        $raw->exec('CREATE TABLE constraint_child (id INT PRIMARY KEY, parent_id INT, FOREIGN KEY (parent_id) REFERENCES constraint_test(id))');
+        return [
+            'CREATE TABLE constraint_test (id INT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE)',
+            'CREATE TABLE constraint_child (id INT PRIMARY KEY, parent_id INT, FOREIGN KEY (parent_id) REFERENCES constraint_test(id))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['constraint_child', 'constraint_test'];
     }
+
 
     public function testDuplicatePrimaryKeyNotEnforcedInShadow(): void
     {
@@ -79,17 +61,5 @@ class PostgresConstraintBehaviorTest extends TestCase
         $stmt = $this->pdo->query('SELECT * FROM constraint_child WHERE id = 1');
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertSame(999, (int) $rows[0]['parent_id']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS constraint_child');
-        $raw->exec('DROP TABLE IF EXISTS constraint_test');
     }
 }

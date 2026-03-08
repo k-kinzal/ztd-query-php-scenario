@@ -5,25 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests INSERT with explicit NULL vs omitted columns on SQLite.
  *
  * Default column values are NOT applied in ZTD shadow store.
  * Both explicit NULL and omitted columns result in NULL.
+ * @spec pending
  */
-class SqliteExplicitNullVsOmittedColumnTest extends TestCase
+class SqliteExplicitNullVsOmittedColumnTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec("CREATE TABLE enoc_test (id INT PRIMARY KEY, name VARCHAR(50) DEFAULT 'default_name', score INT DEFAULT 100)");
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE enoc_test (id INT PRIMARY KEY, name VARCHAR(50) DEFAULT \'default_name\', score INT DEFAULT 100)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['enoc_test'];
+    }
+
 
     /**
      * INSERT with explicit NULL stores NULL.

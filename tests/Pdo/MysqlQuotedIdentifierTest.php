@@ -5,51 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests ZTD behavior with MySQL backtick-quoted identifiers and SQL reserved
  * words as column/table names.
+ * @spec pending
  */
-class MysqlQuotedIdentifierTest extends TestCase
+class MysqlQuotedIdentifierTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS `mysql_qi_items`');
-        $raw->exec('CREATE TABLE `mysql_qi_items` (
+        return 'CREATE TABLE `mysql_qi_items` (
             `id` INT PRIMARY KEY,
             `order` INT,
             `group` VARCHAR(30),
             `key` VARCHAR(50),
             `value` VARCHAR(50),
             `select` VARCHAR(50)
-        )');
+        )';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_qi_items'];
     }
+
 
     public function testInsertAndSelectWithReservedWordColumns(): void
     {
@@ -111,16 +92,5 @@ class MysqlQuotedIdentifierTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('k1', $rows[0]['key']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS `mysql_qi_items`');
     }
 }

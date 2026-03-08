@@ -5,29 +5,40 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests advanced ORDER BY patterns and INSERT subquery patterns
  * commonly used by ORM query builders.
+ * @spec pending
  */
-class SqliteAdvancedOrderAndInsertPatternsTest extends TestCase
+class SqliteAdvancedOrderAndInsertPatternsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE aoi_users (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20), score INT)',
+            'CREATE TABLE aoi_counters (id INT PRIMARY KEY, next_val INT)',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['aoi_users', 'aoi_counters'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE aoi_users (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20), score INT)');
         $this->pdo->exec("INSERT INTO aoi_users VALUES (1, 'Alice', 'admin', 90)");
         $this->pdo->exec("INSERT INTO aoi_users VALUES (2, 'Bob', 'user', 70)");
         $this->pdo->exec("INSERT INTO aoi_users VALUES (3, 'Charlie', 'moderator', 85)");
         $this->pdo->exec("INSERT INTO aoi_users VALUES (4, 'Diana', 'admin', 95)");
-    }
+
+        }
 
     public function testCaseWhenInOrderBy(): void
     {

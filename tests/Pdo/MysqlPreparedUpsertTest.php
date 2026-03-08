@@ -5,45 +5,26 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statement UPSERT (ON DUPLICATE KEY UPDATE) and REPLACE on MySQL PDO.
  *
  * @see https://github.com/k-kinzal/ztd-query-php/issues/23
+ * @spec SPEC-4.2a
  */
-class MysqlPreparedUpsertTest extends TestCase
+class MysqlPreparedUpsertTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pdo_upsert_test');
-        $raw->exec('CREATE TABLE pdo_upsert_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE pdo_upsert_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pdo_upsert_test'];
     }
+
 
     public function testPreparedUpsertInsertsNewRow(): void
     {
@@ -132,16 +113,5 @@ class MysqlPreparedUpsertTest extends TestCase
         $row = $select->fetch(PDO::FETCH_ASSOC);
         $this->assertSame('Replaced', $row['name']);
         $this->assertSame(999, (int) $row['score']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pdo_upsert_test');
     }
 }

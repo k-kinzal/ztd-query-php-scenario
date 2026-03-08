@@ -4,48 +4,32 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests parameterized LIMIT/OFFSET, expression-based GROUP BY,
  * and INSERT...SELECT with filtering on MySQLi.
+ * @spec pending
  */
-class PaginationAndGroupingTest extends TestCase
+class PaginationAndGroupingTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pg_archive');
-        $raw->query('DROP TABLE IF EXISTS mi_pg_products');
-        $raw->query('CREATE TABLE mi_pg_products (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(50), price DECIMAL(10,2), stock INT)');
-        $raw->query('CREATE TABLE mi_pg_archive (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(50), price DECIMAL(10,2), stock INT)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_pg_products (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(50), price DECIMAL(10,2), stock INT)',
+            'CREATE TABLE mi_pg_archive (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(50), price DECIMAL(10,2), stock INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_pg_archive', 'mi_pg_products'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_pg_products VALUES (1, 'Widget A', 'hardware', 9.99, 50)");
         $this->mysqli->query("INSERT INTO mi_pg_products VALUES (2, 'Widget B', 'hardware', 14.99, 30)");
@@ -112,24 +96,5 @@ class PaginationAndGroupingTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame('Widget A', $rows[0]['name']);
         $this->assertSame('Gadget X', $rows[1]['name']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pg_archive');
-        $raw->query('DROP TABLE IF EXISTS mi_pg_products');
-        $raw->close();
     }
 }

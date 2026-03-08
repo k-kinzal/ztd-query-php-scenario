@@ -4,54 +4,26 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests wide table (many columns) behavior with ZTD via MySQLi.
  *
  * Cross-platform parity with MysqlWideTableTest (PDO).
+ * @spec pending
  */
-class WideTableTest extends TestCase
+class WideTableTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $cols = ['id INT PRIMARY KEY'];
-        for ($i = 1; $i <= 19; $i++) {
-            $cols[] = "col{$i} VARCHAR(50)";
-        }
-        $ddl = 'CREATE TABLE mi_wide (' . implode(', ', $cols) . ')';
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_wide');
-        $raw->query($ddl);
-        $raw->close();
+        return 'CREATE TABLE mi_wide (';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_wide'];
     }
+
 
     public function testInsertAndSelectAllColumns(): void
     {
@@ -105,28 +77,5 @@ class WideTableTest extends TestCase
         $row = $result->fetch_assoc();
         $this->assertSame('prep_val_1', $row['col1']);
         $this->assertSame('prep_val_19', $row['col19']);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_wide');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

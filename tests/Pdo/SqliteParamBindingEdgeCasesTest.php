@@ -5,30 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared statement parameter binding edge cases — mixed param types,
  * named vs positional params, rebinding, NULL binding, and type coercion.
+ * @spec pending
  */
-class SqliteParamBindingEdgeCasesTest extends TestCase
+class SqliteParamBindingEdgeCasesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE pb_items (id INTEGER PRIMARY KEY, name TEXT, price REAL, active INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO pb_items (id, name, price, active) VALUES (1, 'Widget', 10.50, 1)");
-        $this->pdo->exec("INSERT INTO pb_items (id, name, price, active) VALUES (2, 'Gadget', 25.00, 0)");
-        $this->pdo->exec("INSERT INTO pb_items (id, name, price, active) VALUES (3, 'Doohickey', 5.75, 1)");
+        return 'CREATE TABLE pb_items (id INTEGER PRIMARY KEY, name TEXT, price REAL, active INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pb_items'];
+    }
+
 
     public function testPositionalParams(): void
     {

@@ -5,29 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests SQLite-specific features: typeof(), instr(), printf(), IIF(), hex/unhex, group_concat order.
+ * @spec pending
  */
-class SqliteSpecificFeaturesTest extends TestCase
+class SqliteSpecificFeaturesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT, price REAL, code TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO items (id, name, price, code) VALUES (1, 'Widget', 9.99, 'W001')");
-        $this->pdo->exec("INSERT INTO items (id, name, price, code) VALUES (2, 'Gadget', 29.99, 'G002')");
-        $this->pdo->exec("INSERT INTO items (id, name, price, code) VALUES (3, 'Gizmo', 19.99, 'GZ03')");
+        return 'CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT, price REAL, code TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['items'];
+    }
+
 
     public function testTypeof(): void
     {

@@ -4,45 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests window functions with FRAME clauses (ROWS/RANGE BETWEEN) on MySQLi.
+ * @spec pending
  */
-class WindowFrameTest extends TestCase
+class WindowFrameTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_wf_sales');
-        $raw->query('CREATE TABLE mi_wf_sales (id INT PRIMARY KEY, month VARCHAR(10), amount DECIMAL(10,2))');
-        $raw->close();
+        return 'CREATE TABLE mi_wf_sales (id INT PRIMARY KEY, month VARCHAR(10), amount DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_wf_sales'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_wf_sales (id, month, amount) VALUES (1, '2024-01', 100)");
         $this->mysqli->query("INSERT INTO mi_wf_sales (id, month, amount) VALUES (2, '2024-02', 200)");
@@ -122,23 +105,5 @@ class WindowFrameTest extends TestCase
         $this->assertCount(4, $rows);
         $this->assertEqualsWithDelta(100.0, (float) $rows[0]['cumulative'], 0.01);
         $this->assertEqualsWithDelta(600.0, (float) $rows[1]['cumulative'], 0.01);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_wf_sales');
-        $raw->close();
     }
 }

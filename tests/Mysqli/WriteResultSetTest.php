@@ -4,43 +4,21 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
-class WriteResultSetTest extends TestCase
+/** @spec SPEC-4.5 */
+class WriteResultSetTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return 'CREATE TABLE write_result_test (id INT PRIMARY KEY, val VARCHAR(255))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS write_result_test');
-        $raw->query('CREATE TABLE write_result_test (id INT PRIMARY KEY, val VARCHAR(255))');
-        $raw->close();
-
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['write_result_test'];
     }
+
 
     public function testInsertResultHasExhaustedCursor(): void
     {
@@ -67,23 +45,5 @@ class WriteResultSetTest extends TestCase
 
         $this->assertInstanceOf(\mysqli_result::class, $result);
         $this->assertNull($result->fetch_assoc());
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS write_result_test');
-        $raw->close();
     }
 }

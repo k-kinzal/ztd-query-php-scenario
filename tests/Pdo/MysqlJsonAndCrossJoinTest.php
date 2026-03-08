@@ -5,47 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests JSON data handling and CROSS JOIN patterns on MySQL PDO.
+ * @spec pending
  */
-class MysqlJsonAndCrossJoinTest extends TestCase
+class MysqlJsonAndCrossJoinTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_jcj_products');
-        $raw->exec('DROP TABLE IF EXISTS mysql_jcj_colors');
-        $raw->exec('DROP TABLE IF EXISTS mysql_jcj_sizes');
-        $raw->exec('CREATE TABLE mysql_jcj_products (id INT PRIMARY KEY, name VARCHAR(255), metadata JSON)');
-        $raw->exec('CREATE TABLE mysql_jcj_colors (id INT PRIMARY KEY, color VARCHAR(50))');
-        $raw->exec('CREATE TABLE mysql_jcj_sizes (id INT PRIMARY KEY, size VARCHAR(50))');
+        return [
+            'CREATE TABLE mysql_jcj_products (id INT PRIMARY KEY, name VARCHAR(255), metadata JSON)',
+            'CREATE TABLE mysql_jcj_colors (id INT PRIMARY KEY, color VARCHAR(50))',
+            'CREATE TABLE mysql_jcj_sizes (id INT PRIMARY KEY, size VARCHAR(50))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_jcj_products', 'mysql_jcj_colors', 'mysql_jcj_sizes'];
     }
+
 
     public function testInsertAndSelectJsonData(): void
     {
@@ -124,18 +105,5 @@ class MysqlJsonAndCrossJoinTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(2, $rows);
         $this->assertSame('Red', $rows[0]['color']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_jcj_products');
-        $raw->exec('DROP TABLE IF EXISTS mysql_jcj_colors');
-        $raw->exec('DROP TABLE IF EXISTS mysql_jcj_sizes');
     }
 }

@@ -14,6 +14,7 @@ use ZtdQuery\Config\UnknownSchemaBehavior;
 use ZtdQuery\Config\UnsupportedSqlBehavior;
 use ZtdQuery\Config\ZtdConfig;
 
+/** @spec SPEC-9.1, SPEC-9.2 */
 class ConfigurationTest extends TestCase
 {
     public static function setUpBeforeClass(): void

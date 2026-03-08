@@ -5,49 +5,35 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests table aliasing patterns with CTE rewriting on MySQL PDO.
+ * @spec pending
  */
-class MysqlAliasedTableTest extends TestCase
+class MysqlAliasedTableTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS at_tasks');
-        $raw->exec('DROP TABLE IF EXISTS at_users');
-        $raw->exec('CREATE TABLE at_users (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(20))');
-        $raw->exec('CREATE TABLE at_tasks (id INT PRIMARY KEY, user_id INT, title VARCHAR(50), status VARCHAR(20))');
+        return [
+            'CREATE TABLE at_users (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(20))',
+            'CREATE TABLE at_tasks (id INT PRIMARY KEY, user_id INT, title VARCHAR(50), status VARCHAR(20))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['at_tasks', 'at_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO at_users (id, name, dept) VALUES (1, 'Alice', 'Eng')");
         $this->pdo->exec("INSERT INTO at_users (id, name, dept) VALUES (2, 'Bob', 'Sales')");
         $this->pdo->exec("INSERT INTO at_users (id, name, dept) VALUES (3, 'Carol', 'Eng')");
-
         $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (1, 1, 'Build', 'done')");
         $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (2, 1, 'Test', 'open')");
         $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (3, 2, 'Sell', 'open')");
@@ -107,17 +93,5 @@ class MysqlAliasedTableTest extends TestCase
         $stmt->execute(['Eng', 'done']);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(2, $rows);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS at_tasks');
-        $raw->exec('DROP TABLE IF EXISTS at_users');
     }
 }

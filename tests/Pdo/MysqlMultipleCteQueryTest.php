@@ -5,37 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests user-defined CTEs (WITH ... AS) in shadow queries on MySQL.
  *
  * ZTD adds its own CTE for shadow data. User-defined CTEs may be
  * overwritten during query rewriting. Documents the behavior on MySQL.
+ * @spec pending
  */
-class MysqlMultipleCteQueryTest extends TestCase
+class MysqlMultipleCteQueryTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_cte_orders');
-        $raw->exec('CREATE TABLE pdo_cte_orders (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount DECIMAL(10,2))');
+        return 'CREATE TABLE pdo_cte_orders (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_cte_orders'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pdo_cte_orders VALUES (1, 'Alice', 'Widget', 100.00)");
         $this->pdo->exec("INSERT INTO pdo_cte_orders VALUES (2, 'Alice', 'Gadget', 200.00)");
         $this->pdo->exec("INSERT INTO pdo_cte_orders VALUES (3, 'Bob', 'Widget', 150.00)");
         $this->pdo->exec("INSERT INTO pdo_cte_orders VALUES (4, 'Bob', 'Gadget', 50.00)");
@@ -107,14 +102,5 @@ class MysqlMultipleCteQueryTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_cte_orders');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_cte_orders');
-        } catch (\Exception $e) {
-        }
     }
 }

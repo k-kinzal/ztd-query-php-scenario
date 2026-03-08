@@ -5,57 +5,41 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL LATERAL subquery through CTE shadow.
  *
  * LATERAL allows a subquery in FROM to reference columns from preceding
  * FROM items. This is a PostgreSQL-specific feature.
+ * @spec pending
  */
-class PostgresLateralSubqueryTest extends TestCase
+class PostgresLateralSubqueryTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_lat_order_items');
-        $raw->exec('DROP TABLE IF EXISTS pg_lat_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_lat_customers');
-        $raw->exec('CREATE TABLE pg_lat_customers (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->exec('CREATE TABLE pg_lat_orders (id INT PRIMARY KEY, customer_id INT, amount DECIMAL(10,2))');
-        $raw->exec('CREATE TABLE pg_lat_order_items (id INT PRIMARY KEY, order_id INT, product VARCHAR(50), qty INT)');
+        return [
+            'CREATE TABLE pg_lat_customers (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE pg_lat_orders (id INT PRIMARY KEY, customer_id INT, amount DECIMAL(10,2))',
+            'CREATE TABLE pg_lat_order_items (id INT PRIMARY KEY, order_id INT, product VARCHAR(50), qty INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_lat_order_items', 'pg_lat_orders', 'pg_lat_customers'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_lat_customers VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO pg_lat_customers VALUES (2, 'Bob')");
-
         $this->pdo->exec("INSERT INTO pg_lat_orders VALUES (1, 1, 100.00)");
         $this->pdo->exec("INSERT INTO pg_lat_orders VALUES (2, 1, 200.00)");
         $this->pdo->exec("INSERT INTO pg_lat_orders VALUES (3, 2, 50.00)");
-
         $this->pdo->exec("INSERT INTO pg_lat_order_items VALUES (1, 1, 'Widget', 2)");
         $this->pdo->exec("INSERT INTO pg_lat_order_items VALUES (2, 1, 'Gadget', 1)");
         $this->pdo->exec("INSERT INTO pg_lat_order_items VALUES (3, 2, 'Widget', 5)");
@@ -158,20 +142,5 @@ class PostgresLateralSubqueryTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_lat_customers');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_lat_order_items');
-            $raw->exec('DROP TABLE IF EXISTS pg_lat_orders');
-            $raw->exec('DROP TABLE IF EXISTS pg_lat_customers');
-        } catch (\Exception $e) {
-        }
     }
 }

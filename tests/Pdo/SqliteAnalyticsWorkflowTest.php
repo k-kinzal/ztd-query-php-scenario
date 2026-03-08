@@ -5,49 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests a realistic analytics workflow: sales reporting, customer segmentation,
  * time-series analysis, and reporting queries using window functions, CTEs, and aggregations.
+ * @spec pending
  */
-class SqliteAnalyticsWorkflowTest extends TestCase
+class SqliteAnalyticsWorkflowTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, segment TEXT, joined_date TEXT)');
-        $raw->exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, order_date TEXT, total REAL, status TEXT)');
-        $raw->exec('CREATE TABLE order_items (id INTEGER PRIMARY KEY, order_id INTEGER, product TEXT, quantity INTEGER, price REAL)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        // Seed customers
-        $this->pdo->exec("INSERT INTO customers VALUES (1, 'Alice', 'premium', '2023-01-15')");
-        $this->pdo->exec("INSERT INTO customers VALUES (2, 'Bob', 'standard', '2023-03-20')");
-        $this->pdo->exec("INSERT INTO customers VALUES (3, 'Charlie', 'premium', '2023-06-01')");
-        $this->pdo->exec("INSERT INTO customers VALUES (4, 'Diana', 'standard', '2024-01-10')");
-
-        // Seed orders
-        $this->pdo->exec("INSERT INTO orders VALUES (1, 1, '2024-01-05', 150.00, 'completed')");
-        $this->pdo->exec("INSERT INTO orders VALUES (2, 1, '2024-02-10', 200.00, 'completed')");
-        $this->pdo->exec("INSERT INTO orders VALUES (3, 2, '2024-01-15', 75.00, 'completed')");
-        $this->pdo->exec("INSERT INTO orders VALUES (4, 2, '2024-03-01', 120.00, 'cancelled')");
-        $this->pdo->exec("INSERT INTO orders VALUES (5, 3, '2024-02-20', 300.00, 'completed')");
-        $this->pdo->exec("INSERT INTO orders VALUES (6, 4, '2024-03-15', 50.00, 'completed')");
-
-        // Seed order items
-        $this->pdo->exec("INSERT INTO order_items VALUES (1, 1, 'Widget', 2, 50.00)");
-        $this->pdo->exec("INSERT INTO order_items VALUES (2, 1, 'Gadget', 1, 50.00)");
-        $this->pdo->exec("INSERT INTO order_items VALUES (3, 2, 'Widget', 4, 50.00)");
-        $this->pdo->exec("INSERT INTO order_items VALUES (4, 3, 'Gizmo', 3, 25.00)");
-        $this->pdo->exec("INSERT INTO order_items VALUES (5, 5, 'Widget', 6, 50.00)");
+        return [
+            'CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, segment TEXT, joined_date TEXT)',
+            'CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, order_date TEXT, total REAL, status TEXT)',
+            'CREATE TABLE order_items (id INTEGER PRIMARY KEY, order_id INTEGER, product TEXT, quantity INTEGER, price REAL)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['customers', 'orders', 'order_items'];
+    }
+
 
     public function testRevenueBySegment(): void
     {

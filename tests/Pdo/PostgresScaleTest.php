@@ -5,43 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests shadow store behavior at higher scale on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresScaleTest extends TestCase
+class PostgresScaleTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS scale_items');
-        $raw->exec('CREATE TABLE scale_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), score INT)');
+        return 'CREATE TABLE scale_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['scale_items'];
     }
+
 
     public function testPreparedBulkInsert200Rows(): void
     {
@@ -80,16 +61,5 @@ class PostgresScaleTest extends TestCase
         $this->pdo->exec("DELETE FROM scale_items WHERE id <= 12");
         $cnt2 = (int) $this->pdo->query('SELECT COUNT(*) AS c FROM scale_items')->fetch(PDO::FETCH_ASSOC)['c'];
         $this->assertSame(38, $cnt2);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS scale_items');
     }
 }

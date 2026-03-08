@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests conditional aggregation, FILTER clause, multi-column ORDER BY on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresConditionalAggregationTest extends TestCase
+class PostgresConditionalAggregationTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_ca_orders');
-        $raw->exec('CREATE TABLE pg_ca_orders (id INT PRIMARY KEY, customer VARCHAR(50), status VARCHAR(20), amount NUMERIC(10,2), region VARCHAR(20))');
+        return 'CREATE TABLE pg_ca_orders (id INT PRIMARY KEY, customer VARCHAR(50), status VARCHAR(20), amount NUMERIC(10,2), region VARCHAR(20))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_ca_orders'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_ca_orders VALUES (1, 'Alice', 'completed', 100, 'north')");
         $this->pdo->exec("INSERT INTO pg_ca_orders VALUES (2, 'Bob', 'completed', 200, 'south')");
@@ -105,16 +91,5 @@ class PostgresConditionalAggregationTest extends TestCase
         ");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame(4, (int) $row['completed']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_ca_orders');
     }
 }

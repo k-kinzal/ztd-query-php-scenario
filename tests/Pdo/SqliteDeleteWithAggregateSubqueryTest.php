@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests DELETE with aggregate-based subquery conditions on SQLite.
@@ -15,28 +13,23 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - DELETE WHERE id IN (SELECT ... GROUP BY ... HAVING COUNT(...) > N)
  * - DELETE WHERE (SELECT COUNT(*) FROM ...) = 0
  * - DELETE WHERE col > (SELECT AVG(col) FROM ...)
+ * @spec pending
  */
-class SqliteDeleteWithAggregateSubqueryTest extends TestCase
+class SqliteDeleteWithAggregateSubqueryTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE das_orders (id INT PRIMARY KEY, customer_id INT, amount DECIMAL(10,2))');
-        $raw->exec('CREATE TABLE das_customers (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO das_customers VALUES (1, 'Alice', 'active')");
-        $this->pdo->exec("INSERT INTO das_customers VALUES (2, 'Bob', 'active')");
-        $this->pdo->exec("INSERT INTO das_customers VALUES (3, 'Charlie', 'inactive')");
-
-        $this->pdo->exec("INSERT INTO das_orders VALUES (1, 1, 100.00)");
-        $this->pdo->exec("INSERT INTO das_orders VALUES (2, 1, 200.00)");
-        $this->pdo->exec("INSERT INTO das_orders VALUES (3, 1, 50.00)");
-        $this->pdo->exec("INSERT INTO das_orders VALUES (4, 2, 75.00)");
-        $this->pdo->exec("INSERT INTO das_orders VALUES (5, 3, 10.00)");
+        return [
+            'CREATE TABLE das_orders (id INT PRIMARY KEY, customer_id INT, amount DECIMAL(10,2))',
+            'CREATE TABLE das_customers (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['das_orders', 'das_customers'];
+    }
+
 
     /**
      * DELETE orders above average amount.

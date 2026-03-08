@@ -5,44 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests UNION/EXCEPT/INTERSECT queries with mutations on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresUnionMutationTest extends TestCase
+class PostgresUnionMutationTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS um_contractors');
-        $raw->exec('DROP TABLE IF EXISTS um_employees');
-        $raw->exec('CREATE TABLE um_employees (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(20))');
-        $raw->exec('CREATE TABLE um_contractors (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(20))');
+        return [
+            'CREATE TABLE um_employees (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(20))',
+            'CREATE TABLE um_contractors (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(20))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['um_contractors', 'um_employees'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO um_employees (id, name, dept) VALUES (1, 'Alice', 'Eng')");
         $this->pdo->exec("INSERT INTO um_employees (id, name, dept) VALUES (2, 'Bob', 'Sales')");
@@ -118,17 +105,5 @@ class PostgresUnionMutationTest extends TestCase
         $stmt->execute(['Eng', 'Eng']);
         $names = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'name');
         $this->assertSame(['Alice', 'Carol', 'Dave'], $names);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS um_contractors');
-        $raw->exec('DROP TABLE IF EXISTS um_employees');
     }
 }

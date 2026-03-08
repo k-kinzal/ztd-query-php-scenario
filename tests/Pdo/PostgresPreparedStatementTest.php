@@ -8,6 +8,7 @@ use PDO;
 use Tests\Scenarios\PreparedStatementScenario;
 use Tests\Support\AbstractPostgresPdoTestCase;
 
+/** @spec SPEC-3.2 */
 class PostgresPreparedStatementTest extends AbstractPostgresPdoTestCase
 {
     use PreparedStatementScenario;

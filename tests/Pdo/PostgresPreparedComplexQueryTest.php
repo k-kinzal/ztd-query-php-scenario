@@ -5,50 +5,36 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests prepared statements with complex queries on PostgreSQL PDO:
  * JOINs with parameters, aggregations with bindings, subqueries with params.
+ * @spec SPEC-3.3
  */
-class PostgresPreparedComplexQueryTest extends TestCase
+class PostgresPreparedComplexQueryTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_pcq_tasks');
-        $raw->exec('DROP TABLE IF EXISTS pg_pcq_users');
-        $raw->exec('CREATE TABLE pg_pcq_users (id INT PRIMARY KEY, name VARCHAR(255), role VARCHAR(50))');
-        $raw->exec('CREATE TABLE pg_pcq_tasks (id INT PRIMARY KEY, user_id INT, title VARCHAR(255), priority INT, done INT DEFAULT 0)');
+        return [
+            'CREATE TABLE pg_pcq_users (id INT PRIMARY KEY, name VARCHAR(255), role VARCHAR(50))',
+            'CREATE TABLE pg_pcq_tasks (id INT PRIMARY KEY, user_id INT, title VARCHAR(255), priority INT, done INT DEFAULT 0)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_pcq_tasks', 'pg_pcq_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_pcq_users (id, name, role) VALUES (1, 'Alice', 'admin')");
         $this->pdo->exec("INSERT INTO pg_pcq_users (id, name, role) VALUES (2, 'Bob', 'user')");
         $this->pdo->exec("INSERT INTO pg_pcq_users (id, name, role) VALUES (3, 'Charlie', 'user')");
-
         $this->pdo->exec("INSERT INTO pg_pcq_tasks (id, user_id, title, priority, done) VALUES (1, 1, 'Deploy', 1, 0)");
         $this->pdo->exec("INSERT INTO pg_pcq_tasks (id, user_id, title, priority, done) VALUES (2, 1, 'Review', 2, 1)");
         $this->pdo->exec("INSERT INTO pg_pcq_tasks (id, user_id, title, priority, done) VALUES (3, 2, 'Test', 1, 0)");
@@ -128,17 +114,5 @@ class PostgresPreparedComplexQueryTest extends TestCase
         $stmt->execute([':role' => 'user', ':done' => 0]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertGreaterThanOrEqual(2, count($rows));
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_pcq_tasks');
-        $raw->exec('DROP TABLE IF EXISTS pg_pcq_users');
     }
 }

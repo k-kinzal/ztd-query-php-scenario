@@ -5,34 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests shadow store behavior with a large dataset (100+ rows) on PostgreSQL.
  *
  * Cross-platform parity with SqliteLargeDatasetTest.
+ * @spec pending
  */
-class PostgresLargeDatasetTest extends TestCase
+class PostgresLargeDatasetTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_large_test');
-        $raw->exec('CREATE TABLE pg_large_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, category VARCHAR(10))');
+        return 'CREATE TABLE pg_large_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, category VARCHAR(10))';
     }
 
+    protected function getTableNames(): array
+    {
+        return ['pg_large_test'];
+    }
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        parent::setUp();
 
         for ($i = 1; $i <= 100; $i++) {
             $name = "User{$i}";
@@ -109,14 +103,5 @@ class PostgresLargeDatasetTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_large_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_large_test');
-        } catch (\Exception $e) {
-        }
     }
 }

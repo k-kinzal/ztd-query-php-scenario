@@ -4,52 +4,35 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests table aliasing patterns with CTE rewriting on MySQLi.
+ * @spec pending
  */
-class AliasedTableTest extends TestCase
+class AliasedTableTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_at_tasks');
-        $raw->query('DROP TABLE IF EXISTS mi_at_users');
-        $raw->query('CREATE TABLE mi_at_users (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(20))');
-        $raw->query('CREATE TABLE mi_at_tasks (id INT PRIMARY KEY, user_id INT, title VARCHAR(50), status VARCHAR(20))');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_at_users (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(20))',
+            'CREATE TABLE mi_at_tasks (id INT PRIMARY KEY, user_id INT, title VARCHAR(50), status VARCHAR(20))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_at_tasks', 'mi_at_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_at_users (id, name, dept) VALUES (1, 'Alice', 'Eng')");
         $this->mysqli->query("INSERT INTO mi_at_users (id, name, dept) VALUES (2, 'Bob', 'Sales')");
         $this->mysqli->query("INSERT INTO mi_at_users (id, name, dept) VALUES (3, 'Carol', 'Eng')");
-
         $this->mysqli->query("INSERT INTO mi_at_tasks (id, user_id, title, status) VALUES (1, 1, 'Build', 'done')");
         $this->mysqli->query("INSERT INTO mi_at_tasks (id, user_id, title, status) VALUES (2, 1, 'Test', 'open')");
         $this->mysqli->query("INSERT INTO mi_at_tasks (id, user_id, title, status) VALUES (3, 2, 'Sell', 'open')");
@@ -96,24 +79,5 @@ class AliasedTableTest extends TestCase
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertSame('Eng', $rows[0]['dept']);
         $this->assertSame(3, (int) $rows[0]['task_count']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_at_tasks');
-        $raw->query('DROP TABLE IF EXISTS mi_at_users');
-        $raw->close();
     }
 }

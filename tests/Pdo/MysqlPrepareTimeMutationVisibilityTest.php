@@ -5,45 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests how CTE snapshotting at prepare time affects visibility of mutations
  * that occur between prepare() and execute() on MySQL.
+ * @spec pending
  */
-class MysqlPrepareTimeMutationVisibilityTest extends TestCase
+class MysqlPrepareTimeMutationVisibilityTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS vis_orders_m');
-        $raw->exec('DROP TABLE IF EXISTS vis_users_m');
-        $raw->exec('CREATE TABLE vis_users_m (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->exec('CREATE TABLE vis_orders_m (id INT PRIMARY KEY, user_id INT, amount INT)');
+        return [
+            'CREATE TABLE vis_users_m (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE vis_orders_m (id INT PRIMARY KEY, user_id INT, amount INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['vis_orders_m', 'vis_users_m'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO vis_users_m VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO vis_users_m VALUES (2, 'Bob')");
@@ -124,17 +111,5 @@ class MysqlPrepareTimeMutationVisibilityTest extends TestCase
         $stmt->execute();
         $prepCount = (int) $stmt->fetchColumn();
         $this->assertSame(2, $prepCount);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS vis_orders_m');
-        $raw->exec('DROP TABLE IF EXISTS vis_users_m');
     }
 }

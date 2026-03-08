@@ -5,43 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests bindColumn() and FETCH_BOUND mode on MySQL ZTD PDO.
+ * @spec pending
  */
-class MysqlBindColumnTest extends TestCase
+class MysqlBindColumnTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS bc_mysql');
-        $raw->exec('CREATE TABLE bc_mysql (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE bc_mysql (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['bc_mysql'];
     }
+
 
     public function testBindColumnByNumber(): void
     {
@@ -86,16 +67,5 @@ class MysqlBindColumnTest extends TestCase
             $names[] = $name;
         }
         $this->assertCount(2, $names);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS bc_mysql');
     }
 }

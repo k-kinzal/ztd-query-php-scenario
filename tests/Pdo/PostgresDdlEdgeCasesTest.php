@@ -5,45 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests DDL edge cases on PostgreSQL:
  * CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, TRUNCATE isolation.
+ * @spec pending
  */
-class PostgresDdlEdgeCasesTest extends TestCase
+class PostgresDdlEdgeCasesTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_ddl_edge');
-        $raw->exec('CREATE TABLE pg_ddl_edge (id INT PRIMARY KEY, val VARCHAR(255))');
+        return [
+            'CREATE TABLE pg_ddl_edge (id INT PRIMARY KEY, val VARCHAR(255))',
+            'CREATE TABLE IF NOT EXISTS pg_ddl_edge (id INT PRIMARY KEY, val VARCHAR(255))',
+            'CREATE TABLE pg_ddl_edge (id INT PRIMARY KEY)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_ddl_edge', 'pg_nonexistent_ddl_table', 'IF'];
     }
+
 
     public function testCreateTableIfNotExistsOnExistingTable(): void
     {
@@ -97,16 +81,5 @@ class PostgresDdlEdgeCasesTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('after', $rows[0]['val']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_ddl_edge');
     }
 }

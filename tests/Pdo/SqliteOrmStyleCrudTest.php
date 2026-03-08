@@ -5,29 +5,41 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ORM-style CRUD patterns with ZTD shadow store on SQLite PDO.
  *
  * Note: Uses exec() for INSERT operations because rows inserted via
  * prepared statements cannot be subsequently updated/deleted (issue #23).
+ * @spec pending
  */
-class SqliteOrmStyleCrudTest extends TestCase
+class SqliteOrmStyleCrudTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE users (id INT PRIMARY KEY, email VARCHAR(100), name VARCHAR(50), role VARCHAR(20), created_at TEXT)',
+            'CREATE TABLE posts (id INT PRIMARY KEY, user_id INT, title VARCHAR(100), body TEXT, published INT, created_at TEXT)',
+            'CREATE TABLE comments (id INT PRIMARY KEY, post_id INT, user_id INT, body TEXT, created_at TEXT)',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['users', 'posts', 'comments'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE users (id INT PRIMARY KEY, email VARCHAR(100), name VARCHAR(50), role VARCHAR(20), created_at TEXT)');
         $this->pdo->exec('CREATE TABLE posts (id INT PRIMARY KEY, user_id INT, title VARCHAR(100), body TEXT, published INT, created_at TEXT)');
         $this->pdo->exec('CREATE TABLE comments (id INT PRIMARY KEY, post_id INT, user_id INT, body TEXT, created_at TEXT)');
-    }
+
+        }
 
     public function testTypicalCrudWorkflow(): void
     {

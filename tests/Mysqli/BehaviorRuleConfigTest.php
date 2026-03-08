@@ -16,6 +16,7 @@ use ZtdQuery\Config\ZtdConfig;
  * Tests behavior rule configuration via MySQLi.
  *
  * Cross-platform parity with MysqlBehaviorRuleRegexTest (PDO).
+ * @spec SPEC-6.2
  */
 class BehaviorRuleConfigTest extends TestCase
 {

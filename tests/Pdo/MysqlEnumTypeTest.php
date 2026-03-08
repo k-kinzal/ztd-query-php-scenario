@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests MySQL ENUM type handling with ZTD.
@@ -17,25 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * MySQL ENUM columns restrict values to a predefined set.
  * Tests whether the shadow store correctly handles ENUM values
  * through CTE rewriting.
+ * @spec pending
  */
-class MysqlEnumTypeTest extends TestCase
+class MysqlEnumTypeTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_enum_test');
-        $raw->exec("CREATE TABLE pdo_enum_test (id INT PRIMARY KEY, name VARCHAR(50), status ENUM('active', 'inactive', 'pending'), priority ENUM('low', 'medium', 'high', 'critical'))");
+        return 'CREATE TABLE pdo_enum_test (id INT PRIMARY KEY, name VARCHAR(50), status ENUM(\'active\', \'inactive\', \'pending\'), priority ENUM(\'low\', \'medium\', \'high\', \'critical\'))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        return ['pdo_enum_test'];
     }
+
 
     /**
      * INSERT with valid ENUM values.
@@ -127,14 +118,5 @@ class MysqlEnumTypeTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_enum_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_enum_test');
-        } catch (\Exception $e) {
-        }
     }
 }

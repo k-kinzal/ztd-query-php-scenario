@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests DDL-then-DML workflows in a single ZTD session on SQLite.
@@ -20,18 +19,54 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *   6. DROP TABLE
  *
  * All of these should work within a single ZTD session.
+ * @spec pending
  */
-class SqliteDdlThenDmlWorkflowTest extends TestCase
+class SqliteDdlThenDmlWorkflowTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE → INSERT → SELECT workflow.
+     */
+    public function testCreateInsertSelect(): void
+    {
+        $this->pdo->exec(',
+            'CREATE TABLE wf_test (id INTEGER PRIMARY KEY, name TEXT)',
+            'CREATE TABLE → INSERT → UPDATE → SELECT workflow.
+     */
+    public function testCreateInsertUpdateSelect(): void
+    {
+        $this->pdo->exec(',
+            'CREATE TABLE wf_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)',
+            'CREATE TABLE → INSERT → DELETE → SELECT workflow.
+     */
+    public function testCreateInsertDeleteSelect(): void
+    {
+        $this->pdo->exec(',
+            'CREATE TABLE wf_users (id INTEGER PRIMARY KEY, name TEXT)',
+            'CREATE TABLE wf_scores (user_id INTEGER, score INTEGER)',
+            'CREATE TABLE → INSERT → DROP TABLE → verify gone.
+     */
+    public function testCreateInsertDropTable(): void
+    {
+        $this->pdo->exec(',
+            'CREATE TABLE wf_temp (id INTEGER PRIMARY KEY, val TEXT)',
+            'CREATE TABLE → INSERT → DROP → CREATE same name → INSERT new data.
+     */
+    public function testDropAndRecreateTable(): void
+    {
+        $this->pdo->exec(',
+            'CREATE TABLE wf_recycle (id INTEGER PRIMARY KEY, val TEXT)',
+            'CREATE TABLE wf_recycle (id INTEGER PRIMARY KEY, val TEXT, extra TEXT)',
+            'CREATE TABLE wf_iso (id INTEGER PRIMARY KEY, val TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['wf_test', 'wf_users', 'wf_scores', 'wf_temp', 'wf_recycle', 'wf_iso'];
+    }
+
 
     /**
      * CREATE TABLE → INSERT → SELECT workflow.

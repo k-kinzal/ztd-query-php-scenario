@@ -5,31 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests advanced window function patterns and edge cases on SQLite.
  *
  * Tests FILTER clause, EXCLUDE, GROUPS frame, nth_value,
  * and other advanced window function syntax.
+ * @spec pending
  */
-class SqliteWindowGroupingEdgeCaseTest extends TestCase
+class SqliteWindowGroupingEdgeCaseTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE wge_scores (id INT PRIMARY KEY, name VARCHAR(50), score INT, category VARCHAR(20))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO wge_scores VALUES (1, 'Alice', 95, 'A')");
-        $this->pdo->exec("INSERT INTO wge_scores VALUES (2, 'Bob', 85, 'A')");
-        $this->pdo->exec("INSERT INTO wge_scores VALUES (3, 'Charlie', 90, 'B')");
-        $this->pdo->exec("INSERT INTO wge_scores VALUES (4, 'Diana', 75, 'B')");
-        $this->pdo->exec("INSERT INTO wge_scores VALUES (5, 'Eve', 88, 'A')");
+        return 'CREATE TABLE wge_scores (id INT PRIMARY KEY, name VARCHAR(50), score INT, category VARCHAR(20))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['wge_scores'];
+    }
+
 
     /**
      * FILTER clause on aggregate functions (SQLite 3.30+).

@@ -4,28 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ZTD enable/disable cycle with data persistence on SQLite.
  *
  * Ensures shadow data survives enable/disable toggle cycles and that
  * physical operations during disabled periods don't leak into shadow.
+ * @spec pending
  */
-class SqliteEnableDisableCycleDataTest extends TestCase
+class SqliteEnableDisableCycleDataTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_edc_test (id INTEGER PRIMARY KEY, name TEXT, val INTEGER)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE sl_edc_test (id INTEGER PRIMARY KEY, name TEXT, val INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_edc_test'];
+    }
+
 
     /**
      * Shadow data persists through disable/re-enable cycle.

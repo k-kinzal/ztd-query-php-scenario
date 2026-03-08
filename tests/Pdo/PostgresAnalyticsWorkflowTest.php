@@ -5,50 +5,36 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests a realistic analytics workflow on PostgreSQL with window functions, CTEs,
  * prepared statements with date params, and GENERATE_SERIES.
+ * @spec pending
  */
-class PostgresAnalyticsWorkflowTest extends TestCase
+class PostgresAnalyticsWorkflowTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_aw_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_aw_customers');
-        $raw->exec('CREATE TABLE pg_aw_customers (id INT PRIMARY KEY, name VARCHAR(255), segment VARCHAR(50))');
-        $raw->exec('CREATE TABLE pg_aw_orders (id INT PRIMARY KEY, customer_id INT, order_date DATE, total NUMERIC(10,2), status VARCHAR(20))');
+        return [
+            'CREATE TABLE pg_aw_customers (id INT PRIMARY KEY, name VARCHAR(255), segment VARCHAR(50))',
+            'CREATE TABLE pg_aw_orders (id INT PRIMARY KEY, customer_id INT, order_date DATE, total NUMERIC(10,2), status VARCHAR(20))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_aw_orders', 'pg_aw_customers'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_aw_customers VALUES (1, 'Alice', 'premium')");
         $this->pdo->exec("INSERT INTO pg_aw_customers VALUES (2, 'Bob', 'standard')");
         $this->pdo->exec("INSERT INTO pg_aw_customers VALUES (3, 'Charlie', 'premium')");
-
         $this->pdo->exec("INSERT INTO pg_aw_orders VALUES (1, 1, '2024-01-15', 150.00, 'completed')");
         $this->pdo->exec("INSERT INTO pg_aw_orders VALUES (2, 1, '2024-02-10', 200.00, 'completed')");
         $this->pdo->exec("INSERT INTO pg_aw_orders VALUES (3, 2, '2024-01-20', 75.00, 'completed')");
@@ -128,17 +114,5 @@ class PostgresAnalyticsWorkflowTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame(2, (int) $rows[0]['customer_id']); // Bob only ordered in Jan
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_aw_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_aw_customers');
     }
 }

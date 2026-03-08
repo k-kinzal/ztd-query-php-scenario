@@ -5,26 +5,26 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ZtdPdo::quote() with different PDO::PARAM_* types on SQLite.
  *
  * SQLite in-memory, no container needed.
+ * @spec pending
  */
-class SqliteQuoteParamTypesTest extends TestCase
+class SqliteQuoteParamTypesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sq_qt_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE sq_qt_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sq_qt_test'];
+    }
+
 
     /**
      * quote() with default PARAM_STR.

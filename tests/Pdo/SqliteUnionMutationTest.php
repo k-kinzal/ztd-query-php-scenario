@@ -5,36 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests UNION queries with mutations — verifying that UNION correctly
  * reflects shadow store changes (INSERT, UPDATE, DELETE) and works
  * with various UNION patterns.
+ * @spec pending
  */
-class SqliteUnionMutationTest extends TestCase
+class SqliteUnionMutationTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE um_employees (id INTEGER PRIMARY KEY, name TEXT, dept TEXT)');
-        $raw->exec('CREATE TABLE um_contractors (id INTEGER PRIMARY KEY, name TEXT, dept TEXT)');
-        $raw->exec('CREATE TABLE um_results (id INTEGER PRIMARY KEY, source TEXT, name TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO um_employees (id, name, dept) VALUES (1, 'Alice', 'Eng')");
-        $this->pdo->exec("INSERT INTO um_employees (id, name, dept) VALUES (2, 'Bob', 'Sales')");
-        $this->pdo->exec("INSERT INTO um_employees (id, name, dept) VALUES (3, 'Carol', 'Eng')");
-
-        $this->pdo->exec("INSERT INTO um_contractors (id, name, dept) VALUES (1, 'Dave', 'Eng')");
-        $this->pdo->exec("INSERT INTO um_contractors (id, name, dept) VALUES (2, 'Eve', 'Ops')");
+        return [
+            'CREATE TABLE um_employees (id INTEGER PRIMARY KEY, name TEXT, dept TEXT)',
+            'CREATE TABLE um_contractors (id INTEGER PRIMARY KEY, name TEXT, dept TEXT)',
+            'CREATE TABLE um_results (id INTEGER PRIMARY KEY, source TEXT, name TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['um_employees', 'um_contractors', 'um_results'];
+    }
+
 
     public function testUnionReflectsInserts(): void
     {

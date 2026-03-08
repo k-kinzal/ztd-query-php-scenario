@@ -5,30 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests NULL handling edge cases: UPDATE SET NULL, IS NULL after mutation,
  * COALESCE chains, NULL in aggregations, NULL in CASE, and NULL comparisons.
+ * @spec pending
  */
-class SqliteNullHandlingEdgeCasesTest extends TestCase
+class SqliteNullHandlingEdgeCasesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE contacts (id INTEGER PRIMARY KEY, name TEXT, email TEXT, phone TEXT, notes TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO contacts VALUES (1, 'Alice', 'alice@test.com', '555-0001', 'VIP customer')");
-        $this->pdo->exec("INSERT INTO contacts VALUES (2, 'Bob', 'bob@test.com', NULL, NULL)");
-        $this->pdo->exec("INSERT INTO contacts VALUES (3, 'Charlie', NULL, '555-0003', 'New lead')");
+        return 'CREATE TABLE contacts (id INTEGER PRIMARY KEY, name TEXT, email TEXT, phone TEXT, notes TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['contacts'];
+    }
+
 
     public function testUpdateSetToNull(): void
     {

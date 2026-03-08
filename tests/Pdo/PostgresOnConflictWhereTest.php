@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL INSERT ... ON CONFLICT DO UPDATE ... WHERE on ZTD.
@@ -21,35 +17,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * The PgSqlParser::extractOnConflictUpdateColumns() strips the WHERE clause
  * (line 253), so UpsertMutation does not enforce it. This means conditional
  * upserts may update rows that should be left unchanged.
+ * @spec pending
  */
-class PostgresOnConflictWhereTest extends TestCase
+class PostgresOnConflictWhereTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_ocw_test');
-        $raw->exec('CREATE TABLE pg_ocw_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, active BOOLEAN DEFAULT TRUE)');
+        return 'CREATE TABLE pg_ocw_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, active BOOLEAN DEFAULT TRUE)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_ocw_test'];
     }
+
 
     /**
      * ON CONFLICT DO UPDATE without WHERE — always updates on conflict.
@@ -152,14 +133,5 @@ class PostgresOnConflictWhereTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_ocw_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_ocw_test');
-        } catch (\Exception $e) {
-        }
     }
 }

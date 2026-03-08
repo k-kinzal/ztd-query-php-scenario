@@ -5,44 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests that the ZTD shadow store is independent of physical transaction state (PostgreSQL PDO).
  * Shadow data persists after rollback; commit does not flush shadow to physical.
+ * @spec SPEC-4.8
  */
-class PostgresTransactionShadowInteractionTest extends TestCase
+class PostgresTransactionShadowInteractionTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_txs_items');
-        $raw->exec('CREATE TABLE pg_txs_items (id INT PRIMARY KEY, name VARCHAR(50), price NUMERIC(10,2))');
+        return 'CREATE TABLE pg_txs_items (id INT PRIMARY KEY, name VARCHAR(50), price NUMERIC(10,2))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_txs_items'];
     }
+
 
     public function testShadowDataPersistsAfterRollback(): void
     {
@@ -116,16 +97,5 @@ class PostgresTransactionShadowInteractionTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame('Prepared', $rows[0]['name']);
         $this->assertSame('Also Prepared', $rows[1]['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_txs_items');
     }
 }

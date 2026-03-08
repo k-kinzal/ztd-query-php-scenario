@@ -4,46 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests shadow store behavior at higher scale on MySQLi.
+ * @spec pending
  */
-class ScaleTest extends TestCase
+class ScaleTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_scale_items');
-        $raw->query('CREATE TABLE mi_scale_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), score INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_scale_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_scale_items'];
     }
+
 
     public function testPreparedBulkInsert200Rows(): void
     {
@@ -110,23 +88,5 @@ class ScaleTest extends TestCase
         $result2 = $this->mysqli->query('SELECT MAX(score) AS max_score FROM mi_scale_items WHERE id > 50');
         $row2 = $result2->fetch_assoc();
         $this->assertSame(100, (int) $row2['max_score']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_scale_items');
-        $raw->close();
     }
 }

@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests ZtdPdo::quote() with different PDO::PARAM_* types on MySQL.
@@ -17,25 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * ZtdPdo::quote() delegates to the inner PDO connection.
  * This verifies that quote() works correctly with ZTD enabled
  * for various parameter types.
+ * @spec pending
  */
-class MysqlQuoteParamTypesTest extends TestCase
+class MysqlQuoteParamTypesTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_quote_test');
-        $raw->exec('CREATE TABLE pdo_quote_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, active BOOLEAN)');
+        return 'CREATE TABLE pdo_quote_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, active BOOLEAN)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        return ['pdo_quote_test'];
     }
+
 
     /**
      * quote() with default PARAM_STR.
@@ -127,14 +118,5 @@ class MysqlQuoteParamTypesTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_quote_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_quote_test');
-        } catch (\Exception $e) {
-        }
     }
 }

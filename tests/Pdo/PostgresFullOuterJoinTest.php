@@ -5,50 +5,36 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests FULL OUTER JOIN on PostgreSQL — a join type not available on MySQL or SQLite.
  * Verifies that CTE rewriter correctly handles FULL OUTER JOIN with shadow tables.
+ * @spec pending
  */
-class PostgresFullOuterJoinTest extends TestCase
+class PostgresFullOuterJoinTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_foj_students');
-        $raw->exec('DROP TABLE IF EXISTS pg_foj_scores');
-        $raw->exec('CREATE TABLE pg_foj_students (id INT PRIMARY KEY, name VARCHAR(255))');
-        $raw->exec('CREATE TABLE pg_foj_scores (id INT PRIMARY KEY, student_id INT, subject VARCHAR(100), score INT)');
+        return [
+            'CREATE TABLE pg_foj_students (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE pg_foj_scores (id INT PRIMARY KEY, student_id INT, subject VARCHAR(100), score INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_foj_students', 'pg_foj_scores'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_foj_students (id, name) VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO pg_foj_students (id, name) VALUES (2, 'Bob')");
         $this->pdo->exec("INSERT INTO pg_foj_students (id, name) VALUES (3, 'Charlie')");
-
         $this->pdo->exec("INSERT INTO pg_foj_scores (id, student_id, subject, score) VALUES (1, 1, 'Math', 95)");
         $this->pdo->exec("INSERT INTO pg_foj_scores (id, student_id, subject, score) VALUES (2, 1, 'Science', 88)");
         $this->pdo->exec("INSERT INTO pg_foj_scores (id, student_id, subject, score) VALUES (3, 2, 'Math', 72)");
@@ -122,17 +108,5 @@ class PostgresFullOuterJoinTest extends TestCase
         $names = array_column($rows, 'name');
         $this->assertContains('Alice', $names);
         $this->assertContains('Charlie', $names);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_foj_scores');
-        $raw->exec('DROP TABLE IF EXISTS pg_foj_students');
     }
 }

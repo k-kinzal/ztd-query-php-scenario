@@ -5,33 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Investigates UPDATE with IN (subquery containing GROUP BY HAVING) on SQLite.
  * This appears to cause "incomplete input" errors in the CTE rewriter.
+ * @spec pending
  */
-class SqliteUpdateSubqueryBugTest extends TestCase
+class SqliteUpdateSubqueryBugTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, tier TEXT)');
-        $raw->exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, total REAL, status TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO users (id, name, tier) VALUES (1, 'Alice', 'standard')");
-        $this->pdo->exec("INSERT INTO users (id, name, tier) VALUES (2, 'Bob', 'standard')");
-        $this->pdo->exec("INSERT INTO orders (id, user_id, total, status) VALUES (1, 1, 500, 'completed')");
-        $this->pdo->exec("INSERT INTO orders (id, user_id, total, status) VALUES (2, 1, 300, 'completed')");
-        $this->pdo->exec("INSERT INTO orders (id, user_id, total, status) VALUES (3, 2, 100, 'completed')");
+        return [
+            'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, tier TEXT)',
+            'CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, total REAL, status TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['users', 'orders'];
+    }
+
 
     public function testSimpleUpdateWithInSubquery(): void
     {

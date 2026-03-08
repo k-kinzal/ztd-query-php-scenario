@@ -5,44 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests utility methods: getAvailableDrivers, lastInsertId, errorCode, errorInfo,
  * setAttribute/getAttribute on PostgreSQL via PDO.
+ * @spec SPEC-4.9
  */
-class PostgresUtilityMethodsTest extends TestCase
+class PostgresUtilityMethodsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_util_test');
-        $raw->exec('CREATE TABLE pg_util_test (id SERIAL PRIMARY KEY, val VARCHAR(255))');
+        return 'CREATE TABLE pg_util_test (id SERIAL PRIMARY KEY, val VARCHAR(255))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_util_test'];
     }
+
 
     public function testGetAvailableDrivers(): void
     {
@@ -85,16 +66,5 @@ class PostgresUtilityMethodsTest extends TestCase
         $quoted = $this->pdo->quote("it's a test");
         $this->assertIsString($quoted);
         $this->assertStringContainsString("it", $quoted);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_util_test');
     }
 }

@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests EXCEPT and INTERSECT on PostgreSQL PDO.
  *
  * Unlike MySQL where these throw, PostgreSQL supports EXCEPT/INTERSECT natively.
+ * @spec SPEC-3.3d
  */
 class PostgresExceptIntersectTest extends TestCase
 {

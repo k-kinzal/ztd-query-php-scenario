@@ -5,25 +5,33 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests common statement reuse patterns (ORM-style) with ZTD on SQLite.
  * Focuses on patterns like prepare-once/execute-many, batch reads, and mixed workflows.
+ * @spec pending
  */
-class SqliteStatementReusePatternTest extends TestCase
+class SqliteStatementReusePatternTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE reuse (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), amount INT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['reuse'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE reuse (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), amount INT)');
-    }
+
+        }
 
     public function testBatchInsertViaPreparedStatement(): void
     {

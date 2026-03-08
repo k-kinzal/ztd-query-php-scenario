@@ -11,6 +11,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdoException;
 use ZtdQuery\Config\UnsupportedSqlBehavior;
 use ZtdQuery\Config\ZtdConfig;
 
+/** @spec SPEC-9.1, SPEC-9.2 */
 class SqliteConfigurationTest extends TestCase
 {
     private PDO $raw;

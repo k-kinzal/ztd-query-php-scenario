@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests INSERT with DEFAULT keyword on PostgreSQL PDO ZTD.
@@ -18,39 +14,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * which PostgreSQL rejects: "DEFAULT is not allowed in this context".
  *
  * Both INSERT ... DEFAULT VALUES and INSERT ... VALUES (DEFAULT) fail under ZTD.
+ * @spec pending
  */
-class PostgresInsertDefaultValuesTest extends TestCase
+class PostgresInsertDefaultValuesTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_idef_test');
-        $raw->exec('CREATE TABLE pg_idef_test (
+        return 'CREATE TABLE pg_idef_test (
             id SERIAL PRIMARY KEY,
-            name VARCHAR(50) DEFAULT \'default_name\',
+            name VARCHAR(50) DEFAULT \\\'default_name\\\',
             score INT DEFAULT 100
-        )');
+        )';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_idef_test'];
     }
+
 
     /**
      * INSERT ... DEFAULT VALUES fails under ZTD.
@@ -119,14 +100,5 @@ class PostgresInsertDefaultValuesTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_idef_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_idef_test');
-        } catch (\Exception $e) {
-        }
     }
 }

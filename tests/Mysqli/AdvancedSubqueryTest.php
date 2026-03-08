@@ -4,61 +4,42 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests advanced subquery patterns on MySQLi to stress the CTE rewriter:
  * nested subqueries, subqueries in UPDATE SET, EXISTS, scalar subqueries.
+ * @spec pending
  */
-class AdvancedSubqueryTest extends TestCase
+class AdvancedSubqueryTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_advsq_projects');
-        $raw->query('DROP TABLE IF EXISTS mi_advsq_employees');
-        $raw->query('DROP TABLE IF EXISTS mi_advsq_departments');
-        $raw->query('CREATE TABLE mi_advsq_departments (id INT PRIMARY KEY, name VARCHAR(255), budget DECIMAL(12,2))');
-        $raw->query('CREATE TABLE mi_advsq_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, salary DECIMAL(10,2), active TINYINT DEFAULT 1)');
-        $raw->query('CREATE TABLE mi_advsq_projects (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, status VARCHAR(50))');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_advsq_departments (id INT PRIMARY KEY, name VARCHAR(255), budget DECIMAL(12,2))',
+            'CREATE TABLE mi_advsq_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, salary DECIMAL(10,2), active TINYINT DEFAULT 1)',
+            'CREATE TABLE mi_advsq_projects (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, status VARCHAR(50))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_advsq_projects', 'mi_advsq_employees', 'mi_advsq_departments'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_advsq_departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
         $this->mysqli->query("INSERT INTO mi_advsq_departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
         $this->mysqli->query("INSERT INTO mi_advsq_departments (id, name, budget) VALUES (3, 'Sales', 300000)");
-
         $this->mysqli->query("INSERT INTO mi_advsq_employees (id, name, dept_id, salary) VALUES (1, 'Alice', 1, 120000)");
         $this->mysqli->query("INSERT INTO mi_advsq_employees (id, name, dept_id, salary) VALUES (2, 'Bob', 1, 110000)");
         $this->mysqli->query("INSERT INTO mi_advsq_employees (id, name, dept_id, salary) VALUES (3, 'Charlie', 2, 90000)");
         $this->mysqli->query("INSERT INTO mi_advsq_employees (id, name, dept_id, salary) VALUES (4, 'Diana', 3, 95000)");
         $this->mysqli->query("INSERT INTO mi_advsq_employees (id, name, dept_id, salary) VALUES (5, 'Eve', 1, 130000)");
-
         $this->mysqli->query("INSERT INTO mi_advsq_projects (id, name, dept_id, status) VALUES (1, 'Alpha', 1, 'active')");
         $this->mysqli->query("INSERT INTO mi_advsq_projects (id, name, dept_id, status) VALUES (2, 'Beta', 1, 'completed')");
         $this->mysqli->query("INSERT INTO mi_advsq_projects (id, name, dept_id, status) VALUES (3, 'Gamma', 2, 'active')");
@@ -139,25 +120,5 @@ class AdvancedSubqueryTest extends TestCase
         ");
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertGreaterThanOrEqual(4, count($rows));
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_advsq_projects');
-        $raw->query('DROP TABLE IF EXISTS mi_advsq_employees');
-        $raw->query('DROP TABLE IF EXISTS mi_advsq_departments');
-        $raw->close();
     }
 }

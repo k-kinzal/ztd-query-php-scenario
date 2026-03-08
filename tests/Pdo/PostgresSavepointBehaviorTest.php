@@ -13,6 +13,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests SAVEPOINT behavior on PostgreSQL PDO with ZTD.
+ * @spec SPEC-6.3
  */
 class PostgresSavepointBehaviorTest extends TestCase
 {

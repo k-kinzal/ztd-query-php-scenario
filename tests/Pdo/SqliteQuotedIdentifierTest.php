@@ -5,35 +5,38 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ZTD behavior with quoted identifiers and SQL reserved words as
  * column/table names. Real-world schemas often use reserved words like
  * "order", "group", "select", "key", "value" as identifiers.
+ * @spec pending
  */
-class SqliteQuotedIdentifierTest extends TestCase
+class SqliteQuotedIdentifierTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        // Table with reserved-word columns
-        $raw->exec('CREATE TABLE qi_items (
+        return [
+            'CREATE TABLE qi_items (
             "id" INTEGER PRIMARY KEY,
             "order" INTEGER,
             "group" TEXT,
             "key" TEXT,
             "value" TEXT,
             "select" TEXT
-        )');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        )',
+            'CREATE TABLE "order" ("id" INTEGER PRIMARY KEY, "status" TEXT, "total" REAL)',
+            'CREATE TABLE qi_parent ("id" INTEGER PRIMARY KEY, "key" TEXT)',
+            'CREATE TABLE qi_child ("id" INTEGER PRIMARY KEY, "key" TEXT, "value" TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['qi_items', 'order', 'qi_parent', 'qi_child'];
+    }
+
 
     /**
      * INSERT and SELECT with quoted reserved-word columns.

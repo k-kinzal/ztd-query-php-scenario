@@ -5,23 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests shadow store behavior with wide tables (many columns) on SQLite.
  * CTE rewriting must handle all columns correctly.
+ * @spec pending
  */
-class SqliteWideTableTest extends TestCase
+class SqliteWideTableTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        return [
+            'CREATE TABLE wide20 (',
+            'CREATE TABLE wide20u (',
+            'CREATE TABLE wide10 (',
+            'CREATE TABLE wide5 (id INT PRIMARY KEY, a VARCHAR(50), b VARCHAR(50), c VARCHAR(50), d VARCHAR(50), e VARCHAR(50))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['wide20', 'wide20u', 'wide10', 'wide5'];
+    }
+
 
     public function testTableWith20Columns(): void
     {

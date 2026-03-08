@@ -4,52 +4,35 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests a realistic analytics workflow on MySQLi with window functions,
  * prepared date params, and reporting queries.
+ * @spec pending
  */
-class AnalyticsWorkflowTest extends TestCase
+class AnalyticsWorkflowTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_aw_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_aw_customers');
-        $raw->query('CREATE TABLE mi_aw_customers (id INT PRIMARY KEY, name VARCHAR(255), segment VARCHAR(50))');
-        $raw->query('CREATE TABLE mi_aw_orders (id INT PRIMARY KEY, customer_id INT, order_date DATE, total DECIMAL(10,2), status VARCHAR(20))');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_aw_customers (id INT PRIMARY KEY, name VARCHAR(255), segment VARCHAR(50))',
+            'CREATE TABLE mi_aw_orders (id INT PRIMARY KEY, customer_id INT, order_date DATE, total DECIMAL(10,2), status VARCHAR(20))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_aw_orders', 'mi_aw_customers'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_aw_customers VALUES (1, 'Alice', 'premium')");
         $this->mysqli->query("INSERT INTO mi_aw_customers VALUES (2, 'Bob', 'standard')");
-
         $this->mysqli->query("INSERT INTO mi_aw_orders VALUES (1, 1, '2024-01-15', 150.00, 'completed')");
         $this->mysqli->query("INSERT INTO mi_aw_orders VALUES (2, 1, '2024-02-10', 200.00, 'completed')");
         $this->mysqli->query("INSERT INTO mi_aw_orders VALUES (3, 2, '2024-01-20', 75.00, 'completed')");
@@ -117,24 +100,5 @@ class AnalyticsWorkflowTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame('2024-01', $rows[0]['month']);
         $this->assertEqualsWithDelta(225.0, (float) $rows[0]['cumulative'], 0.01);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_aw_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_aw_customers');
-        $raw->close();
     }
 }

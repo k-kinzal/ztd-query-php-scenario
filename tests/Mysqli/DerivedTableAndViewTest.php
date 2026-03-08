@@ -4,56 +4,37 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests derived tables (subqueries in FROM) and views on MySQLi.
+ * @spec SPEC-3.3a
  */
-class DerivedTableAndViewTest extends TestCase
+class DerivedTableAndViewTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP VIEW IF EXISTS mi_dt_dept_summary');
-        $raw->query('DROP TABLE IF EXISTS mi_dt_employees');
-        $raw->query('DROP TABLE IF EXISTS mi_dt_departments');
-        $raw->query('CREATE TABLE mi_dt_employees (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(100), salary INT)');
-        $raw->query('CREATE TABLE mi_dt_departments (id INT PRIMARY KEY, name VARCHAR(100), budget INT)');
-        $raw->query("CREATE VIEW mi_dt_dept_summary AS SELECT department, COUNT(*) AS emp_count, SUM(salary) AS total_salary FROM mi_dt_employees GROUP BY department");
-        $raw->close();
+        return [
+            'CREATE TABLE mi_dt_employees (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(100), salary INT)',
+            'CREATE TABLE mi_dt_departments (id INT PRIMARY KEY, name VARCHAR(100), budget INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_dt_employees', 'mi_dt_departments'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_dt_employees (id, name, department, salary) VALUES (1, 'Alice', 'Engineering', 120000)");
         $this->mysqli->query("INSERT INTO mi_dt_employees (id, name, department, salary) VALUES (2, 'Bob', 'Engineering', 110000)");
         $this->mysqli->query("INSERT INTO mi_dt_employees (id, name, department, salary) VALUES (3, 'Charlie', 'Marketing', 90000)");
         $this->mysqli->query("INSERT INTO mi_dt_employees (id, name, department, salary) VALUES (4, 'Diana', 'Marketing', 85000)");
         $this->mysqli->query("INSERT INTO mi_dt_employees (id, name, department, salary) VALUES (5, 'Eve', 'Sales', 95000)");
-
         $this->mysqli->query("INSERT INTO mi_dt_departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
         $this->mysqli->query("INSERT INTO mi_dt_departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
         $this->mysqli->query("INSERT INTO mi_dt_departments (id, name, budget) VALUES (3, 'Sales', 300000)");
@@ -127,25 +108,5 @@ class DerivedTableAndViewTest extends TestCase
         ");
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertCount(0, $rows);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP VIEW IF EXISTS mi_dt_dept_summary');
-        $raw->query('DROP TABLE IF EXISTS mi_dt_employees');
-        $raw->query('DROP TABLE IF EXISTS mi_dt_departments');
-        $raw->close();
     }
 }

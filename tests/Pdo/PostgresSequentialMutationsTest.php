@@ -5,41 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests sequential mutations on the same table on PostgreSQL PDO to verify
  * shadow store correctly accumulates changes across multiple operations.
+ * @spec pending
  */
-class PostgresSequentialMutationsTest extends TestCase
+class PostgresSequentialMutationsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            sprintf('pgsql:host=%s;port=%d;dbname=test', PostgreSQLContainer::getHost(), PostgreSQLContainer::getPort()),
-            'test',
-            'test',
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_seq_test');
-        $raw->exec('CREATE TABLE pg_seq_test (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20), score INT)');
+        return 'CREATE TABLE pg_seq_test (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_seq_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            sprintf('pgsql:host=%s;port=%d;dbname=test', PostgreSQLContainer::getHost(), PostgreSQLContainer::getPort()),
-            'test',
-            'test',
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_seq_test (id, name, status, score) VALUES (1, 'Alice', 'active', 90)");
         $this->pdo->exec("INSERT INTO pg_seq_test (id, name, status, score) VALUES (2, 'Bob', 'active', 80)");
@@ -166,18 +154,5 @@ class PostgresSequentialMutationsTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_seq_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                sprintf('pgsql:host=%s;port=%d;dbname=test', PostgreSQLContainer::getHost(), PostgreSQLContainer::getPort()),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_seq_test');
-        } catch (\Exception $e) {
-        }
     }
 }

@@ -4,46 +4,31 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests multi-statement SQL detection and handling on MySQL PDO.
  *
  * The CTE rewriter should detect and reject multi-statement SQL
  * to prevent SQL injection and ensure correct CTE rewriting.
+ * @spec pending
  */
-class MysqlMultiStatementDetectionTest extends TestCase
+class MysqlMultiStatementDetectionTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS msd_items');
-        $raw->exec('CREATE TABLE msd_items (id INT PRIMARY KEY, name VARCHAR(50))');
+        return 'CREATE TABLE msd_items (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['msd_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO msd_items VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO msd_items VALUES (2, 'Bob')");
@@ -118,18 +103,5 @@ class MysqlMultiStatementDetectionTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM msd_items');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                MySQLContainer::getDsn(),
-                'root',
-                'root',
-            );
-            $raw->exec('DROP TABLE IF EXISTS msd_items');
-        } catch (\Exception $e) {
-        }
     }
 }

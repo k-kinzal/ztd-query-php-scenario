@@ -4,46 +4,26 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests database views behavior through ZTD on MySQL PDO.
  *
  * Views are NOT rewritten by the CTE rewriter — they pass through to physical DB.
+ * @spec SPEC-3.3b
  */
-class MysqlViewThroughZtdTest extends TestCase
+class MysqlViewThroughZtdTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP VIEW IF EXISTS pdo_vtzt_active');
-        $raw->exec('DROP TABLE IF EXISTS pdo_vtzt_users');
-        $raw->exec('CREATE TABLE pdo_vtzt_users (id INT PRIMARY KEY, name VARCHAR(50), active TINYINT)');
-        $raw->exec("INSERT INTO pdo_vtzt_users VALUES (1, 'Alice', 1)");
-        $raw->exec("INSERT INTO pdo_vtzt_users VALUES (2, 'Bob', 0)");
-        $raw->exec("INSERT INTO pdo_vtzt_users VALUES (3, 'Charlie', 1)");
-        $raw->exec('CREATE VIEW pdo_vtzt_active AS SELECT id, name FROM pdo_vtzt_users WHERE active = 1');
+        return 'CREATE TABLE pdo_vtzt_users (id INT PRIMARY KEY, name VARCHAR(50), active TINYINT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pdo_vtzt_users'];
     }
+
 
     /**
      * View returns physical data (not shadow).
@@ -75,15 +55,5 @@ class MysqlViewThroughZtdTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_vtzt_users');
         $this->assertSame(3, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP VIEW IF EXISTS pdo_vtzt_active');
-            $raw->exec('DROP TABLE IF EXISTS pdo_vtzt_users');
-        } catch (\Exception $e) {
-        }
     }
 }

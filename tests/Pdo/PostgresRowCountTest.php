@@ -4,43 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests rowCount() behavior after write operations in ZTD mode on PostgreSQL PDO.
+ * @spec SPEC-4.4
  */
-class PostgresRowCountTest extends TestCase
+class PostgresRowCountTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS rc_items');
-        $raw->exec('CREATE TABLE rc_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), active SMALLINT)');
+        return 'CREATE TABLE rc_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), active SMALLINT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['rc_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO rc_items (id, name, category, active) VALUES (1, 'Alpha', 'A', 1)");
         $this->pdo->exec("INSERT INTO rc_items (id, name, category, active) VALUES (2, 'Beta', 'A', 1)");
@@ -73,16 +58,5 @@ class PostgresRowCountTest extends TestCase
     {
         $count = $this->pdo->exec("UPDATE rc_items SET active = 0 WHERE category = 'A'");
         $this->assertSame(2, $count);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS rc_items');
     }
 }

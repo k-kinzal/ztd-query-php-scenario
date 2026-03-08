@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests lastInsertId() behavior with ZTD on SQLite.
@@ -19,19 +18,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * This is a significant user pitfall: after a ZTD INSERT with an
  * AUTO_INCREMENT / AUTOINCREMENT column, lastInsertId() will NOT
  * return the expected auto-increment value.
+ * @spec SPEC-4.7
  */
-class SqliteLastInsertIdBehaviorTest extends TestCase
+class SqliteLastInsertIdBehaviorTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE lid_test (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, score INTEGER)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE lid_test (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, score INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['lid_test'];
+    }
+
 
     /**
      * lastInsertId() returns "0" after shadow INSERT because no physical INSERT occurs.

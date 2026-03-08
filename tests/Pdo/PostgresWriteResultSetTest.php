@@ -5,40 +5,21 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
-class PostgresWriteResultSetTest extends TestCase
+/** @spec SPEC-4.5 */
+class PostgresWriteResultSetTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return 'CREATE TABLE write_result_test (id INT PRIMARY KEY, val VARCHAR(255))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS write_result_test');
-        $raw->exec('CREATE TABLE write_result_test (id INT PRIMARY KEY, val VARCHAR(255))');
-
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['write_result_test'];
     }
+
 
     public function testInsertViaExecReturnsAffectedCount(): void
     {
@@ -75,16 +56,5 @@ class PostgresWriteResultSetTest extends TestCase
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertSame([], $rows);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS write_result_test');
     }
 }

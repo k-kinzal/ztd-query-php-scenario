@@ -5,28 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests window functions with FRAME clauses and INSERT ON CONFLICT behavior on SQLite.
  * Window frames (ROWS/RANGE BETWEEN) are an advanced SQL feature.
  * INSERT ON CONFLICT DO NOTHING on SQLite is documented as broken (inserts both rows).
+ * @spec pending
  */
-class SqliteWindowFrameAndConflictTest extends TestCase
+class SqliteWindowFrameAndConflictTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sales (id INTEGER PRIMARY KEY, month TEXT, amount REAL)');
-        $raw->exec('CREATE TABLE unique_items (id INTEGER PRIMARY KEY, name TEXT UNIQUE)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE sales (id INTEGER PRIMARY KEY, month TEXT, amount REAL)',
+            'CREATE TABLE unique_items (id INTEGER PRIMARY KEY, name TEXT UNIQUE)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sales', 'unique_items'];
+    }
+
 
     public function testWindowFunctionRowsBetween(): void
     {

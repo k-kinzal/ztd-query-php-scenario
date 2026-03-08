@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests INSERT with DEFAULT keyword on SQLite PDO ZTD.
@@ -18,24 +17,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * "INSERT ... DEFAULT VALUES" fails under ZTD because InsertTransformer
  * requires explicit values to project into the CTE.
  * This is already documented; this test verifies and extends coverage.
+ * @spec pending
  */
-class SqliteInsertDefaultValuesTest extends TestCase
+class SqliteInsertDefaultValuesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE si_def_test (
+        return 'CREATE TABLE si_def_test (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT DEFAULT \'default_name\',
+            name TEXT DEFAULT \\\'default_name\\\',
             score INTEGER DEFAULT 100
-        )');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        )';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['si_def_test'];
+    }
+
 
     /**
      * INSERT ... DEFAULT VALUES should fail under ZTD.

@@ -5,27 +5,35 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ALTER TABLE ADD COLUMN behavior with the shadow store on SQLite PDO.
  *
  * ALTER TABLE ADD COLUMN should update the reflected schema so that
  * new columns are queryable.
+ * @spec SPEC-5.1a
  */
-class SqliteAlterTableAfterDataTest extends TestCase
+class SqliteAlterTableAfterDataTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE evolve (id INT PRIMARY KEY, name VARCHAR(50))';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['evolve'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE evolve (id INT PRIMARY KEY, name VARCHAR(50))');
-    }
+
+        }
 
     /**
      * SELECT referencing the new column should work after ALTER TABLE ADD COLUMN.

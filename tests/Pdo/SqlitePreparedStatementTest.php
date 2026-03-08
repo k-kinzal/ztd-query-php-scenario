@@ -8,6 +8,7 @@ use PDO;
 use Tests\Scenarios\PreparedStatementScenario;
 use Tests\Support\AbstractSqlitePdoTestCase;
 
+/** @spec SPEC-3.2 */
 class SqlitePreparedStatementTest extends AbstractSqlitePdoTestCase
 {
     use PreparedStatementScenario;

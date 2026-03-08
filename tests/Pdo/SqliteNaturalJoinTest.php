@@ -5,37 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests NATURAL JOIN and USING clause through ZTD shadow store on SQLite.
  *
  * NATURAL JOIN implicitly joins on columns with the same name.
  * USING clause joins on specified common column(s).
+ * @spec pending
  */
-class SqliteNaturalJoinTest extends TestCase
+class SqliteNaturalJoinTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE nj_users (id INT PRIMARY KEY, name VARCHAR(50), dept_id INT)');
-        $raw->exec('CREATE TABLE nj_depts (dept_id INT PRIMARY KEY, dept_name VARCHAR(50))');
-        $raw->exec('CREATE TABLE nj_roles (id INT PRIMARY KEY, role_name VARCHAR(50))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO nj_users VALUES (1, 'Alice', 10)");
-        $this->pdo->exec("INSERT INTO nj_users VALUES (2, 'Bob', 20)");
-        $this->pdo->exec("INSERT INTO nj_users VALUES (3, 'Charlie', 10)");
-
-        $this->pdo->exec("INSERT INTO nj_depts VALUES (10, 'Engineering')");
-        $this->pdo->exec("INSERT INTO nj_depts VALUES (20, 'Marketing')");
-
-        $this->pdo->exec("INSERT INTO nj_roles VALUES (1, 'Admin')");
-        $this->pdo->exec("INSERT INTO nj_roles VALUES (2, 'User')");
+        return [
+            'CREATE TABLE nj_users (id INT PRIMARY KEY, name VARCHAR(50), dept_id INT)',
+            'CREATE TABLE nj_depts (dept_id INT PRIMARY KEY, dept_name VARCHAR(50))',
+            'CREATE TABLE nj_roles (id INT PRIMARY KEY, role_name VARCHAR(50))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['nj_users', 'nj_depts', 'nj_roles'];
+    }
+
 
     /**
      * NATURAL JOIN on common column (dept_id).

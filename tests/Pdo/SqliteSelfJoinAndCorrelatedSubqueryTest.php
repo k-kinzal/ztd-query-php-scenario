@@ -5,23 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests self-joins and correlated subqueries with ZTD shadow store on SQLite.
  * These patterns require the CTE rewriter to handle multiple references to
  * the same table correctly.
+ * @spec pending
  */
-class SqliteSelfJoinAndCorrelatedSubqueryTest extends TestCase
+class SqliteSelfJoinAndCorrelatedSubqueryTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE employees (id INT PRIMARY KEY, name VARCHAR(50), manager_id INT, salary INT, dept VARCHAR(20))';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['employees'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE employees (id INT PRIMARY KEY, name VARCHAR(50), manager_id INT, salary INT, dept VARCHAR(20))');
         $this->pdo->exec("INSERT INTO employees VALUES (1, 'CEO', NULL, 200, 'exec')");
@@ -29,7 +36,8 @@ class SqliteSelfJoinAndCorrelatedSubqueryTest extends TestCase
         $this->pdo->exec("INSERT INTO employees VALUES (3, 'Alice', 2, 100, 'eng')");
         $this->pdo->exec("INSERT INTO employees VALUES (4, 'Bob', 2, 90, 'eng')");
         $this->pdo->exec("INSERT INTO employees VALUES (5, 'Charlie', 3, 80, 'eng')");
-    }
+
+        }
 
     public function testSelfJoinEmployeeManager(): void
     {

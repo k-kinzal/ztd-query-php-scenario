@@ -5,36 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests MySQL-specific INSERT ... SET syntax on MySQL PDO ZTD.
  *
  * MySQL supports: INSERT INTO table SET col1 = val1, col2 = val2
  * The InsertTransformer handles this via buildInsertSetSelect().
+ * @spec pending
  */
-class MysqlInsertSetSyntaxTest extends TestCase
+class MysqlInsertSetSyntaxTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_ins_set');
-        $raw->exec('CREATE TABLE pdo_ins_set (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE pdo_ins_set (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        return ['pdo_ins_set'];
     }
+
 
     /**
      * Basic INSERT ... SET syntax.
@@ -98,14 +89,5 @@ class MysqlInsertSetSyntaxTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_ins_set');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_ins_set');
-        } catch (\Exception $e) {
-        }
     }
 }

@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests CHECK constraint behavior with ZTD shadow store on SQLite.
@@ -15,24 +14,25 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * rewrites INSERT/UPDATE to CTE-based operations, CHECK constraints
  * are NOT enforced in the shadow store (the physical table is never
  * modified). This documents that behavior.
+ * @spec SPEC-8.1
  */
-class SqliteCheckConstraintBehaviorTest extends TestCase
+class SqliteCheckConstraintBehaviorTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_check_test (
+        return 'CREATE TABLE sl_check_test (
             id INTEGER PRIMARY KEY,
             age INTEGER CHECK(age >= 0 AND age <= 150),
             score INTEGER CHECK(score >= 0),
-            status TEXT CHECK(status IN (\'active\', \'inactive\', \'pending\'))
-        )');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+            status TEXT CHECK(status IN (\\\'active\\\', \\\'inactive\\\', \\\'pending\\\'))
+        )';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_check_test'];
+    }
+
 
     /**
      * INSERT with valid CHECK constraint values succeeds.

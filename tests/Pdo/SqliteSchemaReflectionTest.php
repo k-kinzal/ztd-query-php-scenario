@@ -5,11 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
-class SqliteSchemaReflectionTest extends TestCase
+/** @spec SPEC-1.6 */
+class SqliteSchemaReflectionTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE reflect_test (id INTEGER PRIMARY KEY, val TEXT)',
+            'Create table after adapter
+        $raw->exec(',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['reflect_test', 'after'];
+    }
+
     public function testAdapterConstructedAfterTableReflectsSchema(): void
     {
         $raw = new PDO('sqlite::memory:', null, null, [

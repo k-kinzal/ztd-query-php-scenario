@@ -4,30 +4,22 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractMysqliTestCase;
 use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
-class SessionIsolationTest extends TestCase
+/** @spec SPEC-2.4 */
+class SessionIsolationTest extends AbstractMysqliTestCase
 {
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS session_test');
-        $raw->query('CREATE TABLE session_test (id INT PRIMARY KEY, val VARCHAR(255))');
-        $raw->close();
+        return 'CREATE TABLE session_test (id INT PRIMARY KEY, val VARCHAR(255))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['session_test'];
+    }
+
 
     public function testShadowDataNotSharedBetweenInstances(): void
     {
@@ -88,18 +80,5 @@ class SessionIsolationTest extends TestCase
         $this->assertSame(0, $result->num_rows);
 
         $ztd2->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS session_test');
-        $raw->close();
     }
 }

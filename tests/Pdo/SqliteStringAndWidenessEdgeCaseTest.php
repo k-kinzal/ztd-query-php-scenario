@@ -5,22 +5,36 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests string edge cases, wide table handling, and value boundary patterns.
+ * @spec pending
  */
-class SqliteStringAndWidenessEdgeCaseTest extends TestCase
+class SqliteStringAndWidenessEdgeCaseTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        return [
+            'CREATE TABLE str_test (id INT PRIMARY KEY, val VARCHAR(50))',
+            'CREATE TABLE long_str (id INT PRIMARY KEY, content TEXT)',
+            'CREATE TABLE quote_test (id INT PRIMARY KEY, val TEXT)',
+            'CREATE TABLE dquote_test (id INT PRIMARY KEY, val TEXT)',
+            'CREATE TABLE wide20 (id INT PRIMARY KEY,',
+            'CREATE TABLE multi_upd (id INT PRIMARY KEY, a VARCHAR(20), b VARCHAR(20), c VARCHAR(20))',
+            'CREATE TABLE int_edge (id INT PRIMARY KEY, big_val BIGINT)',
+            'CREATE TABLE named_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, active INT)',
+            'CREATE TABLE del_multi (id INT PRIMARY KEY, cat VARCHAR(20), status INT)',
+            'CREATE TABLE or_test (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20))',
+            'CREATE TABLE nested_cond (id INT PRIMARY KEY, a INT, b INT, c INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['str_test', 'long_str', 'quote_test', 'dquote_test', 'wide20', 'multi_upd', 'int_edge', 'named_test', 'del_multi', 'or_test', 'nested_cond'];
+    }
+
 
     public function testEmptyStringVsNull(): void
     {

@@ -5,37 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests subqueries in various SQL positions (ORDER BY, HAVING, SELECT list,
  * CASE, nested WHERE) to verify CTE rewriting handles them correctly.
+ * @spec pending
  */
-class SqliteSubqueryPositionsTest extends TestCase
+class SqliteSubqueryPositionsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sp_products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL)');
-        $raw->exec('CREATE TABLE sp_orders (id INTEGER PRIMARY KEY, product_id INTEGER, qty INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (1, 'Widget', 'A', 10.00)");
-        $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (2, 'Gadget', 'A', 25.00)");
-        $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (3, 'Doohickey', 'B', 5.00)");
-        $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (4, 'Thingamajig', 'B', 50.00)");
-
-        $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (1, 1, 3)");
-        $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (2, 2, 1)");
-        $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (3, 1, 2)");
-        $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (4, 3, 5)");
+        return [
+            'CREATE TABLE sp_products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL)',
+            'CREATE TABLE sp_orders (id INTEGER PRIMARY KEY, product_id INTEGER, qty INTEGER)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sp_products', 'sp_orders'];
+    }
+
 
     public function testScalarSubqueryInSelectList(): void
     {

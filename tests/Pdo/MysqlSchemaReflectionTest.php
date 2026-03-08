@@ -13,6 +13,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests schema reflection behavior in ZTD mode on MySQL via PDO.
+ * @spec SPEC-1.6
  */
 class MysqlSchemaReflectionTest extends TestCase
 {

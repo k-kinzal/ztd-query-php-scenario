@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests date/time functions and advanced window functions on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresDateAndAdvancedWindowTest extends TestCase
+class PostgresDateAndAdvancedWindowTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_daw_events');
-        $raw->exec('CREATE TABLE pg_daw_events (id INT PRIMARY KEY, title VARCHAR(255), event_date DATE, category VARCHAR(50), amount NUMERIC(10,2))');
+        return 'CREATE TABLE pg_daw_events (id INT PRIMARY KEY, title VARCHAR(255), event_date DATE, category VARCHAR(50), amount NUMERIC(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_daw_events'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_daw_events (id, title, event_date, category, amount) VALUES (1, 'A', '2024-01-10', 'work', 100)");
         $this->pdo->exec("INSERT INTO pg_daw_events (id, title, event_date, category, amount) VALUES (2, 'B', '2024-01-20', 'work', 200)");
@@ -146,16 +132,5 @@ class PostgresDateAndAdvancedWindowTest extends TestCase
         $this->assertSame('personal', $rows[0]['category']);
         $this->assertSame(1, (int) $rows[0]['rn']);
         $this->assertEqualsWithDelta(700.0, (float) $rows[0]['cat_total'], 0.01);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_daw_events');
     }
 }

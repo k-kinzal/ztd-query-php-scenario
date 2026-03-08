@@ -9,6 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests basic CRUD operations in ZTD mode on MySQL via PDO.
+ * @spec SPEC-1.1, SPEC-1.2, SPEC-2.1, SPEC-2.2, SPEC-2.3, SPEC-3.1, SPEC-4.1, SPEC-4.2, SPEC-4.3
  */
 class MysqlBasicCrudTest extends AbstractMysqlPdoTestCase
 {

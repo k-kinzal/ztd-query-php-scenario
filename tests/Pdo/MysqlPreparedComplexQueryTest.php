@@ -5,50 +5,36 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statements with complex queries on MySQL PDO:
  * JOINs with parameters, aggregations with bindings, subqueries with params.
+ * @spec SPEC-3.3
  */
-class MysqlPreparedComplexQueryTest extends TestCase
+class MysqlPreparedComplexQueryTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_pcq_tasks');
-        $raw->exec('DROP TABLE IF EXISTS mysql_pcq_users');
-        $raw->exec('CREATE TABLE mysql_pcq_users (id INT PRIMARY KEY, name VARCHAR(255), role VARCHAR(50))');
-        $raw->exec('CREATE TABLE mysql_pcq_tasks (id INT PRIMARY KEY, user_id INT, title VARCHAR(255), priority INT, done TINYINT DEFAULT 0)');
+        return [
+            'CREATE TABLE mysql_pcq_users (id INT PRIMARY KEY, name VARCHAR(255), role VARCHAR(50))',
+            'CREATE TABLE mysql_pcq_tasks (id INT PRIMARY KEY, user_id INT, title VARCHAR(255), priority INT, done TINYINT DEFAULT 0)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_pcq_tasks', 'mysql_pcq_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_pcq_users (id, name, role) VALUES (1, 'Alice', 'admin')");
         $this->pdo->exec("INSERT INTO mysql_pcq_users (id, name, role) VALUES (2, 'Bob', 'user')");
         $this->pdo->exec("INSERT INTO mysql_pcq_users (id, name, role) VALUES (3, 'Charlie', 'user')");
-
         $this->pdo->exec("INSERT INTO mysql_pcq_tasks (id, user_id, title, priority, done) VALUES (1, 1, 'Deploy', 1, 0)");
         $this->pdo->exec("INSERT INTO mysql_pcq_tasks (id, user_id, title, priority, done) VALUES (2, 1, 'Review', 2, 1)");
         $this->pdo->exec("INSERT INTO mysql_pcq_tasks (id, user_id, title, priority, done) VALUES (3, 2, 'Test', 1, 0)");
@@ -128,17 +114,5 @@ class MysqlPreparedComplexQueryTest extends TestCase
         $stmt->execute([':role' => 'user', ':done' => 0]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertGreaterThanOrEqual(2, count($rows));
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_pcq_tasks');
-        $raw->exec('DROP TABLE IF EXISTS mysql_pcq_users');
     }
 }

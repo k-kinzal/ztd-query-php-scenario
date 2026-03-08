@@ -4,49 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests that doubled-quote escaping ('') works correctly in MySQLi ZTD.
  *
  * MySQL supports both '' and \' for escaping single quotes.
  * This test verifies the MySQL parser handles these correctly via MySQLi adapter.
+ * @spec pending
  */
-class EscapedQuoteTest extends TestCase
+class EscapedQuoteTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_eq_quote');
-        $raw->query('CREATE TABLE mi_eq_quote (id INT PRIMARY KEY, body TEXT, notes TEXT)');
-        $raw->close();
+        return 'CREATE TABLE mi_eq_quote (id INT PRIMARY KEY, body TEXT, notes TEXT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_eq_quote'];
     }
+
 
     public function testInsertWithDoubledQuotes(): void
     {
@@ -84,28 +62,5 @@ class EscapedQuoteTest extends TestCase
         $row = $result->fetch_assoc();
         $this->assertSame("it's", $row['body']);
         $this->assertSame("she's", $row['notes']);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_eq_quote');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

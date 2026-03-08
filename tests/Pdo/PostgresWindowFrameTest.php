@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests window functions with FRAME clauses (ROWS/RANGE BETWEEN) on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresWindowFrameTest extends TestCase
+class PostgresWindowFrameTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_wf_sales');
-        $raw->exec('CREATE TABLE pg_wf_sales (id INT PRIMARY KEY, month VARCHAR(10), amount NUMERIC(10,2))');
+        return 'CREATE TABLE pg_wf_sales (id INT PRIMARY KEY, month VARCHAR(10), amount NUMERIC(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_wf_sales'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_wf_sales (id, month, amount) VALUES (1, '2024-01', 100)");
         $this->pdo->exec("INSERT INTO pg_wf_sales (id, month, amount) VALUES (2, '2024-02', 200)");
@@ -107,16 +93,5 @@ class PostgresWindowFrameTest extends TestCase
         $this->assertCount(4, $rows);
         $this->assertEqualsWithDelta(100.0, (float) $rows[0]['cumulative'], 0.01);
         $this->assertEqualsWithDelta(600.0, (float) $rows[1]['cumulative'], 0.01);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_wf_sales');
     }
 }

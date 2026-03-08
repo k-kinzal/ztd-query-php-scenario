@@ -9,6 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 use Tests\Support\MySQLContainer;
 use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
+/** @spec SPEC-4.8 */
 class TransactionTest extends AbstractMysqliTestCase
 {
     use TransactionScenario;

@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests SQL:2012 OFFSET...FETCH syntax on PostgreSQL ZTD.
@@ -19,34 +15,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *   OFFSET y ROWS FETCH FIRST x ROWS ONLY (SQL:2012 standard)
  *
  * The CTE rewriter should preserve these clauses correctly.
+ * @spec pending
  */
-class PostgresOffsetFetchTest extends TestCase
+class PostgresOffsetFetchTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_of_test');
-        $raw->exec('CREATE TABLE pg_of_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE pg_of_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_of_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         for ($i = 1; $i <= 10; $i++) {
             $this->pdo->exec("INSERT INTO pg_of_test (id, name, score) VALUES ($i, 'User_$i', " . ($i * 10) . ")");
@@ -124,14 +110,5 @@ class PostgresOffsetFetchTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_of_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_of_test');
-        } catch (\Exception $e) {
-        }
     }
 }

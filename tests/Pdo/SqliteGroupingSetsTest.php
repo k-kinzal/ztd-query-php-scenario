@@ -5,29 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests that GROUPING SETS / ROLLUP / CUBE are NOT supported on SQLite.
  *
  * SQLite does not support these advanced GROUP BY extensions.
  * These queries should throw errors.
+ * @spec pending
  */
-class SqliteGroupingSetsTest extends TestCase
+class SqliteGroupingSetsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE gs_test (id INT PRIMARY KEY, region VARCHAR(20), product VARCHAR(20), amount INT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO gs_test VALUES (1, 'East', 'Widget', 100)");
-        $this->pdo->exec("INSERT INTO gs_test VALUES (2, 'East', 'Gadget', 200)");
-        $this->pdo->exec("INSERT INTO gs_test VALUES (3, 'West', 'Widget', 150)");
+        return 'CREATE TABLE gs_test (id INT PRIMARY KEY, region VARCHAR(20), product VARCHAR(20), amount INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['gs_test'];
+    }
+
 
     /**
      * GROUPING SETS not supported on SQLite — should throw.

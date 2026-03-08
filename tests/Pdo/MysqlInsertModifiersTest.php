@@ -5,45 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests MySQL-specific INSERT modifiers through ZTD:
  * - INSERT IGNORE
  * - INSERT ... ON DUPLICATE KEY UPDATE with expressions
  * - REPLACE INTO with SET syntax
+ * @spec pending
  */
-class MysqlInsertModifiersTest extends TestCase
+class MysqlInsertModifiersTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_im_test');
-        $raw->exec('CREATE TABLE mysql_im_test (id INT PRIMARY KEY, name VARCHAR(50), counter INT DEFAULT 0)');
+        return 'CREATE TABLE mysql_im_test (id INT PRIMARY KEY, name VARCHAR(50), counter INT DEFAULT 0)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_im_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_im_test VALUES (1, 'Alice', 1)");
         $this->pdo->exec("INSERT INTO mysql_im_test VALUES (2, 'Bob', 1)");
@@ -157,18 +143,5 @@ class MysqlInsertModifiersTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM mysql_im_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                MySQLContainer::getDsn(),
-                'root',
-                'root',
-            );
-            $raw->exec('DROP TABLE IF EXISTS mysql_im_test');
-        } catch (\Exception $e) {
-        }
     }
 }

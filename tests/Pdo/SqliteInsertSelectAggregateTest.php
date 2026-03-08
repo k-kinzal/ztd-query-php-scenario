@@ -5,29 +5,34 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests INSERT...SELECT with aggregate functions through ZTD shadow store.
+ * @spec pending
  */
-class SqliteInsertSelectAggregateTest extends TestCase
+class SqliteInsertSelectAggregateTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE isa_orders (id INT PRIMARY KEY, category VARCHAR(20), amount DECIMAL(10,2))');
-        $raw->exec('CREATE TABLE isa_summary (category VARCHAR(20), order_count INT, total_amount DECIMAL(10,2))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO isa_orders VALUES (1, 'Electronics', 100.00)");
-        $this->pdo->exec("INSERT INTO isa_orders VALUES (2, 'Electronics', 200.00)");
-        $this->pdo->exec("INSERT INTO isa_orders VALUES (3, 'Books', 30.00)");
-        $this->pdo->exec("INSERT INTO isa_orders VALUES (4, 'Books', 25.00)");
-        $this->pdo->exec("INSERT INTO isa_orders VALUES (5, 'Electronics', 150.00)");
+        return [
+            'CREATE TABLE isa_orders (id INT PRIMARY KEY, category VARCHAR(20), amount DECIMAL(10,2))',
+            'CREATE TABLE isa_summary (category VARCHAR(20), order_count INT, total_amount DECIMAL(10,2))',
+            'CREATE TABLE isa_src (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE isa_dst (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE isa_src2 (id INT PRIMARY KEY, name VARCHAR(50), active INT)',
+            'CREATE TABLE isa_dst2 (id INT PRIMARY KEY, name VARCHAR(50), active INT)',
+            'CREATE TABLE isa_self (id INT PRIMARY KEY, value INT)',
+            'CREATE TABLE isa_ranked (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE isa_top (id INT PRIMARY KEY, name VARCHAR(50))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['isa_orders', 'isa_summary', 'isa_src', 'isa_dst', 'isa_src2', 'isa_dst2', 'isa_self', 'isa_ranked', 'isa_top'];
+    }
+
 
     /**
      * INSERT...SELECT with GROUP BY should transfer computed columns correctly.

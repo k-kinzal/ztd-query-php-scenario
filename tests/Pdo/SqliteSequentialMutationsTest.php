@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests sequential mutations on the same table to verify shadow store
@@ -15,25 +14,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * All seed data is inserted via ZTD mode (not physical) because once
  * schema reflection occurs, the CTE replaces physical table references.
  * Physical rows are NOT visible through ZTD SELECT.
+ * @spec pending
  */
-class SqliteSequentialMutationsTest extends TestCase
+class SqliteSequentialMutationsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE seq_test (id INTEGER PRIMARY KEY, name TEXT, status TEXT, score INT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        // Seed data via ZTD — physical rows are not visible after reflection
-        $this->pdo->exec("INSERT INTO seq_test (id, name, status, score) VALUES (1, 'Alice', 'active', 90)");
-        $this->pdo->exec("INSERT INTO seq_test (id, name, status, score) VALUES (2, 'Bob', 'active', 80)");
-        $this->pdo->exec("INSERT INTO seq_test (id, name, status, score) VALUES (3, 'Charlie', 'active', 70)");
+        return 'CREATE TABLE seq_test (id INTEGER PRIMARY KEY, name TEXT, status TEXT, score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['seq_test'];
+    }
+
 
     /**
      * Insert then update the same row.

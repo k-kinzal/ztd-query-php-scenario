@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests the CTE shadow replacement behavior: when a table has pre-existing
@@ -15,25 +14,35 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * This is a critical usability characteristic: the shadow store starts empty
  * and only data inserted/updated/deleted through ZTD is visible.
+ * @spec SPEC-2.2
  */
-class SqlitePhysicalShadowOverlayTest extends TestCase
+class SqlitePhysicalShadowOverlayTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, price REAL, category TEXT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['products'];
+    }
+
     private PDO $raw;
+
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->raw = new PDO('sqlite::memory:', null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
         $this->raw->exec('CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, price REAL, category TEXT)');
-
         // Pre-populate with physical data BEFORE wrapping with ZTD
         $this->raw->exec("INSERT INTO products VALUES (1, 'Widget', 29.99, 'electronics')");
         $this->raw->exec("INSERT INTO products VALUES (2, 'Gadget', 49.99, 'electronics')");
         $this->raw->exec("INSERT INTO products VALUES (3, 'Gizmo', 19.99, 'toys')");
-
-        $this->pdo = ZtdPdo::fromPdo($this->raw);
     }
 
     /**

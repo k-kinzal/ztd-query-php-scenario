@@ -4,53 +4,36 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests prepared statements with complex queries on MySQLi:
  * JOINs with parameters, aggregations with bindings, subqueries with params.
+ * @spec SPEC-3.3
  */
-class PreparedComplexQueryTest extends TestCase
+class PreparedComplexQueryTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pcq_tasks');
-        $raw->query('DROP TABLE IF EXISTS mi_pcq_users');
-        $raw->query('CREATE TABLE mi_pcq_users (id INT PRIMARY KEY, name VARCHAR(255), role VARCHAR(50))');
-        $raw->query('CREATE TABLE mi_pcq_tasks (id INT PRIMARY KEY, user_id INT, title VARCHAR(255), priority INT, done TINYINT DEFAULT 0)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_pcq_users (id INT PRIMARY KEY, name VARCHAR(255), role VARCHAR(50))',
+            'CREATE TABLE mi_pcq_tasks (id INT PRIMARY KEY, user_id INT, title VARCHAR(255), priority INT, done TINYINT DEFAULT 0)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_pcq_tasks', 'mi_pcq_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_pcq_users (id, name, role) VALUES (1, 'Alice', 'admin')");
         $this->mysqli->query("INSERT INTO mi_pcq_users (id, name, role) VALUES (2, 'Bob', 'user')");
         $this->mysqli->query("INSERT INTO mi_pcq_users (id, name, role) VALUES (3, 'Charlie', 'user')");
-
         $this->mysqli->query("INSERT INTO mi_pcq_tasks (id, user_id, title, priority, done) VALUES (1, 1, 'Deploy', 1, 0)");
         $this->mysqli->query("INSERT INTO mi_pcq_tasks (id, user_id, title, priority, done) VALUES (2, 1, 'Review', 2, 1)");
         $this->mysqli->query("INSERT INTO mi_pcq_tasks (id, user_id, title, priority, done) VALUES (3, 2, 'Test', 1, 0)");
@@ -160,24 +143,5 @@ class PreparedComplexQueryTest extends TestCase
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('New Task', $rows[0]['title']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pcq_tasks');
-        $raw->query('DROP TABLE IF EXISTS mi_pcq_users');
-        $raw->close();
     }
 }

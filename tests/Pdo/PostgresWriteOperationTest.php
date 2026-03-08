@@ -7,6 +7,7 @@ namespace Tests\Pdo;
 use Tests\Scenarios\WriteOperationScenario;
 use Tests\Support\AbstractPostgresPdoTestCase;
 
+/** @spec SPEC-4.1, SPEC-4.2 */
 class PostgresWriteOperationTest extends AbstractPostgresPdoTestCase
 {
     use WriteOperationScenario;

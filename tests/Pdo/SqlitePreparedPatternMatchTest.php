@@ -5,21 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests LIKE, BETWEEN, and IS NULL with prepared statement parameters on SQLite.
+ * @spec pending
  */
-class SqlitePreparedPatternMatchTest extends TestCase
+class SqlitePreparedPatternMatchTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE pattern_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, note TEXT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['pattern_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE pattern_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, note TEXT)');
         $this->pdo->exec("INSERT INTO pattern_test VALUES (1, 'Alice', 80, 'Good student')");
@@ -27,7 +34,8 @@ class SqlitePreparedPatternMatchTest extends TestCase
         $this->pdo->exec("INSERT INTO pattern_test VALUES (3, 'Charlie', 90, 'Top performer')");
         $this->pdo->exec("INSERT INTO pattern_test VALUES (4, 'Alice Jr', 70, 'Good effort')");
         $this->pdo->exec("INSERT INTO pattern_test VALUES (5, 'Dave', 50, NULL)");
-    }
+
+        }
 
     public function testLikeWithPreparedParam(): void
     {

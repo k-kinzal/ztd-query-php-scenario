@@ -9,6 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests shared JOIN and subquery scenarios on PostgreSQL via PDO.
+ * @spec pending
  */
 class PostgresJoinAndSubqueryTest extends AbstractPostgresPdoTestCase
 {

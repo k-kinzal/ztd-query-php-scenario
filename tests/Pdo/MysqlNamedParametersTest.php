@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests PDO named parameter binding (:param) with ZTD on MySQL.
  *
  * Cross-platform parity with SqliteNamedParametersTest.
+ * @spec pending
  */
 class MysqlNamedParametersTest extends TestCase
 {

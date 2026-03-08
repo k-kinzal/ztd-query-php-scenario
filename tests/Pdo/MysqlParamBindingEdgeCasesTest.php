@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statement parameter binding edge cases on MySQL PDO.
+ * @spec pending
  */
-class MysqlParamBindingEdgeCasesTest extends TestCase
+class MysqlParamBindingEdgeCasesTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pb_items');
-        $raw->exec('CREATE TABLE pb_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), active TINYINT)');
+        return 'CREATE TABLE pb_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), active TINYINT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pb_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pb_items (id, name, price, active) VALUES (1, 'Widget', 10.50, 1)");
         $this->pdo->exec("INSERT INTO pb_items (id, name, price, active) VALUES (2, 'Gadget', 25.00, 0)");
@@ -101,16 +87,5 @@ class MysqlParamBindingEdgeCasesTest extends TestCase
         $inactive = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $inactive);
         $this->assertSame('Gadget', $inactive[0]['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pb_items');
     }
 }

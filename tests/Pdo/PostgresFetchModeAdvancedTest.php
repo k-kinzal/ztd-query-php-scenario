@@ -5,43 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests advanced PDO fetch modes (FETCH_GROUP, FETCH_UNIQUE, FETCH_COLUMN|FETCH_GROUP)
  * with ZTD shadow store on PostgreSQL.
+ * @spec SPEC-3.4
  */
-class PostgresFetchModeAdvancedTest extends TestCase
+class PostgresFetchModeAdvancedTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS orders_pg');
-        $raw->exec('CREATE TABLE orders_pg (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount INT)');
+        return 'CREATE TABLE orders_pg (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['orders_pg'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec('DELETE FROM orders_pg');
         $this->pdo->exec("INSERT INTO orders_pg VALUES (1, 'Alice', 'Widget', 100)");
@@ -126,16 +112,5 @@ class PostgresFetchModeAdvancedTest extends TestCase
         $objects = $stmt->fetchAll(PDO::FETCH_OBJ);
         $this->assertCount(5, $objects);
         $this->assertSame('Alice', $objects[0]->customer);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS orders_pg');
     }
 }

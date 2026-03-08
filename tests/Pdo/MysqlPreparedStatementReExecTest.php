@@ -5,43 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statement re-execution patterns on MySQL ZTD PDO.
+ * @spec pending
  */
-class MysqlPreparedStatementReExecTest extends TestCase
+class MysqlPreparedStatementReExecTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS re_exec_m');
-        $raw->exec('CREATE TABLE re_exec_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE re_exec_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['re_exec_m'];
     }
+
 
     public function testReExecuteSelectWithDifferentParams(): void
     {
@@ -96,16 +77,5 @@ class MysqlPreparedStatementReExecTest extends TestCase
         $sel->execute([1]);
         $row = $sel->fetch(PDO::FETCH_ASSOC);
         $this->assertSame('Alice', $row['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS re_exec_m');
     }
 }

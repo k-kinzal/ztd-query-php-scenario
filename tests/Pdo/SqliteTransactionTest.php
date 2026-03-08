@@ -7,6 +7,7 @@ namespace Tests\Pdo;
 use Tests\Scenarios\TransactionScenario;
 use Tests\Support\AbstractSqlitePdoTestCase;
 
+/** @spec SPEC-4.8 */
 class SqliteTransactionTest extends AbstractSqlitePdoTestCase
 {
     use TransactionScenario;

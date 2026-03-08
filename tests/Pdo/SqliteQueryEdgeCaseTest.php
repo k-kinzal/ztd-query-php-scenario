@@ -5,26 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests edge cases in query behavior with the shadow store:
  * NULL handling, ORDER BY, LIMIT, self-referencing updates, etc.
+ * @spec pending
  */
-class SqliteQueryEdgeCaseTest extends TestCase
+class SqliteQueryEdgeCaseTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE edge_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, category TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE edge_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, category TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['edge_test'];
+    }
+
 
     public function testCountStarVsCountColumn(): void
     {

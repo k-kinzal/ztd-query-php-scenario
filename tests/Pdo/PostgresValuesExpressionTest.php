@@ -5,45 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests standalone VALUES expression and CTE MATERIALIZED hints on PostgreSQL.
  *
  * PostgreSQL supports VALUES as a standalone query (not just in INSERT)
  * and CTE hints like MATERIALIZED/NOT MATERIALIZED.
+ * @spec pending
  */
-class PostgresValuesExpressionTest extends TestCase
+class PostgresValuesExpressionTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_ve_test');
-        $raw->exec('CREATE TABLE pg_ve_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE pg_ve_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_ve_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_ve_test VALUES (1, 'Alice', 95)");
         $this->pdo->exec("INSERT INTO pg_ve_test VALUES (2, 'Bob', 85)");
@@ -136,18 +122,5 @@ class PostgresValuesExpressionTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_ve_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_ve_test');
-        } catch (\Exception $e) {
-        }
     }
 }

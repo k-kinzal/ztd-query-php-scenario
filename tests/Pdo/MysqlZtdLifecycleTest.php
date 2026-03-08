@@ -5,44 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests ZTD lifecycle edge cases on MySQL via PDO: toggle cycles, re-enable after disable,
  * multiple enable/disable sequences, and shadow store behavior across cycles.
+ * @spec SPEC-2.1
  */
-class MysqlZtdLifecycleTest extends TestCase
+class MysqlZtdLifecycleTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_lifecycle_test');
-        $raw->exec('CREATE TABLE mysql_lifecycle_test (id INT PRIMARY KEY, val VARCHAR(255))');
+        return 'CREATE TABLE mysql_lifecycle_test (id INT PRIMARY KEY, val VARCHAR(255))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_lifecycle_test'];
     }
+
 
     public function testShadowDataPreservedAfterDisableEnable(): void
     {
@@ -165,16 +146,5 @@ class MysqlZtdLifecycleTest extends TestCase
         $stmt = $this->pdo->query('SELECT COUNT(*) as cnt FROM mysql_lifecycle_test');
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame(0, (int) $row['cnt']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_lifecycle_test');
     }
 }

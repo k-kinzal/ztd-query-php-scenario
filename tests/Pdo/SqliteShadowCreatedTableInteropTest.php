@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests interoperability between shadow-created tables (via CREATE TABLE
@@ -14,21 +13,30 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * covers JOINs, INSERT...SELECT, subqueries, and aggregations across
  * both table types — a common real-world pattern where users create
  * temporary analysis tables alongside existing application tables.
+ * @spec pending
  */
-class SqliteShadowCreatedTableInteropTest extends TestCase
+class SqliteShadowCreatedTableInteropTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        // Physical table (will be reflected)
-        $raw->exec('CREATE TABLE sci_users (id INTEGER PRIMARY KEY, name TEXT, status TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE sci_users (id INTEGER PRIMARY KEY, name TEXT, status TEXT)',
+            'CREATE TABLE sci_scores (user_id INTEGER PRIMARY KEY, score INTEGER)',
+            'CREATE TABLE sci_orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL)',
+            'CREATE TABLE sci_active_users (id INTEGER PRIMARY KEY, name TEXT)',
+            'CREATE TABLE sci_blacklist (user_id INTEGER PRIMARY KEY)',
+            'CREATE TABLE sci_purchases (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL)',
+            'CREATE TABLE sci_deactivate (user_id INTEGER PRIMARY KEY)',
+            'CREATE TABLE sci_to_delete (user_id INTEGER PRIMARY KEY)',
+            'CREATE TABLE sci_temp (id INTEGER PRIMARY KEY, val TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sci_users', 'sci_scores', 'sci_orders', 'sci_active_users', 'sci_blacklist', 'sci_purchases', 'sci_deactivate', 'sci_to_delete', 'sci_temp'];
+    }
+
 
     /**
      * JOIN between a reflected table and a shadow-created table.

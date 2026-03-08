@@ -4,68 +4,47 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests three-table and four-table JOIN operations through ZTD shadow store.
  *
  * Verifies that CTE rewriter handles multiple shadow tables in complex JOIN topologies.
+ * @spec pending
  */
-class ThreeTableJoinTest extends TestCase
+class ThreeTableJoinTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_3tj_order_items');
-        $raw->query('DROP TABLE IF EXISTS mi_3tj_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_3tj_products');
-        $raw->query('DROP TABLE IF EXISTS mi_3tj_customers');
-        $raw->query('CREATE TABLE mi_3tj_customers (id INT PRIMARY KEY, name VARCHAR(50), tier VARCHAR(20))');
-        $raw->query('CREATE TABLE mi_3tj_products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))');
-        $raw->query('CREATE TABLE mi_3tj_orders (id INT PRIMARY KEY, customer_id INT, order_date DATE)');
-        $raw->query('CREATE TABLE mi_3tj_order_items (id INT PRIMARY KEY, order_id INT, product_id INT, qty INT)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_3tj_customers (id INT PRIMARY KEY, name VARCHAR(50), tier VARCHAR(20))',
+            'CREATE TABLE mi_3tj_products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))',
+            'CREATE TABLE mi_3tj_orders (id INT PRIMARY KEY, customer_id INT, order_date DATE)',
+            'CREATE TABLE mi_3tj_order_items (id INT PRIMARY KEY, order_id INT, product_id INT, qty INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_3tj_order_items', 'mi_3tj_orders', 'mi_3tj_products', 'mi_3tj_customers'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         // Customers
         $this->mysqli->query("INSERT INTO mi_3tj_customers VALUES (1, 'Alice', 'Gold')");
         $this->mysqli->query("INSERT INTO mi_3tj_customers VALUES (2, 'Bob', 'Silver')");
-
         // Products
         $this->mysqli->query("INSERT INTO mi_3tj_products VALUES (1, 'Widget', 10.00)");
         $this->mysqli->query("INSERT INTO mi_3tj_products VALUES (2, 'Gadget', 25.00)");
         $this->mysqli->query("INSERT INTO mi_3tj_products VALUES (3, 'Doohickey', 5.00)");
-
         // Orders
         $this->mysqli->query("INSERT INTO mi_3tj_orders VALUES (1, 1, '2024-01-15')");
         $this->mysqli->query("INSERT INTO mi_3tj_orders VALUES (2, 2, '2024-01-16')");
         $this->mysqli->query("INSERT INTO mi_3tj_orders VALUES (3, 1, '2024-01-17')");
-
         // Order items
         $this->mysqli->query("INSERT INTO mi_3tj_order_items VALUES (1, 1, 1, 3)");
         $this->mysqli->query("INSERT INTO mi_3tj_order_items VALUES (2, 1, 2, 1)");
@@ -178,31 +157,5 @@ class ThreeTableJoinTest extends TestCase
 
         $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_3tj_order_items');
         $this->assertSame(0, (int) $result->fetch_assoc()['cnt']);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_3tj_order_items');
-            $raw->query('DROP TABLE IF EXISTS mi_3tj_orders');
-            $raw->query('DROP TABLE IF EXISTS mi_3tj_products');
-            $raw->query('DROP TABLE IF EXISTS mi_3tj_customers');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests advanced ORDER BY patterns and interleaved prepared statements on MySQL.
+ * @spec pending
  */
-class MysqlAdvancedOrderAndInsertPatternsTest extends TestCase
+class MysqlAdvancedOrderAndInsertPatternsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS aoi_users_m');
-        $raw->exec('CREATE TABLE aoi_users_m (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20), score INT)');
+        return 'CREATE TABLE aoi_users_m (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['aoi_users_m'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO aoi_users_m VALUES (1, 'Alice', 'admin', 90)");
         $this->pdo->exec("INSERT INTO aoi_users_m VALUES (2, 'Bob', 'user', 70)");
@@ -94,16 +80,5 @@ class MysqlAdvancedOrderAndInsertPatternsTest extends TestCase
         $stmtByRole->execute(['user']);
         $users = $stmtByRole->fetchAll(PDO::FETCH_COLUMN);
         $this->assertSame(['Bob'], $users);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS aoi_users_m');
     }
 }

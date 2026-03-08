@@ -65,8 +65,10 @@ final class VersionRecorder implements Extension
 
         $adapter = self::detectAdapter($testClassName);
 
-        // Use version info set by base class setUp() if available
-        $dbVersion = self::$versionInfo[$testClassName]['dbVersion'] ?? 'pending';
+        // Use version info set by base class setUp() if available,
+        // otherwise auto-detect from running containers
+        $dbVersion = self::$versionInfo[$testClassName]['dbVersion']
+            ?? self::autoDetectDbVersion($adapter);
         $ztdVersion = self::$versionInfo[$testClassName]['ztdVersion'] ?? self::detectZtdVersion($adapter);
 
         self::$entries[$testClassName] = [
@@ -122,6 +124,64 @@ final class VersionRecorder implements Extension
             self::$entries[$testClassName]['dbVersion'] = $dbVersion;
             self::$entries[$testClassName]['ztdVersion'] = $ztdVersion;
         }
+    }
+
+    private static function autoDetectDbVersion(string $adapter): string
+    {
+        try {
+            return match ($adapter) {
+                'mysqli' => self::detectMysqlVersionViaMysqli(),
+                'mysql-pdo' => self::detectMysqlVersionViaPdo(),
+                'postgres-pdo' => self::detectPostgresVersionViaPdo(),
+                'sqlite-pdo' => self::detectSqliteVersion(),
+                default => 'unknown',
+            };
+        } catch (\Throwable) {
+            return 'unknown';
+        }
+    }
+
+    private static function detectMysqlVersionViaMysqli(): string
+    {
+        $raw = new \mysqli(
+            MySQLContainer::getHost(),
+            'root',
+            'root',
+            'test',
+            MySQLContainer::getPort(),
+        );
+        $result = $raw->query('SELECT VERSION()');
+        $version = $result->fetch_row()[0];
+        $raw->close();
+        return $version;
+    }
+
+    private static function detectMysqlVersionViaPdo(): string
+    {
+        $raw = new \PDO(
+            MySQLContainer::getDsn(),
+            'root',
+            'root',
+            [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION],
+        );
+        return $raw->query('SELECT VERSION()')->fetchColumn();
+    }
+
+    private static function detectPostgresVersionViaPdo(): string
+    {
+        $raw = new \PDO(
+            PostgreSQLContainer::getDsn(),
+            'test',
+            'test',
+            [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION],
+        );
+        return $raw->query('SHOW server_version')->fetchColumn();
+    }
+
+    private static function detectSqliteVersion(): string
+    {
+        $raw = new \PDO('sqlite::memory:');
+        return $raw->query('SELECT sqlite_version()')->fetchColumn();
     }
 
     private static function detectAdapter(string $className): string

@@ -5,51 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests ON CONFLICT (UPSERT) with composite primary keys on PostgreSQL.
  *
  * PostgreSQL uses ON CONFLICT DO UPDATE SET ... syntax for upserts.
  * Composite keys require specifying multiple columns in the conflict target.
+ * @spec SPEC-4.2a
  */
-class PostgresCompositePkUpsertTest extends TestCase
+class PostgresCompositePkUpsertTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_cpk_upsert');
-        $raw->exec('CREATE TABLE pg_cpk_upsert (
+        return 'CREATE TABLE pg_cpk_upsert (
             region_id INT NOT NULL,
             product_id INT NOT NULL,
             quantity INT NOT NULL DEFAULT 0,
             price DECIMAL(10,2),
             PRIMARY KEY (region_id, product_id)
-        )');
+        )';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_cpk_upsert'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_cpk_upsert VALUES (1, 1, 10, 9.99)");
         $this->pdo->exec("INSERT INTO pg_cpk_upsert VALUES (1, 2, 20, 19.99)");
@@ -161,18 +147,5 @@ class PostgresCompositePkUpsertTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_cpk_upsert');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_cpk_upsert');
-        } catch (\Exception $e) {
-        }
     }
 }

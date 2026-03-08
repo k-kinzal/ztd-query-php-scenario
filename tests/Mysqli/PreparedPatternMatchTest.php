@@ -4,45 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests LIKE, BETWEEN, and IS NULL with prepared statement parameters on MySQLi.
+ * @spec pending
  */
-class PreparedPatternMatchTest extends TestCase
+class PreparedPatternMatchTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pattern_test');
-        $raw->query('CREATE TABLE mi_pattern_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, note TEXT)');
-        $raw->close();
+        return 'CREATE TABLE mi_pattern_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, note TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_pattern_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_pattern_test VALUES (1, 'Alice', 80, 'Good student')");
         $this->mysqli->query("INSERT INTO mi_pattern_test VALUES (2, 'Bob', 60, NULL)");
@@ -96,23 +79,5 @@ class PreparedPatternMatchTest extends TestCase
         $result = $this->mysqli->query('SELECT note FROM mi_pattern_test WHERE id = 1');
         $row = $result->fetch_assoc();
         $this->assertNull($row['note']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pattern_test');
-        $raw->close();
     }
 }

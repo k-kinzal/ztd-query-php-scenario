@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests INSERT IGNORE behavior on MySQL ZTD via MySQLi adapter:
@@ -17,37 +13,24 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
  * - Batch INSERT IGNORE with mixed duplicates
  * - Prepared INSERT IGNORE
  * - Physical isolation
+ * @spec SPEC-4.2e
  */
-class InsertIgnoreTest extends TestCase
+class InsertIgnoreTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_ins_ign');
-        $raw->query('CREATE TABLE mi_ins_ign (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_ins_ign (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_ins_ign'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_ins_ign VALUES (1, 'Alice', 90)");
         $this->mysqli->query("INSERT INTO mi_ins_ign VALUES (2, 'Bob', 80)");
@@ -128,27 +111,5 @@ class InsertIgnoreTest extends TestCase
         $this->mysqli->disableZtd();
         $result = $this->mysqli->query('SELECT COUNT(*) as cnt FROM mi_ins_ign');
         $this->assertEquals(0, $result->fetch_assoc()['cnt']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_ins_ign');
-            $raw->close();
-        } catch (\Exception $e) {
-            // Container may be unavailable during cleanup
-        }
     }
 }

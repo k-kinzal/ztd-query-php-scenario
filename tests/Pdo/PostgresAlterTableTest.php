@@ -5,47 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests ALTER TABLE behavior in ZTD mode on PostgreSQL via PDO.
  *
  * PostgreSQL does NOT support ALTER TABLE in ZTD mode — it throws
  * ZtdPdoException ("ALTER TABLE not yet supported for PostgreSQL").
+ * @spec SPEC-5.1a
  */
-class PostgresAlterTableTest extends TestCase
+class PostgresAlterTableTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_alter_test');
-        $raw->exec('CREATE TABLE pg_alter_test (id INT PRIMARY KEY, name VARCHAR(255))');
+        return 'CREATE TABLE pg_alter_test (id INT PRIMARY KEY, name VARCHAR(255))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_alter_test'];
     }
+
 
     public function testAlterTableAddColumnThrows(): void
     {
@@ -79,16 +59,5 @@ class PostgresAlterTableTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('Alice', $rows[0]['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_alter_test');
     }
 }

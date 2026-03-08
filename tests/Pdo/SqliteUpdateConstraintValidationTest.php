@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests UPDATE constraint validation in the shadow store on SQLite.
@@ -14,24 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * UpdateMutation optionally validates NOT NULL and UNIQUE constraints
  * when constraint validation is enabled. This tests whether ZTD
  * correctly enforces these constraints during UPDATE operations.
+ * @spec pending
  */
-class SqliteUpdateConstraintValidationTest extends TestCase
+class SqliteUpdateConstraintValidationTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE upd_const_test (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE, score INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO upd_const_test (id, name, email, score) VALUES (1, 'Alice', 'alice@test.com', 90)");
-        $this->pdo->exec("INSERT INTO upd_const_test (id, name, email, score) VALUES (2, 'Bob', 'bob@test.com', 80)");
-        $this->pdo->exec("INSERT INTO upd_const_test (id, name, email, score) VALUES (3, 'Charlie', 'charlie@test.com', 70)");
+        return 'CREATE TABLE upd_const_test (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE, score INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['upd_const_test'];
+    }
+
 
     /**
      * UPDATE with valid values succeeds.

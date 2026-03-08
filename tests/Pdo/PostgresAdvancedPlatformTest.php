@@ -5,51 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL-specific advanced features with ZTD shadow store:
  * DISTINCT ON, LATERAL JOIN, array functions, advanced casting.
+ * @spec pending
  */
-class PostgresAdvancedPlatformTest extends TestCase
+class PostgresAdvancedPlatformTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pgadv_scores');
-        $raw->exec('DROP TABLE IF EXISTS pgadv_users');
-        $raw->exec('CREATE TABLE pgadv_users (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(20))');
-        $raw->exec('CREATE TABLE pgadv_scores (id INT PRIMARY KEY, user_id INT, score INT, created_date DATE)');
+        return [
+            'CREATE TABLE pgadv_users (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(20))',
+            'CREATE TABLE pgadv_scores (id INT PRIMARY KEY, user_id INT, score INT, created_date DATE)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pgadv_scores', 'pgadv_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pgadv_users VALUES (1, 'Alice', 'Engineering')");
         $this->pdo->exec("INSERT INTO pgadv_users VALUES (2, 'Bob', 'Engineering')");
         $this->pdo->exec("INSERT INTO pgadv_users VALUES (3, 'Charlie', 'Marketing')");
         $this->pdo->exec("INSERT INTO pgadv_users VALUES (4, 'Diana', 'Marketing')");
-
         $this->pdo->exec("INSERT INTO pgadv_scores VALUES (1, 1, 95, '2024-01-15')");
         $this->pdo->exec("INSERT INTO pgadv_scores VALUES (2, 1, 88, '2024-02-15')");
         $this->pdo->exec("INSERT INTO pgadv_scores VALUES (3, 2, 92, '2024-01-15')");
@@ -199,17 +185,5 @@ class PostgresAdvancedPlatformTest extends TestCase
         $this->assertSame('Engineering', $rows[0]['department']);
         $this->assertEquals(2, (int) $rows[0]['user_count']);
         $this->assertEquals(95, (int) $rows[0]['max_score']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pgadv_scores');
-        $raw->exec('DROP TABLE IF EXISTS pgadv_users');
     }
 }

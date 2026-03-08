@@ -5,43 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests interoperability between shadow-created tables and reflected tables (MySQL PDO).
+ * @spec pending
  */
-class MysqlShadowCreatedTableInteropTest extends TestCase
+class MysqlShadowCreatedTableInteropTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_sci_users');
-        $raw->exec('CREATE TABLE mysql_sci_users (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20))');
+        return [
+            'CREATE TABLE mysql_sci_users (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20))',
+            'CREATE TABLE mysql_sci_scores (user_id INT PRIMARY KEY, score INT)',
+            'CREATE TABLE mysql_sci_active (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE mysql_sci_blacklist (user_id INT PRIMARY KEY)',
+            'CREATE TABLE mysql_sci_deactivate (user_id INT PRIMARY KEY)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_sci_users', 'mysql_sci_scores', 'mysql_sci_active', 'mysql_sci_blacklist', 'mysql_sci_deactivate'];
     }
+
 
     public function testJoinReflectedAndShadowCreatedTable(): void
     {
@@ -111,16 +98,5 @@ class MysqlShadowCreatedTableInteropTest extends TestCase
 
         $stmt = $this->pdo->query("SELECT status FROM mysql_sci_users WHERE id = 2");
         $this->assertSame('deactivated', $stmt->fetch(PDO::FETCH_ASSOC)['status']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_sci_users');
     }
 }

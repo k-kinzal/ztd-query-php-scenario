@@ -5,48 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests ORM-style CRUD patterns with ZTD shadow store on MySQL PDO.
  * Uses exec() for INSERT (workaround for issue #23).
+ * @spec pending
  */
-class MysqlOrmStyleCrudTest extends TestCase
+class MysqlOrmStyleCrudTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS orm_comments_m');
-        $raw->exec('DROP TABLE IF EXISTS orm_posts_m');
-        $raw->exec('DROP TABLE IF EXISTS orm_users_m');
-        $raw->exec('CREATE TABLE orm_users_m (id INT PRIMARY KEY, email VARCHAR(100), name VARCHAR(50), role VARCHAR(20))');
-        $raw->exec('CREATE TABLE orm_posts_m (id INT PRIMARY KEY, user_id INT, title VARCHAR(100), published TINYINT)');
-        $raw->exec('CREATE TABLE orm_comments_m (id INT PRIMARY KEY, post_id INT, user_id INT, body TEXT)');
+        return [
+            'CREATE TABLE orm_users_m (id INT PRIMARY KEY, email VARCHAR(100), name VARCHAR(50), role VARCHAR(20))',
+            'CREATE TABLE orm_posts_m (id INT PRIMARY KEY, user_id INT, title VARCHAR(100), published TINYINT)',
+            'CREATE TABLE orm_comments_m (id INT PRIMARY KEY, post_id INT, user_id INT, body TEXT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['orm_comments_m', 'orm_posts_m', 'orm_users_m'];
     }
+
 
     public function testTypicalCrudWorkflow(): void
     {
@@ -137,18 +118,5 @@ class MysqlOrmStyleCrudTest extends TestCase
         $page2 = $stmt->fetchAll(PDO::FETCH_COLUMN);
         $this->assertCount(5, $page2);
         $this->assertSame('User06', $page2[0]);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS orm_comments_m');
-        $raw->exec('DROP TABLE IF EXISTS orm_posts_m');
-        $raw->exec('DROP TABLE IF EXISTS orm_users_m');
     }
 }

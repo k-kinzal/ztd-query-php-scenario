@@ -5,36 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests correlated subqueries in SELECT after mutations in shadow store.
  *
  * Correlated subqueries reference the outer query's row and must
  * correctly reflect shadow mutations (INSERT/UPDATE/DELETE).
+ * @spec pending
  */
-class SqliteCorrelatedSubqueryAfterMutationTest extends TestCase
+class SqliteCorrelatedSubqueryAfterMutationTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_corr_orders (id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL)');
-        $raw->exec('CREATE TABLE sl_corr_customers (id INTEGER PRIMARY KEY, name TEXT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sl_corr_customers VALUES (1, 'Alice')");
-        $this->pdo->exec("INSERT INTO sl_corr_customers VALUES (2, 'Bob')");
-        $this->pdo->exec("INSERT INTO sl_corr_customers VALUES (3, 'Charlie')");
-
-        $this->pdo->exec("INSERT INTO sl_corr_orders VALUES (1, 1, 100.00)");
-        $this->pdo->exec("INSERT INTO sl_corr_orders VALUES (2, 1, 200.00)");
-        $this->pdo->exec("INSERT INTO sl_corr_orders VALUES (3, 2, 150.00)");
+        return [
+            'CREATE TABLE sl_corr_orders (id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL)',
+            'CREATE TABLE sl_corr_customers (id INTEGER PRIMARY KEY, name TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_corr_orders', 'sl_corr_customers'];
+    }
+
 
     /**
      * Scalar correlated subquery in SELECT list.

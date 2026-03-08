@@ -5,28 +5,40 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests FETCH_LAZY mode, exec() with SELECT, and other edge cases
  * commonly encountered by ORMs and frameworks.
+ * @spec pending
  */
-class SqliteFetchLazyAndEdgeCaseTest extends TestCase
+class SqliteFetchLazyAndEdgeCaseTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE fl_users (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20), score INT)',
+            'CREATE TABLE fl_flags (id INT PRIMARY KEY, active INT)',
+            'CREATE TABLE fl_orders (id INT PRIMARY KEY, user_id INT, name VARCHAR(50))',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['fl_users', 'fl_flags', 'fl_orders'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE fl_users (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20), score INT)');
         $this->pdo->exec("INSERT INTO fl_users VALUES (1, 'Alice', 'admin', 90)");
         $this->pdo->exec("INSERT INTO fl_users VALUES (2, 'Bob', 'user', 70)");
         $this->pdo->exec("INSERT INTO fl_users VALUES (3, 'Charlie', 'moderator', 85)");
-    }
+
+        }
 
     public function testFetchLazyReturnsPdoRow(): void
     {

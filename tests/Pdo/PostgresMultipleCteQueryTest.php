@@ -5,37 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests user-defined CTEs (WITH ... AS) in shadow queries on PostgreSQL.
  *
  * ZTD adds its own CTE for shadow data. User-defined CTEs may be
  * overwritten during query rewriting. Documents the behavior on PostgreSQL.
+ * @spec pending
  */
-class PostgresMultipleCteQueryTest extends TestCase
+class PostgresMultipleCteQueryTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_orders');
-        $raw->exec('CREATE TABLE pg_cte_orders (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount NUMERIC(10,2))');
+        return 'CREATE TABLE pg_cte_orders (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount NUMERIC(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_cte_orders'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pg_cte_orders VALUES (1, 'Alice', 'Widget', 100.00)");
         $this->pdo->exec("INSERT INTO pg_cte_orders VALUES (2, 'Alice', 'Gadget', 200.00)");
         $this->pdo->exec("INSERT INTO pg_cte_orders VALUES (3, 'Bob', 'Widget', 150.00)");
         $this->pdo->exec("INSERT INTO pg_cte_orders VALUES (4, 'Bob', 'Gadget', 50.00)");
@@ -102,14 +97,5 @@ class PostgresMultipleCteQueryTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_cte_orders');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_cte_orders');
-        } catch (\Exception $e) {
-        }
     }
 }

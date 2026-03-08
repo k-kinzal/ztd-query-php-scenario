@@ -6,11 +6,7 @@ namespace Tests\Pdo;
 
 use PDO;
 use PDOException;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL array type handling with ZTD.
@@ -26,25 +22,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - TEXT[] columns work because CAST to TEXT is compatible.
  * - NULL array values work correctly.
  * - ARRAY[] constructor syntax causes InsertTransformer to mismatch column count.
+ * @spec pending
  */
-class PostgresArrayTypeTest extends TestCase
+class PostgresArrayTypeTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_arr_test');
-        $raw->exec('CREATE TABLE pg_arr_test (id INT PRIMARY KEY, name VARCHAR(50), tags TEXT[], scores INTEGER[])');
+        return 'CREATE TABLE pg_arr_test (id INT PRIMARY KEY, name VARCHAR(50), tags TEXT[], scores INTEGER[])';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        return ['pg_arr_test'];
     }
+
 
     /**
      * INSERT with curly brace array literal succeeds, but SELECT fails.
@@ -159,14 +150,5 @@ class PostgresArrayTypeTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_arr_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_arr_test');
-        } catch (\Exception $e) {
-        }
     }
 }

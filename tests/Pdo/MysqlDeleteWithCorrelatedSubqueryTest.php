@@ -5,41 +5,36 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests DELETE with correlated subqueries on MySQL PDO.
  *
  * Cross-platform parity with SqliteDeleteWithCorrelatedSubqueryTest.
+ * @spec pending
  */
-class MysqlDeleteWithCorrelatedSubqueryTest extends TestCase
+class MysqlDeleteWithCorrelatedSubqueryTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_del_orders');
-        $raw->exec('DROP TABLE IF EXISTS pdo_del_customers');
-        $raw->exec('CREATE TABLE pdo_del_customers (id INT PRIMARY KEY, name VARCHAR(50), active TINYINT)');
-        $raw->exec('CREATE TABLE pdo_del_orders (id INT PRIMARY KEY, customer_id INT, amount DECIMAL(10,2))');
+        return [
+            'CREATE TABLE pdo_del_customers (id INT PRIMARY KEY, name VARCHAR(50), active TINYINT)',
+            'CREATE TABLE pdo_del_orders (id INT PRIMARY KEY, customer_id INT, amount DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_del_orders', 'pdo_del_customers'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pdo_del_customers VALUES (1, 'Alice', 1)");
         $this->pdo->exec("INSERT INTO pdo_del_customers VALUES (2, 'Bob', 0)");
         $this->pdo->exec("INSERT INTO pdo_del_customers VALUES (3, 'Charlie', 1)");
-
         $this->pdo->exec("INSERT INTO pdo_del_orders VALUES (1, 1, 100.00)");
         $this->pdo->exec("INSERT INTO pdo_del_orders VALUES (2, 1, 200.00)");
         $this->pdo->exec("INSERT INTO pdo_del_orders VALUES (3, 3, 150.00)");
@@ -104,15 +99,5 @@ class MysqlDeleteWithCorrelatedSubqueryTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_del_customers');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_del_orders');
-            $raw->exec('DROP TABLE IF EXISTS pdo_del_customers');
-        } catch (\Exception $e) {
-        }
     }
 }

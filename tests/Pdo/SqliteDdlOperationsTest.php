@@ -5,24 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
-class SqliteDdlOperationsTest extends TestCase
+/** @spec SPEC-5.1, SPEC-5.2 */
+class SqliteDdlOperationsTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE ddl_existing (id INTEGER PRIMARY KEY, val TEXT)',
+            'CREATE TABLE ddl_existing (id INTEGER PRIMARY KEY)',
+            'CREATE TABLE ddl_new (id INTEGER PRIMARY KEY, name TEXT)',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['ddl_existing', 'ddl_new'];
+    }
+
     private PDO $raw;
-    private ZtdPdo $pdo;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->raw = new PDO('sqlite::memory:', null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
         $this->raw->exec('CREATE TABLE ddl_existing (id INTEGER PRIMARY KEY, val TEXT)');
 
-        $this->pdo = ZtdPdo::fromPdo($this->raw);
-    }
+        }
 
     public function testCreateTableThrowsWhenTableExistsPhysically(): void
     {

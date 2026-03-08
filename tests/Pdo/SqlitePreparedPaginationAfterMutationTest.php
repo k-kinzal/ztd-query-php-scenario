@@ -5,32 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared pagination (LIMIT/OFFSET) combined with shadow mutations on SQLite.
  *
  * Ensures that prepared SELECT with parameterized LIMIT/OFFSET correctly
  * reflects shadow state changes across multiple pages.
+ * @spec pending
  */
-class SqlitePreparedPaginationAfterMutationTest extends TestCase
+class SqlitePreparedPaginationAfterMutationTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_ppag_test (id INTEGER PRIMARY KEY, name TEXT, category TEXT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        for ($i = 1; $i <= 10; $i++) {
-            $cat = $i <= 5 ? 'A' : 'B';
-            $this->pdo->exec("INSERT INTO sl_ppag_test VALUES ($i, 'Item$i', '$cat')");
-        }
+        return 'CREATE TABLE sl_ppag_test (id INTEGER PRIMARY KEY, name TEXT, category TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_ppag_test'];
+    }
+
 
     /**
      * Parameterized LIMIT and OFFSET.

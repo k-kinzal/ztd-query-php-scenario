@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests shadow store behavior with larger datasets.
@@ -14,19 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Verifies that the CTE-based shadow store handles hundreds of rows
  * correctly — including INSERT, SELECT with aggregation, UPDATE,
  * DELETE, and complex queries on non-trivial data volumes.
+ * @spec pending
  */
-class SqliteLargeDatasetTest extends TestCase
+class SqliteLargeDatasetTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE ld_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, category TEXT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE ld_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, category TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['ld_test'];
+    }
+
 
     /**
      * Insert and query 100 rows.

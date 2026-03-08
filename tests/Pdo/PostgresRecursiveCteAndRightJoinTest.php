@@ -5,49 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests recursive CTEs and RIGHT JOIN on PostgreSQL PDO.
+ * @spec SPEC-3.3c
  */
-class PostgresRecursiveCteAndRightJoinTest extends TestCase
+class PostgresRecursiveCteAndRightJoinTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_rc_enrollments');
-        $raw->exec('DROP TABLE IF EXISTS pg_rc_categories');
-        $raw->exec('DROP TABLE IF EXISTS pg_rc_students');
-        $raw->exec('DROP TABLE IF EXISTS pg_rc_courses');
-        $raw->exec('CREATE TABLE pg_rc_categories (id INT PRIMARY KEY, name VARCHAR(255), parent_id INT)');
-        $raw->exec('CREATE TABLE pg_rc_students (id INT PRIMARY KEY, name VARCHAR(255))');
-        $raw->exec('CREATE TABLE pg_rc_courses (id INT PRIMARY KEY, title VARCHAR(255))');
-        $raw->exec('CREATE TABLE pg_rc_enrollments (student_id INT, course_id INT)');
+        return [
+            'CREATE TABLE pg_rc_categories (id INT PRIMARY KEY, name VARCHAR(255), parent_id INT)',
+            'CREATE TABLE pg_rc_students (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE pg_rc_courses (id INT PRIMARY KEY, title VARCHAR(255))',
+            'CREATE TABLE pg_rc_enrollments (student_id INT, course_id INT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_rc_enrollments', 'pg_rc_categories', 'pg_rc_students', 'pg_rc_courses'];
     }
+
 
     public function testRecursiveCteNumberSeries(): void
     {
@@ -123,19 +103,5 @@ class PostgresRecursiveCteAndRightJoinTest extends TestCase
 
         $math = array_filter($rows, fn($r) => $r['title'] === 'Math');
         $this->assertCount(2, $math);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_rc_enrollments');
-        $raw->exec('DROP TABLE IF EXISTS pg_rc_categories');
-        $raw->exec('DROP TABLE IF EXISTS pg_rc_students');
-        $raw->exec('DROP TABLE IF EXISTS pg_rc_courses');
     }
 }

@@ -5,32 +5,26 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractPostgresPdoTestCase;
 use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests that multiple ZtdPdo instances connected to the same PostgreSQL database
  * maintain independent shadow stores with interleaved operations.
+ * @spec SPEC-2.4
  */
-class PostgresConcurrentInstancesTest extends TestCase
+class PostgresConcurrentInstancesTest extends AbstractPostgresPdoTestCase
 {
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ci_items');
-        $raw->exec('CREATE TABLE ci_items (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE ci_items (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['ci_items'];
+    }
+
 
     public function testInsertInOneInstanceInvisibleToOther(): void
     {
@@ -77,16 +71,5 @@ class PostgresConcurrentInstancesTest extends TestCase
 
         $nameA = $pdoA->query('SELECT name FROM ci_items WHERE id = 1')->fetch(PDO::FETCH_ASSOC)['name'];
         $this->assertSame('UpdatedByA', $nameA);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ci_items');
     }
 }

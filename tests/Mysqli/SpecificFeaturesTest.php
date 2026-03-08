@@ -4,47 +4,30 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests MySQL-specific features: IF(), IFNULL, FIND_IN_SET, ON DUPLICATE KEY edge cases via MySQLi.
  *
  * Cross-platform parity with MysqlSpecificFeaturesTest (PDO).
+ * @spec pending
  */
-class SpecificFeaturesTest extends TestCase
+class SpecificFeaturesTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_msf_products');
-        $raw->query('CREATE TABLE mi_msf_products (id INT PRIMARY KEY, name VARCHAR(255), stock INT, price DECIMAL(10,2), tags VARCHAR(255))');
-        $raw->close();
+        return 'CREATE TABLE mi_msf_products (id INT PRIMARY KEY, name VARCHAR(255), stock INT, price DECIMAL(10,2), tags VARCHAR(255))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_msf_products'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_msf_products (id, name, stock, price, tags) VALUES (1, 'Widget', 50, 9.99, 'hardware,small')");
         $this->mysqli->query("INSERT INTO mi_msf_products (id, name, stock, price, tags) VALUES (2, 'Gadget', 0, 29.99, 'electronics,big')");
@@ -125,28 +108,5 @@ class SpecificFeaturesTest extends TestCase
         $row = $result->fetch_assoc();
         $this->assertSame('tegdiW', $row['rev']);
         $this->assertSame('00050', $row['padded']);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_msf_products');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

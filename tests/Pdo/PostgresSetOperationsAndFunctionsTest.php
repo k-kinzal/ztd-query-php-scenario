@@ -5,49 +5,35 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests set operations (EXCEPT, INTERSECT), string/math functions, and multiple CTEs on PostgreSQL PDO.
+ * @spec SPEC-3.3d
  */
-class PostgresSetOperationsAndFunctionsTest extends TestCase
+class PostgresSetOperationsAndFunctionsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_sof_vip');
-        $raw->exec('DROP TABLE IF EXISTS pg_sof_users');
-        $raw->exec('CREATE TABLE pg_sof_users (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), score INT)');
-        $raw->exec('CREATE TABLE pg_sof_vip (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255))');
+        return [
+            'CREATE TABLE pg_sof_users (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), score INT)',
+            'CREATE TABLE pg_sof_vip (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_sof_vip', 'pg_sof_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_sof_users (id, name, email, score) VALUES (1, 'Alice', 'alice@test.com', 90)");
         $this->pdo->exec("INSERT INTO pg_sof_users (id, name, email, score) VALUES (2, 'Bob', 'bob@test.com', 80)");
         $this->pdo->exec("INSERT INTO pg_sof_users (id, name, email, score) VALUES (3, 'Charlie', 'charlie@test.com', 70)");
-
         $this->pdo->exec("INSERT INTO pg_sof_vip (id, name, email) VALUES (1, 'Alice', 'alice@test.com')");
     }
 
@@ -142,17 +128,5 @@ class PostgresSetOperationsAndFunctionsTest extends TestCase
 
         $affected = $this->pdo->exec("DELETE FROM pg_sof_users WHERE id = 999");
         $this->assertSame(0, $affected);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_sof_vip');
-        $raw->exec('DROP TABLE IF EXISTS pg_sof_users');
     }
 }

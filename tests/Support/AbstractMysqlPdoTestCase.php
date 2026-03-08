@@ -51,14 +51,19 @@ abstract class AbstractMysqlPdoTestCase extends TestCase
             $raw->exec($ddl);
         }
 
-        $this->pdo = new ZtdPdo(
+        $this->pdo = $this->createZtdConnection();
+
+        VersionRecorder::setVersionInfo(static::class, $this->getDbVersion(), $this->getZtdVersion());
+    }
+
+    protected function createZtdConnection(): ZtdPdo
+    {
+        return new ZtdPdo(
             MySQLContainer::getDsn(),
             'root',
             'root',
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
-
-        VersionRecorder::setVersionInfo(static::class, $this->getDbVersion(), $this->getZtdVersion());
     }
 
     protected function ztdExec(string $sql): int|false

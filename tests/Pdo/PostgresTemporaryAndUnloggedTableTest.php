@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests CREATE TEMPORARY TABLE and CREATE UNLOGGED TABLE on PostgreSQL ZTD.
@@ -17,26 +12,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * The PgSqlParser recognizes TEMPORARY, TEMP, and UNLOGGED modifiers in CREATE TABLE.
  * In ZTD shadow mode, these modifiers don't affect behavior (all tables are in-memory),
  * but the parser must correctly extract table names despite these keywords.
+ * @spec pending
  */
-class PostgresTemporaryAndUnloggedTableTest extends TestCase
+class PostgresTemporaryAndUnloggedTableTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return [];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return [];
     }
+
 
     public function testCreateTemporaryTable(): void
     {

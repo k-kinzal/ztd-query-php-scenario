@@ -5,32 +5,26 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractMysqlPdoTestCase;
 use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests PDO attribute interactions with ZTD on MySQL.
  * EMULATE_PREPARES is particularly important on MySQL.
+ * @spec pending
  */
-class MysqlPdoAttributeInteractionTest extends TestCase
+class MysqlPdoAttributeInteractionTest extends AbstractMysqlPdoTestCase
 {
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS attr_mysql');
-        $raw->exec('CREATE TABLE attr_mysql (id INT PRIMARY KEY, name VARCHAR(50), score DECIMAL(10,2))');
+        return 'CREATE TABLE attr_mysql (id INT PRIMARY KEY, name VARCHAR(50), score DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['attr_mysql'];
+    }
+
 
     public function testEmulatePreparesTrueWithShadow(): void
     {
@@ -118,16 +112,5 @@ class MysqlPdoAttributeInteractionTest extends TestCase
 
         $this->assertCount(2, $rows);
         $this->assertSame('Alice', $rows[0]['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS attr_mysql');
     }
 }

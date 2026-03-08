@@ -5,26 +5,33 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests savepoint (nested transaction) behavior with ZTD on SQLite PDO.
+ * @spec SPEC-6.3
  */
-class SqliteSavepointTest extends TestCase
+class SqliteSavepointTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE sp_test (id INT PRIMARY KEY, name VARCHAR(50))';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['sp_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE sp_test (id INT PRIMARY KEY, name VARCHAR(50))');
         $this->pdo->exec("INSERT INTO sp_test VALUES (1, 'Alice')");
-    }
+
+        }
 
     /**
      * SAVEPOINT should be supported.

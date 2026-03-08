@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests INSERT OR IGNORE behavior on SQLite ZTD:
@@ -16,21 +15,30 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - Physical isolation (shadow-only table)
  *
  * Note: SQLite uses "INSERT OR IGNORE" syntax (not "INSERT IGNORE").
+ * @spec SPEC-4.2e
  */
-class SqliteInsertIgnoreTest extends TestCase
+class SqliteInsertIgnoreTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE ins_ign_s (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['ins_ign_s'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE ins_ign_s (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO ins_ign_s VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO ins_ign_s VALUES (2, 'Bob', 80)");
-    }
+
+        }
 
     public function testInsertOrIgnoreDuplicateSkipped(): void
     {

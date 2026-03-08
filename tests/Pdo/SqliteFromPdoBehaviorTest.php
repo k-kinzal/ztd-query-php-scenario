@@ -11,6 +11,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 /**
  * Tests behavioral differences between ZtdPdo::fromPdo() and new ZtdPdo() constructor
  * on SQLite. Documents how schema reflection timing affects ZTD operations.
+ * @spec SPEC-1.4
  */
 class SqliteFromPdoBehaviorTest extends TestCase
 {

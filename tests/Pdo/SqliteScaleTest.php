@@ -5,26 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests shadow store behavior at higher scale — 200+ rows with
  * interleaved INSERT/UPDATE/DELETE/SELECT operations.
+ * @spec pending
  */
-class SqliteScaleTest extends TestCase
+class SqliteScaleTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE scale_items (id INTEGER PRIMARY KEY, name TEXT, category TEXT, score INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE scale_items (id INTEGER PRIMARY KEY, name TEXT, category TEXT, score INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['scale_items'];
+    }
+
 
     public function testBulkInsert200Rows(): void
     {

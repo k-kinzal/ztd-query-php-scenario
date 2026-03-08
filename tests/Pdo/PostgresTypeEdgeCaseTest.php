@@ -5,45 +5,26 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL-specific type edge cases with ZTD shadow store.
  *
  * @see https://github.com/k-kinzal/ztd-query-php/issues/6
+ * @spec pending
  */
-class PostgresTypeEdgeCaseTest extends TestCase
+class PostgresTypeEdgeCaseTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_type_edge');
-        $raw->exec('CREATE TABLE pg_type_edge (id INT PRIMARY KEY, flag BOOLEAN, big_num BIGINT)');
+        return 'CREATE TABLE pg_type_edge (id INT PRIMARY KEY, flag BOOLEAN, big_num BIGINT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_type_edge'];
     }
+
 
     /**
      * BOOLEAN true works correctly via prepared statement.
@@ -123,16 +104,5 @@ class PostgresTypeEdgeCaseTest extends TestCase
         $sel = $this->pdo->query('SELECT flag, big_num FROM pg_type_edge WHERE id = 5');
         $row = $sel->fetch(PDO::FETCH_ASSOC);
         $this->assertNotFalse($row);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_type_edge');
     }
 }

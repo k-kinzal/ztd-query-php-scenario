@@ -5,43 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests statement methods (setFetchMode, closeCursor, bindColumn, columnCount, iterator, query with fetch mode)
  * in ZTD mode on MySQL via PDO.
+ * @spec SPEC-4.12
  */
-class MysqlStatementMethodsTest extends TestCase
+class MysqlStatementMethodsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_stmt_test');
-        $raw->exec('CREATE TABLE mysql_stmt_test (id INT PRIMARY KEY, name VARCHAR(255), amount DECIMAL(10,2))');
+        return 'CREATE TABLE mysql_stmt_test (id INT PRIMARY KEY, name VARCHAR(255), amount DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_stmt_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_stmt_test (id, name, amount) VALUES (1, 'Alice', 100.50)");
         $this->pdo->exec("INSERT INTO mysql_stmt_test (id, name, amount) VALUES (2, 'Bob', 200.75)");
@@ -153,16 +139,5 @@ class MysqlStatementMethodsTest extends TestCase
 
         $info = $this->pdo->errorInfo();
         $this->assertIsArray($info);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_stmt_test');
     }
 }

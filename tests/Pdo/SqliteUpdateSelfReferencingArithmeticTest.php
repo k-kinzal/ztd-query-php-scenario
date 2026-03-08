@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests UPDATE with self-referencing arithmetic (SET col = col + N)
@@ -14,23 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * This pattern is common in counter updates, balance adjustments,
  * and scoring systems.
+ * @spec pending
  */
-class SqliteUpdateSelfReferencingArithmeticTest extends TestCase
+class SqliteUpdateSelfReferencingArithmeticTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_selfref_test (id INTEGER PRIMARY KEY, name TEXT, counter INTEGER, balance REAL)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sl_selfref_test VALUES (1, 'Alice', 10, 100.00)");
-        $this->pdo->exec("INSERT INTO sl_selfref_test VALUES (2, 'Bob', 20, 200.00)");
-        $this->pdo->exec("INSERT INTO sl_selfref_test VALUES (3, 'Charlie', 30, 300.00)");
+        return 'CREATE TABLE sl_selfref_test (id INTEGER PRIMARY KEY, name TEXT, counter INTEGER, balance REAL)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_selfref_test'];
+    }
+
 
     /**
      * SET col = col + N on a single row.

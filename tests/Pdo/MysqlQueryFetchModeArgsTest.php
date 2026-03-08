@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
+use Tests\Support\AbstractMysqlPdoTestCase;
 use Tests\Support\UserDto;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests ZtdPdo::query() with fetchMode arguments.
@@ -20,25 +16,25 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * When fetchMode is provided, it calls setFetchMode($fetchMode, ...$fetchModeArgs)
  * on the result statement. This tests the variadic args path.
+ * @spec pending
  */
-class MysqlQueryFetchModeArgsTest extends TestCase
+class MysqlQueryFetchModeArgsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_qfm_test');
-        $raw->exec('CREATE TABLE pdo_qfm_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE pdo_qfm_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_qfm_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
-        $this->pdo->exec("INSERT INTO pdo_qfm_test (id, name, score) VALUES (1, 'Alice', 90)");
+        parent::setUp();
+
         $this->pdo->exec("INSERT INTO pdo_qfm_test (id, name, score) VALUES (2, 'Bob', 80)");
     }
 
@@ -140,14 +136,5 @@ class MysqlQueryFetchModeArgsTest extends TestCase
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_qfm_test', PDO::FETCH_COLUMN, 0);
         $count = $stmt->fetch();
         $this->assertSame(0, (int) $count);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_qfm_test');
-        } catch (\Exception $e) {
-        }
     }
 }

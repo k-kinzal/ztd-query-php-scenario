@@ -9,6 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests shared JOIN and subquery scenarios on MySQL via MySQLi.
+ * @spec pending
  */
 class JoinAndSubqueryTest extends AbstractMysqliTestCase
 {

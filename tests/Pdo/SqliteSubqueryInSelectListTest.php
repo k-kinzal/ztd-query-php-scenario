@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests subqueries in various positions within SELECT on SQLite.
@@ -14,27 +13,23 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Verifies scalar subqueries in SELECT list, EXISTS in WHERE,
  * subqueries in CASE WHEN, and nested subqueries all work
  * correctly through CTE rewriting.
+ * @spec pending
  */
-class SqliteSubqueryInSelectListTest extends TestCase
+class SqliteSubqueryInSelectListTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE ssl_dept (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->exec('CREATE TABLE ssl_emp (id INT PRIMARY KEY, name VARCHAR(50), dept_id INT, salary DECIMAL(10,2))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO ssl_dept VALUES (1, 'Engineering')");
-        $this->pdo->exec("INSERT INTO ssl_dept VALUES (2, 'Marketing')");
-        $this->pdo->exec("INSERT INTO ssl_dept VALUES (3, 'HR')");
-
-        $this->pdo->exec("INSERT INTO ssl_emp VALUES (1, 'Alice', 1, 120000)");
-        $this->pdo->exec("INSERT INTO ssl_emp VALUES (2, 'Bob', 1, 100000)");
-        $this->pdo->exec("INSERT INTO ssl_emp VALUES (3, 'Charlie', 2, 90000)");
-        $this->pdo->exec("INSERT INTO ssl_emp VALUES (4, 'Diana', 2, 95000)");
+        return [
+            'CREATE TABLE ssl_dept (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE ssl_emp (id INT PRIMARY KEY, name VARCHAR(50), dept_id INT, salary DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['ssl_dept', 'ssl_emp'];
+    }
+
 
     /**
      * Scalar subquery in SELECT list.

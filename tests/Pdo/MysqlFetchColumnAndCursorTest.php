@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests fetchColumn(), closeCursor(), and FETCH_CLASS on MySQL ZTD PDO.
+ * @spec pending
  */
-class MysqlFetchColumnAndCursorTest extends TestCase
+class MysqlFetchColumnAndCursorTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS fc_test_m');
-        $raw->exec('CREATE TABLE fc_test_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE fc_test_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['fc_test_m'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO fc_test_m VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO fc_test_m VALUES (2, 'Bob', 85)");
@@ -110,16 +96,5 @@ class MysqlFetchColumnAndCursorTest extends TestCase
         $stmt = $this->pdo->query('SELECT id, name FROM fc_test_m ORDER BY id');
         $pairs = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
         $this->assertSame([1 => 'Alice', 2 => 'Bob', 3 => 'Charlie'], $pairs);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS fc_test_m');
     }
 }

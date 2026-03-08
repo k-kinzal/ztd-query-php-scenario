@@ -5,49 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests recursive CTEs and RIGHT JOIN on MySQL PDO.
+ * @spec SPEC-3.3c
  */
-class MysqlRecursiveCteAndRightJoinTest extends TestCase
+class MysqlRecursiveCteAndRightJoinTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_rc_enrollments');
-        $raw->exec('DROP TABLE IF EXISTS mysql_rc_categories');
-        $raw->exec('DROP TABLE IF EXISTS mysql_rc_students');
-        $raw->exec('DROP TABLE IF EXISTS mysql_rc_courses');
-        $raw->exec('CREATE TABLE mysql_rc_categories (id INT PRIMARY KEY, name VARCHAR(255), parent_id INT)');
-        $raw->exec('CREATE TABLE mysql_rc_students (id INT PRIMARY KEY, name VARCHAR(255))');
-        $raw->exec('CREATE TABLE mysql_rc_courses (id INT PRIMARY KEY, title VARCHAR(255))');
-        $raw->exec('CREATE TABLE mysql_rc_enrollments (student_id INT, course_id INT)');
+        return [
+            'CREATE TABLE mysql_rc_categories (id INT PRIMARY KEY, name VARCHAR(255), parent_id INT)',
+            'CREATE TABLE mysql_rc_students (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE mysql_rc_courses (id INT PRIMARY KEY, title VARCHAR(255))',
+            'CREATE TABLE mysql_rc_enrollments (student_id INT, course_id INT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_rc_enrollments', 'mysql_rc_categories', 'mysql_rc_students', 'mysql_rc_courses'];
     }
+
 
     public function testRecursiveCteNumberSeries(): void
     {
@@ -118,19 +98,5 @@ class MysqlRecursiveCteAndRightJoinTest extends TestCase
 
         $math = array_filter($rows, fn($r) => $r['title'] === 'Math');
         $this->assertCount(2, $math);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_rc_enrollments');
-        $raw->exec('DROP TABLE IF EXISTS mysql_rc_categories');
-        $raw->exec('DROP TABLE IF EXISTS mysql_rc_students');
-        $raw->exec('DROP TABLE IF EXISTS mysql_rc_courses');
     }
 }

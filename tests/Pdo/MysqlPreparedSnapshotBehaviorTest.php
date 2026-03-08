@@ -4,40 +4,30 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statement CTE snapshot behavior on MySQL PDO.
  *
  * Cross-platform parity with SqlitePreparedSnapshotBehaviorTest.
+ * @spec pending
  */
-class MysqlPreparedSnapshotBehaviorTest extends TestCase
+class MysqlPreparedSnapshotBehaviorTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_mpsb_test');
-        $raw->exec('CREATE TABLE pdo_mpsb_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE pdo_mpsb_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_mpsb_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pdo_mpsb_test VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO pdo_mpsb_test VALUES (2, 'Bob', 80)");
@@ -82,14 +72,5 @@ class MysqlPreparedSnapshotBehaviorTest extends TestCase
 
         $stmt->execute();
         $this->assertSame(2, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_mpsb_test');
-        } catch (\Exception $e) {
-        }
     }
 }

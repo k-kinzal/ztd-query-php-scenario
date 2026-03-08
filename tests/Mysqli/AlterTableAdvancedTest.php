@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests advanced ALTER TABLE operations on MySQL ZTD via MySQLi:
@@ -16,39 +12,20 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
  * - CHANGE COLUMN with existing shadow data
  * - MODIFY COLUMN with existing shadow data
  * - Multiple ALTER operations in sequence
+ * @spec SPEC-5.1a
  */
-class AlterTableAdvancedTest extends TestCase
+class AlterTableAdvancedTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_alt_adv');
-        $raw->query('DROP TABLE IF EXISTS mi_alt_adv_new');
-        $raw->query('CREATE TABLE mi_alt_adv (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_alt_adv (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_alt_adv', 'mi_alt_adv_new'];
     }
+
 
     public function testRenameTable(): void
     {
@@ -113,28 +90,5 @@ class AlterTableAdvancedTest extends TestCase
 
         $result = $this->mysqli->query('SELECT COUNT(*) as cnt FROM mi_alt_adv');
         $this->assertEquals(2, $result->fetch_assoc()['cnt']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_alt_adv');
-            $raw->query('DROP TABLE IF EXISTS mi_alt_adv_new');
-            $raw->close();
-        } catch (\Exception $e) {
-            // Container may be unavailable
-        }
     }
 }

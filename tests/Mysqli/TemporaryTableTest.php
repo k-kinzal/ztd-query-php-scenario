@@ -4,38 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests CREATE TEMPORARY TABLE on MySQL ZTD (MySQLi adapter).
  *
  * MySQL supports TEMPORARY tables. In ZTD shadow mode, the TEMPORARY modifier
  * should be handled by the parser, and the shadow table should behave normally.
+ * @spec pending
  */
-class TemporaryTableTest extends TestCase
+class TemporaryTableTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return [];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return [];
     }
+
 
     public function testCreateTemporaryTable(): void
     {
@@ -85,13 +74,6 @@ class TemporaryTableTest extends TestCase
         } catch (\mysqli_sql_exception $e) {
             // Table doesn't exist — expected
             $this->assertStringContainsString("doesn't exist", $e->getMessage());
-        }
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
         }
     }
 }

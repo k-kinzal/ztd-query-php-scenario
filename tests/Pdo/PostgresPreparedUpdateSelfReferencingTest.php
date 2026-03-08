@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests prepared UPDATE with self-referencing arithmetic on PostgreSQL PDO.
  *
  * Cross-platform parity with SqlitePreparedUpdateSelfReferencingTest.
+ * @spec pending
  */
 class PostgresPreparedUpdateSelfReferencingTest extends TestCase
 {

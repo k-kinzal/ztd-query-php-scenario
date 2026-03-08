@@ -4,47 +4,31 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests user-written CTE (WITH) queries and INSERT ... SELECT in ZTD mode.
+ * @spec pending
  */
-class UserCteTest extends TestCase
+class UserCteTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS cte_products');
-        $raw->query('DROP TABLE IF EXISTS cte_products_backup');
-        $raw->query('CREATE TABLE cte_products (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(255), price DECIMAL(10,2))');
-        $raw->query('CREATE TABLE cte_products_backup (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(255), price DECIMAL(10,2))');
-        $raw->close();
+        return [
+            'CREATE TABLE cte_products (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(255), price DECIMAL(10,2))',
+            'CREATE TABLE cte_products_backup (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(255), price DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['cte_products', 'cte_products_backup'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO cte_products (id, name, category, price) VALUES (1, 'Widget A', 'gadgets', 10.00)");
         $this->mysqli->query("INSERT INTO cte_products (id, name, category, price) VALUES (2, 'Widget B', 'gadgets', 20.00)");
@@ -106,24 +90,5 @@ class UserCteTest extends TestCase
         $result = $this->mysqli->query('SELECT * FROM cte_products_backup');
         $this->assertSame(0, $result->num_rows);
         $this->mysqli->enableZtd();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS cte_products_backup');
-        $raw->query('DROP TABLE IF EXISTS cte_products');
-        $raw->close();
     }
 }

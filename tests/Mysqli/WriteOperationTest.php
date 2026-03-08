@@ -7,6 +7,7 @@ namespace Tests\Mysqli;
 use Tests\Scenarios\WriteOperationScenario;
 use Tests\Support\AbstractMysqliTestCase;
 
+/** @spec SPEC-4.1, SPEC-4.2 */
 class WriteOperationTest extends AbstractMysqliTestCase
 {
     use WriteOperationScenario;

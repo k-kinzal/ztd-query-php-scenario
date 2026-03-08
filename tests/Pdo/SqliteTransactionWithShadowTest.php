@@ -5,27 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests transaction interaction with ZTD shadow store on SQLite.
  *
  * Since shadow operations don't physically write, transactions
  * (BEGIN/COMMIT/ROLLBACK) may interact differently with shadow state.
+ * @spec SPEC-4.8
  */
-class SqliteTransactionWithShadowTest extends TestCase
+class SqliteTransactionWithShadowTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_txn_test (id INTEGER PRIMARY KEY, name TEXT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE sl_txn_test (id INTEGER PRIMARY KEY, name TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_txn_test'];
+    }
+
 
     /**
      * beginTransaction/commit works with shadow INSERT.

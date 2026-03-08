@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests UNION/EXCEPT/INTERSECT combined with LIMIT/OFFSET in shadow queries.
@@ -14,30 +13,23 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Set operations with LIMIT/OFFSET are common pagination patterns
  * in real-world applications. Tests whether the CTE rewriter handles
  * these combinations correctly.
+ * @spec pending
  */
-class SqliteSetOperationsWithLimitTest extends TestCase
+class SqliteSetOperationsWithLimitTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_set_a (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)');
-        $raw->exec('CREATE TABLE sl_set_b (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        // Table A
-        $this->pdo->exec("INSERT INTO sl_set_a VALUES (1, 'Alice', 90)");
-        $this->pdo->exec("INSERT INTO sl_set_a VALUES (2, 'Bob', 80)");
-        $this->pdo->exec("INSERT INTO sl_set_a VALUES (3, 'Charlie', 70)");
-
-        // Table B — overlaps with A on Bob
-        $this->pdo->exec("INSERT INTO sl_set_b VALUES (4, 'Bob', 80)");
-        $this->pdo->exec("INSERT INTO sl_set_b VALUES (5, 'Diana', 60)");
-        $this->pdo->exec("INSERT INTO sl_set_b VALUES (6, 'Eve', 50)");
+        return [
+            'CREATE TABLE sl_set_a (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)',
+            'CREATE TABLE sl_set_b (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_set_a', 'sl_set_b'];
+    }
+
 
     /**
      * UNION ALL with LIMIT.

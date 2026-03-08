@@ -4,46 +4,29 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests the bind_result() + fetch() pattern which is the classic
  * alternative to get_result() for reading prepared statement results.
+ * @spec pending
  */
-class BindResultFetchTest extends TestCase
+class BindResultFetchTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS bind_result_test');
-        $raw->query('CREATE TABLE bind_result_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)');
-        $raw->close();
+        return 'CREATE TABLE bind_result_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['bind_result_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO bind_result_test (id, name, score) VALUES (1, 'Alice', 100)");
         $this->mysqli->query("INSERT INTO bind_result_test (id, name, score) VALUES (2, 'Bob', 85)");
@@ -126,23 +109,5 @@ class BindResultFetchTest extends TestCase
         }
 
         $this->assertCount(2, $rows);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS bind_result_test');
-        $raw->close();
     }
 }

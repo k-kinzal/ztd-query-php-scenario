@@ -4,33 +4,30 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractMysqliTestCase;
 use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqliException;
 
-class SchemaReflectionTest extends TestCase
+/** @spec SPEC-1.6 */
+class SchemaReflectionTest extends AbstractMysqliTestCase
 {
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return [
+            'Create table first
+        $raw = new \\mysqli(
+            MySQLContainer::getHost(),',
+            'CREATE TABLE reflect_test (id INT PRIMARY KEY, val VARCHAR(255))',
+            'Create table after adapter
+        $raw = new \\mysqli(
+            MySQLContainer::getHost(),',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS reflect_test');
-        $raw->close();
+        return ['reflect_test', 'first', 'after'];
     }
+
 
     public function testAdapterConstructedAfterTableReflectsSchema(): void
     {

@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests expression-based clauses in shadow queries on SQLite:
@@ -17,25 +16,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * These patterns are common in real-world reporting queries but were
  * previously untested with ZTD shadow store.
+ * @spec pending
  */
-class SqliteExpressionClausesTest extends TestCase
+class SqliteExpressionClausesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE expr_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, bonus INTEGER, category TEXT, search_term TEXT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO expr_test VALUES (1, 'Alice', 90, 10, 'A', 'hello%world')");
-        $this->pdo->exec("INSERT INTO expr_test VALUES (2, 'Bob', 80, 20, 'B', '100%_done')");
-        $this->pdo->exec("INSERT INTO expr_test VALUES (3, 'Charlie', 70, 30, 'A', 'test_data')");
-        $this->pdo->exec("INSERT INTO expr_test VALUES (4, 'Diana', 60, 40, 'B', 'normal text')");
-        $this->pdo->exec("INSERT INTO expr_test VALUES (5, 'Eve', 50, NULL, 'C', NULL)");
+        return 'CREATE TABLE expr_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, bonus INTEGER, category TEXT, search_term TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['expr_test'];
+    }
+
 
     // --- ORDER BY with expressions ---
 

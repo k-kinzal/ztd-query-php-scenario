@@ -5,46 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests fetchAll with FETCH_FUNC callback mode and other advanced fetch patterns on MySQL ZTD PDO.
+ * @spec pending
  */
-class MysqlFetchCallbackTest extends TestCase
+class MysqlFetchCallbackTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS gc_test_m');
-        $raw->exec('DROP TABLE IF EXISTS grp_test_m');
-        $raw->exec('DROP TABLE IF EXISTS cb_test_m');
-        $raw->exec('CREATE TABLE cb_test_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->exec('CREATE TABLE grp_test_m (id INT PRIMARY KEY, category VARCHAR(10), amount INT)');
-        $raw->exec('CREATE TABLE gc_test_m (id INT PRIMARY KEY, category VARCHAR(10), name VARCHAR(50))');
+        return [
+            'CREATE TABLE cb_test_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE grp_test_m (id INT PRIMARY KEY, category VARCHAR(10), amount INT)',
+            'CREATE TABLE gc_test_m (id INT PRIMARY KEY, category VARCHAR(10), name VARCHAR(50))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['gc_test_m', 'grp_test_m', 'cb_test_m'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO cb_test_m VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO cb_test_m VALUES (2, 'Bob', 85)");
@@ -123,18 +109,5 @@ class MysqlFetchCallbackTest extends TestCase
         $pairs = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
         $this->assertSame([1 => 'UpdatedAlice', 2 => 'Bob'], $pairs);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS gc_test_m');
-        $raw->exec('DROP TABLE IF EXISTS grp_test_m');
-        $raw->exec('DROP TABLE IF EXISTS cb_test_m');
     }
 }

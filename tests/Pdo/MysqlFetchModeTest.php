@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests various PDO fetch modes work correctly with ZTD shadow store on MySQL.
+ * @spec pending
  */
-class MysqlFetchModeTest extends TestCase
+class MysqlFetchModeTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_fetch_test');
-        $raw->exec('CREATE TABLE mysql_fetch_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)');
+        return 'CREATE TABLE mysql_fetch_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_fetch_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_fetch_test (id, name, score) VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO mysql_fetch_test (id, name, score) VALUES (2, 'Bob', 85)");
@@ -174,16 +160,5 @@ class MysqlFetchModeTest extends TestCase
         $stmt->execute();
 
         $this->assertSame(2, $stmt->rowCount());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_fetch_test');
     }
 }

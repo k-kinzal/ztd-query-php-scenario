@@ -4,25 +4,32 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests exec() return values and rowCount() accuracy across various operations.
+ * @spec SPEC-4.4
  */
-class SqliteExecReturnValueTest extends TestCase
+class SqliteExecReturnValueTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE rv_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, active INT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['rv_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE rv_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, active INT)');
-    }
+
+        }
 
     public function testExecInsertReturnsSingleRowCount(): void
     {

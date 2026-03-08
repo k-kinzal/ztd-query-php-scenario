@@ -5,45 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests GROUPING SETS, CUBE, and ROLLUP on PostgreSQL PDO.
  *
  * These are advanced aggregation features that produce multiple
  * levels of subtotals in a single query.
+ * @spec pending
  */
-class PostgresGroupingSetsTest extends TestCase
+class PostgresGroupingSetsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_gs_sales');
-        $raw->exec('CREATE TABLE pg_gs_sales (id INT PRIMARY KEY, region VARCHAR(20), product VARCHAR(20), amount INT)');
+        return 'CREATE TABLE pg_gs_sales (id INT PRIMARY KEY, region VARCHAR(20), product VARCHAR(20), amount INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_gs_sales'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_gs_sales VALUES (1, 'East', 'Widget', 100)");
         $this->pdo->exec("INSERT INTO pg_gs_sales VALUES (2, 'East', 'Gadget', 200)");
@@ -160,18 +146,5 @@ class PostgresGroupingSetsTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_gs_sales');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_gs_sales');
-        } catch (\Exception $e) {
-        }
     }
 }

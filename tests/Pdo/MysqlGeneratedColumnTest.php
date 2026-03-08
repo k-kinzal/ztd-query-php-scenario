@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests MySQL generated (virtual/stored) column handling with ZTD.
@@ -20,31 +16,26 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * Tests whether generated column values are correctly handled
  * in the shadow store via CTE rewriting.
+ * @spec pending
  */
-class MysqlGeneratedColumnTest extends TestCase
+class MysqlGeneratedColumnTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_gencol_test');
-        $raw->exec('CREATE TABLE pdo_gencol_test (
+        return 'CREATE TABLE pdo_gencol_test (
             id INT PRIMARY KEY,
             price DECIMAL(10,2),
             quantity INT,
             total DECIMAL(10,2) GENERATED ALWAYS AS (price * quantity) STORED,
-            label VARCHAR(100) GENERATED ALWAYS AS (CONCAT(quantity, \'x @ \', price)) VIRTUAL
-        )');
+            label VARCHAR(100) GENERATED ALWAYS AS (CONCAT(quantity, \\\'x @ \\\', price)) VIRTUAL
+        )';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        return ['pdo_gencol_test'];
     }
+
 
     /**
      * INSERT omitting generated columns.
@@ -125,14 +116,5 @@ class MysqlGeneratedColumnTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_gencol_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_gencol_test');
-        } catch (\Exception $e) {
-        }
     }
 }

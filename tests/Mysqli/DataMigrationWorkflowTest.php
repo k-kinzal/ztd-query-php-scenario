@@ -4,51 +4,29 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests a data migration workflow on MySQLi: INSERT...SELECT with transformations,
  * subqueries in SELECT/WHERE, and complex aggregation patterns.
+ * @spec pending
  */
-class DataMigrationWorkflowTest extends TestCase
+class DataMigrationWorkflowTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_dm_user_stats');
-        $raw->query('DROP TABLE IF EXISTS mi_dm_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_dm_users');
-        $raw->query('CREATE TABLE mi_dm_users (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), tier VARCHAR(20), created_date DATE)');
-        $raw->query('CREATE TABLE mi_dm_orders (id INT PRIMARY KEY, user_id INT, product VARCHAR(50), amount DECIMAL(10,2), status VARCHAR(20), created_date DATE)');
-        $raw->query('CREATE TABLE mi_dm_user_stats (user_id INT PRIMARY KEY, total_orders INT, total_spent DECIMAL(10,2), last_order_date DATE)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_dm_users (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), tier VARCHAR(20), created_date DATE)',
+            'CREATE TABLE mi_dm_orders (id INT PRIMARY KEY, user_id INT, product VARCHAR(50), amount DECIMAL(10,2), status VARCHAR(20), created_date DATE)',
+            'CREATE TABLE mi_dm_user_stats (user_id INT PRIMARY KEY, total_orders INT, total_spent DECIMAL(10,2), last_order_date DATE)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_dm_user_stats', 'mi_dm_orders', 'mi_dm_users'];
     }
+
 
     /**
      * INSERT...SELECT with LEFT JOIN + GROUP BY + aggregation throws a column-not-found
@@ -133,25 +111,5 @@ class DataMigrationWorkflowTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame('active', $rows[0]['activity_level']);
         $this->assertSame('inactive', $rows[1]['activity_level']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_dm_user_stats');
-        $raw->query('DROP TABLE IF EXISTS mi_dm_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_dm_users');
-        $raw->close();
     }
 }

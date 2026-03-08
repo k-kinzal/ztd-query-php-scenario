@@ -5,41 +5,36 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests COLLATE clause in queries with shadow data on MySQL.
  *
  * COLLATE affects string comparison and ordering behavior.
  * Tests whether ZTD CTE rewriting preserves COLLATE semantics.
+ * @spec pending
  */
-class MysqlCollateInQueryTest extends TestCase
+class MysqlCollateInQueryTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_collate_test');
-        $raw->exec('CREATE TABLE pdo_collate_test (
+        return 'CREATE TABLE pdo_collate_test (
             id INT PRIMARY KEY,
             name VARCHAR(50),
             code VARCHAR(20)
-        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci');
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_collate_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pdo_collate_test VALUES (1, 'Alice', 'abc')");
         $this->pdo->exec("INSERT INTO pdo_collate_test VALUES (2, 'alice', 'ABC')");
         $this->pdo->exec("INSERT INTO pdo_collate_test VALUES (3, 'Bob', 'def')");
         $this->pdo->exec("INSERT INTO pdo_collate_test VALUES (4, 'CHARLIE', 'GHI')");
@@ -115,14 +110,5 @@ class MysqlCollateInQueryTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_collate_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_collate_test');
-        } catch (\Exception $e) {
-        }
     }
 }

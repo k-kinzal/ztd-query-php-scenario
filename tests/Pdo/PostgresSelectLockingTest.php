@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests SELECT with locking clauses on PostgreSQL PDO ZTD.
@@ -22,34 +18,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * This is important to document: user code with FOR UPDATE will run without
  * errors but will NOT actually acquire any row locks.
+ * @spec pending
  */
-class PostgresSelectLockingTest extends TestCase
+class PostgresSelectLockingTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_lock_test');
-        $raw->exec('CREATE TABLE pg_lock_test (id INT PRIMARY KEY, name VARCHAR(50))');
+        return 'CREATE TABLE pg_lock_test (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_lock_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_lock_test (id, name) VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO pg_lock_test (id, name) VALUES (2, 'Bob')");
@@ -148,18 +134,5 @@ class PostgresSelectLockingTest extends TestCase
         $this->assertNotFalse($stmt);
 
         $this->pdo->rollBack();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_lock_test');
-        } catch (\Exception $e) {
-        }
     }
 }

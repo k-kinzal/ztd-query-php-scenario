@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests DROP TABLE ... CASCADE on PostgreSQL ZTD.
@@ -17,37 +12,25 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * CASCADE/RESTRICT are PostgreSQL-specific modifiers for DROP TABLE.
  * The ZTD parser just extracts the table name; CASCADE/RESTRICT don't
  * affect shadow store behavior since there are no physical FK constraints.
+ * @spec pending
  */
-class PostgresDropTableCascadeTest extends TestCase
+class PostgresDropTableCascadeTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_dtc_child');
-        $raw->exec('DROP TABLE IF EXISTS pg_dtc_parent');
-        $raw->exec('CREATE TABLE pg_dtc_parent (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->exec('CREATE TABLE pg_dtc_child (id INT PRIMARY KEY, parent_id INT REFERENCES pg_dtc_parent(id))');
+        return [
+            'CREATE TABLE pg_dtc_parent (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE pg_dtc_child (id INT PRIMARY KEY, parent_id INT REFERENCES pg_dtc_parent(id))',
+            'CREATE TABLE pg_dtc_temp (id INT PRIMARY KEY, val TEXT)',
+            'CREATE TABLE pg_dtc_restrict (id INT PRIMARY KEY, val TEXT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_dtc_child', 'pg_dtc_parent', 'nonexistent_cascade_table', 'pg_dtc_temp', 'pg_dtc_restrict'];
     }
+
 
     public function testDropTableCascadeOnShadowCreatedTable(): void
     {
@@ -91,17 +74,5 @@ class PostgresDropTableCascadeTest extends TestCase
 
         $this->expectException(\PDOException::class);
         $this->pdo->query('SELECT * FROM pg_dtc_restrict');
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_dtc_child');
-        $raw->exec('DROP TABLE IF EXISTS pg_dtc_parent');
     }
 }

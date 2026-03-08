@@ -5,40 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests SELECT...FOR UPDATE locking clause on MySQL PDO.
  *
  * FOR UPDATE is preserved in CTE-rewritten SQL but is effectively a no-op
  * since the query reads from CTE data, not physical rows.
+ * @spec pending
  */
-class MysqlSelectForUpdateTest extends TestCase
+class MysqlSelectForUpdateTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_mfu_test');
-        $raw->exec('CREATE TABLE pdo_mfu_test (id INT PRIMARY KEY, name VARCHAR(50), balance INT)');
+        return 'CREATE TABLE pdo_mfu_test (id INT PRIMARY KEY, name VARCHAR(50), balance INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_mfu_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pdo_mfu_test VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO pdo_mfu_test VALUES (2, 'Bob', 200)");
@@ -81,14 +72,5 @@ class MysqlSelectForUpdateTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_mfu_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_mfu_test');
-        } catch (\Exception $e) {
-        }
     }
 }

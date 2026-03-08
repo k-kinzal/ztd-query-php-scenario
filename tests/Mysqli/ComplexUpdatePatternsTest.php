@@ -4,46 +4,29 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests complex UPDATE patterns on MySQLi: CASE in SET, arithmetic expressions,
  * multiple sequential mutations, UPDATE-DELETE-count chain.
+ * @spec pending
  */
-class ComplexUpdatePatternsTest extends TestCase
+class ComplexUpdatePatternsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_cup_employees');
-        $raw->query('CREATE TABLE mi_cup_employees (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(30), salary DECIMAL(10,2), grade VARCHAR(5), active TINYINT)');
-        $raw->close();
+        return 'CREATE TABLE mi_cup_employees (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(30), salary DECIMAL(10,2), grade VARCHAR(5), active TINYINT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_cup_employees'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_cup_employees VALUES (1, 'Alice', 'Engineering', 80000, 'B', 1)");
         $this->mysqli->query("INSERT INTO mi_cup_employees VALUES (2, 'Bob', 'Engineering', 90000, 'A', 1)");
@@ -101,23 +84,5 @@ class ComplexUpdatePatternsTest extends TestCase
         $result = $this->mysqli->query("SELECT grade FROM mi_cup_employees WHERE id = 2");
         $row = $result->fetch_assoc();
         $this->assertSame('S', $row['grade']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_cup_employees');
-        $raw->close();
     }
 }

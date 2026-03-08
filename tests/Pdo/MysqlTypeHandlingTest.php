@@ -5,43 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests type handling in the shadow store on MySQL PDO.
+ * @spec pending
  */
-class MysqlTypeHandlingTest extends TestCase
+class MysqlTypeHandlingTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS type_test');
-        $raw->exec('CREATE TABLE type_test (id INT PRIMARY KEY, float_val DOUBLE, bool_val TINYINT, date_val DATE, long_text TEXT)');
+        return 'CREATE TABLE type_test (id INT PRIMARY KEY, float_val DOUBLE, bool_val TINYINT, date_val DATE, long_text TEXT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['type_test'];
     }
+
 
     public function testFloatPrecision(): void
     {
@@ -102,16 +83,5 @@ class MysqlTypeHandlingTest extends TestCase
         $stmt2 = $this->pdo->query("SELECT id FROM type_test WHERE long_text IS NULL");
         $rows2 = $stmt2->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $rows2);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS type_test');
     }
 }

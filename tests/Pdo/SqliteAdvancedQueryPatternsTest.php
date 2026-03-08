@@ -5,32 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests advanced SQL query patterns in ZTD mode on SQLite:
  * CASE, LIKE, IN, BETWEEN, EXISTS, COALESCE, window functions.
+ * @spec SPEC-3.3
  */
-class SqliteAdvancedQueryPatternsTest extends TestCase
+class SqliteAdvancedQueryPatternsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, department TEXT, salary REAL)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (1, 'Alice', 'Engineering', 90000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (2, 'Bob', 'Sales', 60000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (3, 'Charlie', 'Engineering', 110000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (4, 'Diana', 'Marketing', 75000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (5, 'Eve', 'Sales', 55000)");
+        return [
+            'CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, department TEXT, salary REAL)',
+            'CREATE TABLE emp (id INTEGER PRIMARY KEY, name TEXT)',
+            'CREATE TABLE tasks (id INTEGER PRIMARY KEY, emp_id INTEGER, task TEXT)',
+            'CREATE TABLE emp2 (id INTEGER PRIMARY KEY, name TEXT)',
+            'CREATE TABLE tasks2 (id INTEGER PRIMARY KEY, emp_id INTEGER, task TEXT)',
+            'CREATE TABLE contact (id INTEGER PRIMARY KEY, name TEXT, email TEXT, phone TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['employees', 'emp', 'tasks', 'emp2', 'tasks2', 'contact'];
+    }
+
 
     public function testCaseExpression(): void
     {

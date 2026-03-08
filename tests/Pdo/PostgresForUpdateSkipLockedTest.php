@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests SELECT...FOR UPDATE NOWAIT / SKIP LOCKED on PostgreSQL.
@@ -17,34 +13,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * These are locking clause extensions that control behavior when
  * a requested row is already locked by another transaction.
  * In ZTD mode, locking clauses are no-ops (CTE data can't be locked).
+ * @spec pending
  */
-class PostgresForUpdateSkipLockedTest extends TestCase
+class PostgresForUpdateSkipLockedTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_fusl_tasks');
-        $raw->exec('CREATE TABLE pg_fusl_tasks (id INT PRIMARY KEY, status VARCHAR(20), payload VARCHAR(100))');
+        return 'CREATE TABLE pg_fusl_tasks (id INT PRIMARY KEY, status VARCHAR(20), payload VARCHAR(100))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_fusl_tasks'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_fusl_tasks VALUES (1, 'pending', 'task-1')");
         $this->pdo->exec("INSERT INTO pg_fusl_tasks VALUES (2, 'pending', 'task-2')");
@@ -143,18 +129,5 @@ class PostgresForUpdateSkipLockedTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_fusl_tasks');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_fusl_tasks');
-        } catch (\Exception $e) {
-        }
     }
 }

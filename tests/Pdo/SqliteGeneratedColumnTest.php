@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests SQLite generated (stored) column handling with ZTD.
@@ -17,24 +16,25 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * Tests whether generated column values are correctly handled
  * in the shadow store via CTE rewriting.
+ * @spec pending
  */
-class SqliteGeneratedColumnTest extends TestCase
+class SqliteGeneratedColumnTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec("CREATE TABLE sl_gencol_test (
+        return 'CREATE TABLE sl_gencol_test (
             id INTEGER PRIMARY KEY,
             price REAL,
             quantity INTEGER,
             total REAL GENERATED ALWAYS AS (price * quantity) STORED
-        )");
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        )';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_gencol_test'];
+    }
+
 
     /**
      * INSERT omitting generated columns.

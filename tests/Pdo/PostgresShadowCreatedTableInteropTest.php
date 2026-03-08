@@ -5,43 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests interoperability between shadow-created tables and reflected tables (PostgreSQL PDO).
+ * @spec pending
  */
-class PostgresShadowCreatedTableInteropTest extends TestCase
+class PostgresShadowCreatedTableInteropTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_sci_users');
-        $raw->exec('CREATE TABLE pg_sci_users (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20))');
+        return [
+            'CREATE TABLE pg_sci_users (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20))',
+            'CREATE TABLE pg_sci_scores (user_id INT PRIMARY KEY, score INT)',
+            'CREATE TABLE pg_sci_active (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE pg_sci_blacklist (user_id INT PRIMARY KEY)',
+            'CREATE TABLE pg_sci_deactivate (user_id INT PRIMARY KEY)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_sci_users', 'pg_sci_scores', 'pg_sci_active', 'pg_sci_blacklist', 'pg_sci_deactivate'];
     }
+
 
     public function testJoinReflectedAndShadowCreatedTable(): void
     {
@@ -113,16 +100,5 @@ class PostgresShadowCreatedTableInteropTest extends TestCase
 
         $this->expectException(\Throwable::class);
         $this->pdo->exec("UPDATE pg_sci_users SET status = 'deactivated' WHERE id IN (SELECT user_id FROM pg_sci_deactivate)");
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_sci_users');
     }
 }

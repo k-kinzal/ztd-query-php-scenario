@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests backslash handling in MySQL shadow store.
@@ -18,35 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * This does NOT affect SQLite or PostgreSQL.
  *
  * @see spec 10.3
+ * @spec pending
  */
-class MysqlBackslashCorruptionTest extends TestCase
+class MysqlBackslashCorruptionTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS bs_test_m');
-        $raw->exec('CREATE TABLE bs_test_m (id INT PRIMARY KEY, path VARCHAR(200))');
+        return 'CREATE TABLE bs_test_m (id INT PRIMARY KEY, path VARCHAR(200))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['bs_test_m'];
     }
+
 
     /**
      * Backslash-t should be preserved in shadow store.
@@ -135,16 +115,5 @@ class MysqlBackslashCorruptionTest extends TestCase
             );
         }
         $this->assertSame("C:\\new\\test", $path);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS bs_test_m');
     }
 }

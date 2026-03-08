@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statements with parameters in HAVING, GROUP BY, and ORDER BY on MySQL PDO.
+ * @spec pending
  */
-class MysqlPreparedAggregateParamsTest extends TestCase
+class MysqlPreparedAggregateParamsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pap_orders');
-        $raw->exec('CREATE TABLE pap_orders (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount DECIMAL(10,2), status VARCHAR(20))');
+        return 'CREATE TABLE pap_orders (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount DECIMAL(10,2), status VARCHAR(20))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pap_orders'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (1, 'Alice', 'Widget', 50.0, 'completed')");
         $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (2, 'Alice', 'Gadget', 30.0, 'completed')");
@@ -92,16 +78,5 @@ class MysqlPreparedAggregateParamsTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(3, $rows);
         $this->assertSame('Bob', $rows[0]['customer']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pap_orders');
     }
 }

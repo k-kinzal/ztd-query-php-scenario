@@ -5,27 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ZTD behavior with composite (multi-column) primary keys on SQLite.
  * UPDATE and DELETE depend on PK reflection, so composite PKs are a critical pattern.
+ * @spec pending
  */
-class SqliteCompositePrimaryKeyTest extends TestCase
+class SqliteCompositePrimaryKeyTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE order_items (order_id INTEGER, item_id INTEGER, product TEXT, quantity INTEGER, price REAL, PRIMARY KEY (order_id, item_id))');
-        $raw->exec('CREATE TABLE enrollments (student_id INTEGER, course_id INTEGER, semester TEXT, grade TEXT, PRIMARY KEY (student_id, course_id, semester))');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE order_items (order_id INTEGER, item_id INTEGER, product TEXT, quantity INTEGER, price REAL, PRIMARY KEY (order_id, item_id))',
+            'CREATE TABLE enrollments (student_id INTEGER, course_id INTEGER, semester TEXT, grade TEXT, PRIMARY KEY (student_id, course_id, semester))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['order_items', 'enrollments'];
+    }
+
 
     public function testInsertAndSelectWithCompositePk(): void
     {

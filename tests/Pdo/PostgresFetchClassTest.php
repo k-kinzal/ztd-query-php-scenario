@@ -5,44 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
+use Tests\Support\AbstractPostgresPdoTestCase;
 use Tests\Support\UserDto;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests PDO::FETCH_CLASS with custom classes on PostgreSQL ZTD.
+ * @spec SPEC-4.10
  */
-class PostgresFetchClassTest extends TestCase
+class PostgresFetchClassTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS fc_class_pg');
-        $raw->exec('CREATE TABLE fc_class_pg (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE fc_class_pg (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['fc_class_pg'];
     }
+
 
     public function testFetchClassWithSimpleDto(): void
     {
@@ -94,16 +75,5 @@ class PostgresFetchClassTest extends TestCase
         $objects = $stmt->fetchAll(PDO::FETCH_CLASS, UserDto::class);
 
         $this->assertCount(2, $objects);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS fc_class_pg');
     }
 }

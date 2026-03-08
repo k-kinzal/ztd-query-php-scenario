@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests PDOStatement::nextRowset() behavior with ZTD.
@@ -14,21 +13,30 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Discovery: nextRowset() delegates to the underlying PDO driver.
  * - SQLite: throws PDOException "Driver does not support this function"
  * - MySQL/PostgreSQL: returns false (no additional result sets from CTE queries)
+ * @spec pending
  */
-class SqliteNextRowsetTest extends TestCase
+class SqliteNextRowsetTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE nr_test (id INT PRIMARY KEY, name VARCHAR(50))';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['nr_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE nr_test (id INT PRIMARY KEY, name VARCHAR(50))');
         $this->pdo->exec("INSERT INTO nr_test VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO nr_test VALUES (2, 'Bob')");
-    }
+
+        }
 
     /**
      * SQLite does not support multiple rowsets — nextRowset() throws.

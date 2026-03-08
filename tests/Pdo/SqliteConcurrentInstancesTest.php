@@ -5,38 +5,43 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests that multiple ZtdPdo instances connected to the same physical database
  * maintain independent shadow stores with interleaved operations.
  * Shadow stores start empty — physical pre-existing data is NOT visible.
+ * @spec SPEC-2.4
  */
-class SqliteConcurrentInstancesTest extends TestCase
+class SqliteConcurrentInstancesTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE ci_items (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['ci_items'];
+    }
+
     private string $dbPath;
     private ?ZtdPdo $pdoA = null;
     private ?ZtdPdo $pdoB = null;
 
+
     protected function setUp(): void
     {
-        $this->dbPath = tempnam(sys_get_temp_dir(), 'ztd_test_') . '.sqlite';
+        parent::setUp();
 
+        $this->dbPath = tempnam(sys_get_temp_dir(), 'ztd_test_') . '.sqlite';
         // Create physical database with schema
         $setup = new PDO("sqlite:{$this->dbPath}", null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
         $setup->exec('CREATE TABLE ci_items (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)');
         $setup = null;
-
         // Two separate ZtdPdo instances pointing at the same file
-        $this->pdoA = new ZtdPdo("sqlite:{$this->dbPath}", null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $this->pdoB = new ZtdPdo("sqlite:{$this->dbPath}", null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
     }
 
     public function testBothInstancesStartWithEmptyShadow(): void

@@ -17,6 +17,7 @@ use ZtdQuery\Config\ZtdConfig;
  * Tests EXCEPT and INTERSECT behavior on MySQL PDO.
  *
  * EXCEPT and INTERSECT are valid SQL supported by MySQL 8.0+.
+ * @spec SPEC-3.3d
  */
 class MysqlExceptIntersectTest extends TestCase
 {

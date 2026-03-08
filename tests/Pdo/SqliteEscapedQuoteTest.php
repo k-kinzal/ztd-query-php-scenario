@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests that doubled-quote escaping ('') works correctly in SQLite ZTD.
@@ -14,20 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * SQLite uses '' for escaping single quotes in string literals.
  * This test verifies that the SQLite parser handles this correctly,
  * unlike the PostgreSQL parser which has a bug (issue #25).
+ * @spec pending
  */
-class SqliteEscapedQuoteTest extends TestCase
+class SqliteEscapedQuoteTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE eq_test (id INTEGER PRIMARY KEY, body TEXT, notes TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE eq_test (id INTEGER PRIMARY KEY, body TEXT, notes TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['eq_test'];
+    }
+
 
     public function testInsertWithEscapedQuotes(): void
     {

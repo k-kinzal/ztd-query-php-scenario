@@ -5,55 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests string edge cases, wide table handling, and value boundary patterns on MySQL.
+ * @spec pending
  */
-class MysqlStringAndWidenessEdgeCaseTest extends TestCase
+class MysqlStringAndWidenessEdgeCaseTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS sw_str_m');
-        $raw->exec('DROP TABLE IF EXISTS sw_long_m');
-        $raw->exec('DROP TABLE IF EXISTS sw_wide_m');
-        $raw->exec('DROP TABLE IF EXISTS sw_int_m');
-        $raw->exec('CREATE TABLE sw_str_m (id INT PRIMARY KEY, val TEXT)');
-        $raw->exec('CREATE TABLE sw_long_m (id INT PRIMARY KEY, content LONGTEXT)');
-        $raw->exec('CREATE TABLE sw_int_m (id INT PRIMARY KEY, big_val BIGINT)');
-
-        // Build wide table with 20 columns
-        $cols = [];
-        for ($i = 1; $i <= 20; $i++) {
-            $cols[] = "col{$i} VARCHAR(50)";
-        }
-        $raw->exec('CREATE TABLE sw_wide_m (id INT PRIMARY KEY, ' . implode(', ', $cols) . ')');
+        return [
+            'CREATE TABLE sw_str_m (id INT PRIMARY KEY, val TEXT)',
+            'CREATE TABLE sw_long_m (id INT PRIMARY KEY, content LONGTEXT)',
+            'CREATE TABLE sw_int_m (id INT PRIMARY KEY, big_val BIGINT)',
+            'CREATE TABLE sw_wide_m (id INT PRIMARY KEY,',
+            'CREATE TABLE sw_cond_m (id INT PRIMARY KEY, a INT, b INT, c INT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['sw_str_m', 'sw_long_m', 'sw_wide_m', 'sw_int_m', 'sw_cond_m'];
     }
+
 
     public function testEmptyStringVsNull(): void
     {
@@ -116,20 +91,5 @@ class MysqlStringAndWidenessEdgeCaseTest extends TestCase
         $this->assertCount(2, $ids);
         $this->assertEquals(2, $ids[0]);
         $this->assertEquals(3, $ids[1]);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS sw_str_m');
-        $raw->exec('DROP TABLE IF EXISTS sw_long_m');
-        $raw->exec('DROP TABLE IF EXISTS sw_wide_m');
-        $raw->exec('DROP TABLE IF EXISTS sw_int_m');
-        $raw->exec('DROP TABLE IF EXISTS sw_cond_m');
     }
 }

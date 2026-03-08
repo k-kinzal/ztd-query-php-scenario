@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests CTE MATERIALIZED/NOT MATERIALIZED hints on PostgreSQL.
@@ -19,34 +15,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * Since ZTD rewrites user CTEs with its own shadow CTE, these hints
  * may conflict with the rewriter.
+ * @spec pending
  */
-class PostgresCteMaterializedTest extends TestCase
+class PostgresCteMaterializedTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_ctem_test');
-        $raw->exec('CREATE TABLE pg_ctem_test (id INT PRIMARY KEY, name VARCHAR(50), active INT DEFAULT 1)');
+        return 'CREATE TABLE pg_ctem_test (id INT PRIMARY KEY, name VARCHAR(50), active INT DEFAULT 1)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_ctem_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_ctem_test VALUES (1, 'Alice', 1)");
         $this->pdo->exec("INSERT INTO pg_ctem_test VALUES (2, 'Bob', 1)");
@@ -140,18 +126,5 @@ class PostgresCteMaterializedTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_ctem_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_ctem_test');
-        } catch (\Exception $e) {
-        }
     }
 }

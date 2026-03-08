@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests advanced ALTER TABLE operations on MySQL ZTD:
@@ -17,36 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - CHANGE COLUMN with existing shadow data (column rename + type change)
  * - MODIFY COLUMN with existing shadow data (type change only)
  * - ALTER TABLE after shadow INSERT (shadow data follows schema changes)
+ * @spec SPEC-5.1a
  */
-class MysqlAlterTableAdvancedTest extends TestCase
+class MysqlAlterTableAdvancedTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS alt_adv_m');
-        $raw->exec('DROP TABLE IF EXISTS alt_adv_renamed');
-        $raw->exec('CREATE TABLE alt_adv_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE alt_adv_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['alt_adv_m', 'alt_adv_renamed'];
     }
+
 
     public function testRenameTable(): void
     {
@@ -154,17 +134,5 @@ class MysqlAlterTableAdvancedTest extends TestCase
             $meta[] = $stmt->getColumnMeta($i)['name'];
         }
         $this->assertNotContains('extra', $meta);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS alt_adv_m');
-        $raw->exec('DROP TABLE IF EXISTS alt_adv_renamed');
     }
 }

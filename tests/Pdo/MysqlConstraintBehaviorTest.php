@@ -5,43 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractMysqlPdoTestCase;
 use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests that database constraints are NOT enforced in the shadow store on MySQL via PDO.
+ * @spec SPEC-8.1
  */
-class MysqlConstraintBehaviorTest extends TestCase
+class MysqlConstraintBehaviorTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_constraint_test');
-        $raw->exec('CREATE TABLE mysql_constraint_test (id INT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE)');
+        return [
+            'CREATE TABLE mysql_constraint_test (id INT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE)',
+            'CREATE TABLE mysql_constraint_child (id INT PRIMARY KEY, parent_id INT, FOREIGN KEY (parent_id) REFERENCES mysql_constraint_test(id))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_constraint_test', 'mysql_constraint_child'];
     }
+
 
     public function testDuplicatePrimaryKeyNotEnforcedInShadow(): void
     {
@@ -92,16 +77,5 @@ class MysqlConstraintBehaviorTest extends TestCase
         $this->assertSame(999, (int) $rows[0]['parent_id']);
 
         $raw->exec('DROP TABLE IF EXISTS mysql_constraint_child');
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_constraint_test');
     }
 }

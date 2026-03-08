@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests prepared DELETE with subqueries on MySQL PDO.
  *
  * Cross-platform parity with SqlitePreparedDeleteWithSubqueryTest.
+ * @spec pending
  */
 class MysqlPreparedDeleteWithSubqueryTest extends TestCase
 {

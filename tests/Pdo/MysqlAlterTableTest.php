@@ -5,48 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests ALTER TABLE operations in ZTD mode on MySQL via PDO.
  *
  * Unlike SQLite (where CTE rewriter ignores schema changes), MySQL fully
  * supports ALTER TABLE in the shadow schema.
+ * @spec SPEC-5.1a
  */
-class MysqlAlterTableTest extends TestCase
+class MysqlAlterTableTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_alter_test');
-        $raw->exec('CREATE TABLE mysql_pdo_alter_test (id INT PRIMARY KEY, name VARCHAR(255))');
-        $raw->exec("INSERT INTO mysql_pdo_alter_test (id, name) VALUES (1, 'Alice')");
-        $raw->exec("INSERT INTO mysql_pdo_alter_test (id, name) VALUES (2, 'Bob')");
+        return 'CREATE TABLE mysql_pdo_alter_test (id INT PRIMARY KEY, name VARCHAR(255))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_pdo_alter_test'];
     }
+
 
     public function testAddColumn(): void
     {
@@ -118,16 +97,5 @@ class MysqlAlterTableTest extends TestCase
         $stmt = $this->pdo->query('SELECT * FROM mysql_pdo_alter_test LIMIT 1');
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertArrayNotHasKey('extra', $row);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_alter_test');
     }
 }

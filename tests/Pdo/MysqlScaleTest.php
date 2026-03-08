@@ -5,43 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests shadow store behavior at higher scale on MySQL PDO.
+ * @spec pending
  */
-class MysqlScaleTest extends TestCase
+class MysqlScaleTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS scale_items');
-        $raw->exec('CREATE TABLE scale_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), score INT)');
+        return 'CREATE TABLE scale_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['scale_items'];
     }
+
 
     public function testPreparedBulkInsert200Rows(): void
     {
@@ -80,16 +61,5 @@ class MysqlScaleTest extends TestCase
         $this->pdo->exec("DELETE FROM scale_items WHERE id <= 12");
         $cnt2 = (int) $this->pdo->query('SELECT COUNT(*) AS c FROM scale_items')->fetch(PDO::FETCH_ASSOC)['c'];
         $this->assertSame(38, $cnt2);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS scale_items');
     }
 }

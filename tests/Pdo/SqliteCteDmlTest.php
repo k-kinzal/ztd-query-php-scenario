@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests CTE-based DML patterns on SQLite PDO ZTD.
@@ -15,28 +13,23 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * does not support these patterns. The CTE rewriter prepends its own
  * shadow CTE, which prevents user CTE names from being visible in
  * the DML statement, causing "no such table" errors.
+ * @spec SPEC-3.3e
  */
-class SqliteCteDmlTest extends TestCase
+class SqliteCteDmlTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE cte_dml_source (id INTEGER PRIMARY KEY, name TEXT, score INT)');
-        $raw->exec('CREATE TABLE cte_dml_target (id INTEGER PRIMARY KEY, name TEXT, score INT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO cte_dml_source (id, name, score) VALUES (1, 'Alice', 90)");
-        $this->pdo->exec("INSERT INTO cte_dml_source (id, name, score) VALUES (2, 'Bob', 80)");
-        $this->pdo->exec("INSERT INTO cte_dml_source (id, name, score) VALUES (3, 'Charlie', 70)");
-
-        $this->pdo->exec("INSERT INTO cte_dml_target (id, name, score) VALUES (1, 'Old_Alice', 50)");
-        $this->pdo->exec("INSERT INTO cte_dml_target (id, name, score) VALUES (2, 'Old_Bob', 40)");
+        return [
+            'CREATE TABLE cte_dml_source (id INTEGER PRIMARY KEY, name TEXT, score INT)',
+            'CREATE TABLE cte_dml_target (id INTEGER PRIMARY KEY, name TEXT, score INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['cte_dml_source', 'cte_dml_target'];
+    }
+
 
     /**
      * WITH ... INSERT fails because user CTE is not visible after ZTD rewriting.

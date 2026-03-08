@@ -5,42 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests correlated subqueries after mutations on MySQL PDO.
  *
  * Cross-platform parity with SqliteCorrelatedSubqueryAfterMutationTest
  * and PostgresCorrelatedSubqueryAfterMutationTest.
+ * @spec pending
  */
-class MysqlCorrelatedSubqueryAfterMutationTest extends TestCase
+class MysqlCorrelatedSubqueryAfterMutationTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_corr_orders');
-        $raw->exec('DROP TABLE IF EXISTS pdo_corr_customers');
-        $raw->exec('CREATE TABLE pdo_corr_customers (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->exec('CREATE TABLE pdo_corr_orders (id INT PRIMARY KEY, customer_id INT, amount DECIMAL(10,2))');
+        return [
+            'CREATE TABLE pdo_corr_customers (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE pdo_corr_orders (id INT PRIMARY KEY, customer_id INT, amount DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_corr_orders', 'pdo_corr_customers'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pdo_corr_customers VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO pdo_corr_customers VALUES (2, 'Bob')");
         $this->pdo->exec("INSERT INTO pdo_corr_customers VALUES (3, 'Charlie')");
-
         $this->pdo->exec("INSERT INTO pdo_corr_orders VALUES (1, 1, 100.00)");
         $this->pdo->exec("INSERT INTO pdo_corr_orders VALUES (2, 1, 200.00)");
         $this->pdo->exec("INSERT INTO pdo_corr_orders VALUES (3, 2, 150.00)");
@@ -121,15 +116,5 @@ class MysqlCorrelatedSubqueryAfterMutationTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_corr_orders');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_corr_orders');
-            $raw->exec('DROP TABLE IF EXISTS pdo_corr_customers');
-        } catch (\Exception $e) {
-        }
     }
 }

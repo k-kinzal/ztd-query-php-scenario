@@ -4,49 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests column type edge cases on MySQLi: TIME, BOOLEAN, mixed-type arithmetic,
  * UPDATE with arithmetic expression.
+ * @spec pending
  */
-class ColumnTypeEdgeCasesTest extends TestCase
+class ColumnTypeEdgeCasesTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_cte_events');
-        $raw->query('DROP TABLE IF EXISTS mi_cte_metrics');
-        $raw->query('CREATE TABLE mi_cte_events (id INT PRIMARY KEY, name VARCHAR(50), event_time TIME, event_date DATE, is_active TINYINT)');
-        $raw->query('CREATE TABLE mi_cte_metrics (id INT PRIMARY KEY, label VARCHAR(20), int_val INT, float_val DOUBLE, text_val VARCHAR(50))');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_cte_events (id INT PRIMARY KEY, name VARCHAR(50), event_time TIME, event_date DATE, is_active TINYINT)',
+            'CREATE TABLE mi_cte_metrics (id INT PRIMARY KEY, label VARCHAR(20), int_val INT, float_val DOUBLE, text_val VARCHAR(50))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_cte_events', 'mi_cte_metrics'];
     }
+
 
     public function testTimeValuesInShadowStore(): void
     {
@@ -88,24 +67,5 @@ class ColumnTypeEdgeCasesTest extends TestCase
         $result = $this->mysqli->query("SELECT COUNT(*) AS cnt FROM mi_cte_events WHERE is_active = 1");
         $row = $result->fetch_assoc();
         $this->assertSame(0, (int) $row['cnt']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_cte_events');
-        $raw->query('DROP TABLE IF EXISTS mi_cte_metrics');
-        $raw->close();
     }
 }

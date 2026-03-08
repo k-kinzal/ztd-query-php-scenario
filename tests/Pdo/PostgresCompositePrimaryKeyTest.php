@@ -5,45 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests ZTD behavior with composite (multi-column) primary keys on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresCompositePrimaryKeyTest extends TestCase
+class PostgresCompositePrimaryKeyTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_cpk_order_items');
-        $raw->exec('DROP TABLE IF EXISTS pg_cpk_enrollments');
-        $raw->exec('CREATE TABLE pg_cpk_order_items (order_id INT, item_id INT, product VARCHAR(255), quantity INT, price NUMERIC(10,2), PRIMARY KEY (order_id, item_id))');
-        $raw->exec('CREATE TABLE pg_cpk_enrollments (student_id INT, course_id INT, semester VARCHAR(10), grade VARCHAR(5), PRIMARY KEY (student_id, course_id, semester))');
+        return [
+            'CREATE TABLE pg_cpk_order_items (order_id INT, item_id INT, product VARCHAR(255), quantity INT, price NUMERIC(10,2), PRIMARY KEY (order_id, item_id))',
+            'CREATE TABLE pg_cpk_enrollments (student_id INT, course_id INT, semester VARCHAR(10), grade VARCHAR(5), PRIMARY KEY (student_id, course_id, semester))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_cpk_order_items', 'pg_cpk_enrollments'];
     }
+
 
     private function seedOrderItems(): void
     {
@@ -155,17 +137,5 @@ class PostgresCompositePrimaryKeyTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) AS c FROM pg_cpk_order_items');
         $this->assertSame(0, (int) $stmt->fetch(PDO::FETCH_ASSOC)['c']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_cpk_order_items');
-        $raw->exec('DROP TABLE IF EXISTS pg_cpk_enrollments');
     }
 }

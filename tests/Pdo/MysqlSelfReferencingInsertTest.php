@@ -5,36 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests INSERT INTO ... SELECT FROM the same table on MySQL.
  *
  * Self-referencing INSERT copies rows from a table back into itself.
  * MySQL requires explicit column lists for INSERT...SELECT (no SELECT *).
+ * @spec pending
  */
-class MysqlSelfReferencingInsertTest extends TestCase
+class MysqlSelfReferencingInsertTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS sri_test');
-        $raw->exec('CREATE TABLE sri_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, category VARCHAR(20))');
+        return 'CREATE TABLE sri_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, category VARCHAR(20))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        return ['sri_test'];
     }
+
 
     /**
      * Self-referencing INSERT with new IDs.
@@ -121,14 +112,5 @@ class MysqlSelfReferencingInsertTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM sri_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS sri_test');
-        } catch (\Exception $e) {
-        }
     }
 }

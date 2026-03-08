@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests SQLite-specific conflict resolution syntax in ZTD mode:
@@ -16,21 +15,30 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - INSERT OR FAIL
  * - INSERT OR ROLLBACK
  * - Physical isolation for all variants
+ * @spec SPEC-4.2b
  */
-class SqliteConflictResolutionTest extends TestCase
+class SqliteConflictResolutionTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE cr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['cr_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE cr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO cr_test VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO cr_test VALUES (2, 'Bob', 80)");
-    }
+
+        }
 
     public function testInsertOrReplaceOverwritesExisting(): void
     {

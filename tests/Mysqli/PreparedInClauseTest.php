@@ -4,45 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests prepared statements with IN and NOT IN clauses on MySQLi.
+ * @spec pending
  */
-class PreparedInClauseTest extends TestCase
+class PreparedInClauseTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pic_items');
-        $raw->query('CREATE TABLE mi_pic_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), price DECIMAL(10,2))');
-        $raw->close();
+        return 'CREATE TABLE mi_pic_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), price DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_pic_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_pic_items (id, name, category, price) VALUES (1, 'Widget', 'A', 10.0)");
         $this->mysqli->query("INSERT INTO mi_pic_items (id, name, category, price) VALUES (2, 'Gadget', 'B', 25.0)");
@@ -83,23 +66,5 @@ class PreparedInClauseTest extends TestCase
         $result = $stmt->get_result();
         $names = array_column($result->fetch_all(MYSQLI_ASSOC), 'name');
         $this->assertSame(['Gadget', 'Thingamajig'], $names);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pic_items');
-        $raw->close();
     }
 }

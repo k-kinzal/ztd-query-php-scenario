@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests dollar-quoted string literals on PostgreSQL ZTD.
@@ -23,35 +19,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * PostgreSQL requires standard single-quoted strings. These tests verify
  * that ZTD handles strings with embedded quotes correctly, and that
  * dollar-quoted function bodies don't break statement splitting.
+ * @spec pending
  */
-class PostgresDollarQuotedStringTest extends TestCase
+class PostgresDollarQuotedStringTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_dq_test');
-        $raw->exec('CREATE TABLE pg_dq_test (id INT PRIMARY KEY, body TEXT, notes TEXT)');
+        return 'CREATE TABLE pg_dq_test (id INT PRIMARY KEY, body TEXT, notes TEXT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_dq_test'];
     }
+
 
     /**
      * Strings containing single quotes should work with escaped quotes.
@@ -180,16 +161,5 @@ class PostgresDollarQuotedStringTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_dq_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_dq_test');
     }
 }

@@ -5,38 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests complex UPDATE patterns: CASE in SET, arithmetic expressions,
  * string concatenation in SET, UPDATE with subquery in SET,
  * multiple sequential mutations, and prepared UPDATE with CASE.
+ * @spec pending
  */
-class SqliteComplexUpdatePatternsTest extends TestCase
+class SqliteComplexUpdatePatternsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, department TEXT, salary REAL, grade TEXT, active INTEGER)');
-        $raw->exec('CREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT, budget REAL, min_salary REAL)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO employees VALUES (1, 'Alice', 'Engineering', 80000, 'B', 1)");
-        $this->pdo->exec("INSERT INTO employees VALUES (2, 'Bob', 'Engineering', 90000, 'A', 1)");
-        $this->pdo->exec("INSERT INTO employees VALUES (3, 'Charlie', 'Sales', 60000, 'C', 1)");
-        $this->pdo->exec("INSERT INTO employees VALUES (4, 'Diana', 'Sales', 70000, 'B', 0)");
-        $this->pdo->exec("INSERT INTO employees VALUES (5, 'Eve', 'Marketing', 55000, 'C', 1)");
-
-        $this->pdo->exec("INSERT INTO departments VALUES (1, 'Engineering', 500000, 75000)");
-        $this->pdo->exec("INSERT INTO departments VALUES (2, 'Sales', 300000, 55000)");
-        $this->pdo->exec("INSERT INTO departments VALUES (3, 'Marketing', 200000, 50000)");
+        return [
+            'CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, department TEXT, salary REAL, grade TEXT, active INTEGER)',
+            'CREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT, budget REAL, min_salary REAL)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['employees', 'departments'];
+    }
+
 
     public function testUpdateWithCaseInSet(): void
     {

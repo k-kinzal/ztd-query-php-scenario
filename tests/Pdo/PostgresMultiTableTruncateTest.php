@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL multi-table TRUNCATE behavior in ZTD.
@@ -18,38 +13,28 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * tables in a single statement. The PgSqlParser::extractTruncateTable()
  * regex only captures the first table name, so multi-table TRUNCATE
  * may only truncate the first table in shadow.
+ * @spec pending
  */
-class PostgresMultiTableTruncateTest extends TestCase
+class PostgresMultiTableTruncateTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_mtt_alpha');
-        $raw->exec('DROP TABLE IF EXISTS pg_mtt_beta');
-        $raw->exec('DROP TABLE IF EXISTS pg_mtt_gamma');
-        $raw->exec('CREATE TABLE pg_mtt_alpha (id INT PRIMARY KEY, val VARCHAR(50))');
-        $raw->exec('CREATE TABLE pg_mtt_beta (id INT PRIMARY KEY, val VARCHAR(50))');
-        $raw->exec('CREATE TABLE pg_mtt_gamma (id INT PRIMARY KEY, val VARCHAR(50))');
+        return [
+            'CREATE TABLE pg_mtt_alpha (id INT PRIMARY KEY, val VARCHAR(50))',
+            'CREATE TABLE pg_mtt_beta (id INT PRIMARY KEY, val VARCHAR(50))',
+            'CREATE TABLE pg_mtt_gamma (id INT PRIMARY KEY, val VARCHAR(50))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_mtt_alpha', 'pg_mtt_beta', 'pg_mtt_gamma'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_mtt_alpha (id, val) VALUES (1, 'a1')");
         $this->pdo->exec("INSERT INTO pg_mtt_alpha (id, val) VALUES (2, 'a2')");
@@ -161,20 +146,5 @@ class PostgresMultiTableTruncateTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_mtt_alpha');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_mtt_alpha');
-            $raw->exec('DROP TABLE IF EXISTS pg_mtt_beta');
-            $raw->exec('DROP TABLE IF EXISTS pg_mtt_gamma');
-        } catch (\Exception $e) {
-        }
     }
 }

@@ -5,47 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests JSON data handling and CROSS JOIN patterns on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresJsonAndCrossJoinTest extends TestCase
+class PostgresJsonAndCrossJoinTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_jcj_products');
-        $raw->exec('DROP TABLE IF EXISTS pg_jcj_colors');
-        $raw->exec('DROP TABLE IF EXISTS pg_jcj_sizes');
-        $raw->exec('CREATE TABLE pg_jcj_products (id INT PRIMARY KEY, name VARCHAR(255), metadata JSONB)');
-        $raw->exec('CREATE TABLE pg_jcj_colors (id INT PRIMARY KEY, color VARCHAR(50))');
-        $raw->exec('CREATE TABLE pg_jcj_sizes (id INT PRIMARY KEY, size VARCHAR(50))');
+        return [
+            'CREATE TABLE pg_jcj_products (id INT PRIMARY KEY, name VARCHAR(255), metadata JSONB)',
+            'CREATE TABLE pg_jcj_colors (id INT PRIMARY KEY, color VARCHAR(50))',
+            'CREATE TABLE pg_jcj_sizes (id INT PRIMARY KEY, size VARCHAR(50))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_jcj_products', 'pg_jcj_colors', 'pg_jcj_sizes'];
     }
+
 
     public function testInsertAndSelectJsonData(): void
     {
@@ -124,18 +105,5 @@ class PostgresJsonAndCrossJoinTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(2, $rows);
         $this->assertSame('Red', $rows[0]['color']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_jcj_products');
-        $raw->exec('DROP TABLE IF EXISTS pg_jcj_colors');
-        $raw->exec('DROP TABLE IF EXISTS pg_jcj_sizes');
     }
 }

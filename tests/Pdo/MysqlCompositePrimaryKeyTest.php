@@ -5,45 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests ZTD behavior with composite (multi-column) primary keys on MySQL PDO.
+ * @spec pending
  */
-class MysqlCompositePrimaryKeyTest extends TestCase
+class MysqlCompositePrimaryKeyTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_cpk_order_items');
-        $raw->exec('DROP TABLE IF EXISTS mysql_cpk_enrollments');
-        $raw->exec('CREATE TABLE mysql_cpk_order_items (order_id INT, item_id INT, product VARCHAR(255), quantity INT, price DECIMAL(10,2), PRIMARY KEY (order_id, item_id))');
-        $raw->exec('CREATE TABLE mysql_cpk_enrollments (student_id INT, course_id INT, semester VARCHAR(10), grade VARCHAR(5), PRIMARY KEY (student_id, course_id, semester))');
+        return [
+            'CREATE TABLE mysql_cpk_order_items (order_id INT, item_id INT, product VARCHAR(255), quantity INT, price DECIMAL(10,2), PRIMARY KEY (order_id, item_id))',
+            'CREATE TABLE mysql_cpk_enrollments (student_id INT, course_id INT, semester VARCHAR(10), grade VARCHAR(5), PRIMARY KEY (student_id, course_id, semester))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_cpk_order_items', 'mysql_cpk_enrollments'];
     }
+
 
     private function seedOrderItems(): void
     {
@@ -155,17 +137,5 @@ class MysqlCompositePrimaryKeyTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) AS c FROM mysql_cpk_order_items');
         $this->assertSame(0, (int) $stmt->fetch(PDO::FETCH_ASSOC)['c']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_cpk_order_items');
-        $raw->exec('DROP TABLE IF EXISTS mysql_cpk_enrollments');
     }
 }

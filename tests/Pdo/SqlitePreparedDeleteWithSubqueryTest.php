@@ -5,36 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared DELETE with subqueries on SQLite.
  *
  * DELETE with EXISTS/IN subqueries via prepared statements ensures
  * parameter binding works correctly with the CTE rewriter.
+ * @spec pending
  */
-class SqlitePreparedDeleteWithSubqueryTest extends TestCase
+class SqlitePreparedDeleteWithSubqueryTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_pdel_customers (id INTEGER PRIMARY KEY, name TEXT, tier TEXT)');
-        $raw->exec('CREATE TABLE sl_pdel_orders (id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sl_pdel_customers VALUES (1, 'Alice', 'gold')");
-        $this->pdo->exec("INSERT INTO sl_pdel_customers VALUES (2, 'Bob', 'silver')");
-        $this->pdo->exec("INSERT INTO sl_pdel_customers VALUES (3, 'Charlie', 'bronze')");
-
-        $this->pdo->exec("INSERT INTO sl_pdel_orders VALUES (1, 1, 100.00)");
-        $this->pdo->exec("INSERT INTO sl_pdel_orders VALUES (2, 1, 200.00)");
-        $this->pdo->exec("INSERT INTO sl_pdel_orders VALUES (3, 2, 50.00)");
+        return [
+            'CREATE TABLE sl_pdel_customers (id INTEGER PRIMARY KEY, name TEXT, tier TEXT)',
+            'CREATE TABLE sl_pdel_orders (id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_pdel_customers', 'sl_pdel_orders'];
+    }
+
 
     /**
      * Prepared DELETE with IN subquery and parameter.

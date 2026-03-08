@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests LIKE, BETWEEN, and IS NULL with prepared statement parameters on MySQL PDO.
+ * @spec pending
  */
-class MysqlPreparedPatternMatchTest extends TestCase
+class MysqlPreparedPatternMatchTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pattern_test');
-        $raw->exec('CREATE TABLE pattern_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, note TEXT)');
+        return 'CREATE TABLE pattern_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, note TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pattern_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pattern_test VALUES (1, 'Alice', 80, 'Good student')");
         $this->pdo->exec("INSERT INTO pattern_test VALUES (2, 'Bob', 60, NULL)");
@@ -84,16 +70,5 @@ class MysqlPreparedPatternMatchTest extends TestCase
         $select = $this->pdo->query('SELECT note FROM pattern_test WHERE id = 1');
         $row = $select->fetch(PDO::FETCH_ASSOC);
         $this->assertNull($row['note']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pattern_test');
     }
 }

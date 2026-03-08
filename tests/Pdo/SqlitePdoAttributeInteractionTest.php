@@ -5,15 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests PDO attribute interactions with ZTD mode on SQLite.
  * Specifically: EMULATE_PREPARES, STRINGIFY_FETCHES, CASE attributes.
+ * @spec pending
  */
-class SqlitePdoAttributeInteractionTest extends TestCase
+class SqlitePdoAttributeInteractionTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE sf_test (id INT PRIMARY KEY, score REAL)',
+            'CREATE TABLE ep_test (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE case_test (id INT PRIMARY KEY, UserName VARCHAR(50))',
+            'CREATE TABLE attr_test (id INT PRIMARY KEY, val TEXT)',
+            'CREATE TABLE switch_test (id INT PRIMARY KEY, name TEXT)',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['sf_test', 'ep_test', 'case_test', 'attr_test', 'switch_test'];
+    }
+
     public function testStringifyFetchesEnabled(): void
     {
         $pdo = new ZtdPdo('sqlite::memory:', null, null, [

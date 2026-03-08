@@ -5,43 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests complex UPDATE patterns on MySQL PDO: CASE in SET, arithmetic expressions,
  * multiple sequential mutations, prepared UPDATE with CASE.
+ * @spec pending
  */
-class MysqlComplexUpdatePatternsTest extends TestCase
+class MysqlComplexUpdatePatternsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_cup_employees');
-        $raw->exec('CREATE TABLE mysql_cup_employees (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(30), salary DECIMAL(10,2), grade VARCHAR(5), active TINYINT)');
+        return 'CREATE TABLE mysql_cup_employees (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(30), salary DECIMAL(10,2), grade VARCHAR(5), active TINYINT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_cup_employees'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_cup_employees VALUES (1, 'Alice', 'Engineering', 80000, 'B', 1)");
         $this->pdo->exec("INSERT INTO mysql_cup_employees VALUES (2, 'Bob', 'Engineering', 90000, 'A', 1)");
@@ -121,16 +107,5 @@ class MysqlComplexUpdatePatternsTest extends TestCase
         $rows = $select->fetchAll(PDO::FETCH_ASSOC);
         $this->assertSame('A', $rows[0]['grade']);
         $this->assertSame('S', $rows[1]['grade']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_cup_employees');
     }
 }

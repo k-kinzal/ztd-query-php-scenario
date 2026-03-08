@@ -5,47 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests column type edge cases on PostgreSQL PDO: TIME, BYTEA, BOOLEAN,
  * mixed-type arithmetic, CASE with mixed return types.
+ * @spec pending
  */
-class PostgresColumnTypeEdgeCasesTest extends TestCase
+class PostgresColumnTypeEdgeCasesTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_events');
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_metrics');
-        // Using SMALLINT instead of BOOLEAN to avoid CTE rewriter CAST('' AS BOOLEAN) issue (see issue #6)
-        $raw->exec('CREATE TABLE pg_cte_events (id INT PRIMARY KEY, name VARCHAR(50), event_time TIME, event_date DATE, is_active SMALLINT, payload BYTEA)');
-        $raw->exec('CREATE TABLE pg_cte_metrics (id INT PRIMARY KEY, label VARCHAR(20), int_val INT, float_val DOUBLE PRECISION, text_val VARCHAR(50))');
+        return [
+            'CREATE TABLE pg_cte_events (id INT PRIMARY KEY, name VARCHAR(50), event_time TIME, event_date DATE, is_active SMALLINT, payload BYTEA)',
+            'CREATE TABLE pg_cte_metrics (id INT PRIMARY KEY, label VARCHAR(20), int_val INT, float_val DOUBLE PRECISION, text_val VARCHAR(50))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_cte_events', 'pg_cte_metrics'];
     }
+
 
     public function testTimeValuesInShadowStore(): void
     {
@@ -99,17 +80,5 @@ class PostgresColumnTypeEdgeCasesTest extends TestCase
         $stmt = $this->pdo->query("SELECT COUNT(*) AS cnt FROM pg_cte_events WHERE is_active = 1");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame(0, (int) $row['cnt']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_events');
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_metrics');
     }
 }

@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests UNION/EXCEPT/INTERSECT with LIMIT/OFFSET on PostgreSQL.
@@ -17,31 +13,30 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * PostgreSQL natively supports all set operations (unlike MySQL which
  * may have issues with EXCEPT/INTERSECT). Tests whether the CTE
  * rewriter handles these combinations correctly.
+ * @spec pending
  */
-class PostgresSetOperationsWithLimitTest extends TestCase
+class PostgresSetOperationsWithLimitTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_set_a');
-        $raw->exec('DROP TABLE IF EXISTS pg_set_b');
-        $raw->exec('CREATE TABLE pg_set_a (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->exec('CREATE TABLE pg_set_b (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return [
+            'CREATE TABLE pg_set_a (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE pg_set_b (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_set_a', 'pg_set_b'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pg_set_a VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO pg_set_a VALUES (2, 'Bob', 80)");
         $this->pdo->exec("INSERT INTO pg_set_a VALUES (3, 'Charlie', 70)");
-
         $this->pdo->exec("INSERT INTO pg_set_b VALUES (4, 'Bob', 80)");
         $this->pdo->exec("INSERT INTO pg_set_b VALUES (5, 'Diana', 60)");
         $this->pdo->exec("INSERT INTO pg_set_b VALUES (6, 'Eve', 50)");
@@ -149,15 +144,5 @@ class PostgresSetOperationsWithLimitTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_set_a');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_set_a');
-            $raw->exec('DROP TABLE IF EXISTS pg_set_b');
-        } catch (\Exception $e) {
-        }
     }
 }

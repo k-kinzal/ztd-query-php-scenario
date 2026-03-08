@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests CTE-based DML patterns on MySQL PDO ZTD.
@@ -18,39 +13,31 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * does not support these patterns. The mutation resolver cannot produce
  * a shadow mutation for CTE-based DML, throwing RuntimeException
  * "Missing shadow mutation for write simulation".
+ * @spec SPEC-3.3e
  */
-class MysqlCteDmlTest extends TestCase
+class MysqlCteDmlTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-            'root',
-            'root',
-        );
-        $raw->exec('DROP TABLE IF EXISTS pdo_cte_dml_target');
-        $raw->exec('DROP TABLE IF EXISTS pdo_cte_dml_source');
-        $raw->exec('CREATE TABLE pdo_cte_dml_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->exec('CREATE TABLE pdo_cte_dml_target (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return [
+            'CREATE TABLE pdo_cte_dml_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE pdo_cte_dml_target (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_cte_dml_target', 'pdo_cte_dml_source'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-            'root',
-            'root',
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pdo_cte_dml_source (id, name, score) VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO pdo_cte_dml_source (id, name, score) VALUES (2, 'Bob', 80)");
         $this->pdo->exec("INSERT INTO pdo_cte_dml_source (id, name, score) VALUES (3, 'Charlie', 70)");
-
         $this->pdo->exec("INSERT INTO pdo_cte_dml_target (id, name, score) VALUES (1, 'Old_Alice', 50)");
         $this->pdo->exec("INSERT INTO pdo_cte_dml_target (id, name, score) VALUES (2, 'Old_Bob', 40)");
     }
@@ -116,19 +103,5 @@ class MysqlCteDmlTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_cte_dml_target');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-                'root',
-                'root',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pdo_cte_dml_target');
-            $raw->exec('DROP TABLE IF EXISTS pdo_cte_dml_source');
-        } catch (\Exception $e) {
-        }
     }
 }

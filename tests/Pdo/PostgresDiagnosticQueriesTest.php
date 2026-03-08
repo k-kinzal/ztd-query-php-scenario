@@ -23,6 +23,7 @@ use ZtdQuery\Config\ZtdConfig;
  *
  * information_schema and pg_catalog are system tables, not user tables,
  * so they should not be affected by CTE rewriting.
+ * @spec pending
  */
 class PostgresDiagnosticQueriesTest extends TestCase
 {

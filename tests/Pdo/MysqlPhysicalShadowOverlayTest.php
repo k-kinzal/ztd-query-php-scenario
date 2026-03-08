@@ -5,48 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests the CTE shadow replacement behavior on MySQL PDO: physical data is NOT
  * visible through ZTD queries — the shadow store replaces the physical table.
+ * @spec SPEC-2.2
  */
-class MysqlPhysicalShadowOverlayTest extends TestCase
+class MysqlPhysicalShadowOverlayTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_pso_products');
-        $raw->exec('CREATE TABLE mysql_pso_products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))');
-        // Pre-populate with physical data
-        $raw->exec("INSERT INTO mysql_pso_products VALUES (1, 'Widget', 29.99, 'electronics')");
-        $raw->exec("INSERT INTO mysql_pso_products VALUES (2, 'Gadget', 49.99, 'electronics')");
-        $raw->exec("INSERT INTO mysql_pso_products VALUES (3, 'Gizmo', 19.99, 'toys')");
+        return 'CREATE TABLE mysql_pso_products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_pso_products'];
     }
+
 
     public function testPhysicalDataNotVisibleThroughZtd(): void
     {
@@ -92,16 +69,5 @@ class MysqlPhysicalShadowOverlayTest extends TestCase
         $stmt = $this->pdo->query("SELECT name FROM mysql_pso_products WHERE id = 1");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame('Shadow Widget', $row['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_pso_products');
     }
 }

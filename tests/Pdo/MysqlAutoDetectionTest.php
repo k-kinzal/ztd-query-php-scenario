@@ -11,6 +11,7 @@ use Testcontainers\Testcontainers;
 use Tests\Support\MySQLContainer;
 use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
+/** @spec SPEC-1.5, SPEC-1.7 */
 class MysqlAutoDetectionTest extends TestCase
 {
     public static function setUpBeforeClass(): void

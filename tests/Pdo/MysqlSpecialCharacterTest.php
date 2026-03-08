@@ -5,45 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests that the shadow store correctly handles special characters,
  * Unicode, and edge-case string values in CTE-rewritten queries on MySQL via PDO.
+ * @spec pending
  */
-class MysqlSpecialCharacterTest extends TestCase
+class MysqlSpecialCharacterTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('SET NAMES utf8mb4');
-        $raw->exec('DROP TABLE IF EXISTS mysql_char_test');
-        $raw->exec('CREATE TABLE mysql_char_test (id INT PRIMARY KEY, val VARCHAR(1000)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+        return 'CREATE TABLE mysql_char_test (id INT PRIMARY KEY, val VARCHAR(1000)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn() . ';charset=utf8mb4',
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_char_test'];
     }
+
 
     public function testSingleQuoteInValue(): void
     {
@@ -178,16 +158,5 @@ class MysqlSpecialCharacterTest extends TestCase
             );
         }
         $this->assertSame($expected, $rows[0]['val']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_char_test');
     }
 }

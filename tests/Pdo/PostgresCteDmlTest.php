@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests CTE-based DML patterns on PostgreSQL PDO ZTD.
@@ -17,39 +12,31 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * PostgreSQL supports WITH ... INSERT/UPDATE/DELETE natively, but ZTD
  * does not support these patterns. The CTE rewriter produces invalid SQL
  * because it does not properly handle user CTEs combined with DML statements.
+ * @spec SPEC-3.3e
  */
-class PostgresCteDmlTest extends TestCase
+class PostgresCteDmlTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            sprintf('pgsql:host=%s;port=%d;dbname=test', PostgreSQLContainer::getHost(), PostgreSQLContainer::getPort()),
-            'test',
-            'test',
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_dml_target');
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_dml_source');
-        $raw->exec('CREATE TABLE pg_cte_dml_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->exec('CREATE TABLE pg_cte_dml_target (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return [
+            'CREATE TABLE pg_cte_dml_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE pg_cte_dml_target (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_cte_dml_target', 'pg_cte_dml_source'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            sprintf('pgsql:host=%s;port=%d;dbname=test', PostgreSQLContainer::getHost(), PostgreSQLContainer::getPort()),
-            'test',
-            'test',
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_cte_dml_source (id, name, score) VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO pg_cte_dml_source (id, name, score) VALUES (2, 'Bob', 80)");
         $this->pdo->exec("INSERT INTO pg_cte_dml_source (id, name, score) VALUES (3, 'Charlie', 70)");
-
         $this->pdo->exec("INSERT INTO pg_cte_dml_target (id, name, score) VALUES (1, 'Old_Alice', 50)");
         $this->pdo->exec("INSERT INTO pg_cte_dml_target (id, name, score) VALUES (2, 'Old_Bob', 40)");
     }
@@ -117,19 +104,5 @@ class PostgresCteDmlTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_cte_dml_target');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                sprintf('pgsql:host=%s;port=%d;dbname=test', PostgreSQLContainer::getHost(), PostgreSQLContainer::getPort()),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_cte_dml_target');
-            $raw->exec('DROP TABLE IF EXISTS pg_cte_dml_source');
-        } catch (\Exception $e) {
-        }
     }
 }

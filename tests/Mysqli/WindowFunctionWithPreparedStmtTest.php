@@ -4,47 +4,30 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests window functions with prepared statements via MySQLi.
  *
  * Cross-platform parity with MysqlWindowFunctionWithPreparedStmtTest (PDO).
+ * @spec pending
  */
-class WindowFunctionWithPreparedStmtTest extends TestCase
+class WindowFunctionWithPreparedStmtTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_wfprep_test');
-        $raw->query('CREATE TABLE mi_wfprep_test (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(50), salary INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_wfprep_test (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(50), salary INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_wfprep_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_wfprep_test VALUES (1, 'Alice', 'Engineering', 90000)");
         $this->mysqli->query("INSERT INTO mi_wfprep_test VALUES (2, 'Bob', 'Engineering', 85000)");
@@ -122,28 +105,5 @@ class WindowFunctionWithPreparedStmtTest extends TestCase
         $this->mysqli->disableZtd();
         $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_wfprep_test');
         $this->assertSame(0, (int) $result->fetch_assoc()['cnt']);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_wfprep_test');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

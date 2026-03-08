@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests INFORMATION_SCHEMA queries through ZTD on MySQL PDO.
@@ -17,35 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * INFORMATION_SCHEMA is a standard metadata schema. Queries to it
  * should pass through to the physical database since INFORMATION_SCHEMA
  * tables are not reflected by ZTD.
+ * @spec pending
  */
-class MysqlInformationSchemaTest extends TestCase
+class MysqlInformationSchemaTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS is_test_table');
-        $raw->exec('CREATE TABLE is_test_table (id INT PRIMARY KEY, name VARCHAR(100))');
+        return 'CREATE TABLE is_test_table (id INT PRIMARY KEY, name VARCHAR(100))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['is_test_table'];
     }
+
 
     /**
      * Query INFORMATION_SCHEMA.TABLES.
@@ -117,18 +98,5 @@ class MysqlInformationSchemaTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM is_test_table');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                MySQLContainer::getDsn(),
-                'root',
-                'root',
-            );
-            $raw->exec('DROP TABLE IF EXISTS is_test_table');
-        } catch (\Exception $e) {
-        }
     }
 }

@@ -5,42 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests correlated subqueries in SELECT after mutations on PostgreSQL.
  *
  * Correlated subqueries reference the outer query's row and must
  * correctly reflect shadow mutations (INSERT/UPDATE/DELETE).
+ * @spec pending
  */
-class PostgresCorrelatedSubqueryAfterMutationTest extends TestCase
+class PostgresCorrelatedSubqueryAfterMutationTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_corr_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_corr_customers');
-        $raw->exec('CREATE TABLE pg_corr_customers (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->exec('CREATE TABLE pg_corr_orders (id INT PRIMARY KEY, customer_id INT, amount NUMERIC(10,2))');
+        return [
+            'CREATE TABLE pg_corr_customers (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE pg_corr_orders (id INT PRIMARY KEY, customer_id INT, amount NUMERIC(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_corr_orders', 'pg_corr_customers'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pg_corr_customers VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO pg_corr_customers VALUES (2, 'Bob')");
         $this->pdo->exec("INSERT INTO pg_corr_customers VALUES (3, 'Charlie')");
-
         $this->pdo->exec("INSERT INTO pg_corr_orders VALUES (1, 1, 100.00)");
         $this->pdo->exec("INSERT INTO pg_corr_orders VALUES (2, 1, 200.00)");
         $this->pdo->exec("INSERT INTO pg_corr_orders VALUES (3, 2, 150.00)");
@@ -124,15 +119,5 @@ class PostgresCorrelatedSubqueryAfterMutationTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_corr_orders');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_corr_orders');
-            $raw->exec('DROP TABLE IF EXISTS pg_corr_customers');
-        } catch (\Exception $e) {
-        }
     }
 }

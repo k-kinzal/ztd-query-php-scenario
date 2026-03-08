@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests CHECK constraint behavior with ZTD shadow store on PostgreSQL.
@@ -17,30 +13,25 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * PostgreSQL has full CHECK constraint support. Since ZTD rewrites
  * operations to CTE-based queries, CHECK constraints are NOT enforced
  * in shadow.
+ * @spec SPEC-8.1
  */
-class PostgresCheckConstraintBehaviorTest extends TestCase
+class PostgresCheckConstraintBehaviorTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_check_test');
-        $raw->exec("CREATE TABLE pg_check_test (
+        return 'CREATE TABLE pg_check_test (
             id INT PRIMARY KEY,
             age INT CHECK (age >= 0 AND age <= 150),
             score INT CHECK (score >= 0),
-            status VARCHAR(20) CHECK (status IN ('active', 'inactive', 'pending'))
-        )");
+            status VARCHAR(20) CHECK (status IN (\'active\', \'inactive\', \'pending\'))
+        )';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        return ['pg_check_test'];
     }
+
 
     /**
      * INSERT with valid values succeeds.
@@ -99,14 +90,5 @@ class PostgresCheckConstraintBehaviorTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_check_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_check_test');
-        } catch (\Exception $e) {
-        }
     }
 }

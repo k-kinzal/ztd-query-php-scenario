@@ -4,52 +4,29 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests recursive CTEs and RIGHT JOIN on MySQLi.
+ * @spec SPEC-3.3c
  */
-class RecursiveCteAndRightJoinTest extends TestCase
+class RecursiveCteAndRightJoinTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_rc_enrollments');
-        $raw->query('DROP TABLE IF EXISTS mi_rc_categories');
-        $raw->query('DROP TABLE IF EXISTS mi_rc_students');
-        $raw->query('DROP TABLE IF EXISTS mi_rc_courses');
-        $raw->query('CREATE TABLE mi_rc_categories (id INT PRIMARY KEY, name VARCHAR(255), parent_id INT)');
-        $raw->query('CREATE TABLE mi_rc_students (id INT PRIMARY KEY, name VARCHAR(255))');
-        $raw->query('CREATE TABLE mi_rc_courses (id INT PRIMARY KEY, title VARCHAR(255))');
-        $raw->query('CREATE TABLE mi_rc_enrollments (student_id INT, course_id INT)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_rc_categories (id INT PRIMARY KEY, name VARCHAR(255), parent_id INT)',
+            'CREATE TABLE mi_rc_students (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE mi_rc_courses (id INT PRIMARY KEY, title VARCHAR(255))',
+            'CREATE TABLE mi_rc_enrollments (student_id INT, course_id INT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_rc_enrollments', 'mi_rc_categories', 'mi_rc_students', 'mi_rc_courses'];
     }
+
 
     public function testRecursiveCteNumberSeries(): void
     {
@@ -119,26 +96,5 @@ class RecursiveCteAndRightJoinTest extends TestCase
 
         $math = array_filter($rows, fn($r) => $r['title'] === 'Math');
         $this->assertCount(2, $math);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_rc_enrollments');
-        $raw->query('DROP TABLE IF EXISTS mi_rc_categories');
-        $raw->query('DROP TABLE IF EXISTS mi_rc_students');
-        $raw->query('DROP TABLE IF EXISTS mi_rc_courses');
-        $raw->close();
     }
 }

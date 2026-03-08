@@ -5,24 +5,26 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests using reserved SQL keywords as column/table names through ZTD.
  *
  * Verifies that identifier quoting handles reserved keywords correctly.
+ * @spec pending
  */
-class SqliteReservedKeywordIdentifierTest extends TestCase
+class SqliteReservedKeywordIdentifierTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE "order" (id INT PRIMARY KEY, "select" VARCHAR(50), "from" INT, "where" VARCHAR(50))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE "order" (id INT PRIMARY KEY, "select" VARCHAR(50), "from" INT, "where" VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['order'];
+    }
+
 
     /**
      * INSERT with reserved keyword column names.

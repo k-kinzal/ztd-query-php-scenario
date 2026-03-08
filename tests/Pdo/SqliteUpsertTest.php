@@ -5,23 +5,33 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
-class SqliteUpsertTest extends TestCase
+/** @spec SPEC-4.2a */
+class SqliteUpsertTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE upsert_test (id INTEGER PRIMARY KEY, val TEXT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['upsert_test'];
+    }
+
     private PDO $raw;
-    private ZtdPdo $pdo;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->raw = new PDO('sqlite::memory:', null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
         $this->raw->exec('CREATE TABLE upsert_test (id INTEGER PRIMARY KEY, val TEXT)');
 
-        $this->pdo = ZtdPdo::fromPdo($this->raw);
-    }
+        }
 
     public function testInsertOnConflictDoUpdateInserts(): void
     {

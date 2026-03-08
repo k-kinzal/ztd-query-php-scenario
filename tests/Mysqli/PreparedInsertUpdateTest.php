@@ -4,47 +4,25 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Confirms MySQLi adapter correctly handles prepared INSERT + subsequent UPDATE.
  * (PDO adapter has issue #23 — MySQLi is NOT affected.)
+ * @spec pending
  */
-class PreparedInsertUpdateTest extends TestCase
+class PreparedInsertUpdateTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_prep_ins');
-        $raw->query('CREATE TABLE mi_prep_ins (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_prep_ins (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_prep_ins'];
     }
+
 
     public function testPreparedInsertThenQueryUpdateWorks(): void
     {
@@ -101,23 +79,5 @@ class PreparedInsertUpdateTest extends TestCase
 
         $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_prep_ins');
         $this->assertSame(1, (int) $result->fetch_assoc()['cnt']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_prep_ins');
-        $raw->close();
     }
 }

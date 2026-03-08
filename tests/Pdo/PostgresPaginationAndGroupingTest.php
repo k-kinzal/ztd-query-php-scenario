@@ -5,45 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests parameterized LIMIT/OFFSET, expression-based GROUP BY,
  * and INSERT...SELECT with filtering on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresPaginationAndGroupingTest extends TestCase
+class PostgresPaginationAndGroupingTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_pg_archive');
-        $raw->exec('DROP TABLE IF EXISTS pg_pg_products');
-        $raw->exec('CREATE TABLE pg_pg_products (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(50), price NUMERIC(10,2), stock INT)');
-        $raw->exec('CREATE TABLE pg_pg_archive (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(50), price NUMERIC(10,2), stock INT)');
+        return [
+            'CREATE TABLE pg_pg_products (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(50), price NUMERIC(10,2), stock INT)',
+            'CREATE TABLE pg_pg_archive (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(50), price NUMERIC(10,2), stock INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_pg_archive', 'pg_pg_products'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_pg_products VALUES (1, 'Widget A', 'hardware', 9.99, 50)");
         $this->pdo->exec("INSERT INTO pg_pg_products VALUES (2, 'Widget B', 'hardware', 14.99, 30)");
@@ -114,17 +101,5 @@ class PostgresPaginationAndGroupingTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame('Widget A', $rows[0]['name']);
         $this->assertSame('Gadget X', $rows[1]['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_pg_archive');
-        $raw->exec('DROP TABLE IF EXISTS pg_pg_products');
     }
 }

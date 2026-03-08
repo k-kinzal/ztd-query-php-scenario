@@ -5,22 +5,21 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
-class SqliteWriteResultSetTest extends TestCase
+/** @spec SPEC-4.5 */
+class SqliteWriteResultSetTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE write_result_test (id INTEGER PRIMARY KEY, val TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE write_result_test (id INTEGER PRIMARY KEY, val TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['write_result_test'];
+    }
+
 
     public function testInsertViaExecReturnsAffectedCount(): void
     {

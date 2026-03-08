@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ALTER TABLE operations in ZTD mode on SQLite.
@@ -18,22 +17,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - RENAME COLUMN: old column name is still used in SELECT results
  *
  * This differs from MySQL where ALTER TABLE fully updates the shadow schema.
+ * @spec SPEC-5.1a
  */
-class SqliteAlterTableTest extends TestCase
+class SqliteAlterTableTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE alter_test (id INTEGER PRIMARY KEY, name TEXT)');
-        $raw->exec("INSERT INTO alter_test (id, name) VALUES (1, 'Alice')");
-        $raw->exec("INSERT INTO alter_test (id, name) VALUES (2, 'Bob')");
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE alter_test (id INTEGER PRIMARY KEY, name TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['alter_test'];
+    }
+
 
     public function testAddColumnDoesNotThrow(): void
     {

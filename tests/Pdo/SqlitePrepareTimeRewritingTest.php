@@ -5,30 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests that query rewriting occurs at prepare time, not execute time.
  * If ZTD mode is toggled between prepare() and execute(), the prepared
  * query retains its original rewritten (or non-rewritten) form.
+ * @spec pending
  */
-class SqlitePrepareTimeRewritingTest extends TestCase
+class SqlitePrepareTimeRewritingTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE ptr_items (id INTEGER PRIMARY KEY, name TEXT, price REAL)');
-        // Physical data
-        $raw->exec("INSERT INTO ptr_items VALUES (1, 'Physical A', 10.00)");
-        $raw->exec("INSERT INTO ptr_items VALUES (2, 'Physical B', 20.00)");
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE ptr_items (id INTEGER PRIMARY KEY, name TEXT, price REAL)',
+            'CREATE TABLE ptr_users (id INTEGER PRIMARY KEY, name TEXT)',
+            'CREATE TABLE ptr_orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['ptr_items', 'ptr_users', 'ptr_orders'];
+    }
+
 
     /**
      * Prepare SELECT with ZTD enabled, disable ZTD, then execute.

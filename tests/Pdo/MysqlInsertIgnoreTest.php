@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests INSERT IGNORE behavior on MySQL ZTD:
@@ -17,34 +13,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - Non-duplicate rows inserted
  * - Batch INSERT IGNORE with mixed duplicate/non-duplicate
  * - Prepared INSERT IGNORE
+ * @spec SPEC-4.2e
  */
-class MysqlInsertIgnoreTest extends TestCase
+class MysqlInsertIgnoreTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ins_ign_m');
-        $raw->exec('CREATE TABLE ins_ign_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE ins_ign_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['ins_ign_m'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO ins_ign_m VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO ins_ign_m VALUES (2, 'Bob', 80)");
@@ -129,16 +115,5 @@ class MysqlInsertIgnoreTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM ins_ign_m');
         $this->assertSame(3, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ins_ign_m');
     }
 }

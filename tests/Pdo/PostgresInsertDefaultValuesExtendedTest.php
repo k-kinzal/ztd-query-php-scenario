@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL-specific INSERT DEFAULT VALUES syntax and
@@ -17,40 +13,25 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * PostgreSQL supports `INSERT INTO t DEFAULT VALUES` which inserts
  * a row with all columns set to their default values.
+ * @spec pending
  */
-class PostgresInsertDefaultValuesExtendedTest extends TestCase
+class PostgresInsertDefaultValuesExtendedTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_defval_test');
-        $raw->exec('CREATE TABLE pg_defval_test (
+        return 'CREATE TABLE pg_defval_test (
             id SERIAL PRIMARY KEY,
-            name VARCHAR(50) DEFAULT \'Unknown\',
+            name VARCHAR(50) DEFAULT \\\'Unknown\\\',
             score INT DEFAULT 0,
             active BOOLEAN DEFAULT true
-        )');
+        )';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_defval_test'];
     }
+
 
     /**
      * INSERT with explicit values works normally.
@@ -128,18 +109,5 @@ class PostgresInsertDefaultValuesExtendedTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_defval_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_defval_test');
-        } catch (\Exception $e) {
-        }
     }
 }

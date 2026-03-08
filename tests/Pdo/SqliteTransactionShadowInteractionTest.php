@@ -5,27 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests the interaction between database transactions and the ZTD shadow store.
  * Key behavior: the shadow store is independent of physical transaction state.
  * Shadow data persists after rollback, and commit does not flush shadow to physical.
+ * @spec SPEC-4.8
  */
-class SqliteTransactionShadowInteractionTest extends TestCase
+class SqliteTransactionShadowInteractionTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE txs_items (id INTEGER PRIMARY KEY, name TEXT, price REAL)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['txs_items'];
+    }
+
     private PDO $raw;
+
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->raw = new PDO('sqlite::memory:', null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
         $this->raw->exec('CREATE TABLE txs_items (id INTEGER PRIMARY KEY, name TEXT, price REAL)');
-
-        $this->pdo = ZtdPdo::fromPdo($this->raw);
     }
 
     /**

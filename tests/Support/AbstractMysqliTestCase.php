@@ -47,15 +47,20 @@ abstract class AbstractMysqliTestCase extends TestCase
         }
         $raw->close();
 
-        $this->mysqli = new ZtdMysqli(
+        $this->mysqli = $this->createZtdConnection();
+
+        VersionRecorder::setVersionInfo(static::class, $this->getDbVersion(), $this->getZtdVersion());
+    }
+
+    protected function createZtdConnection(): ZtdMysqli
+    {
+        return new ZtdMysqli(
             MySQLContainer::getHost(),
             'root',
             'root',
             'test',
             MySQLContainer::getPort(),
         );
-
-        VersionRecorder::setVersionInfo(static::class, $this->getDbVersion(), $this->getZtdVersion());
     }
 
     protected function ztdExec(string $sql): int|false

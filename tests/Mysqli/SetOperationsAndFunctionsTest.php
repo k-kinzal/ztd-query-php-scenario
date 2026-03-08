@@ -4,52 +4,35 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests set operations (EXCEPT, INTERSECT), string/math functions, and multiple CTEs on MySQLi.
+ * @spec SPEC-3.3d
  */
-class SetOperationsAndFunctionsTest extends TestCase
+class SetOperationsAndFunctionsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_sof_vip');
-        $raw->query('DROP TABLE IF EXISTS mi_sof_users');
-        $raw->query('CREATE TABLE mi_sof_users (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), score INT)');
-        $raw->query('CREATE TABLE mi_sof_vip (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255))');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_sof_users (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), score INT)',
+            'CREATE TABLE mi_sof_vip (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_sof_vip', 'mi_sof_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_sof_users (id, name, email, score) VALUES (1, 'Alice', 'alice@test.com', 90)");
         $this->mysqli->query("INSERT INTO mi_sof_users (id, name, email, score) VALUES (2, 'Bob', 'bob@test.com', 80)");
         $this->mysqli->query("INSERT INTO mi_sof_users (id, name, email, score) VALUES (3, 'Charlie', 'charlie@test.com', 70)");
-
         $this->mysqli->query("INSERT INTO mi_sof_vip (id, name, email) VALUES (1, 'Alice', 'alice@test.com')");
     }
 
@@ -166,24 +149,5 @@ class SetOperationsAndFunctionsTest extends TestCase
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('Alice', $rows[0]['name']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_sof_vip');
-        $raw->query('DROP TABLE IF EXISTS mi_sof_users');
-        $raw->close();
     }
 }

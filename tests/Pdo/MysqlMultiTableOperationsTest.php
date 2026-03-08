@@ -5,44 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests multi-table UPDATE and DELETE operations on MySQL PDO.
+ * @spec SPEC-4.2c, SPEC-4.2d
  */
-class MysqlMultiTableOperationsTest extends TestCase
+class MysqlMultiTableOperationsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_mt_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_mt_users');
-        $raw->exec('CREATE TABLE mysql_mt_users (id INT PRIMARY KEY, name VARCHAR(255), active TINYINT DEFAULT 1)');
-        $raw->exec('CREATE TABLE mysql_mt_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2))');
+        return [
+            'CREATE TABLE mysql_mt_users (id INT PRIMARY KEY, name VARCHAR(255), active TINYINT DEFAULT 1)',
+            'CREATE TABLE mysql_mt_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_mt_orders', 'mysql_mt_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_mt_users (id, name, active) VALUES (1, 'Alice', 1)");
         $this->pdo->exec("INSERT INTO mysql_mt_users (id, name, active) VALUES (2, 'Bob', 1)");
@@ -78,17 +65,5 @@ class MysqlMultiTableOperationsTest extends TestCase
         $stmt = $this->pdo->query('SELECT * FROM mysql_mt_orders');
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(2, $rows);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_mt_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_mt_users');
     }
 }

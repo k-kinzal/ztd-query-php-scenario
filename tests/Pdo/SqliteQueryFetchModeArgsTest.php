@@ -5,31 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
+use Tests\Support\AbstractSqlitePdoTestCase;
 use Tests\Support\UserDto;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests ZtdPdo::query() with fetchMode arguments on SQLite.
  *
  * SQLite variant of the query-with-fetchMode tests.
  * Uses in-memory database, no container needed.
+ * @spec pending
  */
-class SqliteQueryFetchModeArgsTest extends TestCase
+class SqliteQueryFetchModeArgsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sq_qfm_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sq_qfm_test (id, name, score) VALUES (1, 'Alice', 90)");
-        $this->pdo->exec("INSERT INTO sq_qfm_test (id, name, score) VALUES (2, 'Bob', 80)");
+        return 'CREATE TABLE sq_qfm_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sq_qfm_test'];
+    }
+
 
     /**
      * query() with FETCH_ASSOC.

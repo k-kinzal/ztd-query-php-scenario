@@ -4,46 +4,29 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests ZtdMysqliStatement-specific methods: ztdAffectedRows(), num_rows(),
  * reset(), free_result(), and property access behavior.
+ * @spec SPEC-4.12
  */
-class StatementMethodsTest extends TestCase
+class StatementMethodsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_stm_items');
-        $raw->query('CREATE TABLE mi_stm_items (id INT PRIMARY KEY, name VARCHAR(255), qty INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_stm_items (id INT PRIMARY KEY, name VARCHAR(255), qty INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_stm_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_stm_items (id, name, qty) VALUES (1, 'Apple', 10)");
         $this->mysqli->query("INSERT INTO mi_stm_items (id, name, qty) VALUES (2, 'Banana', 20)");
@@ -159,23 +142,5 @@ class StatementMethodsTest extends TestCase
         $result = $stmt->get_result();
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertCount(3, $rows);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_stm_items');
-        $raw->close();
     }
 }

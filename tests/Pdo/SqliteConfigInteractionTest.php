@@ -22,6 +22,7 @@ use ZtdQuery\Config\ZtdConfig;
  *     tables/columns not in the reflected schema
  *
  * These can be set independently — this tests various combinations.
+ * @spec SPEC-9.1, SPEC-9.2
  */
 class SqliteConfigInteractionTest extends TestCase
 {

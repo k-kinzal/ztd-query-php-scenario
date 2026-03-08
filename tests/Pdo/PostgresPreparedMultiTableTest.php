@@ -5,45 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests multi-table UPDATE/DELETE with prepared statement parameters on PostgreSQL PDO.
  * PostgreSQL uses different syntax: UPDATE...FROM and DELETE...USING.
+ * @spec pending
  */
-class PostgresPreparedMultiTableTest extends TestCase
+class PostgresPreparedMultiTableTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pmt_orders');
-        $raw->exec('DROP TABLE IF EXISTS pmt_users');
-        $raw->exec('CREATE TABLE pmt_users (id INT PRIMARY KEY, name VARCHAR(50), active SMALLINT)');
-        $raw->exec('CREATE TABLE pmt_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(20))');
+        return [
+            'CREATE TABLE pmt_users (id INT PRIMARY KEY, name VARCHAR(50), active SMALLINT)',
+            'CREATE TABLE pmt_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(20))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pmt_orders', 'pmt_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pmt_users (id, name, active) VALUES (1, 'Alice', 1)");
         $this->pdo->exec("INSERT INTO pmt_users (id, name, active) VALUES (2, 'Bob', 1)");
@@ -97,17 +84,5 @@ class PostgresPreparedMultiTableTest extends TestCase
         $this->assertCount(1, $rows);
         $this->assertSame('Alice', $rows[0]['name']);
         $this->assertEqualsWithDelta(300.0, (float) $rows[0]['total'], 0.01);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pmt_orders');
-        $raw->exec('DROP TABLE IF EXISTS pmt_users');
     }
 }

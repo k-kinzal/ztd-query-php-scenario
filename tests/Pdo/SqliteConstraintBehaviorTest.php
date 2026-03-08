@@ -5,22 +5,21 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
-class SqliteConstraintBehaviorTest extends TestCase
+/** @spec SPEC-8.1 */
+class SqliteConstraintBehaviorTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE constraint_test (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE constraint_test (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['constraint_test'];
+    }
+
 
     public function testDuplicatePrimaryKeyNotEnforcedInShadow(): void
     {

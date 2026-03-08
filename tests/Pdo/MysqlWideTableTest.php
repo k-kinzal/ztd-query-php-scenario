@@ -5,50 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests wide table (many columns) behavior with ZTD on MySQL PDO.
+ * @spec pending
  */
-class MysqlWideTableTest extends TestCase
+class MysqlWideTableTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        // Build a 20-column table
-        $cols = ['id INT PRIMARY KEY'];
-        for ($i = 1; $i <= 19; $i++) {
-            $cols[] = "col{$i} VARCHAR(50)";
-        }
-        $ddl = 'CREATE TABLE wide_mysql (' . implode(', ', $cols) . ')';
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS wide_mysql');
-        $raw->exec($ddl);
+        return 'CREATE TABLE wide_mysql (';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['wide_mysql'];
     }
+
 
     public function testInsertAndSelectAllColumns(): void
     {
@@ -99,16 +73,5 @@ class MysqlWideTableTest extends TestCase
         $row = $sel->fetch(PDO::FETCH_ASSOC);
         $this->assertSame('prep_val_1', $row['col1']);
         $this->assertSame('prep_val_19', $row['col19']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS wide_mysql');
     }
 }

@@ -12,6 +12,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests ZtdPdo::connect() static factory method (requires PHP 8.4+).
  * Verifies that connect() produces a fully functional ZTD-enabled adapter
  * equivalent to fromPdo(PDO::connect(...)).
+ * @spec SPEC-1.4a
  */
 class SqliteConnectFactoryTest extends TestCase
 {

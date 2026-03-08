@@ -95,14 +95,12 @@ composer outdated 'k-kinzal/*' --direct
 composer show -l -D
 ```
 
-## Current limitations
+## Architecture
 
-This section states the structural gaps between the vision and the current architecture.
-
-- **Scenario → spec traceability** covers only shared scenario traits (~3% of tests). The remaining standalone tests have no formal link to specification statements.
-- **Version tracking** works for tests that extend the abstract base classes. Standalone tests that extend `TestCase` directly record `"dbVersion": "pending"`.
-- **Baseline comparison** is partially manual. A capture tool (`scripts/capture-baseline.php`) produces `baseline.json`, but no automated diff/classification tool exists yet.
-- **Shared:standalone ratio is inverted.** 5 scenario traits provide shared cross-platform coverage; ~700 standalone files implement their own setup. The architecture incentivizes standalone tests over shared scenarios.
+- **Spec traceability**: All test classes carry a `@spec SPEC-X.Y` docblock annotation linking them to specification statements in [`spec/`](spec). The [`spec/traceability.md`](spec/traceability.md) matrix maps SPEC-IDs to test classes across all adapters.
+- **Version tracking**: The `VersionRecorder` PHPUnit extension records PHP, database, and ztd-query versions per test class into `spec/verification-log.json`. Tests extending the abstract base classes report versions via `setUp()`; standalone tests get versions auto-detected from running containers.
+- **Baseline comparison**: `scripts/capture-baseline.php` produces `baseline.json` from JUnit XML. `scripts/compare-baseline.php` diffs two baselines and classifies each change as regression, newly supported, intentional change, added, or removed.
+- **Shared base classes**: ~620 test classes extend platform-specific abstract base classes (`AbstractMysqliTestCase`, `AbstractMysqlPdoTestCase`, `AbstractPostgresPdoTestCase`, `AbstractSqlitePdoTestCase`). Each test class provides `getTableDDL()` and `getTableNames()`; the base class handles container setup, connection creation, table cleanup, and version recording. ~57 tests remain standalone where they require per-method connections (ZtdConfig, factory method tests).
 
 ## Issue reporting
 

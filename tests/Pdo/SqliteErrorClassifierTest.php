@@ -5,28 +5,42 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ZTD error handling and exception types on SQLite.
  *
  * The shadow store does NOT enforce PK/UNIQUE/NOT NULL constraints.
  * This test verifies which operations DO throw and which silently succeed.
+ * @spec pending
  */
-class SqliteErrorClassifierTest extends TestCase
+class SqliteErrorClassifierTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE ecl_test (id INT PRIMARY KEY, name VARCHAR(50) NOT NULL, email VARCHAR(100) UNIQUE)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO ecl_test VALUES (1, 'Alice', 'alice@test.com')");
+        return [
+            'CREATE TABLE ecl_test (id INT PRIMARY KEY, name VARCHAR(50) NOT NULL, email VARCHAR(100) UNIQUE)',
+            'CREATE TABLE on existing table throws ZtdPdoException.
+     */
+    public function testCreateExistingTableThrows(): void
+    {
+        $this->expectException(ZtdPdoException::class);
+        $this->pdo->exec(',
+            'CREATE TABLE ecl_test (id INT PRIMARY KEY)',
+            'CREATE TABLE IF NOT EXISTS on existing table is a no-op.
+     */
+    public function testCreateIfNotExistsNoOp(): void
+    {
+        $this->pdo->exec(',
+            'CREATE TABLE IF NOT EXISTS ecl_test (id INT PRIMARY KEY)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['ecl_test', 'on'];
+    }
+
 
     /**
      * Duplicate PRIMARY KEY is NOT enforced — shadow allows it.

@@ -4,42 +4,25 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
-class AlterTableTest extends TestCase
+/** @spec SPEC-5.1a */
+class AlterTableTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS alter_test');
-        $raw->query('CREATE TABLE alter_test (id INT PRIMARY KEY, name VARCHAR(255))');
-        $raw->close();
+        return 'CREATE TABLE alter_test (id INT PRIMARY KEY, name VARCHAR(255))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['alter_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO alter_test (id, name) VALUES (1, 'Alice')");
         $this->mysqli->query("INSERT INTO alter_test (id, name) VALUES (2, 'Bob')");
@@ -120,23 +103,5 @@ class AlterTableTest extends TestCase
         }
         $this->assertNotContains('age', $columns);
         $this->mysqli->enableZtd();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS alter_test');
-        $raw->close();
     }
 }

@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests transaction interaction with ZTD shadow store on MySQL PDO.
  *
  * Cross-platform parity with SqliteTransactionWithShadowTest.
+ * @spec SPEC-4.8
  */
 class MysqlTransactionWithShadowTest extends TestCase
 {

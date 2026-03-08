@@ -5,26 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests utility methods: getAvailableDrivers, lastInsertId, errorCode, errorInfo,
  * setAttribute/getAttribute on SQLite.
+ * @spec SPEC-4.9
  */
-class SqliteUtilityMethodsTest extends TestCase
+class SqliteUtilityMethodsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE util_test (id INTEGER PRIMARY KEY AUTOINCREMENT, val TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE util_test (id INTEGER PRIMARY KEY AUTOINCREMENT, val TEXT)',
+            'Create table and test basic operation
+        $pdo->disableZtd();
+        $pdo->exec(',
+            'CREATE TABLE connect_test (id INTEGER PRIMARY KEY, val TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['util_test', 'and', 'connect_test'];
+    }
+
 
     public function testGetAvailableDrivers(): void
     {

@@ -5,45 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests UPDATE with IN (subquery containing GROUP BY HAVING) on MySQL.
  * This tests whether the CTE rewriter issue found on SQLite also affects MySQL.
+ * @spec pending
  */
-class MysqlUpdateSubqueryBugTest extends TestCase
+class MysqlUpdateSubqueryBugTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_subq_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_subq_users');
-        $raw->exec('CREATE TABLE mysql_subq_users (id INT PRIMARY KEY, name VARCHAR(255), tier VARCHAR(50))');
-        $raw->exec('CREATE TABLE mysql_subq_orders (id INT PRIMARY KEY, user_id INT, total DECIMAL(10,2), status VARCHAR(50))');
+        return [
+            'CREATE TABLE mysql_subq_users (id INT PRIMARY KEY, name VARCHAR(255), tier VARCHAR(50))',
+            'CREATE TABLE mysql_subq_orders (id INT PRIMARY KEY, user_id INT, total DECIMAL(10,2), status VARCHAR(50))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_subq_orders', 'mysql_subq_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_subq_users (id, name, tier) VALUES (1, 'Alice', 'standard')");
         $this->pdo->exec("INSERT INTO mysql_subq_users (id, name, tier) VALUES (2, 'Bob', 'standard')");
@@ -62,17 +49,5 @@ class MysqlUpdateSubqueryBugTest extends TestCase
 
         $stmt = $this->pdo->query("SELECT tier FROM mysql_subq_users WHERE id = 2");
         $this->assertSame('standard', $stmt->fetch(PDO::FETCH_ASSOC)['tier']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_subq_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_subq_users');
     }
 }

@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests that specific exception types are thrown for various error conditions.
@@ -19,20 +16,45 @@ use ZtdQuery\Adapter\Pdo\ZtdPdoException;
  *
  * Using SQLite for fast in-memory testing since exception behavior
  * is consistent across platforms.
+ * @spec pending
  */
-class SqliteExceptionTypesTest extends TestCase
+class SqliteExceptionTypesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE ex_test (id INTEGER PRIMARY KEY, name TEXT, score INT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE ex_test (id INTEGER PRIMARY KEY, name TEXT, score INT)',
+            'CREATE TABLE on a table that already exists in shadow store
+     * should throw an exception (via CreateTableMutation).
+     */
+    public function testCreateTableAlreadyExistsThrows(): void
+    {
+        $this->pdo->exec(',
+            'CREATE TABLE new_table (id INTEGER PRIMARY KEY, val TEXT)',
+            'CREATE TABLE IF NOT EXISTS on existing table should NOT throw.
+     */
+    public function testCreateTableIfNotExistsDoesNotThrow(): void
+    {
+        $this->pdo->exec(',
+            'CREATE TABLE new_table2 (id INTEGER PRIMARY KEY, val TEXT)',
+            'CREATE TABLE IF NOT EXISTS new_table2 (id INTEGER PRIMARY KEY, val TEXT)',
+            'CREATE TABLE AS SELECT on existing table does NOT throw.
+     * The SQLite mutation resolver silently overwrites the existing shadow table.
+     * This differs from MySQL where CreateTableAsSelectMutation throws.
+     */
+    public function testCreateTableAsSelectOnExistingDoesNotThrowOnSqlite(): void
+    {
+        $this->pdo->exec("INSERT INTO ex_test (id, name, score) VALUES (1,',
+            'CREATE TABLE ctas_result AS SELECT * FROM ex_test',
+            'CREATE TABLE drop_me (id INTEGER PRIMARY KEY, val TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['on', 'totally_missing', 'ex_test', 'new_table', 'new_table2', 'AS', 'ctas_result', 'drop_me'];
+    }
+
 
     /**
      * CREATE TABLE on a table that already exists in shadow store

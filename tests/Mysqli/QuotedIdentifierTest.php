@@ -4,53 +4,31 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests ZTD behavior with MySQLi backtick-quoted identifiers and SQL reserved
  * words as column/table names.
+ * @spec pending
  */
-class QuotedIdentifierTest extends TestCase
+class QuotedIdentifierTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS `mi_qi_items`');
-        $raw->query('CREATE TABLE `mi_qi_items` (
+        return 'CREATE TABLE `mi_qi_items` (
             `id` INT PRIMARY KEY,
             `order` INT,
             `group` VARCHAR(30),
             `key` VARCHAR(50),
             `value` VARCHAR(50)
-        )');
-        $raw->close();
+        )';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_qi_items'];
     }
+
 
     public function testInsertAndSelectWithReservedWordColumns(): void
     {
@@ -87,23 +65,5 @@ class QuotedIdentifierTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame('A', $rows[0]['group']);
         $this->assertSame(2, (int) $rows[0]['cnt']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS `mi_qi_items`');
-        $raw->close();
     }
 }

@@ -5,46 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractMysqlPdoTestCase;
 use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests complex query patterns in ZTD mode on MySQL via PDO:
  * joins, aggregation, subqueries, self-joins, UNION.
+ * @spec SPEC-3.3
  */
-class MysqlComplexQueryTest extends TestCase
+class MysqlComplexQueryTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_cq_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_cq_users');
-        $raw->exec('CREATE TABLE mysql_cq_users (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255))');
-        $raw->exec('CREATE TABLE mysql_cq_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(50))');
+        return [
+            'CREATE TABLE mysql_cq_users (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255))',
+            'CREATE TABLE mysql_cq_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(50))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_cq_orders', 'mysql_cq_users'];
     }
+
 
     public function testJoinWithShadowData(): void
     {
@@ -342,17 +325,5 @@ class MysqlComplexQueryTest extends TestCase
         $stmt = $this->pdo->query('SELECT * FROM mysql_cq_users');
         $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC),
             'ZTD SELECT reads only from shadow store; physical data is not visible');
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_cq_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_cq_users');
     }
 }

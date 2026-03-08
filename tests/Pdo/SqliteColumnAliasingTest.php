@@ -5,30 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests column aliasing patterns (AS in SELECT) and expression aliasing
  * through CTE rewriting.
+ * @spec pending
  */
-class SqliteColumnAliasingTest extends TestCase
+class SqliteColumnAliasingTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE ca_items (id INTEGER PRIMARY KEY, name TEXT, price REAL, qty INTEGER, category TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO ca_items (id, name, price, qty, category) VALUES (1, 'Widget', 10.50, 100, 'A')");
-        $this->pdo->exec("INSERT INTO ca_items (id, name, price, qty, category) VALUES (2, 'Gadget', 25.00, 50, 'A')");
-        $this->pdo->exec("INSERT INTO ca_items (id, name, price, qty, category) VALUES (3, 'Doohickey', 5.75, 200, 'B')");
+        return [
+            'CREATE TABLE ca_items (id INTEGER PRIMARY KEY, name TEXT, price REAL, qty INTEGER, category TEXT)',
+            'CREATE TABLE ca_orders (id INTEGER PRIMARY KEY, item_id INTEGER, customer TEXT)',
+            'CREATE TABLE ca_products (id INTEGER PRIMARY KEY, name TEXT, price REAL)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['ca_items', 'ca_orders', 'ca_products'];
+    }
+
 
     public function testSimpleColumnAlias(): void
     {

@@ -5,26 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests that the shadow store correctly handles special characters,
  * Unicode, and edge-case string values in CTE-rewritten queries.
+ * @spec pending
  */
-class SqliteSpecialCharacterTest extends TestCase
+class SqliteSpecialCharacterTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE char_test (id INTEGER PRIMARY KEY, val TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE char_test (id INTEGER PRIMARY KEY, val TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['char_test'];
+    }
+
 
     public function testSingleQuoteInValue(): void
     {

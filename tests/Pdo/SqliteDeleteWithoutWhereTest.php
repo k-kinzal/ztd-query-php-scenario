@@ -4,29 +4,26 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests DELETE without WHERE clause behavior on SQLite.
  *
  * @see https://github.com/k-kinzal/ztd-query-php/issues/7
+ * @spec SPEC-4.3
  */
-class SqliteDeleteWithoutWhereTest extends TestCase
+class SqliteDeleteWithoutWhereTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE dww_test (id INT PRIMARY KEY, name VARCHAR(50))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO dww_test VALUES (1, 'Alice')");
-        $this->pdo->exec("INSERT INTO dww_test VALUES (2, 'Bob')");
-        $this->pdo->exec("INSERT INTO dww_test VALUES (3, 'Charlie')");
+        return 'CREATE TABLE dww_test (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['dww_test'];
+    }
+
 
     /**
      * DELETE without WHERE should delete all rows.

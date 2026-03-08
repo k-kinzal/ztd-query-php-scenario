@@ -5,44 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests user-written CTE queries and INSERT ... SELECT on PostgreSQL.
+ * @spec pending
  */
-class PostgresUserCteTest extends TestCase
+class PostgresUserCteTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_backup');
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_products');
-        $raw->exec('CREATE TABLE pg_cte_products (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(255), price DECIMAL(10,2))');
-        $raw->exec('CREATE TABLE pg_cte_backup (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(255), price DECIMAL(10,2))');
+        return [
+            'CREATE TABLE pg_cte_products (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(255), price DECIMAL(10,2))',
+            'CREATE TABLE pg_cte_backup (id INT PRIMARY KEY, name VARCHAR(255), category VARCHAR(255), price DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_cte_backup', 'pg_cte_products'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_cte_products (id, name, category, price) VALUES (1, 'Widget A', 'gadgets', 10.00)");
         $this->pdo->exec("INSERT INTO pg_cte_products (id, name, category, price) VALUES (2, 'Widget B', 'gadgets', 20.00)");
@@ -99,17 +86,5 @@ class PostgresUserCteTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT * FROM pg_cte_backup');
         $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_backup');
-        $raw->exec('DROP TABLE IF EXISTS pg_cte_products');
     }
 }

@@ -5,46 +5,33 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL-specific multi-table operations.
  * PostgreSQL uses UPDATE ... FROM and DELETE ... USING syntax
  * instead of MySQL's JOIN-based syntax.
+ * @spec SPEC-4.2c, SPEC-4.2d
  */
-class PostgresMultiTableOperationsTest extends TestCase
+class PostgresMultiTableOperationsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_users');
-        $raw->exec('CREATE TABLE pg_users (id INT PRIMARY KEY, name VARCHAR(255), active INT DEFAULT 1)');
-        $raw->exec('CREATE TABLE pg_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2))');
+        return [
+            'CREATE TABLE pg_users (id INT PRIMARY KEY, name VARCHAR(255), active INT DEFAULT 1)',
+            'CREATE TABLE pg_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_orders', 'pg_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_users (id, name, active) VALUES (1, 'Alice', 1)");
         $this->pdo->exec("INSERT INTO pg_users (id, name, active) VALUES (2, 'Bob', 1)");
@@ -85,17 +72,5 @@ class PostgresMultiTableOperationsTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT * FROM pg_users');
         $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_users');
     }
 }

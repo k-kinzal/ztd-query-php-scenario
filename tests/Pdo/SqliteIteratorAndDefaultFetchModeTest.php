@@ -5,27 +5,35 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests getIterator()/foreach on ZtdPdoStatement and default fetch mode configuration.
+ * @spec pending
  */
-class SqliteIteratorAndDefaultFetchModeTest extends TestCase
+class SqliteIteratorAndDefaultFetchModeTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE iter_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['iter_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE iter_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO iter_test VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO iter_test VALUES (2, 'Bob', 85)");
         $this->pdo->exec("INSERT INTO iter_test VALUES (3, 'Charlie', 70)");
-    }
+
+        }
 
     public function testForeachOnStatement(): void
     {

@@ -4,45 +4,25 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqliException;
+use Tests\Support\AbstractMysqliTestCase;
 
-class DdlOperationsTest extends TestCase
+/** @spec SPEC-5.1, SPEC-5.2 */
+class DdlOperationsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS ddl_existing');
-        $raw->query('CREATE TABLE ddl_existing (id INT PRIMARY KEY, val VARCHAR(255))');
-        $raw->query('DROP TABLE IF EXISTS ddl_new');
-        $raw->close();
+        return [
+            'CREATE TABLE ddl_existing (id INT PRIMARY KEY, val VARCHAR(255))',
+            'CREATE TABLE ddl_existing (id INT PRIMARY KEY)',
+            'CREATE TABLE ddl_new (id INT PRIMARY KEY, name VARCHAR(255))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['ddl_existing', 'ddl_new'];
     }
+
 
     public function testCreateTableThrowsWhenTableExistsPhysically(): void
     {
@@ -118,24 +98,5 @@ class DdlOperationsTest extends TestCase
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame(2, (int) $rows[0]['id']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS ddl_existing');
-        $raw->query('DROP TABLE IF EXISTS ddl_new');
-        $raw->close();
     }
 }

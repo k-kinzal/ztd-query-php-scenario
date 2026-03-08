@@ -5,25 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests date/time functions and advanced window functions on SQLite.
+ * @spec pending
  */
-class SqliteDateAndAdvancedWindowTest extends TestCase
+class SqliteDateAndAdvancedWindowTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE events (id INTEGER PRIMARY KEY, title TEXT, event_date TEXT, category TEXT, amount REAL)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE events (id INTEGER PRIMARY KEY, title TEXT, event_date TEXT, category TEXT, amount REAL)',
+            'CREATE TABLE nat_orders (id INTEGER PRIMARY KEY, customer_id INTEGER, total REAL)',
+            'CREATE TABLE nat_customers (id INTEGER PRIMARY KEY, name TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['events', 'nat_orders', 'nat_customers'];
+    }
+
 
     // --- Date Functions ---
 

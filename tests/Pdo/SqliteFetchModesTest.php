@@ -5,31 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests various PDO fetch modes with ZTD shadow operations on SQLite.
  *
  * Ensures FETCH_OBJ, FETCH_NUM, FETCH_BOTH, FETCH_COLUMN,
  * fetchObject(), and fetchAll() modes work correctly with shadow data.
+ * @spec SPEC-3.4
  */
-class SqliteFetchModesTest extends TestCase
+class SqliteFetchModesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_fm_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sl_fm_test VALUES (1, 'Alice', 90)");
-        $this->pdo->exec("INSERT INTO sl_fm_test VALUES (2, 'Bob', 85)");
-        $this->pdo->exec("INSERT INTO sl_fm_test VALUES (3, 'Charlie', 95)");
+        return 'CREATE TABLE sl_fm_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_fm_test'];
+    }
+
 
     /**
      * FETCH_OBJ returns stdClass objects.

@@ -4,55 +4,31 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests multi-table JOINs (4+ tables), INSERT without column list,
  * SQL comments, and edge cases on MySQLi.
+ * @spec pending
  */
-class MultiJoinAndEdgeCasesTest extends TestCase
+class MultiJoinAndEdgeCasesTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_mj_assignments');
-        $raw->query('DROP TABLE IF EXISTS mi_mj_reviews');
-        $raw->query('DROP TABLE IF EXISTS mi_mj_projects');
-        $raw->query('DROP TABLE IF EXISTS mi_mj_employees');
-        $raw->query('DROP TABLE IF EXISTS mi_mj_departments');
-        $raw->query('CREATE TABLE mi_mj_departments (id INT PRIMARY KEY, name VARCHAR(255))');
-        $raw->query('CREATE TABLE mi_mj_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, manager_id INT)');
-        $raw->query('CREATE TABLE mi_mj_projects (id INT PRIMARY KEY, title VARCHAR(255), dept_id INT)');
-        $raw->query('CREATE TABLE mi_mj_assignments (employee_id INT, project_id INT, hours INT)');
-        $raw->query('CREATE TABLE mi_mj_reviews (id INT PRIMARY KEY, employee_id INT, score INT)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_mj_departments (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE mi_mj_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, manager_id INT)',
+            'CREATE TABLE mi_mj_projects (id INT PRIMARY KEY, title VARCHAR(255), dept_id INT)',
+            'CREATE TABLE mi_mj_assignments (employee_id INT, project_id INT, hours INT)',
+            'CREATE TABLE mi_mj_reviews (id INT PRIMARY KEY, employee_id INT, score INT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_mj_assignments', 'mi_mj_reviews', 'mi_mj_projects', 'mi_mj_employees', 'mi_mj_departments'];
     }
+
 
     public function testFiveTableJoin(): void
     {
@@ -98,27 +74,5 @@ class MultiJoinAndEdgeCasesTest extends TestCase
         ");
         $row = $result->fetch_assoc();
         $this->assertSame('Engineering', $row['name']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_mj_assignments');
-        $raw->query('DROP TABLE IF EXISTS mi_mj_reviews');
-        $raw->query('DROP TABLE IF EXISTS mi_mj_projects');
-        $raw->query('DROP TABLE IF EXISTS mi_mj_employees');
-        $raw->query('DROP TABLE IF EXISTS mi_mj_departments');
-        $raw->close();
     }
 }

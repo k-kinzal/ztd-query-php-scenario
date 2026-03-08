@@ -5,30 +5,40 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests getColumnMeta() and FETCH_NAMED mode with ZTD on SQLite PDO.
+ * @spec pending
  */
-class SqliteColumnMetaAndNamedFetchTest extends TestCase
+class SqliteColumnMetaAndNamedFetchTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE left_t (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE right_t (id INT PRIMARY KEY, name VARCHAR(50), left_id INT)',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['left_t', 'right_t'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE left_t (id INT PRIMARY KEY, name VARCHAR(50))');
         $this->pdo->exec('CREATE TABLE right_t (id INT PRIMARY KEY, name VARCHAR(50), left_id INT)');
-
         $this->pdo->exec("INSERT INTO left_t VALUES (1, 'LeftAlice')");
         $this->pdo->exec("INSERT INTO left_t VALUES (2, 'LeftBob')");
         $this->pdo->exec("INSERT INTO right_t VALUES (1, 'RightX', 1)");
         $this->pdo->exec("INSERT INTO right_t VALUES (2, 'RightY', 1)");
-    }
+
+        }
 
     public function testGetColumnMetaReturnsInfo(): void
     {

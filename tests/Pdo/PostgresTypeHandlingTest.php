@@ -5,43 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests type handling in the shadow store on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresTypeHandlingTest extends TestCase
+class PostgresTypeHandlingTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS type_test');
-        $raw->exec('CREATE TABLE type_test (id INT PRIMARY KEY, float_val DOUBLE PRECISION, bool_val BOOLEAN, date_val DATE, long_text TEXT)');
+        return 'CREATE TABLE type_test (id INT PRIMARY KEY, float_val DOUBLE PRECISION, bool_val BOOLEAN, date_val DATE, long_text TEXT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['type_test'];
     }
+
 
     public function testFloatPrecision(): void
     {
@@ -120,16 +101,5 @@ class PostgresTypeHandlingTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) AS cnt FROM type_test');
         $this->assertSame(3, (int) $stmt->fetch(PDO::FETCH_ASSOC)['cnt']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS type_test');
     }
 }

@@ -4,46 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests batch insert operations and NULL handling in ZTD mode on MySQL.
+ * @spec SPEC-4.1
  */
-class BatchInsertTest extends TestCase
+class BatchInsertTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS batch_test');
-        $raw->query('CREATE TABLE batch_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)');
-        $raw->close();
+        return 'CREATE TABLE batch_test (id INT PRIMARY KEY, name VARCHAR(255), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['batch_test'];
     }
+
 
     public function testMultiRowInsert(): void
     {
@@ -100,23 +78,5 @@ class BatchInsertTest extends TestCase
         $result = $this->mysqli->query('SELECT COUNT(*) as cnt FROM batch_test');
         $row = $result->fetch_assoc();
         $this->assertSame(6, (int) $row['cnt']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS batch_test');
-        $raw->close();
     }
 }

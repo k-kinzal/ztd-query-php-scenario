@@ -17,6 +17,7 @@ use ZtdQuery\Config\ZtdConfig;
  *
  * Cross-platform parity with MysqlDiagnosticQueriesTest (PDO).
  * Tests SHOW TABLES, SHOW COLUMNS, EXPLAIN with behavior rules.
+ * @spec pending
  */
 class DiagnosticQueriesTest extends TestCase
 {

@@ -5,50 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests realistic user workflow scenarios on PostgreSQL PDO:
  * e-commerce order processing, user registration, inventory management.
+ * @spec pending
  */
-class PostgresRealisticWorkflowTest extends TestCase
+class PostgresRealisticWorkflowTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_wf_order_items');
-        $raw->exec('DROP TABLE IF EXISTS pg_wf_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_wf_products');
-        $raw->exec('DROP TABLE IF EXISTS pg_wf_customers');
-        $raw->exec("CREATE TABLE pg_wf_customers (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), tier VARCHAR(50) DEFAULT 'standard')");
-        $raw->exec('CREATE TABLE pg_wf_products (id INT PRIMARY KEY, name VARCHAR(255), price DECIMAL(10,2), stock INT)');
-        $raw->exec('CREATE TABLE pg_wf_orders (id INT PRIMARY KEY, customer_id INT, total DECIMAL(10,2), status VARCHAR(50), created_at DATE)');
-        $raw->exec('CREATE TABLE pg_wf_order_items (id INT PRIMARY KEY, order_id INT, product_id INT, qty INT, unit_price DECIMAL(10,2))');
+        return [
+            'CREATE TABLE pg_wf_customers (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), tier VARCHAR(50) DEFAULT \'standard\')',
+            'CREATE TABLE pg_wf_products (id INT PRIMARY KEY, name VARCHAR(255), price DECIMAL(10,2), stock INT)',
+            'CREATE TABLE pg_wf_orders (id INT PRIMARY KEY, customer_id INT, total DECIMAL(10,2), status VARCHAR(50), created_at DATE)',
+            'CREATE TABLE pg_wf_order_items (id INT PRIMARY KEY, order_id INT, product_id INT, qty INT, unit_price DECIMAL(10,2))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_wf_order_items', 'pg_wf_orders', 'pg_wf_products', 'pg_wf_customers'];
     }
+
 
     public function testEcommerceOrderWorkflow(): void
     {
@@ -184,19 +164,5 @@ class PostgresRealisticWorkflowTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) as c FROM pg_wf_order_items WHERE order_id = 1');
         $this->assertSame(0, (int) $stmt->fetch(PDO::FETCH_ASSOC)['c']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_wf_order_items');
-        $raw->exec('DROP TABLE IF EXISTS pg_wf_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_wf_products');
-        $raw->exec('DROP TABLE IF EXISTS pg_wf_customers');
     }
 }

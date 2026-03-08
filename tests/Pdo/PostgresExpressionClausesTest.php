@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests expression-based clauses in shadow queries on PostgreSQL:
@@ -17,26 +13,25 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - GROUP BY with expressions
  * - HAVING with multiple conditions
  * - LIKE / ILIKE with ESCAPE clause
+ * @spec pending
  */
-class PostgresExpressionClausesTest extends TestCase
+class PostgresExpressionClausesTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_expr_test');
-        $raw->exec('CREATE TABLE pg_expr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, bonus INT, category VARCHAR(10), search_term VARCHAR(100))');
+        return 'CREATE TABLE pg_expr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, bonus INT, category VARCHAR(10), search_term VARCHAR(100))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_expr_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pg_expr_test VALUES (1, 'Alice', 90, 10, 'A', 'hello%world')");
         $this->pdo->exec("INSERT INTO pg_expr_test VALUES (2, 'Bob', 80, 20, 'B', '100%_done')");
         $this->pdo->exec("INSERT INTO pg_expr_test VALUES (3, 'Charlie', 70, 30, 'A', 'test_data')");
         $this->pdo->exec("INSERT INTO pg_expr_test VALUES (4, 'Diana', 60, 40, 'B', 'normal text')");
@@ -134,14 +129,5 @@ class PostgresExpressionClausesTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_expr_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_expr_test');
-        } catch (\Exception $e) {
-        }
     }
 }

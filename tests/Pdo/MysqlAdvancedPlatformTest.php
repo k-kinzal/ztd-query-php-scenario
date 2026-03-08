@@ -5,51 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests MySQL-specific advanced features with ZTD shadow store:
  * GROUP_CONCAT with ORDER BY, IF/IFNULL, date functions, multi-column IN.
+ * @spec pending
  */
-class MysqlAdvancedPlatformTest extends TestCase
+class MysqlAdvancedPlatformTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS madv_orders');
-        $raw->exec('DROP TABLE IF EXISTS madv_users');
-        $raw->exec('CREATE TABLE madv_users (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(20), salary DECIMAL(10,2))');
-        $raw->exec('CREATE TABLE madv_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(20), created_at DATE)');
+        return [
+            'CREATE TABLE madv_users (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(20), salary DECIMAL(10,2))',
+            'CREATE TABLE madv_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(20), created_at DATE)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['madv_orders', 'madv_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO madv_users VALUES (1, 'Alice', 'Engineering', 90000)");
         $this->pdo->exec("INSERT INTO madv_users VALUES (2, 'Bob', 'Marketing', 75000)");
         $this->pdo->exec("INSERT INTO madv_users VALUES (3, 'Charlie', 'Engineering', 85000)");
         $this->pdo->exec("INSERT INTO madv_users VALUES (4, 'Diana', 'Marketing', 80000)");
-
         $this->pdo->exec("INSERT INTO madv_orders VALUES (1, 1, 100.00, 'completed', '2024-01-15')");
         $this->pdo->exec("INSERT INTO madv_orders VALUES (2, 1, 200.00, 'pending', '2024-02-15')");
         $this->pdo->exec("INSERT INTO madv_orders VALUES (3, 2, 150.00, 'completed', '2024-01-20')");
@@ -163,17 +149,5 @@ class MysqlAdvancedPlatformTest extends TestCase
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame('ecilA', $row['reversed']);
         $this->assertSame('00001', $row['padded_id']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS madv_orders');
-        $raw->exec('DROP TABLE IF EXISTS madv_users');
     }
 }

@@ -5,35 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests UPDATE with self-referencing arithmetic (SET col = col + N)
  * on PostgreSQL, verifying cross-platform parity with SQLite and MySQL.
+ * @spec pending
  */
-class PostgresUpdateSelfReferencingArithmeticTest extends TestCase
+class PostgresUpdateSelfReferencingArithmeticTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_selfref_test');
-        $raw->exec('CREATE TABLE pg_selfref_test (id INT PRIMARY KEY, name VARCHAR(50), counter INT, balance NUMERIC(10,2))');
+        return 'CREATE TABLE pg_selfref_test (id INT PRIMARY KEY, name VARCHAR(50), counter INT, balance NUMERIC(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_selfref_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pg_selfref_test VALUES (1, 'Alice', 10, 100.00)");
         $this->pdo->exec("INSERT INTO pg_selfref_test VALUES (2, 'Bob', 20, 200.00)");
         $this->pdo->exec("INSERT INTO pg_selfref_test VALUES (3, 'Charlie', 30, 300.00)");
     }
@@ -109,14 +104,5 @@ class PostgresUpdateSelfReferencingArithmeticTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_selfref_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_selfref_test');
-        } catch (\Exception $e) {
-        }
     }
 }

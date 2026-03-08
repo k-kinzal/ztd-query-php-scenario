@@ -11,6 +11,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdoException;
 use ZtdQuery\Config\UnsupportedSqlBehavior;
 use ZtdQuery\Config\ZtdConfig;
 
+/** @spec SPEC-6.1 */
 class SqliteUnsupportedSqlTest extends TestCase
 {
     private function createPdo(?ZtdConfig $config = null): ZtdPdo

@@ -5,29 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests various PDO fetch modes work correctly with ZTD shadow store on SQLite.
+ * @spec pending
  */
-class SqliteFetchModeTest extends TestCase
+class SqliteFetchModeTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE fetch_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO fetch_test (id, name, score) VALUES (1, 'Alice', 100)");
-        $this->pdo->exec("INSERT INTO fetch_test (id, name, score) VALUES (2, 'Bob', 85)");
-        $this->pdo->exec("INSERT INTO fetch_test (id, name, score) VALUES (3, 'Charlie', 70)");
+        return 'CREATE TABLE fetch_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['fetch_test'];
+    }
+
 
     public function testQueryWithFetchModeArg(): void
     {

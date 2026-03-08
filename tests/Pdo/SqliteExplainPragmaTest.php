@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests EXPLAIN and PRAGMA handling through ZTD on SQLite.
@@ -14,19 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * EXPLAIN and PRAGMA are utility statements that may or may not be
  * handled by the CTE rewriter. Tests verify behavior and document
  * what works vs what throws.
+ * @spec pending
  */
-class SqliteExplainPragmaTest extends TestCase
+class SqliteExplainPragmaTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE ep_items (id INT PRIMARY KEY, name VARCHAR(50))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO ep_items VALUES (1, 'Widget')");
+        return 'CREATE TABLE ep_items (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['ep_items'];
+    }
+
 
     /**
      * EXPLAIN QUERY PLAN on a SELECT.

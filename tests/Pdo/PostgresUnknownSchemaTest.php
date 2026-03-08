@@ -14,6 +14,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdoException;
 use ZtdQuery\Config\UnknownSchemaBehavior;
 use ZtdQuery\Config\ZtdConfig;
 
+/** @spec SPEC-7.1, SPEC-7.2, SPEC-7.4 */
 class PostgresUnknownSchemaTest extends TestCase
 {
     public static function setUpBeforeClass(): void

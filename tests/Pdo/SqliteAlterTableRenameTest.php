@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ALTER TABLE ... RENAME TO behavior on SQLite ZTD.
@@ -19,22 +17,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - Old table name: shadow is dropped, queries fall through to physical DB
  * - New table name: NOT in shadow, queries fail (no physical table either)
  * - ZTD-inserted data is lost (shadow was the only place it existed)
+ * @spec pending
  */
-class SqliteAlterTableRenameTest extends TestCase
+class SqliteAlterTableRenameTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE rename_src (id INTEGER PRIMARY KEY, name TEXT, score INT)');
-        $raw->exec("INSERT INTO rename_src (id, name, score) VALUES (1, 'Alice', 90)");
-        $raw->exec("INSERT INTO rename_src (id, name, score) VALUES (2, 'Bob', 80)");
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE rename_src (id INTEGER PRIMARY KEY, name TEXT, score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['rename_src'];
+    }
+
 
     /**
      * RENAME TABLE drops shadow for old name.

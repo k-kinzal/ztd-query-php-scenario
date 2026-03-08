@@ -4,34 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests that the shadow store correctly handles various SQL data types on MySQL via MySQLi,
  * including DATE, DATETIME, DECIMAL, BOOLEAN, and BIGINT.
+ * @spec pending
  */
-class DataTypeTest extends TestCase
+class DataTypeTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mysqli_dtype_test');
-        $raw->query('CREATE TABLE mysqli_dtype_test (
+        return 'CREATE TABLE mysqli_dtype_test (
             id INT PRIMARY KEY,
             name VARCHAR(255),
             price DECIMAL(10,2),
@@ -39,20 +23,14 @@ class DataTypeTest extends TestCase
             created_at DATETIME,
             is_active TINYINT(1),
             quantity BIGINT
-        )');
-        $raw->close();
+        )';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mysqli_dtype_test'];
     }
+
 
     public function testDateValue(): void
     {
@@ -150,23 +128,5 @@ class DataTypeTest extends TestCase
         $this->mysqli->disableZtd();
         $result = $this->mysqli->query('SELECT * FROM mysqli_dtype_test');
         $this->assertSame(0, $result->num_rows);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mysqli_dtype_test');
-        $raw->close();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
     }
 }

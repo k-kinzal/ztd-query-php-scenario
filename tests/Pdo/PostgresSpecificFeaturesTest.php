@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL-specific features: ILIKE, RETURNING, type casting, GENERATE_SERIES.
+ * @spec pending
  */
-class PostgresSpecificFeaturesTest extends TestCase
+class PostgresSpecificFeaturesTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_sf_products');
-        $raw->exec('CREATE TABLE pg_sf_products (id INT PRIMARY KEY, name VARCHAR(255), description TEXT, price NUMERIC(10,2), tags TEXT)');
+        return 'CREATE TABLE pg_sf_products (id INT PRIMARY KEY, name VARCHAR(255), description TEXT, price NUMERIC(10,2), tags TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_sf_products'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_sf_products (id, name, description, price, tags) VALUES (1, 'Widget', 'A small widget', 9.99, 'hardware,small')");
         $this->pdo->exec("INSERT INTO pg_sf_products (id, name, description, price, tags) VALUES (2, 'Gadget', 'A big gadget', 29.99, 'electronics,big')");
@@ -137,16 +123,5 @@ class PostgresSpecificFeaturesTest extends TestCase
             // RETURNING may not be supported
             $this->addToAssertionCount(1);
         }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_sf_products');
     }
 }

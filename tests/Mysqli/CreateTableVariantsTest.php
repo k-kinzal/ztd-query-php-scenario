@@ -4,48 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests CREATE TABLE LIKE and CREATE TABLE AS SELECT on MySQL via MySQLi adapter.
+ * @spec SPEC-5.1b
  */
-class CreateTableVariantsTest extends TestCase
+class CreateTableVariantsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS ctv_target');
-        $raw->query('DROP TABLE IF EXISTS ctv_ctas');
-        $raw->query('DROP TABLE IF EXISTS ctv_source');
-        $raw->query('CREATE TABLE ctv_source (id INT PRIMARY KEY, val VARCHAR(255))');
-        $raw->close();
+        return [
+            'CREATE TABLE ctv_source (id INT PRIMARY KEY, val VARCHAR(255))',
+            'CREATE TABLE ctv_target LIKE ctv_source',
+            'CREATE TABLE ctv_ctas AS SELECT * FROM ctv_source',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['ctv_target', 'ctv_ctas', 'ctv_source', 'LIKE', 'AS'];
     }
+
 
     public function testCreateTableLike(): void
     {
@@ -83,25 +63,5 @@ class CreateTableVariantsTest extends TestCase
         $this->expectException(\mysqli_sql_exception::class);
         $this->expectExceptionMessageMatches("/doesn't exist/");
         $this->mysqli->query('SELECT * FROM ctv_target');
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS ctv_target');
-        $raw->query('DROP TABLE IF EXISTS ctv_ctas');
-        $raw->query('DROP TABLE IF EXISTS ctv_source');
-        $raw->close();
     }
 }

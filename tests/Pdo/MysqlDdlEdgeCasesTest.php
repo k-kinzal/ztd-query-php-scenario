@@ -5,45 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests DDL edge cases on MySQL via PDO adapter:
  * CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, TRUNCATE isolation.
+ * @spec pending
  */
-class MysqlDdlEdgeCasesTest extends TestCase
+class MysqlDdlEdgeCasesTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_ddl_edge');
-        $raw->exec('CREATE TABLE mysql_pdo_ddl_edge (id INT PRIMARY KEY, val VARCHAR(255))');
+        return [
+            'CREATE TABLE mysql_pdo_ddl_edge (id INT PRIMARY KEY, val VARCHAR(255))',
+            'CREATE TABLE IF NOT EXISTS mysql_pdo_ddl_edge (id INT PRIMARY KEY, val VARCHAR(255))',
+            'CREATE TABLE mysql_pdo_ddl_edge (id INT PRIMARY KEY)',
+            'CREATE TABLE IF NOT EXISTS mysql_pdo_ddl_edge_new (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE mysql_pdo_ddl_cycle (id INT PRIMARY KEY, val VARCHAR(255))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_pdo_ddl_edge', 'mysql_pdo_nonexistent_ddl_table', 'mysql_pdo_ddl_cycle', 'IF', 'mysql_pdo_ddl_edge_new'];
     }
+
 
     public function testCreateTableIfNotExistsOnExistingTable(): void
     {
@@ -146,16 +132,5 @@ class MysqlDdlEdgeCasesTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('after', $rows[0]['val']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_pdo_ddl_edge');
     }
 }

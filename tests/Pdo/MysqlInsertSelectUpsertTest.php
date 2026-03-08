@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests INSERT ... SELECT ... ON DUPLICATE KEY UPDATE on MySQL PDO ZTD.
@@ -18,34 +14,27 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * behavior. The mutation resolver creates UpsertMutation when onDuplicateSet
  * is detected, while InsertTransformer::buildInsertFromSelect() wraps the
  * inner SELECT in a subquery for CTE shadowing.
+ * @spec SPEC-4.1a
  */
-class MysqlInsertSelectUpsertTest extends TestCase
+class MysqlInsertSelectUpsertTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-        );
-        $raw->exec('DROP TABLE IF EXISTS pdo_isu_target');
-        $raw->exec('DROP TABLE IF EXISTS pdo_isu_source');
-        $raw->exec('CREATE TABLE pdo_isu_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->exec('CREATE TABLE pdo_isu_target (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return [
+            'CREATE TABLE pdo_isu_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE pdo_isu_target (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_isu_target', 'pdo_isu_source'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pdo_isu_source (id, name, score) VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO pdo_isu_source (id, name, score) VALUES (2, 'Bob', 80)");
@@ -149,15 +138,5 @@ class MysqlInsertSelectUpsertTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_isu_target');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_isu_target');
-            $raw->exec('DROP TABLE IF EXISTS pdo_isu_source');
-        } catch (\Exception $e) {
-        }
     }
 }

@@ -5,29 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests SQL comments handling through the CTE rewriter on SQLite.
  *
  * Verifies that single-line (--), block (/* ... * /), and inline comments
  * are correctly handled by the parser and don't break CTE rewriting.
+ * @spec pending
  */
-class SqliteSqlCommentsTest extends TestCase
+class SqliteSqlCommentsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE cmt_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO cmt_items VALUES (1, 'Widget', 9.99)");
-        $this->pdo->exec("INSERT INTO cmt_items VALUES (2, 'Gadget', 19.99)");
-        $this->pdo->exec("INSERT INTO cmt_items VALUES (3, 'Doohickey', 29.99)");
+        return 'CREATE TABLE cmt_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['cmt_items'];
+    }
+
 
     /**
      * Single-line comment at end of SELECT.

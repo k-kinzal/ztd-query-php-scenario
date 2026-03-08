@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests INSERT with SQL expressions in VALUES clause on SQLite.
@@ -14,19 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * When users write INSERT ... VALUES (1+1, UPPER('test'), ...), the
  * InsertTransformer converts VALUES to SELECT expressions for CTE shadowing.
  * This tests whether computed expressions in VALUES are correctly handled.
+ * @spec pending
  */
-class SqliteInsertExpressionValuesTest extends TestCase
+class SqliteInsertExpressionValuesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE expr_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, label TEXT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE expr_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, label TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['expr_test'];
+    }
+
 
     /**
      * INSERT with arithmetic expression in VALUES.

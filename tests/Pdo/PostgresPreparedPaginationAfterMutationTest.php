@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests prepared pagination (LIMIT/OFFSET) with shadow mutations on PostgreSQL PDO.
  *
  * Cross-platform parity with SqlitePreparedPaginationAfterMutationTest.
+ * @spec pending
  */
 class PostgresPreparedPaginationAfterMutationTest extends TestCase
 {

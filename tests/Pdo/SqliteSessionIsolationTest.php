@@ -5,11 +5,21 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
-class SqliteSessionIsolationTest extends TestCase
+/** @spec SPEC-2.4 */
+class SqliteSessionIsolationTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE session_test (id INTEGER PRIMARY KEY, val TEXT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['session_test'];
+    }
+
     public function testShadowDataNotSharedBetweenInstances(): void
     {
         $raw1 = new PDO('sqlite::memory:', null, null, [

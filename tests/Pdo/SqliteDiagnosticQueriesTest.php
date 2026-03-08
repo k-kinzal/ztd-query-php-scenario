@@ -20,6 +20,7 @@ use ZtdQuery\Config\ZtdConfig;
  *
  * These are commonly used for schema introspection and query analysis.
  * ZTD may or may not support them depending on the SQL parser.
+ * @spec pending
  */
 class SqliteDiagnosticQueriesTest extends TestCase
 {

@@ -5,26 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests set operations (EXCEPT, INTERSECT), string/math functions, and multiple CTEs on SQLite.
+ * @spec SPEC-3.3d
  */
-class SqliteSetOperationsAndFunctionsTest extends TestCase
+class SqliteSetOperationsAndFunctionsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, score INTEGER)');
-        $raw->exec('CREATE TABLE vip_users (id INTEGER PRIMARY KEY, name TEXT, email TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, score INTEGER)',
+            'CREATE TABLE vip_users (id INTEGER PRIMARY KEY, name TEXT, email TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['users', 'vip_users'];
+    }
+
 
     // --- Set Operations ---
 

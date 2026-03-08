@@ -5,58 +5,42 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests advanced subquery patterns on MySQL PDO to stress the CTE rewriter:
  * nested subqueries, subqueries in UPDATE SET, CASE in WHERE, scalar subqueries.
+ * @spec pending
  */
-class MysqlAdvancedSubqueryTest extends TestCase
+class MysqlAdvancedSubqueryTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_advsq_projects');
-        $raw->exec('DROP TABLE IF EXISTS mysql_advsq_employees');
-        $raw->exec('DROP TABLE IF EXISTS mysql_advsq_departments');
-        $raw->exec('CREATE TABLE mysql_advsq_departments (id INT PRIMARY KEY, name VARCHAR(255), budget DECIMAL(12,2))');
-        $raw->exec('CREATE TABLE mysql_advsq_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, salary DECIMAL(10,2), active TINYINT DEFAULT 1)');
-        $raw->exec('CREATE TABLE mysql_advsq_projects (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, status VARCHAR(50))');
+        return [
+            'CREATE TABLE mysql_advsq_departments (id INT PRIMARY KEY, name VARCHAR(255), budget DECIMAL(12,2))',
+            'CREATE TABLE mysql_advsq_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, salary DECIMAL(10,2), active TINYINT DEFAULT 1)',
+            'CREATE TABLE mysql_advsq_projects (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, status VARCHAR(50))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_advsq_projects', 'mysql_advsq_employees', 'mysql_advsq_departments'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_advsq_departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
         $this->pdo->exec("INSERT INTO mysql_advsq_departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
         $this->pdo->exec("INSERT INTO mysql_advsq_departments (id, name, budget) VALUES (3, 'Sales', 300000)");
-
         $this->pdo->exec("INSERT INTO mysql_advsq_employees (id, name, dept_id, salary) VALUES (1, 'Alice', 1, 120000)");
         $this->pdo->exec("INSERT INTO mysql_advsq_employees (id, name, dept_id, salary) VALUES (2, 'Bob', 1, 110000)");
         $this->pdo->exec("INSERT INTO mysql_advsq_employees (id, name, dept_id, salary) VALUES (3, 'Charlie', 2, 90000)");
         $this->pdo->exec("INSERT INTO mysql_advsq_employees (id, name, dept_id, salary) VALUES (4, 'Diana', 3, 95000)");
         $this->pdo->exec("INSERT INTO mysql_advsq_employees (id, name, dept_id, salary) VALUES (5, 'Eve', 1, 130000)");
-
         $this->pdo->exec("INSERT INTO mysql_advsq_projects (id, name, dept_id, status) VALUES (1, 'Alpha', 1, 'active')");
         $this->pdo->exec("INSERT INTO mysql_advsq_projects (id, name, dept_id, status) VALUES (2, 'Beta', 1, 'completed')");
         $this->pdo->exec("INSERT INTO mysql_advsq_projects (id, name, dept_id, status) VALUES (3, 'Gamma', 2, 'active')");
@@ -151,18 +135,5 @@ class MysqlAdvancedSubqueryTest extends TestCase
         ");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertGreaterThanOrEqual(4, count($rows));
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_advsq_projects');
-        $raw->exec('DROP TABLE IF EXISTS mysql_advsq_employees');
-        $raw->exec('DROP TABLE IF EXISTS mysql_advsq_departments');
     }
 }

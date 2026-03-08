@@ -5,49 +5,35 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests set operations (EXCEPT, INTERSECT), string/math functions, and multiple CTEs on MySQL PDO.
+ * @spec SPEC-3.3d
  */
-class MysqlSetOperationsAndFunctionsTest extends TestCase
+class MysqlSetOperationsAndFunctionsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_sof_vip');
-        $raw->exec('DROP TABLE IF EXISTS mysql_sof_users');
-        $raw->exec('CREATE TABLE mysql_sof_users (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), score INT)');
-        $raw->exec('CREATE TABLE mysql_sof_vip (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255))');
+        return [
+            'CREATE TABLE mysql_sof_users (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), score INT)',
+            'CREATE TABLE mysql_sof_vip (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_sof_vip', 'mysql_sof_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_sof_users (id, name, email, score) VALUES (1, 'Alice', 'alice@test.com', 90)");
         $this->pdo->exec("INSERT INTO mysql_sof_users (id, name, email, score) VALUES (2, 'Bob', 'bob@test.com', 80)");
         $this->pdo->exec("INSERT INTO mysql_sof_users (id, name, email, score) VALUES (3, 'Charlie', 'charlie@test.com', 70)");
-
         $this->pdo->exec("INSERT INTO mysql_sof_vip (id, name, email) VALUES (1, 'Alice', 'alice@test.com')");
     }
 
@@ -175,17 +161,5 @@ class MysqlSetOperationsAndFunctionsTest extends TestCase
 
         $affected = $this->pdo->exec("DELETE FROM mysql_sof_users WHERE id = 999");
         $this->assertSame(0, $affected);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_sof_vip');
-        $raw->exec('DROP TABLE IF EXISTS mysql_sof_users');
     }
 }

@@ -5,23 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared statement re-execution patterns on SQLite PDO.
  * Focuses on cursor management, parameter rebinding, and data isolation
  * between executions.
+ * @spec pending
  */
-class SqlitePreparedStatementReExecTest extends TestCase
+class SqlitePreparedStatementReExecTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(20), price INT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(20), price INT)');
         $this->pdo->exec("INSERT INTO items VALUES (1, 'Widget', 'A', 100)");
@@ -29,7 +36,8 @@ class SqlitePreparedStatementReExecTest extends TestCase
         $this->pdo->exec("INSERT INTO items VALUES (3, 'Gizmo', 'A', 150)");
         $this->pdo->exec("INSERT INTO items VALUES (4, 'Doohickey', 'B', 50)");
         $this->pdo->exec("INSERT INTO items VALUES (5, 'Thingamajig', 'C', 300)");
-    }
+
+        }
 
     public function testReExecuteSelectWithDifferentParams(): void
     {

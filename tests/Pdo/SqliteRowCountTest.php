@@ -4,31 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests rowCount() behavior after write operations in ZTD mode on SQLite PDO.
+ * @spec SPEC-4.4
  */
-class SqliteRowCountTest extends TestCase
+class SqliteRowCountTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE rc_items (id INTEGER PRIMARY KEY, name TEXT, category TEXT, active INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO rc_items (id, name, category, active) VALUES (1, 'Alpha', 'A', 1)");
-        $this->pdo->exec("INSERT INTO rc_items (id, name, category, active) VALUES (2, 'Beta', 'A', 1)");
-        $this->pdo->exec("INSERT INTO rc_items (id, name, category, active) VALUES (3, 'Gamma', 'B', 0)");
-        $this->pdo->exec("INSERT INTO rc_items (id, name, category, active) VALUES (4, 'Delta', 'B', 1)");
+        return 'CREATE TABLE rc_items (id INTEGER PRIMARY KEY, name TEXT, category TEXT, active INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['rc_items'];
+    }
+
 
     public function testRowCountAfterInsert(): void
     {

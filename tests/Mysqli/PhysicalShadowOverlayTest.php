@@ -4,50 +4,25 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests the CTE shadow replacement behavior on MySQLi: physical data is NOT
  * visible through ZTD queries — the shadow store replaces the physical table.
+ * @spec SPEC-2.2
  */
-class PhysicalShadowOverlayTest extends TestCase
+class PhysicalShadowOverlayTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pso_products');
-        $raw->query('CREATE TABLE mi_pso_products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))');
-        $raw->query("INSERT INTO mi_pso_products VALUES (1, 'Widget', 29.99, 'electronics')");
-        $raw->query("INSERT INTO mi_pso_products VALUES (2, 'Gadget', 49.99, 'electronics')");
-        $raw->query("INSERT INTO mi_pso_products VALUES (3, 'Gizmo', 19.99, 'toys')");
-        $raw->close();
+        return 'CREATE TABLE mi_pso_products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_pso_products'];
     }
+
 
     public function testPhysicalDataNotVisibleThroughZtd(): void
     {
@@ -83,23 +58,5 @@ class PhysicalShadowOverlayTest extends TestCase
         $result = $this->mysqli->query("SELECT name FROM mi_pso_products WHERE id = 1");
         $row = $result->fetch_assoc();
         $this->assertSame('Shadow Widget', $row['name']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pso_products');
-        $raw->close();
     }
 }

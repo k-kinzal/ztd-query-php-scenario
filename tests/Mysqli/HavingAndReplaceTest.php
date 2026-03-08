@@ -4,47 +4,30 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests HAVING without GROUP BY and REPLACE INTO edge cases via MySQLi.
  *
  * Cross-platform parity with MysqlHavingAndReplaceTest (PDO).
+ * @spec SPEC-4.2b
  */
-class HavingAndReplaceTest extends TestCase
+class HavingAndReplaceTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_hr_items');
-        $raw->query('CREATE TABLE mi_hr_items (id INT PRIMARY KEY, name VARCHAR(255), qty INT, price DECIMAL(10,2))');
-        $raw->close();
+        return 'CREATE TABLE mi_hr_items (id INT PRIMARY KEY, name VARCHAR(255), qty INT, price DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_hr_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_hr_items VALUES (1, 'Widget', 10, 9.99)");
         $this->mysqli->query("INSERT INTO mi_hr_items VALUES (2, 'Gadget', 5, 29.99)");
@@ -104,28 +87,5 @@ class HavingAndReplaceTest extends TestCase
         $row = $result->fetch_assoc();
         $this->assertSame('Gadget Pro', $row['name']);
         $this->assertSame(200, (int) $row['qty']);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_hr_items');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

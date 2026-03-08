@@ -5,22 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests advanced PDO fetch modes (FETCH_GROUP, FETCH_UNIQUE, FETCH_COLUMN|FETCH_GROUP)
  * with ZTD shadow store on SQLite.
+ * @spec SPEC-3.4
  */
-class SqliteFetchModeAdvancedTest extends TestCase
+class SqliteFetchModeAdvancedTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE orders (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount INT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['orders'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE orders (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount INT)');
         $this->pdo->exec("INSERT INTO orders VALUES (1, 'Alice', 'Widget', 100)");
@@ -28,7 +35,8 @@ class SqliteFetchModeAdvancedTest extends TestCase
         $this->pdo->exec("INSERT INTO orders VALUES (3, 'Bob', 'Widget', 150)");
         $this->pdo->exec("INSERT INTO orders VALUES (4, 'Charlie', 'Gizmo', 300)");
         $this->pdo->exec("INSERT INTO orders VALUES (5, 'Alice', 'Gizmo', 50)");
-    }
+
+        }
 
     public function testFetchGroupByCustomer(): void
     {

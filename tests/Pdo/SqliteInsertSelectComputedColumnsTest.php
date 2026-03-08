@@ -4,32 +4,31 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests INSERT...SELECT with computed/aggregated columns on SQLite.
  *
  * On SQLite, computed columns become NULL in INSERT...SELECT.
  * Direct column references transfer correctly.
+ * @spec pending
  */
-class SqliteInsertSelectComputedColumnsTest extends TestCase
+class SqliteInsertSelectComputedColumnsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE iscc_src (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))');
-        $raw->exec('CREATE TABLE iscc_dst (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))');
-        $raw->exec('CREATE TABLE iscc_agg (category VARCHAR(50) PRIMARY KEY, total DECIMAL(10,2))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO iscc_src VALUES (1, 'Widget', 10.00)");
-        $this->pdo->exec("INSERT INTO iscc_src VALUES (2, 'Gadget', 20.00)");
-        $this->pdo->exec("INSERT INTO iscc_src VALUES (3, 'Gizmo', 30.00)");
+        return [
+            'CREATE TABLE iscc_src (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))',
+            'CREATE TABLE iscc_dst (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))',
+            'CREATE TABLE iscc_agg (category VARCHAR(50) PRIMARY KEY, total DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['iscc_src', 'iscc_dst', 'iscc_agg'];
+    }
+
 
     /**
      * INSERT...SELECT with direct column references works.

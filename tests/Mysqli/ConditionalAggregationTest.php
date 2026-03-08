@@ -4,45 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests conditional aggregation, COUNT DISTINCT, and multi-column ORDER BY on MySQLi.
+ * @spec pending
  */
-class ConditionalAggregationTest extends TestCase
+class ConditionalAggregationTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_ca_orders');
-        $raw->query('CREATE TABLE mi_ca_orders (id INT PRIMARY KEY, customer VARCHAR(50), status VARCHAR(20), amount DECIMAL(10,2), region VARCHAR(20))');
-        $raw->close();
+        return 'CREATE TABLE mi_ca_orders (id INT PRIMARY KEY, customer VARCHAR(50), status VARCHAR(20), amount DECIMAL(10,2), region VARCHAR(20))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_ca_orders'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_ca_orders VALUES (1, 'Alice', 'completed', 100, 'north')");
         $this->mysqli->query("INSERT INTO mi_ca_orders VALUES (2, 'Bob', 'completed', 200, 'south')");
@@ -102,23 +85,5 @@ class ConditionalAggregationTest extends TestCase
         ");
         $row = $result->fetch_assoc();
         $this->assertSame(4, (int) $row['completed']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_ca_orders');
-        $raw->close();
     }
 }

@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests HAVING without GROUP BY and REPLACE INTO edge cases on MySQL PDO.
+ * @spec SPEC-4.2b
  */
-class MysqlHavingAndReplaceTest extends TestCase
+class MysqlHavingAndReplaceTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_hr_items');
-        $raw->exec('CREATE TABLE mysql_hr_items (id INT PRIMARY KEY, name VARCHAR(255), qty INT, price DECIMAL(10,2))');
+        return 'CREATE TABLE mysql_hr_items (id INT PRIMARY KEY, name VARCHAR(255), qty INT, price DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_hr_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_hr_items VALUES (1, 'Widget', 10, 9.99)");
         $this->pdo->exec("INSERT INTO mysql_hr_items VALUES (2, 'Gadget', 5, 29.99)");
@@ -94,16 +80,5 @@ class MysqlHavingAndReplaceTest extends TestCase
         $row = $select->fetch(PDO::FETCH_ASSOC);
         // Expected: 'Gadget Pro' (replaced), Actual: 'Gadget' (old row retained)
         $this->assertSame('Gadget', $row['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_hr_items');
     }
 }

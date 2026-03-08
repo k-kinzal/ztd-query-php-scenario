@@ -5,35 +5,20 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests MySQL PARTITION clause behavior through ZTD.
  *
  * DELETE FROM ... PARTITION and UPDATE ... PARTITION are
  * not supported by the CTE rewriter and should throw.
+ * @spec pending
  */
-class MysqlPartitionClauseTest extends TestCase
+class MysqlPartitionClauseTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_part_test');
-        $raw->exec('CREATE TABLE mysql_part_test (
+        return 'CREATE TABLE mysql_part_test (
             id INT NOT NULL,
             name VARCHAR(50),
             created_year INT NOT NULL,
@@ -42,17 +27,18 @@ class MysqlPartitionClauseTest extends TestCase
             PARTITION p2023 VALUES LESS THAN (2024),
             PARTITION p2024 VALUES LESS THAN (2025),
             PARTITION pmax VALUES LESS THAN MAXVALUE
-        )');
+        )';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_part_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_part_test VALUES (1, 'Alice', 2023)");
         $this->pdo->exec("INSERT INTO mysql_part_test VALUES (2, 'Bob', 2024)");
@@ -143,18 +129,5 @@ class MysqlPartitionClauseTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM mysql_part_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                MySQLContainer::getDsn(),
-                'root',
-                'root',
-            );
-            $raw->exec('DROP TABLE IF EXISTS mysql_part_test');
-        } catch (\Exception $e) {
-        }
     }
 }

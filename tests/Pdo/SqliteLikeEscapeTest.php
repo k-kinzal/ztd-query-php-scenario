@@ -4,29 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests LIKE pattern matching with special characters and ESCAPE clause on SQLite.
+ * @spec pending
  */
-class SqliteLikeEscapeTest extends TestCase
+class SqliteLikeEscapeTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE le_test (id INT PRIMARY KEY, val VARCHAR(100))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO le_test VALUES (1, 'hello world')");
-        $this->pdo->exec("INSERT INTO le_test VALUES (2, 'hello_world')");
-        $this->pdo->exec("INSERT INTO le_test VALUES (3, '100% complete')");
-        $this->pdo->exec("INSERT INTO le_test VALUES (4, '50% done')");
-        $this->pdo->exec("INSERT INTO le_test VALUES (5, 'no match')");
+        return 'CREATE TABLE le_test (id INT PRIMARY KEY, val VARCHAR(100))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['le_test'];
+    }
+
 
     /**
      * Basic LIKE with % wildcard.

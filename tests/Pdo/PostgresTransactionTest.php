@@ -7,6 +7,7 @@ namespace Tests\Pdo;
 use Tests\Scenarios\TransactionScenario;
 use Tests\Support\AbstractPostgresPdoTestCase;
 
+/** @spec SPEC-4.8 */
 class PostgresTransactionTest extends AbstractPostgresPdoTestCase
 {
     use TransactionScenario;

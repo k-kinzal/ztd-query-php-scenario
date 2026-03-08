@@ -5,52 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests multi-table JOINs (4+ tables), INSERT without column list,
  * SQL comments, and edge cases on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresMultiJoinAndEdgeCasesTest extends TestCase
+class PostgresMultiJoinAndEdgeCasesTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_mj_assignments');
-        $raw->exec('DROP TABLE IF EXISTS pg_mj_reviews');
-        $raw->exec('DROP TABLE IF EXISTS pg_mj_projects');
-        $raw->exec('DROP TABLE IF EXISTS pg_mj_employees');
-        $raw->exec('DROP TABLE IF EXISTS pg_mj_departments');
-        $raw->exec('CREATE TABLE pg_mj_departments (id INT PRIMARY KEY, name VARCHAR(255))');
-        $raw->exec('CREATE TABLE pg_mj_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, manager_id INT)');
-        $raw->exec('CREATE TABLE pg_mj_projects (id INT PRIMARY KEY, title VARCHAR(255), dept_id INT)');
-        $raw->exec('CREATE TABLE pg_mj_assignments (employee_id INT, project_id INT, hours INT)');
-        $raw->exec('CREATE TABLE pg_mj_reviews (id INT PRIMARY KEY, employee_id INT, score INT)');
+        return [
+            'CREATE TABLE pg_mj_departments (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE pg_mj_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, manager_id INT)',
+            'CREATE TABLE pg_mj_projects (id INT PRIMARY KEY, title VARCHAR(255), dept_id INT)',
+            'CREATE TABLE pg_mj_assignments (employee_id INT, project_id INT, hours INT)',
+            'CREATE TABLE pg_mj_reviews (id INT PRIMARY KEY, employee_id INT, score INT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_mj_assignments', 'pg_mj_reviews', 'pg_mj_projects', 'pg_mj_employees', 'pg_mj_departments'];
     }
+
 
     public function testFiveTableJoin(): void
     {
@@ -108,20 +87,5 @@ class PostgresMultiJoinAndEdgeCasesTest extends TestCase
         ");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame('Engineering', $row['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_mj_assignments');
-        $raw->exec('DROP TABLE IF EXISTS pg_mj_reviews');
-        $raw->exec('DROP TABLE IF EXISTS pg_mj_projects');
-        $raw->exec('DROP TABLE IF EXISTS pg_mj_employees');
-        $raw->exec('DROP TABLE IF EXISTS pg_mj_departments');
     }
 }

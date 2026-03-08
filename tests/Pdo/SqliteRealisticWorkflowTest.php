@@ -5,21 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests realistic user workflow scenarios on SQLite:
  * e-commerce order processing, user registration, inventory management.
  * These simulate how a real application would use ztd-query for testing.
+ * @spec pending
  */
-class SqliteRealisticWorkflowTest extends TestCase
+class SqliteRealisticWorkflowTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, email TEXT, tier TEXT DEFAULT \'standard\')',
+            'CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, price REAL, stock INTEGER)',
+            'CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, total REAL, status TEXT, created_at TEXT)',
+            'CREATE TABLE order_items (id INTEGER PRIMARY KEY, order_id INTEGER, product_id INTEGER, qty INTEGER, unit_price REAL)',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['customers', 'products', 'orders', 'order_items'];
+    }
+
     private PDO $raw;
-    private ZtdPdo $pdo;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->raw = new PDO('sqlite::memory:', null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
@@ -28,8 +44,7 @@ class SqliteRealisticWorkflowTest extends TestCase
         $this->raw->exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER, total REAL, status TEXT, created_at TEXT)');
         $this->raw->exec('CREATE TABLE order_items (id INTEGER PRIMARY KEY, order_id INTEGER, product_id INTEGER, qty INTEGER, unit_price REAL)');
 
-        $this->pdo = ZtdPdo::fromPdo($this->raw);
-    }
+        }
 
     public function testEcommerceOrderWorkflow(): void
     {

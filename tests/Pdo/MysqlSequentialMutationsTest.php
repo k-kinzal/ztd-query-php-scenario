@@ -5,41 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests sequential mutations on the same table on MySQL PDO to verify
  * shadow store correctly accumulates changes across multiple operations.
+ * @spec pending
  */
-class MysqlSequentialMutationsTest extends TestCase
+class MysqlSequentialMutationsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-            'root',
-            'root',
-        );
-        $raw->exec('DROP TABLE IF EXISTS pdo_mysql_seq');
-        $raw->exec('CREATE TABLE pdo_mysql_seq (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20), score INT)');
+        return 'CREATE TABLE pdo_mysql_seq (id INT PRIMARY KEY, name VARCHAR(50), status VARCHAR(20), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_mysql_seq'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-            'root',
-            'root',
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pdo_mysql_seq (id, name, status, score) VALUES (1, 'Alice', 'active', 90)");
         $this->pdo->exec("INSERT INTO pdo_mysql_seq (id, name, status, score) VALUES (2, 'Bob', 'active', 80)");
@@ -166,18 +154,5 @@ class MysqlSequentialMutationsTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_mysql_seq');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                sprintf('mysql:host=%s;port=%d;dbname=test', MySQLContainer::getHost(), MySQLContainer::getPort()),
-                'root',
-                'root',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pdo_mysql_seq');
-        } catch (\Exception $e) {
-        }
     }
 }

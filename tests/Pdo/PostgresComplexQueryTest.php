@@ -5,44 +5,26 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractPostgresPdoTestCase;
 use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
-class PostgresComplexQueryTest extends TestCase
+/** @spec SPEC-3.3 */
+class PostgresComplexQueryTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        return [
+            'CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255))',
+            'CREATE TABLE orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(50))',
+            'CREATE TABLE order_items (id INT PRIMARY KEY, order_id INT, product VARCHAR(255), qty INT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS order_items');
-        $raw->exec('DROP TABLE IF EXISTS orders');
-        $raw->exec('DROP TABLE IF EXISTS users');
-        $raw->exec('CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255))');
-        $raw->exec('CREATE TABLE orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(50))');
-        $raw->exec('CREATE TABLE order_items (id INT PRIMARY KEY, order_id INT, product VARCHAR(255), qty INT)');
-
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['order_items', 'orders', 'users'];
     }
+
 
     public function testJoinWithShadowData(): void
     {
@@ -350,18 +332,5 @@ class PostgresComplexQueryTest extends TestCase
 
         $this->assertSame(5, (int) $rows[0]['cnt']);
         $this->assertSame(15, (int) $rows[0]['total_qty']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS order_items');
-        $raw->exec('DROP TABLE IF EXISTS orders');
-        $raw->exec('DROP TABLE IF EXISTS users');
     }
 }

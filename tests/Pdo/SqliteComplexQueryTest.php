@@ -5,16 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
-class SqliteComplexQueryTest extends TestCase
+/** @spec SPEC-3.3 */
+class SqliteComplexQueryTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, department TEXT)',
+            'CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL, status TEXT)',
+            'CREATE TABLE order_items (id INTEGER PRIMARY KEY, order_id INTEGER, product TEXT, qty INTEGER)',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['users', 'orders', 'order_items'];
+    }
+
     private PDO $raw;
-    private ZtdPdo $pdo;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->raw = new PDO('sqlite::memory:', null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
@@ -22,8 +37,7 @@ class SqliteComplexQueryTest extends TestCase
         $this->raw->exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL, status TEXT)');
         $this->raw->exec('CREATE TABLE order_items (id INTEGER PRIMARY KEY, order_id INTEGER, product TEXT, qty INTEGER)');
 
-        $this->pdo = ZtdPdo::fromPdo($this->raw);
-    }
+        }
 
     public function testJoinWithShadowData(): void
     {

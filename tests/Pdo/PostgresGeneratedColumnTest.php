@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL generated (stored) column handling with ZTD.
@@ -19,30 +15,25 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * Tests whether generated column values are correctly handled
  * in the shadow store via CTE rewriting.
+ * @spec pending
  */
-class PostgresGeneratedColumnTest extends TestCase
+class PostgresGeneratedColumnTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_gencol_test');
-        $raw->exec('CREATE TABLE pg_gencol_test (
+        return 'CREATE TABLE pg_gencol_test (
             id INT PRIMARY KEY,
             price NUMERIC(10,2),
             quantity INT,
             total NUMERIC(10,2) GENERATED ALWAYS AS (price * quantity) STORED
-        )');
+        )';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        return ['pg_gencol_test'];
     }
+
 
     /**
      * INSERT omitting generated columns.
@@ -114,14 +105,5 @@ class PostgresGeneratedColumnTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_gencol_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_gencol_test');
-        } catch (\Exception $e) {
-        }
     }
 }

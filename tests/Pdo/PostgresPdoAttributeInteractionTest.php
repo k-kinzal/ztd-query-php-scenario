@@ -5,33 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractPostgresPdoTestCase;
 use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests PDO attribute interactions with ZTD on PostgreSQL.
  * PostgreSQL does not support EMULATE_PREPARES the same way MySQL does,
  * but the attribute can still be set and should not break ZTD behavior.
+ * @spec pending
  */
-class PostgresPdoAttributeInteractionTest extends TestCase
+class PostgresPdoAttributeInteractionTest extends AbstractPostgresPdoTestCase
 {
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS attr_pg');
-        $raw->exec('CREATE TABLE attr_pg (id INT PRIMARY KEY, name VARCHAR(50), score DECIMAL(10,2))');
+        return [
+            'CREATE TABLE attr_pg (id INT PRIMARY KEY, name VARCHAR(50), score DECIMAL(10,2))',
+            'CREATE TABLE case_pg (id INT PRIMARY KEY, username VARCHAR(50))',
+            'CREATE TABLE attr_multi_pg (id INT PRIMARY KEY, val TEXT)',
+            'CREATE TABLE switch_pg (id INT PRIMARY KEY, name TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['attr_pg', 'case_pg', 'attr_multi_pg', 'switch_pg'];
+    }
+
 
     public function testEmulatePreparesTrueWithShadow(): void
     {
@@ -199,19 +198,5 @@ class PostgresPdoAttributeInteractionTest extends TestCase
         // Both should work correctly with shadow store
         $this->assertSame('Alice', $row1['name']);
         $this->assertSame('Alice', $row2['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS attr_pg');
-        $raw->exec('DROP TABLE IF EXISTS case_pg');
-        $raw->exec('DROP TABLE IF EXISTS attr_multi_pg');
-        $raw->exec('DROP TABLE IF EXISTS switch_pg');
     }
 }

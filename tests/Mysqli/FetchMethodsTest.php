@@ -4,46 +4,29 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests various MySQLi fetch methods with ZTD shadow data:
  * fetch_assoc, fetch_row, fetch_object, fetch_array, fetch_all, num_rows.
+ * @spec SPEC-3.4
  */
-class FetchMethodsTest extends TestCase
+class FetchMethodsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_fetch_test');
-        $raw->query('CREATE TABLE mi_fetch_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_fetch_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_fetch_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_fetch_test (id, name, score) VALUES (1, 'Alice', 100)");
         $this->mysqli->query("INSERT INTO mi_fetch_test (id, name, score) VALUES (2, 'Bob', 85)");
@@ -117,23 +100,5 @@ class FetchMethodsTest extends TestCase
         $result->fetch_assoc(); // first row
         $row = $result->fetch_assoc(); // no more rows
         $this->assertNull($row);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_fetch_test');
-        $raw->close();
     }
 }

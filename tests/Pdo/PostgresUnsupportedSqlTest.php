@@ -14,6 +14,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdoException;
 use ZtdQuery\Config\UnsupportedSqlBehavior;
 use ZtdQuery\Config\ZtdConfig;
 
+/** @spec SPEC-6.1 */
 class PostgresUnsupportedSqlTest extends TestCase
 {
     public static function setUpBeforeClass(): void

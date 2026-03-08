@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ZTD enable/disable toggle with data interaction patterns.
@@ -16,19 +15,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - Shadow INSERT → disable ZTD → verify physical table empty
  * - Multiple toggle cycles with different data in each state
  * - ZTD disabled physical INSERT, then ZTD enabled shadow INSERT on same table
+ * @spec pending
  */
-class SqliteZtdToggleDataInteractionTest extends TestCase
+class SqliteZtdToggleDataInteractionTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE toggle_test (id INTEGER PRIMARY KEY, name TEXT, val INTEGER)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE toggle_test (id INTEGER PRIMARY KEY, name TEXT, val INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['toggle_test'];
+    }
+
 
     /**
      * Shadow data persists across disable/enable cycle.

@@ -4,34 +4,26 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractMysqliTestCase;
 use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
 /**
  * Tests that multiple ZtdMysqli instances connected to the same MySQL database
  * maintain independent shadow stores with interleaved operations.
+ * @spec SPEC-2.4
  */
-class ConcurrentInstancesTest extends TestCase
+class ConcurrentInstancesTest extends AbstractMysqliTestCase
 {
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_ci_items');
-        $raw->query('CREATE TABLE mi_ci_items (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_ci_items (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_ci_items'];
+    }
+
 
     public function testInsertInOneInstanceInvisibleToOther(): void
     {
@@ -87,18 +79,5 @@ class ConcurrentInstancesTest extends TestCase
 
         $a->close();
         $b->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_ci_items');
-        $raw->close();
     }
 }

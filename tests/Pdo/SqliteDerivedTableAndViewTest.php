@@ -5,38 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests derived tables (subqueries in FROM), views, and INSERT with defaults on SQLite.
  * These patterns stress the CTE rewriter's ability to handle non-standard table references.
+ * @spec SPEC-3.3a
  */
-class SqliteDerivedTableAndViewTest extends TestCase
+class SqliteDerivedTableAndViewTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, department TEXT, salary INTEGER)');
-        $raw->exec('CREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT, budget INTEGER)');
-        $raw->exec("CREATE VIEW dept_summary AS SELECT department, COUNT(*) AS emp_count, SUM(salary) AS total_salary FROM employees GROUP BY department");
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (1, 'Alice', 'Engineering', 120000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (2, 'Bob', 'Engineering', 110000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (3, 'Charlie', 'Marketing', 90000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (4, 'Diana', 'Marketing', 85000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (5, 'Eve', 'Sales', 95000)");
-
-        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
-        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
-        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (3, 'Sales', 300000)");
+        return [
+            'CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, department TEXT, salary INTEGER)',
+            'CREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT, budget INTEGER)',
+            'CREATE TABLE auto_table (id INTEGER PRIMARY KEY AUTOINCREMENT, val TEXT DEFAULT \\\'default_val\\\')',
+            'CREATE TABLE config (id INTEGER PRIMARY KEY, key TEXT NOT NULL, value TEXT DEFAULT \\\'empty\\\', active INTEGER DEFAULT 1)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['employees', 'departments', 'auto_table', 'config'];
+    }
+
 
     /**
      * Derived table as the sole FROM source — CTE rewriter does NOT rewrite table

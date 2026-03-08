@@ -4,55 +4,38 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests MySQL-specific advanced features: GROUP_CONCAT, IF/IFNULL, CASE UPDATE, subqueries via MySQLi.
  *
  * Cross-platform parity with MysqlAdvancedPlatformTest (PDO).
+ * @spec pending
  */
-class AdvancedPlatformTest extends TestCase
+class AdvancedPlatformTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_adv_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_adv_users');
-        $raw->query('CREATE TABLE mi_adv_users (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(20), salary DECIMAL(10,2))');
-        $raw->query('CREATE TABLE mi_adv_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(20), created_at DATE)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_adv_users (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(20), salary DECIMAL(10,2))',
+            'CREATE TABLE mi_adv_orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2), status VARCHAR(20), created_at DATE)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_adv_orders', 'mi_adv_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_adv_users VALUES (1, 'Alice', 'Engineering', 90000)");
         $this->mysqli->query("INSERT INTO mi_adv_users VALUES (2, 'Bob', 'Marketing', 75000)");
         $this->mysqli->query("INSERT INTO mi_adv_users VALUES (3, 'Charlie', 'Engineering', 85000)");
         $this->mysqli->query("INSERT INTO mi_adv_users VALUES (4, 'Diana', 'Marketing', 80000)");
-
         $this->mysqli->query("INSERT INTO mi_adv_orders VALUES (1, 1, 100.00, 'completed', '2024-01-15')");
         $this->mysqli->query("INSERT INTO mi_adv_orders VALUES (2, 1, 200.00, 'pending', '2024-02-15')");
         $this->mysqli->query("INSERT INTO mi_adv_orders VALUES (3, 2, 150.00, 'completed', '2024-01-20')");
@@ -179,29 +162,5 @@ class AdvancedPlatformTest extends TestCase
         $row = $result->fetch_assoc();
         $this->assertSame('ecilA', $row['reversed']);
         $this->assertSame('00001', $row['padded_id']);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_adv_orders');
-            $raw->query('DROP TABLE IF EXISTS mi_adv_users');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

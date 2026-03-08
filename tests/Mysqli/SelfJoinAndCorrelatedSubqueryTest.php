@@ -4,45 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests self-joins and correlated subqueries with ZTD shadow store on MySQLi.
+ * @spec pending
  */
-class SelfJoinAndCorrelatedSubqueryTest extends TestCase
+class SelfJoinAndCorrelatedSubqueryTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS employees');
-        $raw->query('CREATE TABLE employees (id INT PRIMARY KEY, name VARCHAR(50), manager_id INT, salary INT, dept VARCHAR(20))');
-        $raw->close();
+        return 'CREATE TABLE employees (id INT PRIMARY KEY, name VARCHAR(50), manager_id INT, salary INT, dept VARCHAR(20))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['employees'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO employees VALUES (1, 'CEO', NULL, 200, 'exec')");
         $this->mysqli->query("INSERT INTO employees VALUES (2, 'VP', 1, 150, 'exec')");
@@ -100,23 +83,5 @@ class SelfJoinAndCorrelatedSubqueryTest extends TestCase
         $byName = array_column($rows, 'report_count', 'name');
         $this->assertSame(1, (int) $byName['CEO']);
         $this->assertSame(2, (int) $byName['VP']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS employees');
-        $raw->close();
     }
 }

@@ -13,6 +13,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests database views behavior through ZTD on PostgreSQL PDO.
+ * @spec SPEC-3.3b
  */
 class PostgresViewThroughZtdTest extends TestCase
 {

@@ -5,39 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
-class PostgresStatementMethodsTest extends TestCase
+/** @spec SPEC-4.12 */
+class PostgresStatementMethodsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_stmt_test');
-        $raw->exec('CREATE TABLE pg_stmt_test (id INT PRIMARY KEY, name VARCHAR(255), amount DECIMAL(10,2))');
+        return 'CREATE TABLE pg_stmt_test (id INT PRIMARY KEY, name VARCHAR(255), amount DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_stmt_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_stmt_test (id, name, amount) VALUES (1, 'Alice', 100.50)");
         $this->pdo->exec("INSERT INTO pg_stmt_test (id, name, amount) VALUES (2, 'Bob', 200.75)");
@@ -110,16 +96,5 @@ class PostgresStatementMethodsTest extends TestCase
         $this->assertIsArray($row);
         $this->assertArrayHasKey(0, $row);
         $this->assertArrayHasKey(1, $row);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_stmt_test');
     }
 }

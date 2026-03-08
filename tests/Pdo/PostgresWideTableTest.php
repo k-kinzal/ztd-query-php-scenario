@@ -5,50 +5,24 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests wide table (many columns) behavior with ZTD on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresWideTableTest extends TestCase
+class PostgresWideTableTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        // Build a 20-column table
-        $cols = ['id INT PRIMARY KEY'];
-        for ($i = 1; $i <= 19; $i++) {
-            $cols[] = "col{$i} VARCHAR(50)";
-        }
-        $ddl = 'CREATE TABLE wide_pg (' . implode(', ', $cols) . ')';
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS wide_pg');
-        $raw->exec($ddl);
+        return 'CREATE TABLE wide_pg (';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['wide_pg'];
     }
+
 
     public function testInsertAndSelectAllColumns(): void
     {
@@ -99,16 +73,5 @@ class PostgresWideTableTest extends TestCase
         $row = $sel->fetch(PDO::FETCH_ASSOC);
         $this->assertSame('prep_val_1', $row['col1']);
         $this->assertSame('prep_val_19', $row['col19']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS wide_pg');
     }
 }

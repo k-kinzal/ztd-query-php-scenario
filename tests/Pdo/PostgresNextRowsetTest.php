@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PDOStatement::nextRowset() behavior with ZTD on PostgreSQL.
@@ -17,34 +13,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Discovery: PostgreSQL PDO driver does NOT support nextRowset() — same as SQLite.
  * Throws PDOException "Driver does not support this function".
  * Only MySQL supports nextRowset() (returns false for CTE queries).
+ * @spec pending
  */
-class PostgresNextRowsetTest extends TestCase
+class PostgresNextRowsetTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS nr_test_pg');
-        $raw->exec('CREATE TABLE nr_test_pg (id INT PRIMARY KEY, name VARCHAR(50))');
+        return 'CREATE TABLE nr_test_pg (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['nr_test_pg'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO nr_test_pg VALUES (1, 'Alice')");
     }
@@ -71,16 +57,5 @@ class PostgresNextRowsetTest extends TestCase
         $this->expectException(\PDOException::class);
         $this->expectExceptionMessage('does not support');
         $stmt->nextRowset();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS nr_test_pg');
     }
 }

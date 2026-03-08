@@ -5,25 +5,33 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests type handling in the shadow store on SQLite PDO.
  * Verifies FLOAT, BOOLEAN, DATE, and long TEXT values through CTE rewriting.
+ * @spec pending
  */
-class SqliteTypeHandlingTest extends TestCase
+class SqliteTypeHandlingTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE type_test (id INT PRIMARY KEY, float_val REAL, bool_val INT, date_val TEXT, long_text TEXT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['type_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE type_test (id INT PRIMARY KEY, float_val REAL, bool_val INT, date_val TEXT, long_text TEXT)');
-    }
+
+        }
 
     public function testFloatPrecision(): void
     {

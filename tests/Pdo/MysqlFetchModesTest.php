@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests various PDO fetch modes with ZTD shadow operations on MySQL.
  *
  * Cross-platform parity with SqliteFetchModesTest.
+ * @spec SPEC-3.4
  */
 class MysqlFetchModesTest extends TestCase
 {

@@ -5,43 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests NULL handling edge cases on PostgreSQL PDO: UPDATE SET NULL, IS NULL after mutation,
  * COALESCE chains, NULL in CASE, prepared statements with NULL, and NULLS FIRST/LAST ordering.
+ * @spec pending
  */
-class PostgresNullHandlingEdgeCasesTest extends TestCase
+class PostgresNullHandlingEdgeCasesTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_nhe_contacts');
-        $raw->exec('CREATE TABLE pg_nhe_contacts (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), phone VARCHAR(20), notes TEXT)');
+        return 'CREATE TABLE pg_nhe_contacts (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), phone VARCHAR(20), notes TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_nhe_contacts'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_nhe_contacts VALUES (1, 'Alice', 'alice@test.com', '555-0001', 'VIP customer')");
         $this->pdo->exec("INSERT INTO pg_nhe_contacts VALUES (2, 'Bob', 'bob@test.com', NULL, NULL)");
@@ -147,16 +133,5 @@ class PostgresNullHandlingEdgeCasesTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(3, $rows);
         $this->assertNull($rows[2]['email']); // Charlie (NULL last)
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_nhe_contacts');
     }
 }

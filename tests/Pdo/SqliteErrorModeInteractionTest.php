@@ -5,17 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests interaction between PDO error modes and ZTD shadow store.
  *
  * Many applications use ERRMODE_WARNING or ERRMODE_SILENT instead of ERRMODE_EXCEPTION.
  * This tests that ZTD works correctly with all three error modes.
+ * @spec SPEC-4.11
  */
-class SqliteErrorModeInteractionTest extends TestCase
+class SqliteErrorModeInteractionTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE err_mode (id INT PRIMARY KEY, name VARCHAR(50))';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['err_mode'];
+    }
+
     public function testErrmodeExceptionThrowsOnInvalidSql(): void
     {
         $pdo = new ZtdPdo('sqlite::memory:', null, null, [

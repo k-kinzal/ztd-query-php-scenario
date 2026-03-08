@@ -5,42 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
-class PostgresDdlOperationsTest extends TestCase
+/** @spec SPEC-5.1, SPEC-5.2 */
+class PostgresDdlOperationsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ddl_existing');
-        $raw->exec('CREATE TABLE ddl_existing (id INT PRIMARY KEY, val VARCHAR(255))');
-        $raw->exec('DROP TABLE IF EXISTS ddl_new');
+        return [
+            'CREATE TABLE ddl_existing (id INT PRIMARY KEY, val VARCHAR(255))',
+            'CREATE TABLE ddl_existing (id INT PRIMARY KEY)',
+            'CREATE TABLE ddl_new (id INT PRIMARY KEY, name VARCHAR(255))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['ddl_existing', 'ddl_new'];
     }
+
 
     public function testCreateTableThrowsWhenTableExistsPhysically(): void
     {
@@ -117,17 +100,5 @@ class PostgresDdlOperationsTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame(2, (int) $rows[0]['id']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ddl_existing');
-        $raw->exec('DROP TABLE IF EXISTS ddl_new');
     }
 }

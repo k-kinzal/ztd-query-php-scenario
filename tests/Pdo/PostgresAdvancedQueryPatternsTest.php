@@ -5,43 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractPostgresPdoTestCase;
 use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests advanced SQL query patterns in ZTD mode on PostgreSQL:
  * CASE, LIKE, IN, BETWEEN, EXISTS, COALESCE, window functions.
+ * @spec SPEC-3.3
  */
-class PostgresAdvancedQueryPatternsTest extends TestCase
+class PostgresAdvancedQueryPatternsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_adv_employees');
-        $raw->exec('CREATE TABLE pg_adv_employees (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary NUMERIC(10,2))');
+        return [
+            'CREATE TABLE pg_adv_employees (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary NUMERIC(10,2))',
+            'CREATE TABLE pg_adv_emp (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE pg_adv_tasks (id INT PRIMARY KEY, emp_id INT, task VARCHAR(255))',
+            'CREATE TABLE pg_adv_emp2 (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE pg_adv_tasks2 (id INT PRIMARY KEY, emp_id INT, task VARCHAR(255))',
+            'CREATE TABLE pg_adv_contact (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), phone VARCHAR(255))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_adv_employees', 'pg_adv_tasks', 'pg_adv_emp', 'pg_adv_tasks2', 'pg_adv_emp2', 'pg_adv_contact'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_adv_employees (id, name, department, salary) VALUES (1, 'Alice', 'Engineering', 90000)");
         $this->pdo->exec("INSERT INTO pg_adv_employees (id, name, department, salary) VALUES (2, 'Bob', 'Sales', 60000)");
@@ -252,16 +246,5 @@ class PostgresAdvancedQueryPatternsTest extends TestCase
         $this->assertSame(99000.0, (float) $rows[0]['salary']);  // Alice: 90000 * 1.1
         $this->assertSame(63000.0, (float) $rows[1]['salary']);  // Bob: 60000 * 1.05
         $this->assertSame(121000.0, (float) $rows[2]['salary']); // Charlie: 110000 * 1.1
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_adv_employees');
     }
 }

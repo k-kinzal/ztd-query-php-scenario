@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests JOIN + aggregate queries after shadow mutations on PostgreSQL PDO.
  *
  * Cross-platform parity with SqliteJoinAggregateAfterMutationTest.
+ * @spec pending
  */
 class PostgresJoinAggregateAfterMutationTest extends TestCase
 {

@@ -4,46 +4,29 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests NULL handling edge cases on MySQLi: UPDATE SET NULL, IS NULL after mutation,
  * COALESCE chains, NULL in CASE, and prepared statements with NULL.
+ * @spec pending
  */
-class NullHandlingEdgeCasesTest extends TestCase
+class NullHandlingEdgeCasesTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_nhe_contacts');
-        $raw->query('CREATE TABLE mi_nhe_contacts (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), phone VARCHAR(20), notes TEXT)');
-        $raw->close();
+        return 'CREATE TABLE mi_nhe_contacts (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), phone VARCHAR(20), notes TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_nhe_contacts'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_nhe_contacts VALUES (1, 'Alice', 'alice@test.com', '555-0001', 'VIP customer')");
         $this->mysqli->query("INSERT INTO mi_nhe_contacts VALUES (2, 'Bob', 'bob@test.com', NULL, NULL)");
@@ -129,23 +112,5 @@ class NullHandlingEdgeCasesTest extends TestCase
         $this->assertSame('555-0001', $rows[0]['phone_display']);
         $this->assertSame('N/A', $rows[1]['phone_display']);
         $this->assertSame('555-0003', $rows[2]['phone_display']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_nhe_contacts');
-        $raw->close();
     }
 }

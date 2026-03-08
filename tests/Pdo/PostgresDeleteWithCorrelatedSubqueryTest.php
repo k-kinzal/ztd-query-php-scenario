@@ -5,41 +5,36 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests DELETE with correlated subqueries on PostgreSQL.
  *
  * Cross-platform parity with SqliteDeleteWithCorrelatedSubqueryTest.
+ * @spec pending
  */
-class PostgresDeleteWithCorrelatedSubqueryTest extends TestCase
+class PostgresDeleteWithCorrelatedSubqueryTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_del_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_del_customers');
-        $raw->exec('CREATE TABLE pg_del_customers (id INT PRIMARY KEY, name VARCHAR(50), active INT)');
-        $raw->exec('CREATE TABLE pg_del_orders (id INT PRIMARY KEY, customer_id INT, amount NUMERIC(10,2))');
+        return [
+            'CREATE TABLE pg_del_customers (id INT PRIMARY KEY, name VARCHAR(50), active INT)',
+            'CREATE TABLE pg_del_orders (id INT PRIMARY KEY, customer_id INT, amount NUMERIC(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_del_orders', 'pg_del_customers'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pg_del_customers VALUES (1, 'Alice', 1)");
         $this->pdo->exec("INSERT INTO pg_del_customers VALUES (2, 'Bob', 0)");
         $this->pdo->exec("INSERT INTO pg_del_customers VALUES (3, 'Charlie', 1)");
-
         $this->pdo->exec("INSERT INTO pg_del_orders VALUES (1, 1, 100.00)");
         $this->pdo->exec("INSERT INTO pg_del_orders VALUES (2, 1, 200.00)");
         $this->pdo->exec("INSERT INTO pg_del_orders VALUES (3, 3, 150.00)");
@@ -105,15 +100,5 @@ class PostgresDeleteWithCorrelatedSubqueryTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_del_customers');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_del_orders');
-            $raw->exec('DROP TABLE IF EXISTS pg_del_customers');
-        } catch (\Exception $e) {
-        }
     }
 }

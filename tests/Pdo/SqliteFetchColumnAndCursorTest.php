@@ -5,27 +5,35 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests fetchColumn(), closeCursor(), and FETCH_CLASS on SQLite PDO.
+ * @spec pending
  */
-class SqliteFetchColumnAndCursorTest extends TestCase
+class SqliteFetchColumnAndCursorTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE fc_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['fc_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE fc_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO fc_test VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO fc_test VALUES (2, 'Bob', 85)");
         $this->pdo->exec("INSERT INTO fc_test VALUES (3, 'Charlie', 70)");
-    }
+
+        }
 
     public function testFetchColumnDefaultFirstColumn(): void
     {

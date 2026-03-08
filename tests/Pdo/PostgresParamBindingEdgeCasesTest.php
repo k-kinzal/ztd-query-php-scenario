@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests prepared statement parameter binding edge cases on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresParamBindingEdgeCasesTest extends TestCase
+class PostgresParamBindingEdgeCasesTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pb_items');
-        $raw->exec('CREATE TABLE pb_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), active SMALLINT)');
+        return 'CREATE TABLE pb_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), active SMALLINT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pb_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pb_items (id, name, price, active) VALUES (1, 'Widget', 10.50, 1)");
         $this->pdo->exec("INSERT INTO pb_items (id, name, price, active) VALUES (2, 'Gadget', 25.00, 0)");
@@ -100,16 +86,5 @@ class PostgresParamBindingEdgeCasesTest extends TestCase
         $inactive = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $inactive);
         $this->assertSame('Gadget', $inactive[0]['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pb_items');
     }
 }

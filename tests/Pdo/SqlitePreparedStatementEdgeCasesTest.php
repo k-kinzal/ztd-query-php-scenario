@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared statement edge cases on SQLite PDO.
@@ -14,21 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Covers edge cases like no-parameter prepared statements,
  * multiple concurrent prepared statements, parameter binding errors,
  * and prepared statement behavior with empty result sets.
+ * @spec pending
  */
-class SqlitePreparedStatementEdgeCasesTest extends TestCase
+class SqlitePreparedStatementEdgeCasesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE pse_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(20))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO pse_items VALUES (1, 'Widget', 'tools')");
-        $this->pdo->exec("INSERT INTO pse_items VALUES (2, 'Gadget', 'electronics')");
-        $this->pdo->exec("INSERT INTO pse_items VALUES (3, 'Doohickey', 'tools')");
+        return 'CREATE TABLE pse_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(20))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pse_items'];
+    }
+
 
     /**
      * Prepared statement with no parameters (literal SQL).

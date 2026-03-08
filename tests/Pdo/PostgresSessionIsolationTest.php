@@ -5,28 +5,22 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractPostgresPdoTestCase;
 use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
-class PostgresSessionIsolationTest extends TestCase
+/** @spec SPEC-2.4 */
+class PostgresSessionIsolationTest extends AbstractPostgresPdoTestCase
 {
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS session_test');
-        $raw->exec('CREATE TABLE session_test (id INT PRIMARY KEY, val VARCHAR(255))');
+        return 'CREATE TABLE session_test (id INT PRIMARY KEY, val VARCHAR(255))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['session_test'];
+    }
+
 
     public function testShadowDataNotSharedBetweenInstances(): void
     {
@@ -75,16 +69,5 @@ class PostgresSessionIsolationTest extends TestCase
         );
         $stmt = $pdo2->query('SELECT * FROM session_test WHERE id = 1');
         $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS session_test');
     }
 }

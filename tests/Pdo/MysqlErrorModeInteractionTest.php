@@ -5,31 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractMysqlPdoTestCase;
 use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests interaction between PDO error modes and ZTD shadow store on MySQL.
+ * @spec SPEC-4.11
  */
-class MysqlErrorModeInteractionTest extends TestCase
+class MysqlErrorModeInteractionTest extends AbstractMysqlPdoTestCase
 {
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS err_mode_m');
-        $raw->exec('CREATE TABLE err_mode_m (id INT PRIMARY KEY, name VARCHAR(50))');
+        return 'CREATE TABLE err_mode_m (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['err_mode_m'];
+    }
+
 
     public function testErrmodeSilentReturnsFalseOnInvalidQuery(): void
     {
@@ -87,16 +81,5 @@ class MysqlErrorModeInteractionTest extends TestCase
 
         $this->expectException(\PDOException::class);
         $pdo->query('SELECT * FROM nonexistent_xyz');
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS err_mode_m');
     }
 }

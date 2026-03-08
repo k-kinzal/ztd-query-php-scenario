@@ -5,48 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests a data migration workflow on PostgreSQL PDO: INSERT...SELECT with transformations,
  * subqueries in SELECT/WHERE, and complex aggregation patterns.
+ * @spec pending
  */
-class PostgresDataMigrationWorkflowTest extends TestCase
+class PostgresDataMigrationWorkflowTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_dm_user_stats');
-        $raw->exec('DROP TABLE IF EXISTS pg_dm_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_dm_users');
-        $raw->exec('CREATE TABLE pg_dm_users (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), tier VARCHAR(20), created_date DATE)');
-        $raw->exec('CREATE TABLE pg_dm_orders (id INT PRIMARY KEY, user_id INT, product VARCHAR(50), amount NUMERIC(10,2), status VARCHAR(20), created_date DATE)');
-        $raw->exec('CREATE TABLE pg_dm_user_stats (user_id INT PRIMARY KEY, total_orders INT, total_spent NUMERIC(10,2), last_order_date DATE)');
+        return [
+            'CREATE TABLE pg_dm_users (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), tier VARCHAR(20), created_date DATE)',
+            'CREATE TABLE pg_dm_orders (id INT PRIMARY KEY, user_id INT, product VARCHAR(50), amount NUMERIC(10,2), status VARCHAR(20), created_date DATE)',
+            'CREATE TABLE pg_dm_user_stats (user_id INT PRIMARY KEY, total_orders INT, total_spent NUMERIC(10,2), last_order_date DATE)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_dm_user_stats', 'pg_dm_orders', 'pg_dm_users'];
     }
+
 
     /**
      * INSERT...SELECT with LEFT JOIN + GROUP BY + aggregation inserts rows
@@ -163,18 +144,5 @@ class PostgresDataMigrationWorkflowTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('Bob', $rows[0]['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_dm_user_stats');
-        $raw->exec('DROP TABLE IF EXISTS pg_dm_orders');
-        $raw->exec('DROP TABLE IF EXISTS pg_dm_users');
     }
 }

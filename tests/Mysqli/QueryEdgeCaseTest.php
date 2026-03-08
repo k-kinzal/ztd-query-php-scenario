@@ -4,47 +4,25 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests edge cases in query behavior with the shadow store on MySQL via MySQLi:
  * NULL handling, ORDER BY, LIMIT, self-referencing updates, etc.
+ * @spec pending
  */
-class QueryEdgeCaseTest extends TestCase
+class QueryEdgeCaseTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mysqli_edge_test');
-        $raw->query('CREATE TABLE mysqli_edge_test (id INT PRIMARY KEY, name VARCHAR(255), score INT, category VARCHAR(255))');
-        $raw->close();
+        return 'CREATE TABLE mysqli_edge_test (id INT PRIMARY KEY, name VARCHAR(255), score INT, category VARCHAR(255))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mysqli_edge_test'];
     }
+
 
     public function testCountStarVsCountColumn(): void
     {
@@ -223,23 +201,5 @@ class QueryEdgeCaseTest extends TestCase
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('second', $rows[0]['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mysqli_edge_test');
-        $raw->close();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
     }
 }

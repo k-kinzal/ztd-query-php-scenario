@@ -5,44 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests common statement reuse patterns (ORM-style) with ZTD on PostgreSQL.
  * Focuses on patterns like prepare-once/execute-many, batch reads, and mixed workflows.
+ * @spec pending
  */
-class PostgresStatementReusePatternTest extends TestCase
+class PostgresStatementReusePatternTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS reuse_users_pg');
-        $raw->exec('CREATE TABLE reuse_users_pg (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), amount INT)');
+        return 'CREATE TABLE reuse_users_pg (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), amount INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['reuse_users_pg'];
     }
+
 
     public function testBatchInsertViaPreparedStatement(): void
     {
@@ -224,16 +205,5 @@ class PostgresStatementReusePatternTest extends TestCase
         $this->pdo->exec("INSERT INTO reuse_users_pg VALUES (3, 'Charlie', 'A', 150)");
         $this->pdo->exec("INSERT INTO reuse_users_pg VALUES (4, 'Diana', 'B', 75)");
         $this->pdo->exec("INSERT INTO reuse_users_pg VALUES (5, 'Eve', 'C', 300)");
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS reuse_users_pg');
     }
 }

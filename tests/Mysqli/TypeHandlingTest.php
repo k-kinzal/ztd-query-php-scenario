@@ -4,46 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests type handling in the shadow store on MySQLi.
+ * @spec pending
  */
-class TypeHandlingTest extends TestCase
+class TypeHandlingTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_type_test');
-        $raw->query('CREATE TABLE mi_type_test (id INT PRIMARY KEY, float_val DOUBLE, bool_val TINYINT, date_val DATE, long_text TEXT)');
-        $raw->close();
+        return 'CREATE TABLE mi_type_test (id INT PRIMARY KEY, float_val DOUBLE, bool_val TINYINT, date_val DATE, long_text TEXT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_type_test'];
     }
+
 
     public function testFloatPrecision(): void
     {
@@ -105,23 +83,5 @@ class TypeHandlingTest extends TestCase
         $result = $this->mysqli->query('SELECT float_val FROM mi_type_test WHERE id = 1');
         $row = $result->fetch_assoc();
         $this->assertEqualsWithDelta(-42.5, (float) $row['float_val'], 0.01);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_type_test');
-        $raw->close();
     }
 }

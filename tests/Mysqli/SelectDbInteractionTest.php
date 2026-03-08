@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests select_db() interaction with ZTD on MySQLi.
@@ -21,46 +17,23 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
  * - Tables in the new database may not be reflected in ZTD
  * - Shadow data from the original database persists
  * - Schema reflection uses the original database context
+ * @spec pending
  */
-class SelectDbInteractionTest extends TestCase
+class SelectDbInteractionTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-
-        // Create test table in 'test' database
-        $raw->query('DROP TABLE IF EXISTS sdb_test');
-        $raw->query('CREATE TABLE sdb_test (id INT PRIMARY KEY, name VARCHAR(50))');
-
-        // Create a second database and table
-        $raw->query('CREATE DATABASE IF NOT EXISTS test_alt');
-        $raw->query('DROP TABLE IF EXISTS test_alt.sdb_alt_test');
-        $raw->query('CREATE TABLE test_alt.sdb_alt_test (id INT PRIMARY KEY, val VARCHAR(50))');
-
-        $raw->close();
+        return [
+            'CREATE TABLE sdb_test (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE test_alt.sdb_alt_test (id INT PRIMARY KEY, val VARCHAR(50))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['sdb_test', 'test_alt'];
     }
+
 
     /**
      * select_db() returns true on success.
@@ -132,30 +105,5 @@ class SelectDbInteractionTest extends TestCase
     {
         $this->expectException(\mysqli_sql_exception::class);
         $this->mysqli->select_db('nonexistent_db_12345');
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS sdb_test');
-            $raw->query('DROP TABLE IF EXISTS test_alt.sdb_alt_test');
-            $raw->query('DROP DATABASE IF EXISTS test_alt');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

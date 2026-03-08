@@ -18,6 +18,7 @@ use ZtdQuery\Config\ZtdConfig;
 /**
  * Tests ZTD configuration options on MySQL via PDO:
  * unsupported SQL behavior, behavior rules, and toggle cycles.
+ * @spec SPEC-9.1, SPEC-9.2
  */
 class MysqlConfigurationTest extends TestCase
 {

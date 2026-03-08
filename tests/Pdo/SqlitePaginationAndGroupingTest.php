@@ -5,36 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests parameterized LIMIT/OFFSET, expression-based GROUP BY,
  * INSERT...SELECT with filtering, and correlated HAVING on SQLite.
+ * @spec pending
  */
-class SqlitePaginationAndGroupingTest extends TestCase
+class SqlitePaginationAndGroupingTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL, stock INTEGER)');
-        $raw->exec('CREATE TABLE archive (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL, stock INTEGER)');
-        $raw->exec('CREATE TABLE thresholds (category TEXT PRIMARY KEY, min_count INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO products VALUES (1, 'Widget A', 'hardware', 9.99, 50)");
-        $this->pdo->exec("INSERT INTO products VALUES (2, 'Widget B', 'hardware', 14.99, 30)");
-        $this->pdo->exec("INSERT INTO products VALUES (3, 'Gadget X', 'electronics', 29.99, 10)");
-        $this->pdo->exec("INSERT INTO products VALUES (4, 'Gadget Y', 'electronics', 49.99, 5)");
-        $this->pdo->exec("INSERT INTO products VALUES (5, 'Gizmo', 'electronics', 19.99, 20)");
-        $this->pdo->exec("INSERT INTO products VALUES (6, 'Tool', 'hardware', 7.99, 100)");
-        $this->pdo->exec("INSERT INTO products VALUES (7, 'Sensor', 'electronics', 39.99, 15)");
+        return [
+            'CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL, stock INTEGER)',
+            'CREATE TABLE archive (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL, stock INTEGER)',
+            'CREATE TABLE thresholds (category TEXT PRIMARY KEY, min_count INTEGER)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['products', 'archive', 'thresholds'];
+    }
+
 
     // --- Parameterized LIMIT/OFFSET ---
 

@@ -16,6 +16,7 @@ use ZtdQuery\Config\ZtdConfig;
 
 /**
  * Tests unsupported SQL behavior configuration in ZTD mode on MySQL via PDO.
+ * @spec SPEC-6.1
  */
 class MysqlUnsupportedSqlTest extends TestCase
 {

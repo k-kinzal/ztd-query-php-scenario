@@ -4,48 +4,31 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests WITH ROLLUP on MySQL via MySQLi.
  *
  * MySQL 8.0+ supports WITH ROLLUP but NOT GROUPING SETS or CUBE.
  * Cross-platform parity with MysqlGroupingSetsTest (PDO).
+ * @spec pending
  */
-class GroupingSetsTest extends TestCase
+class GroupingSetsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_gs_sales');
-        $raw->query('CREATE TABLE mi_gs_sales (id INT PRIMARY KEY, region VARCHAR(20), product VARCHAR(20), amount INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_gs_sales (id INT PRIMARY KEY, region VARCHAR(20), product VARCHAR(20), amount INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_gs_sales'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_gs_sales VALUES (1, 'East', 'Widget', 100)");
         $this->mysqli->query("INSERT INTO mi_gs_sales VALUES (2, 'East', 'Gadget', 200)");
@@ -107,28 +90,5 @@ class GroupingSetsTest extends TestCase
         $this->mysqli->disableZtd();
         $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_gs_sales');
         $this->assertSame(0, (int) $result->fetch_assoc()['cnt']);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_gs_sales');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

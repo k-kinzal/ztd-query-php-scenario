@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL DISTINCT ON through CTE shadow.
@@ -17,34 +13,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * DISTINCT ON is a PostgreSQL extension that returns the first row
  * of each set of rows where the given expressions evaluate to equal.
  * Also tests FETCH FIRST N ROWS ONLY (SQL standard LIMIT).
+ * @spec pending
  */
-class PostgresDistinctOnTest extends TestCase
+class PostgresDistinctOnTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_don_logs');
-        $raw->exec('CREATE TABLE pg_don_logs (id INT PRIMARY KEY, category VARCHAR(50), message VARCHAR(100), priority INT)');
+        return 'CREATE TABLE pg_don_logs (id INT PRIMARY KEY, category VARCHAR(50), message VARCHAR(100), priority INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_don_logs'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_don_logs VALUES (1, 'error', 'disk full', 1)");
         $this->pdo->exec("INSERT INTO pg_don_logs VALUES (2, 'error', 'timeout', 2)");
@@ -149,18 +135,5 @@ class PostgresDistinctOnTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_don_logs');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_don_logs');
-        } catch (\Exception $e) {
-        }
     }
 }

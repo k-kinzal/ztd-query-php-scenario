@@ -4,47 +4,25 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests ZTD lifecycle edge cases on MySQL via MySQLi: toggle cycles, re-enable after disable,
  * multiple enable/disable sequences, and shadow store behavior across cycles.
+ * @spec SPEC-2.1
  */
-class ZtdLifecycleTest extends TestCase
+class ZtdLifecycleTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mysqli_lifecycle_test');
-        $raw->query('CREATE TABLE mysqli_lifecycle_test (id INT PRIMARY KEY, val VARCHAR(255))');
-        $raw->close();
+        return 'CREATE TABLE mysqli_lifecycle_test (id INT PRIMARY KEY, val VARCHAR(255))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mysqli_lifecycle_test'];
     }
+
 
     public function testShadowDataPreservedAfterDisableEnable(): void
     {
@@ -155,23 +133,5 @@ class ZtdLifecycleTest extends TestCase
         $this->mysqli->disableZtd();
         $result = $this->mysqli->query('SELECT COUNT(*) as cnt FROM mysqli_lifecycle_test');
         $this->assertSame(0, (int) $result->fetch_assoc()['cnt']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mysqli_lifecycle_test');
-        $raw->close();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
     }
 }

@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests various INSERT patterns involving subqueries — real-world patterns
@@ -16,22 +15,27 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - INSERT ... SELECT WHERE NOT EXISTS (conditional insert)
  * - INSERT from aggregated subquery
  * - INSERT with scalar subquery in VALUES
+ * @spec SPEC-4.1a
  */
-class SqliteInsertSubqueryPatternsTest extends TestCase
+class SqliteInsertSubqueryPatternsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE isp_products (id INTEGER PRIMARY KEY, name TEXT, price REAL, category TEXT)');
-        $raw->exec('CREATE TABLE isp_archive (id INTEGER PRIMARY KEY, name TEXT, price REAL, category TEXT)');
-        $raw->exec('CREATE TABLE isp_stats (category TEXT PRIMARY KEY, product_count INTEGER, avg_price REAL)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE isp_products (id INTEGER PRIMARY KEY, name TEXT, price REAL, category TEXT)',
+            'CREATE TABLE isp_archive (id INTEGER PRIMARY KEY, name TEXT, price REAL, category TEXT)',
+            'CREATE TABLE isp_stats (category TEXT PRIMARY KEY, product_count INTEGER, avg_price REAL)',
+            'CREATE TABLE combined (id INTEGER PRIMARY KEY, name TEXT, price REAL, category TEXT)',
+            'CREATE TABLE source1 (id INTEGER PRIMARY KEY, name TEXT, price REAL, category TEXT)',
+            'CREATE TABLE source2 (id INTEGER PRIMARY KEY, name TEXT, price REAL, category TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['isp_products', 'isp_archive', 'isp_stats', 'combined', 'source1', 'source2'];
+    }
+
 
     /**
      * INSERT ... SELECT with WHERE clause filters shadow data correctly.

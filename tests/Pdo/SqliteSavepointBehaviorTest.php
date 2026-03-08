@@ -4,25 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests SAVEPOINT behavior on SQLite with ZTD.
+ * @spec SPEC-6.3
  */
-class SqliteSavepointBehaviorTest extends TestCase
+class SqliteSavepointBehaviorTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE sp_test (id INT PRIMARY KEY, name VARCHAR(50))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sp_test VALUES (1, 'Alice')");
+        return 'CREATE TABLE sp_test (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sp_test'];
+    }
+
 
     /**
      * SAVEPOINT should be supported.

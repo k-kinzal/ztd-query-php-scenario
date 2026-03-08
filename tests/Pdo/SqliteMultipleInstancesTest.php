@@ -5,17 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests multiple ZtdPdo instances with independent shadow stores on SQLite.
  *
  * Each ZtdPdo instance should maintain its own independent shadow store,
  * so mutations in one instance should not be visible to another.
+ * @spec pending
  */
-class SqliteMultipleInstancesTest extends TestCase
+class SqliteMultipleInstancesTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE sl_mi_test (id INTEGER PRIMARY KEY, name TEXT)',
+            'CREATE TABLE sl_mi2_test (id INTEGER PRIMARY KEY, val INTEGER)',
+            'CREATE TABLE sl_mi3_test (id INTEGER PRIMARY KEY, name TEXT)',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_mi_test', 'sl_mi2_test', 'sl_mi3_test'];
+    }
+
     /**
      * Two ZtdPdo instances on same database have independent shadow stores.
      */

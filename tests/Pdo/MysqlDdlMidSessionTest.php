@@ -5,43 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests DDL operations mid-session on MySQL ZTD PDO.
+ * @spec pending
  */
-class MysqlDdlMidSessionTest extends TestCase
+class MysqlDdlMidSessionTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ddl_ms_mysql');
-        $raw->exec('CREATE TABLE ddl_ms_mysql (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return [
+            'CREATE TABLE ddl_ms_mysql (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE succeeds (creates a new shadow table even though physical table exists)
+        $this->pdo->exec(',
+            'CREATE TABLE ddl_ms_mysql (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE ddl_other_m (id INT PRIMARY KEY, tag VARCHAR(20))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['ddl_ms_mysql', 'succeeds', 'ddl_other_m'];
     }
+
 
     public function testDropTableClearsShadowAndFallsToPhysical(): void
     {
@@ -88,16 +75,5 @@ class MysqlDdlMidSessionTest extends TestCase
         $stmt = $this->pdo->query('SELECT tag FROM ddl_other_m WHERE id = 1');
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame('important', $row['tag']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ddl_ms_mysql');
     }
 }

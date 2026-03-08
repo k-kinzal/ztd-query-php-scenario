@@ -5,45 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL-specific string functions through CTE shadow.
  *
  * Covers string_agg, regexp_replace, position, overlay, left/right,
  * and other PostgreSQL string functions.
+ * @spec pending
  */
-class PostgresStringFunctionsTest extends TestCase
+class PostgresStringFunctionsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_sf_items');
-        $raw->exec('CREATE TABLE pg_sf_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(30), description TEXT)');
+        return 'CREATE TABLE pg_sf_items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(30), description TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_sf_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_sf_items VALUES (1, 'Widget Pro', 'tools', 'A professional widget')");
         $this->pdo->exec("INSERT INTO pg_sf_items VALUES (2, 'Gadget Plus', 'electronics', 'An enhanced gadget')");
@@ -138,18 +124,5 @@ class PostgresStringFunctionsTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_sf_items');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_sf_items');
-        } catch (\Exception $e) {
-        }
     }
 }

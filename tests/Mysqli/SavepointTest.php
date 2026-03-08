@@ -4,46 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqliException;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests savepoint behavior with ZTD on MySQLi.
+ * @spec SPEC-6.3
  */
-class SavepointTest extends TestCase
+class SavepointTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_sp_test');
-        $raw->query('CREATE TABLE mi_sp_test (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->close();
+        return 'CREATE TABLE mi_sp_test (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_sp_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_sp_test VALUES (1, 'Alice')");
     }
@@ -102,23 +84,5 @@ class SavepointTest extends TestCase
                 'ROLLBACK TO SAVEPOINT not yet supported on MySQLi: ' . $e->getMessage()
             );
         }
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_sp_test');
-        $raw->close();
     }
 }

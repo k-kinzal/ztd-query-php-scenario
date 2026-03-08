@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests CREATE TABLE LIKE and CREATE TABLE AS SELECT on SQLite.
@@ -15,20 +14,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * CREATE TABLE AS SELECT (CTAS) has a limitation: the exec succeeds and
  * INSERT into the created table works, but SELECT from it fails because
  * the CTE rewriter cannot find the physical table for the shadow-only table.
+ * @spec SPEC-5.1b
  */
-class SqliteCreateTableVariantsTest extends TestCase
+class SqliteCreateTableVariantsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE source_table (id INTEGER PRIMARY KEY, val TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE source_table (id INTEGER PRIMARY KEY, val TEXT)',
+            'CREATE TABLE target_like LIKE source_table',
+            'CREATE TABLE target_ctas AS SELECT * FROM source_table',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['LIKE', 'AS', 'source_table', 'target_like', 'target_ctas'];
+    }
+
 
     public function testCreateTableLike(): void
     {

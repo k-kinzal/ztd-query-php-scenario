@@ -5,26 +5,34 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
-class SqliteStatementMethodsTest extends TestCase
+/** @spec SPEC-4.12 */
+class SqliteStatementMethodsTest extends AbstractSqlitePdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE stmt_test (id INTEGER PRIMARY KEY, name TEXT, amount REAL)';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['stmt_test'];
+    }
+
     private PDO $raw;
-    private ZtdPdo $pdo;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->raw = new PDO('sqlite::memory:', null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
         $this->raw->exec('CREATE TABLE stmt_test (id INTEGER PRIMARY KEY, name TEXT, amount REAL)');
-
-        $this->pdo = ZtdPdo::fromPdo($this->raw);
-
-        $this->pdo->exec("INSERT INTO stmt_test (id, name, amount) VALUES (1, 'Alice', 100.50)");
         $this->pdo->exec("INSERT INTO stmt_test (id, name, amount) VALUES (2, 'Bob', 200.75)");
-    }
+
+        }
 
     public function testSetFetchModeOnStatement(): void
     {

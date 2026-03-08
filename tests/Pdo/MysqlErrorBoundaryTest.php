@@ -5,43 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests error boundaries: what happens to shadow state after errors,
  * invalid SQL, and exception recovery scenarios on MySQL.
+ * @spec SPEC-8.2
  */
-class MysqlErrorBoundaryTest extends TestCase
+class MysqlErrorBoundaryTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS err_test_m');
-        $raw->exec('CREATE TABLE err_test_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE err_test_m (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['err_test_m'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO err_test_m VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO err_test_m VALUES (2, 'Bob', 85)");
@@ -127,16 +113,5 @@ class MysqlErrorBoundaryTest extends TestCase
         $stmt->execute([2]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame('Bob', $row['name']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS err_test_m');
     }
 }

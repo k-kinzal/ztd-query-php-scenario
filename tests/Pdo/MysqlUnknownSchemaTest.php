@@ -16,6 +16,7 @@ use ZtdQuery\Config\ZtdConfig;
 
 /**
  * Tests unknown schema behavior modes on MySQL via PDO.
+ * @spec SPEC-7.1, SPEC-7.2, SPEC-7.4
  */
 class MysqlUnknownSchemaTest extends TestCase
 {

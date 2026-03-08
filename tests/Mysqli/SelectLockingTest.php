@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests SELECT with locking clauses (FOR UPDATE, LOCK IN SHARE MODE) on MySQLi ZTD.
@@ -18,37 +14,24 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
  * The locking is a no-op since CTE-derived rows are not physical table rows,
  * meaning no actual row locks are acquired. This is important for user code
  * that uses FOR UPDATE — it won't error, but it won't actually lock anything.
+ * @spec pending
  */
-class SelectLockingTest extends TestCase
+class SelectLockingTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_lock_test');
-        $raw->query('CREATE TABLE mi_lock_test (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->close();
+        return 'CREATE TABLE mi_lock_test (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_lock_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_lock_test (id, name) VALUES (1, 'Alice')");
         $this->mysqli->query("INSERT INTO mi_lock_test (id, name) VALUES (2, 'Bob')");
@@ -131,28 +114,5 @@ class SelectLockingTest extends TestCase
         $this->assertNotFalse($result);
 
         $this->mysqli->rollback();
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_lock_test');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

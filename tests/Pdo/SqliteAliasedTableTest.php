@@ -5,36 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests table aliasing patterns with CTE rewriting — aliases in FROM, JOIN,
  * self-aliased references, and subqueries with aliases.
+ * @spec pending
  */
-class SqliteAliasedTableTest extends TestCase
+class SqliteAliasedTableTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE at_users (id INTEGER PRIMARY KEY, name TEXT, dept TEXT)');
-        $raw->exec('CREATE TABLE at_tasks (id INTEGER PRIMARY KEY, user_id INTEGER, title TEXT, status TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO at_users (id, name, dept) VALUES (1, 'Alice', 'Eng')");
-        $this->pdo->exec("INSERT INTO at_users (id, name, dept) VALUES (2, 'Bob', 'Sales')");
-        $this->pdo->exec("INSERT INTO at_users (id, name, dept) VALUES (3, 'Carol', 'Eng')");
-
-        $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (1, 1, 'Build', 'done')");
-        $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (2, 1, 'Test', 'open')");
-        $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (3, 2, 'Sell', 'open')");
-        $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (4, 3, 'Review', 'done')");
+        return [
+            'CREATE TABLE at_users (id INTEGER PRIMARY KEY, name TEXT, dept TEXT)',
+            'CREATE TABLE at_tasks (id INTEGER PRIMARY KEY, user_id INTEGER, title TEXT, status TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['at_users', 'at_tasks'];
+    }
+
 
     public function testSimpleAlias(): void
     {

@@ -5,46 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests CREATE TABLE LIKE, CREATE TABLE AS SELECT, and ALTER TABLE behavior on PostgreSQL.
+ * @spec SPEC-5.1b
  */
-class PostgresCreateTableVariantsTest extends TestCase
+class PostgresCreateTableVariantsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_ctv_target');
-        $raw->exec('DROP TABLE IF EXISTS pg_ctv_ctas');
-        $raw->exec('DROP TABLE IF EXISTS pg_ctv_source');
-        $raw->exec('CREATE TABLE pg_ctv_source (id INT PRIMARY KEY, val VARCHAR(255))');
+        return [
+            'CREATE TABLE pg_ctv_source (id INT PRIMARY KEY, val VARCHAR(255))',
+            'CREATE TABLE pg_ctv_target (LIKE pg_ctv_source)',
+            'CREATE TABLE pg_ctv_ctas AS SELECT * FROM pg_ctv_source',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_ctv_target', 'pg_ctv_ctas', 'pg_ctv_source', 'LIKE', 'AS'];
     }
+
 
     public function testCreateTableLike(): void
     {
@@ -77,18 +59,5 @@ class PostgresCreateTableVariantsTest extends TestCase
         // ALTER TABLE is not supported on PostgreSQL — throws ZtdPdoException
         $this->expectException(ZtdPdoException::class);
         $this->pdo->exec('ALTER TABLE pg_ctv_source ADD COLUMN extra VARCHAR(100)');
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_ctv_target');
-        $raw->exec('DROP TABLE IF EXISTS pg_ctv_ctas');
-        $raw->exec('DROP TABLE IF EXISTS pg_ctv_source');
     }
 }

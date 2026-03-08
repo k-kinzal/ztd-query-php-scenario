@@ -5,27 +5,26 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared statement UPSERT (ON CONFLICT DO UPDATE) on SQLite PDO.
  *
  * @see https://github.com/k-kinzal/ztd-query-php/issues/23
+ * @spec SPEC-4.2a
  */
-class SqlitePreparedUpsertTest extends TestCase
+class SqlitePreparedUpsertTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sq_ups (id INTEGER PRIMARY KEY, name TEXT, score INT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE sq_ups (id INTEGER PRIMARY KEY, name TEXT, score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sq_ups'];
+    }
+
 
     public function testPreparedUpsertInsertsNewRow(): void
     {

@@ -5,25 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests INSERT with column list / values count mismatches on SQLite.
  *
  * Verifies error handling when column counts don't match, and that
  * the shadow store remains consistent after errors.
+ * @spec pending
  */
-class SqliteInsertColumnMismatchTest extends TestCase
+class SqliteInsertColumnMismatchTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE icm_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE icm_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['icm_items'];
+    }
+
 
     /**
      * Correct INSERT works.

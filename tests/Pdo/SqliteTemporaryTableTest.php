@@ -4,28 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests CREATE TEMPORARY TABLE on SQLite ZTD.
  *
  * The SqliteParser recognizes TEMPORARY in CREATE TABLE statements.
  * In ZTD shadow mode, temporary tables behave the same as regular shadow tables.
+ * @spec pending
  */
-class SqliteTemporaryTableTest extends TestCase
+class SqliteTemporaryTableTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['statements'];
+    }
+
 
     public function testCreateTemporaryTable(): void
     {

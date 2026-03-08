@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests prepared pagination (LIMIT/OFFSET) with shadow mutations on MySQL PDO.
  *
  * Cross-platform parity with SqlitePreparedPaginationAfterMutationTest.
+ * @spec pending
  */
 class MysqlPreparedPaginationAfterMutationTest extends TestCase
 {

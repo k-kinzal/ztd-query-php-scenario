@@ -5,35 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests UPDATE with self-referencing arithmetic (SET col = col + N)
  * on MySQL, verifying cross-platform parity with SQLite.
+ * @spec pending
  */
-class MysqlUpdateSelfReferencingArithmeticTest extends TestCase
+class MysqlUpdateSelfReferencingArithmeticTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_selfref_test');
-        $raw->exec('CREATE TABLE pdo_selfref_test (id INT PRIMARY KEY, name VARCHAR(50), counter INT, balance DECIMAL(10,2))');
+        return 'CREATE TABLE pdo_selfref_test (id INT PRIMARY KEY, name VARCHAR(50), counter INT, balance DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_selfref_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pdo_selfref_test VALUES (1, 'Alice', 10, 100.00)");
         $this->pdo->exec("INSERT INTO pdo_selfref_test VALUES (2, 'Bob', 20, 200.00)");
         $this->pdo->exec("INSERT INTO pdo_selfref_test VALUES (3, 'Charlie', 30, 300.00)");
     }
@@ -109,14 +104,5 @@ class MysqlUpdateSelfReferencingArithmeticTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_selfref_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_selfref_test');
-        } catch (\Exception $e) {
-        }
     }
 }

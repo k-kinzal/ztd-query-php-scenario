@@ -5,53 +5,37 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests derived tables (subqueries in FROM) and views on MySQL PDO.
+ * @spec SPEC-3.3a
  */
-class MysqlDerivedTableAndViewTest extends TestCase
+class MysqlDerivedTableAndViewTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP VIEW IF EXISTS mysql_dt_dept_summary');
-        $raw->exec('DROP TABLE IF EXISTS mysql_dt_employees');
-        $raw->exec('DROP TABLE IF EXISTS mysql_dt_departments');
-        $raw->exec('CREATE TABLE mysql_dt_employees (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(100), salary INT)');
-        $raw->exec('CREATE TABLE mysql_dt_departments (id INT PRIMARY KEY, name VARCHAR(100), budget INT)');
-        $raw->exec("CREATE VIEW mysql_dt_dept_summary AS SELECT department, COUNT(*) AS emp_count, SUM(salary) AS total_salary FROM mysql_dt_employees GROUP BY department");
+        return [
+            'CREATE TABLE mysql_dt_employees (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(100), salary INT)',
+            'CREATE TABLE mysql_dt_departments (id INT PRIMARY KEY, name VARCHAR(100), budget INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_dt_employees', 'mysql_dt_departments'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_dt_employees (id, name, department, salary) VALUES (1, 'Alice', 'Engineering', 120000)");
         $this->pdo->exec("INSERT INTO mysql_dt_employees (id, name, department, salary) VALUES (2, 'Bob', 'Engineering', 110000)");
         $this->pdo->exec("INSERT INTO mysql_dt_employees (id, name, department, salary) VALUES (3, 'Charlie', 'Marketing', 90000)");
         $this->pdo->exec("INSERT INTO mysql_dt_employees (id, name, department, salary) VALUES (4, 'Diana', 'Marketing', 85000)");
         $this->pdo->exec("INSERT INTO mysql_dt_employees (id, name, department, salary) VALUES (5, 'Eve', 'Sales', 95000)");
-
         $this->pdo->exec("INSERT INTO mysql_dt_departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
         $this->pdo->exec("INSERT INTO mysql_dt_departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
         $this->pdo->exec("INSERT INTO mysql_dt_departments (id, name, budget) VALUES (3, 'Sales', 300000)");
@@ -135,18 +119,5 @@ class MysqlDerivedTableAndViewTest extends TestCase
         $this->pdo->exec("INSERT INTO mysql_dt_employees (id, name, department, salary) VALUES (10, 'Frank', 'Engineering', 100000)");
         $stmt = $this->pdo->query("SELECT COUNT(*) AS c FROM mysql_dt_employees WHERE department = 'Engineering'");
         $this->assertSame(3, (int) $stmt->fetch(PDO::FETCH_ASSOC)['c']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP VIEW IF EXISTS mysql_dt_dept_summary');
-        $raw->exec('DROP TABLE IF EXISTS mysql_dt_employees');
-        $raw->exec('DROP TABLE IF EXISTS mysql_dt_departments');
     }
 }

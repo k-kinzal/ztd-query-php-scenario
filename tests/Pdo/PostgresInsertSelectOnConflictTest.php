@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests INSERT ... SELECT ... ON CONFLICT on PostgreSQL ZTD.
@@ -17,36 +12,27 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * This pattern combines INSERT...SELECT with conflict handling.
  * The PgSqlParser::hasOnConflict() and hasInsertSelect() are both checked
  * during INSERT resolution, but the combination may not be fully supported.
+ * @spec pending
  */
-class PostgresInsertSelectOnConflictTest extends TestCase
+class PostgresInsertSelectOnConflictTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_isoc_target');
-        $raw->exec('DROP TABLE IF EXISTS pg_isoc_source');
-        $raw->exec('CREATE TABLE pg_isoc_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->exec('CREATE TABLE pg_isoc_target (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return [
+            'CREATE TABLE pg_isoc_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE pg_isoc_target (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_isoc_target', 'pg_isoc_source'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_isoc_source (id, name, score) VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO pg_isoc_source (id, name, score) VALUES (2, 'Bob', 80)");
@@ -131,17 +117,5 @@ class PostgresInsertSelectOnConflictTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_isoc_target');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_isoc_target');
-        $raw->exec('DROP TABLE IF EXISTS pg_isoc_source');
     }
 }

@@ -4,46 +4,37 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
+use Tests\Support\AbstractMysqliTestCase;
 use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
 /**
  * Tests advanced SQL query patterns in ZTD mode via MySQLi:
  * CASE, LIKE, IN, BETWEEN, EXISTS, COALESCE, window functions.
+ * @spec SPEC-3.3
  */
-class AdvancedQueryPatternsTest extends TestCase
+class AdvancedQueryPatternsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS adv_employees');
-        $raw->query('CREATE TABLE adv_employees (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10,2))');
-        $raw->close();
+        return [
+            'CREATE TABLE adv_employees (id INT PRIMARY KEY, name VARCHAR(255), department VARCHAR(255), salary DECIMAL(10,2))',
+            'CREATE TABLE adv_emp (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE adv_tasks (id INT PRIMARY KEY, emp_id INT, task VARCHAR(255))',
+            'CREATE TABLE adv_emp2 (id INT PRIMARY KEY, name VARCHAR(255))',
+            'CREATE TABLE adv_tasks2 (id INT PRIMARY KEY, emp_id INT, task VARCHAR(255))',
+            'CREATE TABLE adv_contact (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), phone VARCHAR(255))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['adv_employees', 'adv_tasks', 'adv_emp', 'adv_tasks2', 'adv_emp2', 'adv_contact'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO adv_employees (id, name, department, salary) VALUES (1, 'Alice', 'Engineering', 90000)");
         $this->mysqli->query("INSERT INTO adv_employees (id, name, department, salary) VALUES (2, 'Bob', 'Sales', 60000)");
@@ -292,23 +283,5 @@ class AdvancedQueryPatternsTest extends TestCase
         $this->assertSame(99000.0, (float) $rows[0]['salary']);  // Alice: 90000 * 1.1
         $this->assertSame(63000.0, (float) $rows[1]['salary']);  // Bob: 60000 * 1.05
         $this->assertSame(121000.0, (float) $rows[2]['salary']); // Charlie: 110000 * 1.1
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS adv_employees');
-        $raw->close();
     }
 }

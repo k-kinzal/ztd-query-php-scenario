@@ -5,48 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests INSERT ... SELECT subquery patterns on PostgreSQL PDO.
  * Like SQLite, computed/aggregated columns produce NULLs (unlike MySQL which works).
+ * @spec SPEC-4.1a
  */
-class PostgresInsertSubqueryPatternsTest extends TestCase
+class PostgresInsertSubqueryPatternsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_isp_stats');
-        $raw->exec('DROP TABLE IF EXISTS pg_isp_archive');
-        $raw->exec('DROP TABLE IF EXISTS pg_isp_products');
-        $raw->exec('CREATE TABLE pg_isp_products (id INT PRIMARY KEY, name VARCHAR(50), price NUMERIC(10,2), category VARCHAR(30))');
-        $raw->exec('CREATE TABLE pg_isp_archive (id INT PRIMARY KEY, name VARCHAR(50), price NUMERIC(10,2), category VARCHAR(30))');
-        $raw->exec('CREATE TABLE pg_isp_stats (category VARCHAR(30) PRIMARY KEY, product_count INT, avg_price NUMERIC(10,2))');
+        return [
+            'CREATE TABLE pg_isp_products (id INT PRIMARY KEY, name VARCHAR(50), price NUMERIC(10,2), category VARCHAR(30))',
+            'CREATE TABLE pg_isp_archive (id INT PRIMARY KEY, name VARCHAR(50), price NUMERIC(10,2), category VARCHAR(30))',
+            'CREATE TABLE pg_isp_stats (category VARCHAR(30) PRIMARY KEY, product_count INT, avg_price NUMERIC(10,2))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_isp_stats', 'pg_isp_archive', 'pg_isp_products'];
     }
+
 
     public function testInsertSelectWithWhereFilter(): void
     {
@@ -125,18 +106,5 @@ class PostgresInsertSubqueryPatternsTest extends TestCase
         $stmt = $this->pdo->query("SELECT price FROM pg_isp_archive WHERE id = 1");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertEqualsWithDelta(99.99, (float) $row['price'], 0.01);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_isp_stats');
-        $raw->exec('DROP TABLE IF EXISTS pg_isp_archive');
-        $raw->exec('DROP TABLE IF EXISTS pg_isp_products');
     }
 }

@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests MySQL multi-table DELETE via PDO adapter.
@@ -20,36 +15,27 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * MySqlMutationResolver creates MultiDeleteMutation when
  * count($tables) > 1 in the projection.
+ * @spec SPEC-4.2d
  */
-class MysqlMultiTableDeleteTest extends TestCase
+class MysqlMultiTableDeleteTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pdo_md_orders');
-        $raw->exec('DROP TABLE IF EXISTS pdo_md_users');
-        $raw->exec('CREATE TABLE pdo_md_users (id INT PRIMARY KEY, name VARCHAR(50), active TINYINT DEFAULT 1)');
-        $raw->exec('CREATE TABLE pdo_md_orders (id INT PRIMARY KEY, user_id INT, amount INT)');
+        return [
+            'CREATE TABLE pdo_md_users (id INT PRIMARY KEY, name VARCHAR(50), active TINYINT DEFAULT 1)',
+            'CREATE TABLE pdo_md_orders (id INT PRIMARY KEY, user_id INT, amount INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_md_orders', 'pdo_md_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pdo_md_users (id, name, active) VALUES (1, 'Alice', 1)");
         $this->pdo->exec("INSERT INTO pdo_md_users (id, name, active) VALUES (2, 'Bob', 0)");
@@ -132,17 +118,5 @@ class MysqlMultiTableDeleteTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_md_orders');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pdo_md_orders');
-        $raw->exec('DROP TABLE IF EXISTS pdo_md_users');
     }
 }

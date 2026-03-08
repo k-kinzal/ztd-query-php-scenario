@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqliException;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests MySQL-specific exception types for error conditions.
@@ -17,38 +12,35 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqliException;
  * MySQL's AlterTableMutation validates column existence and throws
  * ColumnAlreadyExistsException / ColumnNotFoundException, unlike SQLite
  * which silently ignores these conditions.
+ * @spec pending
  */
-class ExceptionTypesTest extends TestCase
+class ExceptionTypesTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_ex_test');
-        $raw->query('CREATE TABLE mi_ex_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_ex_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE on shadow-created table that already exists should throw.
+     */
+    public function testCreateTableAlreadyExistsThrows(): void
+    {
+        $this->mysqli->query(',
+            'CREATE TABLE mi_ex_new (id INT PRIMARY KEY, val VARCHAR(50))',
+            'CREATE TABLE IF NOT EXISTS on existing table should not throw.
+     */
+    public function testCreateTableIfNotExistsDoesNotThrow(): void
+    {
+        $this->mysqli->query(',
+            'CREATE TABLE mi_ex_new2 (id INT PRIMARY KEY, val VARCHAR(50))',
+            'CREATE TABLE IF NOT EXISTS mi_ex_new2 (id INT PRIMARY KEY, val VARCHAR(50))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_ex_test', 'mi_ex_new', 'mi_ex_new2', 'on'];
     }
+
 
     /**
      * CREATE TABLE on shadow-created table that already exists should throw.
@@ -119,30 +111,5 @@ class ExceptionTypesTest extends TestCase
     {
         $this->expectException(\ZtdQuery\Exception\ColumnNotFoundException::class);
         $this->mysqli->query('ALTER TABLE mi_ex_test RENAME COLUMN nonexistent TO new_name');
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_ex_test');
-            $raw->query('DROP TABLE IF EXISTS mi_ex_new');
-            $raw->query('DROP TABLE IF EXISTS mi_ex_new2');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

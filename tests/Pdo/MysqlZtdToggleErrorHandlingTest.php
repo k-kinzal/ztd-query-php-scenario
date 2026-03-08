@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests error handling across ZTD toggle boundaries on MySQL:
@@ -17,37 +12,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * - State consistency after toggle + error
  * - Prepared statements created with ZTD on/off and executed across toggles
  * - Shadow data visibility vs physical data across toggles
+ * @spec pending
  */
-class MysqlZtdToggleErrorHandlingTest extends TestCase
+class MysqlZtdToggleErrorHandlingTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mzte_users');
-        $raw->exec('CREATE TABLE mzte_users (id INT PRIMARY KEY, name VARCHAR(50))');
-        // Insert physical data so it exists when ZTD is disabled
-        $raw->exec("INSERT INTO mzte_users VALUES (1, 'Alice')");
-        $raw->exec("INSERT INTO mzte_users VALUES (2, 'Bob')");
+        return 'CREATE TABLE mzte_users (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mzte_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         // Insert through ZtdPdo so shadow store has the data
         // This shadows the physical data with the same values
@@ -174,16 +156,5 @@ class MysqlZtdToggleErrorHandlingTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT name FROM mzte_users WHERE id = 1');
         $this->assertSame('Alice', $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mzte_users');
     }
 }

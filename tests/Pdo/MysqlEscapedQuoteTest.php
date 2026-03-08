@@ -5,46 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests that doubled-quote escaping ('') works correctly in MySQL PDO ZTD.
  *
  * MySQL supports both '' and \' for escaping single quotes.
  * This test verifies the MySQL parser handles these correctly.
+ * @spec pending
  */
-class MysqlEscapedQuoteTest extends TestCase
+class MysqlEscapedQuoteTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS my_eq_test');
-        $raw->exec('CREATE TABLE my_eq_test (id INT PRIMARY KEY, body TEXT, notes TEXT)');
+        return 'CREATE TABLE my_eq_test (id INT PRIMARY KEY, body TEXT, notes TEXT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['my_eq_test'];
     }
+
 
     public function testInsertWithDoubledQuotes(): void
     {
@@ -82,16 +63,5 @@ class MysqlEscapedQuoteTest extends TestCase
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame("it's", $row['body']);
         $this->assertSame("she's", $row['notes']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS my_eq_test');
     }
 }

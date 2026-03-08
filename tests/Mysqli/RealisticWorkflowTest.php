@@ -4,54 +4,31 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
+use Tests\Support\AbstractMysqliTestCase;
 use mysqli;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
 /**
  * Tests realistic user workflow scenarios on MySQL via MySQLi:
  * e-commerce order processing, user registration, inventory management.
+ * @spec pending
  */
-class RealisticWorkflowTest extends TestCase
+class RealisticWorkflowTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_wf_order_items');
-        $raw->query('DROP TABLE IF EXISTS mi_wf_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_wf_products');
-        $raw->query('DROP TABLE IF EXISTS mi_wf_customers');
-        $raw->query("CREATE TABLE mi_wf_customers (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), tier VARCHAR(50) DEFAULT 'standard')");
-        $raw->query('CREATE TABLE mi_wf_products (id INT PRIMARY KEY, name VARCHAR(255), price DECIMAL(10,2), stock INT)');
-        $raw->query('CREATE TABLE mi_wf_orders (id INT PRIMARY KEY, customer_id INT, total DECIMAL(10,2), status VARCHAR(50), created_at DATE)');
-        $raw->query('CREATE TABLE mi_wf_order_items (id INT PRIMARY KEY, order_id INT, product_id INT, qty INT, unit_price DECIMAL(10,2))');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_wf_customers (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), tier VARCHAR(50) DEFAULT \'standard\')',
+            'CREATE TABLE mi_wf_products (id INT PRIMARY KEY, name VARCHAR(255), price DECIMAL(10,2), stock INT)',
+            'CREATE TABLE mi_wf_orders (id INT PRIMARY KEY, customer_id INT, total DECIMAL(10,2), status VARCHAR(50), created_at DATE)',
+            'CREATE TABLE mi_wf_order_items (id INT PRIMARY KEY, order_id INT, product_id INT, qty INT, unit_price DECIMAL(10,2))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_wf_order_items', 'mi_wf_orders', 'mi_wf_products', 'mi_wf_customers'];
     }
+
 
     public function testEcommerceOrderWorkflow(): void
     {
@@ -179,21 +156,5 @@ class RealisticWorkflowTest extends TestCase
 
         $result = $this->mysqli->query('SELECT COUNT(*) as c FROM mi_wf_order_items WHERE order_id = 1');
         $this->assertSame(0, (int) $result->fetch_assoc()['c']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_wf_order_items');
-        $raw->query('DROP TABLE IF EXISTS mi_wf_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_wf_products');
-        $raw->query('DROP TABLE IF EXISTS mi_wf_customers');
-        $raw->close();
     }
 }

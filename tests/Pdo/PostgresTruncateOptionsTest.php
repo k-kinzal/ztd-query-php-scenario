@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL TRUNCATE TABLE with various options.
@@ -17,34 +12,24 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * PostgreSQL supports: TRUNCATE [TABLE] [ONLY] name [RESTART IDENTITY | CONTINUE IDENTITY] [CASCADE | RESTRICT]
  * The PgSqlParser::extractTruncateTable() extracts the table name and the
  * TruncateMutation simply clears all rows regardless of options.
+ * @spec pending
  */
-class PostgresTruncateOptionsTest extends TestCase
+class PostgresTruncateOptionsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_trunc_test');
-        $raw->exec('CREATE TABLE pg_trunc_test (id SERIAL PRIMARY KEY, name VARCHAR(50), score INT)');
+        return 'CREATE TABLE pg_trunc_test (id SERIAL PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_trunc_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_trunc_test (id, name, score) VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO pg_trunc_test (id, name, score) VALUES (2, 'Bob', 80)");
@@ -143,16 +128,5 @@ class PostgresTruncateOptionsTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_trunc_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_trunc_test');
     }
 }

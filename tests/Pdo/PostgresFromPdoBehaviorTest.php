@@ -16,6 +16,7 @@ use ZtdQuery\Config\ZtdConfig;
 /**
  * Tests ZtdPdo::fromPdo() behavior on PostgreSQL.
  * Documents differences between fromPdo() and new ZtdPdo() constructor.
+ * @spec SPEC-1.4
  */
 class PostgresFromPdoBehaviorTest extends TestCase
 {

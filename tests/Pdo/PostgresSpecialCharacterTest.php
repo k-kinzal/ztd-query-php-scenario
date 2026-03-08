@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests that the shadow store correctly handles special characters,
@@ -17,35 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * Note: PostgreSQL uses standard SQL escaping ('' for single quotes),
  * not backslash escaping by default.
+ * @spec pending
  */
-class PostgresSpecialCharacterTest extends TestCase
+class PostgresSpecialCharacterTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_char_test');
-        $raw->exec('CREATE TABLE pg_char_test (id INT PRIMARY KEY, val TEXT)');
+        return 'CREATE TABLE pg_char_test (id INT PRIMARY KEY, val TEXT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_char_test'];
     }
+
 
     public function testSingleQuoteInValue(): void
     {
@@ -160,16 +141,5 @@ class PostgresSpecialCharacterTest extends TestCase
         $stmt = $this->pdo->query('SELECT val FROM pg_char_test WHERE id = 1');
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertSame("it's \"quoted\" with\\backslash", $rows[0]['val']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_char_test');
     }
 }

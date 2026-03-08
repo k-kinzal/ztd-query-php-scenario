@@ -4,48 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests that query rewriting occurs at prepare time, not execute time (MySQLi).
+ * @spec pending
  */
-class PrepareTimeRewritingTest extends TestCase
+class PrepareTimeRewritingTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_ptr_items');
-        $raw->query('CREATE TABLE mi_ptr_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))');
-        $raw->query("INSERT INTO mi_ptr_items VALUES (1, 'Physical A', 10.00)");
-        $raw->query("INSERT INTO mi_ptr_items VALUES (2, 'Physical B', 20.00)");
-        $raw->close();
+        return 'CREATE TABLE mi_ptr_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_ptr_items'];
     }
+
 
     public function testSelectPreparedWithZtdEnabledDisabledBeforeExecute(): void
     {
@@ -105,23 +81,5 @@ class PrepareTimeRewritingTest extends TestCase
 
         $this->assertSame(1, $shadowCount);
         $this->assertSame(2, $physicalCount);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_ptr_items');
-        $raw->close();
     }
 }

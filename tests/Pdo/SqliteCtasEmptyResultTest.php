@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests CREATE TABLE AS SELECT (CTAS) behavior on SQLite.
@@ -16,21 +14,26 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * CTE rewriter cannot find it in the physical database.
  *
  * Also tests chained DDL → DML operations.
+ * @spec pending
  */
-class SqliteCtasEmptyResultTest extends TestCase
+class SqliteCtasEmptyResultTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE ctas_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO ctas_source VALUES (1, 'Alice', 95)");
-        $this->pdo->exec("INSERT INTO ctas_source VALUES (2, 'Bob', 85)");
-        $this->pdo->exec("INSERT INTO ctas_source VALUES (3, 'Charlie', 75)");
+        return [
+            'CREATE TABLE ctas_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE ctas_copy AS SELECT * FROM ctas_source',
+            'CREATE TABLE ctas_empty AS SELECT * FROM ctas_source WHERE 1=0',
+            'CREATE TABLE ctas_source (id INT PRIMARY KEY, label VARCHAR(50))',
+            'CREATE TABLE ctas_chain (id INT PRIMARY KEY, value VARCHAR(50))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['ctas_chain', 'AS', 'ctas_source', 'ctas_copy', 'ctas_empty'];
+    }
+
 
     /**
      * CTAS creates the table but querying it fails on SQLite

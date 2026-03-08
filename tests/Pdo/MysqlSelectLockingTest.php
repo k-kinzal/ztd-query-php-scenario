@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests SELECT with locking clauses on MySQL PDO ZTD.
@@ -19,26 +15,25 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * ZTD rewrites SELECT queries by prepending WITH CTEs. Locking clauses
  * are preserved and accepted by MySQL. The locking is effectively a no-op
  * since CTE-derived rows are not physical table rows.
+ * @spec pending
  */
-class MysqlSelectLockingTest extends TestCase
+class MysqlSelectLockingTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_lock_test');
-        $raw->exec('CREATE TABLE pdo_lock_test (id INT PRIMARY KEY, name VARCHAR(50))');
+        return 'CREATE TABLE pdo_lock_test (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_lock_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pdo_lock_test (id, name) VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO pdo_lock_test (id, name) VALUES (2, 'Bob')");
     }
 
@@ -102,14 +97,5 @@ class MysqlSelectLockingTest extends TestCase
         $this->assertNotFalse($stmt);
 
         $this->pdo->rollBack();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_lock_test');
-        } catch (\Exception $e) {
-        }
     }
 }

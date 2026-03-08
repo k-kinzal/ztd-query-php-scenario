@@ -5,52 +5,38 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests WHERE clause operators on MySQL PDO: LIKE, NOT LIKE, BETWEEN, NOT BETWEEN,
  * EXISTS, NOT EXISTS, comparison operators — all after mutations.
+ * @spec pending
  */
-class MysqlWhereClauseOperatorsTest extends TestCase
+class MysqlWhereClauseOperatorsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_wco_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_wco_products');
-        $raw->exec('CREATE TABLE mysql_wco_products (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(30), price DECIMAL(10,2), in_stock TINYINT)');
-        $raw->exec('CREATE TABLE mysql_wco_orders (id INT PRIMARY KEY, product_id INT, customer VARCHAR(50), qty INT)');
+        return [
+            'CREATE TABLE mysql_wco_products (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(30), price DECIMAL(10,2), in_stock TINYINT)',
+            'CREATE TABLE mysql_wco_orders (id INT PRIMARY KEY, product_id INT, customer VARCHAR(50), qty INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_wco_orders', 'mysql_wco_products'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_wco_products VALUES (1, 'Widget Alpha', 'electronics', 29.99, 1)");
         $this->pdo->exec("INSERT INTO mysql_wco_products VALUES (2, 'Widget Beta', 'electronics', 49.99, 1)");
         $this->pdo->exec("INSERT INTO mysql_wco_products VALUES (3, 'Gadget Pro', 'accessories', 15.00, 0)");
         $this->pdo->exec("INSERT INTO mysql_wco_products VALUES (4, 'Super Tool', 'tools', 99.99, 1)");
         $this->pdo->exec("INSERT INTO mysql_wco_products VALUES (5, 'Mini Tool', 'tools', 9.99, 1)");
-
         $this->pdo->exec("INSERT INTO mysql_wco_orders VALUES (1, 1, 'Alice', 2)");
         $this->pdo->exec("INSERT INTO mysql_wco_orders VALUES (2, 2, 'Bob', 1)");
         $this->pdo->exec("INSERT INTO mysql_wco_orders VALUES (3, 4, 'Alice', 3)");
@@ -131,17 +117,5 @@ class MysqlWhereClauseOperatorsTest extends TestCase
         $stmt->execute([20, 60]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(2, $rows);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_wco_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_wco_products');
     }
 }

@@ -5,30 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests recursive CTEs and RIGHT JOIN on SQLite.
  * Recursive CTEs are important for hierarchical data (org charts, categories).
  * RIGHT JOIN is a fundamental SQL join type not yet tested.
+ * @spec SPEC-3.3c
  */
-class SqliteRecursiveCteAndRightJoinTest extends TestCase
+class SqliteRecursiveCteAndRightJoinTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE categories (id INTEGER PRIMARY KEY, name TEXT, parent_id INTEGER)');
-        $raw->exec('CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT)');
-        $raw->exec('CREATE TABLE courses (id INTEGER PRIMARY KEY, title TEXT)');
-        $raw->exec('CREATE TABLE enrollments (student_id INTEGER, course_id INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE categories (id INTEGER PRIMARY KEY, name TEXT, parent_id INTEGER)',
+            'CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT)',
+            'CREATE TABLE courses (id INTEGER PRIMARY KEY, title TEXT)',
+            'CREATE TABLE enrollments (student_id INTEGER, course_id INTEGER)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['categories', 'students', 'courses', 'enrollments'];
+    }
+
 
     /**
      * Basic recursive CTE: generate a number series.

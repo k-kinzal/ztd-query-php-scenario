@@ -13,6 +13,7 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqliException;
 use ZtdQuery\Config\UnknownSchemaBehavior;
 use ZtdQuery\Config\ZtdConfig;
 
+/** @spec SPEC-7.1, SPEC-7.2, SPEC-7.4 */
 class UnknownSchemaTest extends TestCase
 {
     public static function setUpBeforeClass(): void

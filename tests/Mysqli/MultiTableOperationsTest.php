@@ -4,44 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
-class MultiTableOperationsTest extends TestCase
+/** @spec SPEC-4.2c, SPEC-4.2d */
+class MultiTableOperationsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS orders');
-        $raw->query('DROP TABLE IF EXISTS users');
-        $raw->query('CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255), active TINYINT DEFAULT 1)');
-        $raw->query('CREATE TABLE orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2))');
-        $raw->close();
+        return [
+            'CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255), active TINYINT DEFAULT 1)',
+            'CREATE TABLE orders (id INT PRIMARY KEY, user_id INT, amount DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['orders', 'users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO users (id, name, active) VALUES (1, 'Alice', 1)");
         $this->mysqli->query("INSERT INTO users (id, name, active) VALUES (2, 'Bob', 1)");
@@ -85,24 +69,5 @@ class MultiTableOperationsTest extends TestCase
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         // Only Alice's orders should remain
         $this->assertCount(2, $rows);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS orders');
-        $raw->query('DROP TABLE IF EXISTS users');
-        $raw->close();
     }
 }

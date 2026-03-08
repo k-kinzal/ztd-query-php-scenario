@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests user-defined CTEs (WITH ... AS) in shadow queries on SQLite.
@@ -19,25 +18,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * causing the user-defined CTE names to become undefined references.
  * Queries that don't reference the CTE name in the outer query may
  * still succeed (the CTE is simply ignored).
+ * @spec pending
  */
-class SqliteMultipleCteQueryTest extends TestCase
+class SqliteMultipleCteQueryTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_cte_orders (id INTEGER PRIMARY KEY, customer TEXT, product TEXT, amount REAL)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sl_cte_orders VALUES (1, 'Alice', 'Widget', 100.00)");
-        $this->pdo->exec("INSERT INTO sl_cte_orders VALUES (2, 'Alice', 'Gadget', 200.00)");
-        $this->pdo->exec("INSERT INTO sl_cte_orders VALUES (3, 'Bob', 'Widget', 150.00)");
-        $this->pdo->exec("INSERT INTO sl_cte_orders VALUES (4, 'Bob', 'Gadget', 50.00)");
-        $this->pdo->exec("INSERT INTO sl_cte_orders VALUES (5, 'Charlie', 'Widget', 300.00)");
+        return 'CREATE TABLE sl_cte_orders (id INTEGER PRIMARY KEY, customer TEXT, product TEXT, amount REAL)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_cte_orders'];
+    }
+
 
     /**
      * User CTE referencing the CTE name fails — ZTD overwrites the WITH clause.

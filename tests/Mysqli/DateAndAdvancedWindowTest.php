@@ -4,45 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests date/time functions and advanced window functions on MySQLi.
+ * @spec pending
  */
-class DateAndAdvancedWindowTest extends TestCase
+class DateAndAdvancedWindowTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_daw_events');
-        $raw->query('CREATE TABLE mi_daw_events (id INT PRIMARY KEY, title VARCHAR(255), event_date DATE, category VARCHAR(50), amount DECIMAL(10,2))');
-        $raw->close();
+        return 'CREATE TABLE mi_daw_events (id INT PRIMARY KEY, title VARCHAR(255), event_date DATE, category VARCHAR(50), amount DECIMAL(10,2))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_daw_events'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_daw_events (id, title, event_date, category, amount) VALUES (1, 'A', '2024-01-10', 'work', 100)");
         $this->mysqli->query("INSERT INTO mi_daw_events (id, title, event_date, category, amount) VALUES (2, 'B', '2024-01-20', 'work', 200)");
@@ -106,23 +89,5 @@ class DateAndAdvancedWindowTest extends TestCase
         $this->assertSame('personal', $rows[0]['category']);
         $this->assertSame(1, (int) $rows[0]['rn']);
         $this->assertEqualsWithDelta(700.0, (float) $rows[0]['cat_total'], 0.01);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_daw_events');
-        $raw->close();
     }
 }

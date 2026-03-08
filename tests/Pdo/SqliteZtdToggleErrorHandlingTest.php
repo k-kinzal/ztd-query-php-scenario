@@ -4,30 +4,37 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests error handling across ZTD toggle boundaries:
  * - Errors when ZTD is enabled vs disabled
  * - State consistency after toggle + error
  * - Prepared statements created with ZTD on/off and executed across toggles
+ * @spec pending
  */
-class SqliteZtdToggleErrorHandlingTest extends TestCase
+class SqliteZtdToggleErrorHandlingTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE zte_users (id INT PRIMARY KEY, name VARCHAR(50))';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['zte_users'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE zte_users (id INT PRIMARY KEY, name VARCHAR(50))');
         $this->pdo->exec("INSERT INTO zte_users VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO zte_users VALUES (2, 'Bob')");
-    }
+
+        }
 
     public function testErrorWithZtdEnabledDoesNotCorruptShadow(): void
     {

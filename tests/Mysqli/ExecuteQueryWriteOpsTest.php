@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests execute_query() with UPDATE and DELETE operations (PHP 8.2+).
@@ -16,42 +12,28 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
  * execute_query() internally uses prepare() + execute(), but prior tests
  * only covered SELECT and INSERT. This file verifies UPDATE and DELETE
  * also work correctly through the execute_query() path.
+ * @spec pending
  */
-class ExecuteQueryWriteOpsTest extends TestCase
+class ExecuteQueryWriteOpsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_eq_write');
-        $raw->query('CREATE TABLE mi_eq_write (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_eq_write (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_eq_write'];
+    }
+
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         if (!method_exists(\mysqli::class, 'execute_query')) {
             $this->markTestSkipped('execute_query requires PHP 8.2+');
         }
-
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-
         $this->mysqli->query("INSERT INTO mi_eq_write VALUES (1, 'Alice', 90)");
         $this->mysqli->query("INSERT INTO mi_eq_write VALUES (2, 'Bob', 80)");
         $this->mysqli->query("INSERT INTO mi_eq_write VALUES (3, 'Charlie', 70)");
@@ -239,29 +221,5 @@ class ExecuteQueryWriteOpsTest extends TestCase
         $this->mysqli->disableZtd();
         $result = $this->mysqli->query('SELECT * FROM mi_eq_write');
         $this->assertSame(0, $result->num_rows);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_eq_write');
-            $raw->close();
-        } catch (\Exception $e) {
-            // Container may be unavailable
-        }
     }
 }

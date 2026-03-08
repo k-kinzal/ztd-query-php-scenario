@@ -5,28 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests a data migration workflow: create archive tables, migrate data with transformations,
  * verify data integrity with complex queries. Exercises many SQL patterns together.
+ * @spec pending
  */
-class SqliteDataMigrationWorkflowTest extends TestCase
+class SqliteDataMigrationWorkflowTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, tier TEXT, created_date TEXT)');
-        $raw->exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, product TEXT, amount REAL, status TEXT, created_date TEXT)');
-        $raw->exec('CREATE TABLE user_stats (user_id INTEGER PRIMARY KEY, total_orders INTEGER, total_spent REAL, last_order_date TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, tier TEXT, created_date TEXT)',
+            'CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, product TEXT, amount REAL, status TEXT, created_date TEXT)',
+            'CREATE TABLE user_stats (user_id INTEGER PRIMARY KEY, total_orders INTEGER, total_spent REAL, last_order_date TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['users', 'orders', 'user_stats'];
+    }
+
 
     /**
      * INSERT...SELECT with LEFT JOIN + GROUP BY + aggregation inserts rows

@@ -5,25 +5,39 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests DDL operations mid-session: DROP TABLE + CREATE TABLE, TRUNCATE,
  * and how they interact with existing shadow data and prepared statements.
+ * @spec pending
  */
-class SqliteDdlMidSessionTest extends TestCase
+class SqliteDdlMidSessionTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE ddl_sess (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE ddl_sess (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE ddl_sess (id INT PRIMARY KEY, email VARCHAR(100), active INT)',
+            'CREATE TABLE ddl_cycle (id INT PRIMARY KEY, val INT)',
+            'CREATE TABLE ddl_other (id INT PRIMARY KEY, ref_id INT, tag VARCHAR(20))',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['ddl_sess', 'ddl_cycle', 'ddl_other'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE ddl_sess (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-    }
+
+        }
 
     public function testDropTableClearsShadowAndQueryFails(): void
     {

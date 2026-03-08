@@ -4,59 +4,40 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests cross-table shadow consistency on MySQL via MySQLi: operations spanning
  * multiple shadow tables, subquery interactions, and data flow.
+ * @spec pending
  */
-class MultiTableShadowTest extends TestCase
+class MultiTableShadowTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_mt_projects');
-        $raw->query('DROP TABLE IF EXISTS mi_mt_employees');
-        $raw->query('DROP TABLE IF EXISTS mi_mt_departments');
-        $raw->query('CREATE TABLE mi_mt_departments (id INT PRIMARY KEY, name VARCHAR(255), budget DECIMAL(12,2))');
-        $raw->query('CREATE TABLE mi_mt_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, salary DECIMAL(10,2))');
-        $raw->query('CREATE TABLE mi_mt_projects (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, lead_id INT)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_mt_departments (id INT PRIMARY KEY, name VARCHAR(255), budget DECIMAL(12,2))',
+            'CREATE TABLE mi_mt_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, salary DECIMAL(10,2))',
+            'CREATE TABLE mi_mt_projects (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, lead_id INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_mt_projects', 'mi_mt_employees', 'mi_mt_departments'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_mt_departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
         $this->mysqli->query("INSERT INTO mi_mt_departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
-
         $this->mysqli->query("INSERT INTO mi_mt_employees (id, name, dept_id, salary) VALUES (1, 'Alice', 1, 90000)");
         $this->mysqli->query("INSERT INTO mi_mt_employees (id, name, dept_id, salary) VALUES (2, 'Bob', 2, 60000)");
         $this->mysqli->query("INSERT INTO mi_mt_employees (id, name, dept_id, salary) VALUES (3, 'Charlie', 1, 110000)");
         $this->mysqli->query("INSERT INTO mi_mt_employees (id, name, dept_id, salary) VALUES (4, 'Diana', 2, 75000)");
-
         $this->mysqli->query("INSERT INTO mi_mt_projects (id, name, dept_id, lead_id) VALUES (1, 'Project Alpha', 1, 1)");
         $this->mysqli->query("INSERT INTO mi_mt_projects (id, name, dept_id, lead_id) VALUES (2, 'Project Beta', 2, 2)");
     }
@@ -156,25 +137,5 @@ class MultiTableShadowTest extends TestCase
 
         $result = $this->mysqli->query('SELECT COUNT(*) as c FROM mi_mt_projects');
         $this->assertSame(0, (int) $result->fetch_assoc()['c']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_mt_projects');
-        $raw->query('DROP TABLE IF EXISTS mi_mt_employees');
-        $raw->query('DROP TABLE IF EXISTS mi_mt_departments');
-        $raw->close();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
     }
 }

@@ -32,9 +32,14 @@ abstract class AbstractSqlitePdoTestCase extends TestCase
             $raw->exec($ddl);
         }
 
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        $this->pdo = $this->createZtdConnection($raw);
 
         VersionRecorder::setVersionInfo(static::class, $this->getDbVersion(), $this->getZtdVersion());
+    }
+
+    protected function createZtdConnection(\PDO $rawPdo): ZtdPdo
+    {
+        return ZtdPdo::fromPdo($rawPdo);
     }
 
     protected function ztdExec(string $sql): int|false

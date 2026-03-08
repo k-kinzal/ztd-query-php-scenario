@@ -7,6 +7,7 @@ namespace Tests\Mysqli;
 use Tests\Support\AbstractMysqliTestCase;
 use Tests\Support\MySQLContainer;
 
+/** @spec pending */
 class SelectDbSideEffectTest extends AbstractMysqliTestCase
 {
     protected function getTableDDL(): string

@@ -4,51 +4,29 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests INSERT ... SELECT subquery patterns on MySQLi.
  * Like MySQL PDO, computed columns and GROUP BY aggregation work correctly.
+ * @spec SPEC-4.1a
  */
-class InsertSubqueryPatternsTest extends TestCase
+class InsertSubqueryPatternsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_isp_stats');
-        $raw->query('DROP TABLE IF EXISTS mi_isp_archive');
-        $raw->query('DROP TABLE IF EXISTS mi_isp_products');
-        $raw->query('CREATE TABLE mi_isp_products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))');
-        $raw->query('CREATE TABLE mi_isp_archive (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))');
-        $raw->query('CREATE TABLE mi_isp_stats (category VARCHAR(30) PRIMARY KEY, product_count INT, avg_price DECIMAL(10,2))');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_isp_products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))',
+            'CREATE TABLE mi_isp_archive (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(30))',
+            'CREATE TABLE mi_isp_stats (category VARCHAR(30) PRIMARY KEY, product_count INT, avg_price DECIMAL(10,2))',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_isp_stats', 'mi_isp_archive', 'mi_isp_products'];
     }
+
 
     public function testInsertSelectWithWhereFilter(): void
     {
@@ -93,25 +71,5 @@ class InsertSubqueryPatternsTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame('electronics', $rows[0]['category']);
         $this->assertSame(2, (int) $rows[0]['product_count']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_isp_stats');
-        $raw->query('DROP TABLE IF EXISTS mi_isp_archive');
-        $raw->query('DROP TABLE IF EXISTS mi_isp_products');
-        $raw->close();
     }
 }

@@ -4,46 +4,29 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests that multi_query() bypasses ZTD entirely and operates
  * directly on the physical database, even when ZTD is enabled.
+ * @spec pending
  */
-class MultiQueryBypassTest extends TestCase
+class MultiQueryBypassTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mq_bypass_test');
-        $raw->query('CREATE TABLE mq_bypass_test (id INT PRIMARY KEY, val VARCHAR(255))');
-        $raw->close();
+        return 'CREATE TABLE mq_bypass_test (id INT PRIMARY KEY, val VARCHAR(255))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mq_bypass_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         // Clean up physical table
         $this->mysqli->disableZtd();
@@ -138,23 +121,5 @@ class MultiQueryBypassTest extends TestCase
         $rows = $res->fetch_all(MYSQLI_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('shadow', $rows[0]['val']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mq_bypass_test');
-        $raw->close();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
     }
 }

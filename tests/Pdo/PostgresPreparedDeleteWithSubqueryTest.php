@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests prepared DELETE with subqueries on PostgreSQL PDO.
  *
  * Cross-platform parity with SqlitePreparedDeleteWithSubqueryTest.
+ * @spec pending
  */
 class PostgresPreparedDeleteWithSubqueryTest extends TestCase
 {

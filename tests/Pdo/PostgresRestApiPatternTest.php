@@ -5,46 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests common REST API / controller-layer query patterns on PostgreSQL.
+ * @spec pending
  */
-class PostgresRestApiPatternTest extends TestCase
+class PostgresRestApiPatternTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS api_product_categories_pg');
-        $raw->exec('DROP TABLE IF EXISTS api_products_pg');
-        $raw->exec('DROP TABLE IF EXISTS api_categories_pg');
-        $raw->exec('CREATE TABLE api_products_pg (id INT PRIMARY KEY, name VARCHAR(100), price DECIMAL(10,2), stock INT, active INT DEFAULT 1)');
-        $raw->exec('CREATE TABLE api_categories_pg (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->exec('CREATE TABLE api_product_categories_pg (product_id INT, category_id INT, PRIMARY KEY (product_id, category_id))');
+        return [
+            'CREATE TABLE api_products_pg (id INT PRIMARY KEY, name VARCHAR(100), price DECIMAL(10,2), stock INT, active INT DEFAULT 1)',
+            'CREATE TABLE api_categories_pg (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE api_product_categories_pg (product_id INT, category_id INT, PRIMARY KEY (product_id, category_id))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['api_product_categories_pg', 'api_products_pg', 'api_categories_pg'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO api_categories_pg VALUES (1, 'Electronics')");
         $this->pdo->exec("INSERT INTO api_categories_pg VALUES (2, 'Books')");
@@ -133,18 +119,5 @@ class PostgresRestApiPatternTest extends TestCase
         $this->pdo->exec('DELETE FROM api_products_pg WHERE id = 10');
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM api_products_pg WHERE id = 10');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS api_product_categories_pg');
-        $raw->exec('DROP TABLE IF EXISTS api_products_pg');
-        $raw->exec('DROP TABLE IF EXISTS api_categories_pg');
     }
 }

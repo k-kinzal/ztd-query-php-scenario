@@ -4,48 +4,26 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests prepared statement edge cases in ZTD mode on MySQL via MySQLi:
  * NULL binding, re-execution, multiple conditions, prepared UPDATE/DELETE,
  * and statement reuse patterns.
+ * @spec pending
  */
-class PreparedEdgeCaseTest extends TestCase
+class PreparedEdgeCaseTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_prep_edge');
-        $raw->query('CREATE TABLE mi_prep_edge (id INT PRIMARY KEY, name VARCHAR(255), score INT, active TINYINT(1))');
-        $raw->close();
+        return 'CREATE TABLE mi_prep_edge (id INT PRIMARY KEY, name VARCHAR(255), score INT, active TINYINT(1))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_prep_edge'];
     }
+
 
     public function testBindParamNullType(): void
     {
@@ -186,23 +164,5 @@ class PreparedEdgeCaseTest extends TestCase
         $row = $result->fetch_assoc();
         $this->assertSame('Alice', $row['name']);
         $this->assertNull($row['score']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_prep_edge');
-        $raw->close();
     }
 }

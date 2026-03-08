@@ -5,44 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests common statement reuse patterns (ORM-style) with ZTD on MySQL.
  * Focuses on patterns like prepare-once/execute-many, batch reads, and mixed workflows.
+ * @spec pending
  */
-class MysqlStatementReusePatternTest extends TestCase
+class MysqlStatementReusePatternTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS reuse_users_m');
-        $raw->exec('CREATE TABLE reuse_users_m (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), amount INT)');
+        return 'CREATE TABLE reuse_users_m (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), amount INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['reuse_users_m'];
     }
+
 
     public function testBatchInsertViaPreparedStatement(): void
     {
@@ -231,16 +212,5 @@ class MysqlStatementReusePatternTest extends TestCase
         $this->pdo->exec("INSERT INTO reuse_users_m VALUES (3, 'Charlie', 'A', 150)");
         $this->pdo->exec("INSERT INTO reuse_users_m VALUES (4, 'Diana', 'B', 75)");
         $this->pdo->exec("INSERT INTO reuse_users_m VALUES (5, 'Eve', 'C', 300)");
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS reuse_users_m');
     }
 }

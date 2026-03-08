@@ -10,6 +10,7 @@ use Testcontainers\Testcontainers;
 use Tests\Support\MySQLContainer;
 use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
+/** @spec SPEC-4.9 */
 class DelegatedMethodsTest extends TestCase
 {
     private ZtdMysqli $mysqli;

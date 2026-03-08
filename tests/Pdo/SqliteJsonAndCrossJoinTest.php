@@ -5,28 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests JSON data handling and CROSS JOIN patterns on SQLite.
  * JSON is common in modern PHP apps; CROSS JOIN is an important untested SQL pattern.
+ * @spec pending
  */
-class SqliteJsonAndCrossJoinTest extends TestCase
+class SqliteJsonAndCrossJoinTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, metadata TEXT)');
-        $raw->exec('CREATE TABLE colors (id INTEGER PRIMARY KEY, color TEXT)');
-        $raw->exec('CREATE TABLE sizes (id INTEGER PRIMARY KEY, size TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, metadata TEXT)',
+            'CREATE TABLE colors (id INTEGER PRIMARY KEY, color TEXT)',
+            'CREATE TABLE sizes (id INTEGER PRIMARY KEY, size TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['products', 'colors', 'sizes'];
+    }
+
 
     public function testInsertAndSelectJsonData(): void
     {

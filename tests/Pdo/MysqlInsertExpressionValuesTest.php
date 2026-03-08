@@ -5,36 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests INSERT with SQL expressions in VALUES clause on MySQL.
  *
  * The InsertTransformer converts VALUES to SELECT expressions for CTE.
  * This tests whether computed expressions survive the transformation.
+ * @spec pending
  */
-class MysqlInsertExpressionValuesTest extends TestCase
+class MysqlInsertExpressionValuesTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS expr_test');
-        $raw->exec('CREATE TABLE expr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, label VARCHAR(50))');
+        return 'CREATE TABLE expr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, label VARCHAR(50))';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        return ['expr_test'];
     }
+
 
     /**
      * INSERT with arithmetic expression.
@@ -121,14 +112,5 @@ class MysqlInsertExpressionValuesTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM expr_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS expr_test');
-        } catch (\Exception $e) {
-        }
     }
 }

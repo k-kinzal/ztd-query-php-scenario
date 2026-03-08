@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests ALTER TABLE with INDEX, KEY, FOREIGN KEY, and UNIQUE constraints on MySQL ZTD.
@@ -17,38 +13,24 @@ use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
  * INDEX and UNIQUE KEY are handled at the parser level.
  * These tests verify that ALTER TABLE with these operations doesn't break the
  * shadow store or cause unexpected exceptions.
+ * @spec SPEC-5.1a
  */
-class AlterTableIndexAndKeyTest extends TestCase
+class AlterTableIndexAndKeyTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_aik_child');
-        $raw->query('DROP TABLE IF EXISTS mi_aik_test');
-        $raw->query('CREATE TABLE mi_aik_test (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), score INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_aik_test (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_aik_child', 'mi_aik_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_aik_test (id, name, email, score) VALUES (1, 'Alice', 'alice@test.com', 90)");
         $this->mysqli->query("INSERT INTO mi_aik_test (id, name, email, score) VALUES (2, 'Bob', 'bob@test.com', 80)");
@@ -162,29 +144,5 @@ class AlterTableIndexAndKeyTest extends TestCase
         $this->assertSame('alice@test.com', $row['email']);
         $this->assertEquals(90, $row['score']);
         $this->assertSame('active', $row['status']);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_aik_child');
-            $raw->query('DROP TABLE IF EXISTS mi_aik_test');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

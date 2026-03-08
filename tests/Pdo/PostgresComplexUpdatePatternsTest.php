@@ -5,43 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests complex UPDATE patterns on PostgreSQL PDO: CASE in SET, arithmetic expressions,
  * multiple sequential mutations, string concatenation, prepared UPDATE with CASE.
+ * @spec pending
  */
-class PostgresComplexUpdatePatternsTest extends TestCase
+class PostgresComplexUpdatePatternsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_cup_employees');
-        $raw->exec('CREATE TABLE pg_cup_employees (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(30), salary NUMERIC(10,2), grade VARCHAR(5), active SMALLINT)');
+        return 'CREATE TABLE pg_cup_employees (id INT PRIMARY KEY, name VARCHAR(50), department VARCHAR(30), salary NUMERIC(10,2), grade VARCHAR(5), active SMALLINT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_cup_employees'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_cup_employees VALUES (1, 'Alice', 'Engineering', 80000, 'B', 1)");
         $this->pdo->exec("INSERT INTO pg_cup_employees VALUES (2, 'Bob', 'Engineering', 90000, 'A', 1)");
@@ -112,16 +98,5 @@ class PostgresComplexUpdatePatternsTest extends TestCase
         $stmt = $this->pdo->query("SELECT COUNT(*) AS cnt FROM pg_cup_employees");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertSame(3, (int) $row['cnt']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_cup_employees');
     }
 }

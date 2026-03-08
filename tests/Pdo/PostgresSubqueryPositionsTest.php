@@ -5,50 +5,36 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests subqueries in various SQL positions on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresSubqueryPositionsTest extends TestCase
+class PostgresSubqueryPositionsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS sp_orders');
-        $raw->exec('DROP TABLE IF EXISTS sp_products');
-        $raw->exec('CREATE TABLE sp_products (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), price DECIMAL(10,2))');
-        $raw->exec('CREATE TABLE sp_orders (id INT PRIMARY KEY, product_id INT, qty INT)');
+        return [
+            'CREATE TABLE sp_products (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), price DECIMAL(10,2))',
+            'CREATE TABLE sp_orders (id INT PRIMARY KEY, product_id INT, qty INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sp_orders', 'sp_products'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (1, 'Widget', 'A', 10.00)");
         $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (2, 'Gadget', 'A', 25.00)");
         $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (3, 'Doohickey', 'B', 5.00)");
         $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (4, 'Thingamajig', 'B', 50.00)");
-
         $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (1, 1, 3)");
         $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (2, 2, 1)");
         $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (3, 1, 2)");
@@ -117,17 +103,5 @@ class PostgresSubqueryPositionsTest extends TestCase
         ");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $this->assertNull($row['total_qty']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS sp_orders');
-        $raw->exec('DROP TABLE IF EXISTS sp_products');
     }
 }

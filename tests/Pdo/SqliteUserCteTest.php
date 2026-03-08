@@ -5,30 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests user-written CTE queries and INSERT ... SELECT on SQLite.
+ * @spec pending
  */
-class SqliteUserCteTest extends TestCase
+class SqliteUserCteTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL)');
-        $raw->exec('CREATE TABLE backup (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO products (id, name, category, price) VALUES (1, 'Widget A', 'gadgets', 10.00)");
-        $this->pdo->exec("INSERT INTO products (id, name, category, price) VALUES (2, 'Widget B', 'gadgets', 20.00)");
-        $this->pdo->exec("INSERT INTO products (id, name, category, price) VALUES (3, 'Gizmo X', 'tools', 30.00)");
+        return [
+            'CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL)',
+            'CREATE TABLE backup (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['products', 'backup'];
+    }
+
 
     public function testUserCteSelectReadsShadowData(): void
     {

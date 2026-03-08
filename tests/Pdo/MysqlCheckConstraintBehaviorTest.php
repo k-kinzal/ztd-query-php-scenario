@@ -5,44 +5,35 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests CHECK constraint behavior with ZTD shadow store on MySQL.
  *
  * MySQL 8.0.16+ supports CHECK constraints. Since ZTD rewrites operations
  * to CTE-based queries, CHECK constraints are NOT enforced in shadow.
+ * @spec SPEC-8.1
  */
-class MysqlCheckConstraintBehaviorTest extends TestCase
+class MysqlCheckConstraintBehaviorTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_check_test');
-        $raw->exec('CREATE TABLE pdo_check_test (
+        return 'CREATE TABLE pdo_check_test (
             id INT PRIMARY KEY,
             age INT,
             score INT,
             status VARCHAR(20),
             CONSTRAINT chk_age CHECK (age >= 0 AND age <= 150),
             CONSTRAINT chk_score CHECK (score >= 0),
-            CONSTRAINT chk_status CHECK (status IN (\'active\', \'inactive\', \'pending\'))
-        )');
+            CONSTRAINT chk_status CHECK (status IN (\\\'active\\\', \\\'inactive\\\', \\\'pending\\\'))
+        )';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        return ['pdo_check_test'];
     }
+
 
     /**
      * INSERT with valid values succeeds.
@@ -101,14 +92,5 @@ class MysqlCheckConstraintBehaviorTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_check_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_check_test');
-        } catch (\Exception $e) {
-        }
     }
 }

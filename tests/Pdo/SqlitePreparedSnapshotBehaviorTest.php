@@ -4,29 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared statement CTE snapshot behavior on SQLite.
  *
  * Prepared statements capture shadow store data at prepare() time.
  * Changes after prepare() are NOT visible to the prepared statement.
+ * @spec pending
  */
-class SqlitePreparedSnapshotBehaviorTest extends TestCase
+class SqlitePreparedSnapshotBehaviorTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE psb_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO psb_test VALUES (1, 'Alice', 100)");
-        $this->pdo->exec("INSERT INTO psb_test VALUES (2, 'Bob', 80)");
+        return 'CREATE TABLE psb_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['psb_test'];
+    }
+
 
     /**
      * INSERT after prepare() is NOT visible to the prepared SELECT.

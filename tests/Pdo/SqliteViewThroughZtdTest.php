@@ -4,31 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests database views behavior through ZTD on SQLite.
  *
  * Views are NOT rewritten by the CTE rewriter.
  * Querying a view returns empty results because no shadow data exists for views.
+ * @spec SPEC-3.3b
  */
-class SqliteViewThroughZtdTest extends TestCase
+class SqliteViewThroughZtdTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE vtzt_users (id INT PRIMARY KEY, name VARCHAR(50), active INT)');
-        $raw->exec('INSERT INTO vtzt_users VALUES (1, \'Alice\', 1)');
-        $raw->exec('INSERT INTO vtzt_users VALUES (2, \'Bob\', 0)');
-        $raw->exec('INSERT INTO vtzt_users VALUES (3, \'Charlie\', 1)');
-        $raw->exec('CREATE VIEW vtzt_active_users AS SELECT id, name FROM vtzt_users WHERE active = 1');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE vtzt_users (id INT PRIMARY KEY, name VARCHAR(50), active INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['vtzt_users'];
+    }
+
 
     /**
      * View query returns physical data (not shadow) because views are not rewritten.

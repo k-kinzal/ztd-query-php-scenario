@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests INSERT INTO ... SELECT FROM the same table on SQLite.
@@ -14,19 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Self-referencing INSERT copies rows from a table back into itself.
  * This tests whether the InsertTransformer correctly handles
  * the case where source and destination table are the same.
+ * @spec pending
  */
-class SqliteSelfReferencingInsertTest extends TestCase
+class SqliteSelfReferencingInsertTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sri_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, category TEXT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE sri_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, category TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sri_test'];
+    }
+
 
     /**
      * INSERT INTO t SELECT with new IDs from same table.

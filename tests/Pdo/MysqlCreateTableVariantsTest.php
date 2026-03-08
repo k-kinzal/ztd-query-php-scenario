@@ -5,45 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests CREATE TABLE LIKE and CREATE TABLE AS SELECT on MySQL via PDO.
+ * @spec SPEC-5.1b
  */
-class MysqlCreateTableVariantsTest extends TestCase
+class MysqlCreateTableVariantsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_ct_target_like');
-        $raw->exec('DROP TABLE IF EXISTS mysql_ct_target_ctas');
-        $raw->exec('DROP TABLE IF EXISTS mysql_ct_source');
-        $raw->exec('CREATE TABLE mysql_ct_source (id INT PRIMARY KEY, val VARCHAR(255))');
+        return [
+            'CREATE TABLE mysql_ct_source (id INT PRIMARY KEY, val VARCHAR(255))',
+            'CREATE TABLE mysql_ct_target_like LIKE mysql_ct_source',
+            'CREATE TABLE mysql_ct_target_ctas AS SELECT * FROM mysql_ct_source',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['mysql_ct_target_like', 'mysql_ct_target_ctas', 'mysql_ct_source', 'LIKE', 'AS'];
     }
+
 
     public function testCreateTableLike(): void
     {
@@ -85,18 +68,5 @@ class MysqlCreateTableVariantsTest extends TestCase
         } catch (\PDOException $e) {
             $this->assertStringContainsString('mysql_ct_target_like', $e->getMessage());
         }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_ct_target_like');
-        $raw->exec('DROP TABLE IF EXISTS mysql_ct_target_ctas');
-        $raw->exec('DROP TABLE IF EXISTS mysql_ct_source');
     }
 }

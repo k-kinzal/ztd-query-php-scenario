@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests transaction interaction with ZTD shadow store on PostgreSQL PDO.
  *
  * Cross-platform parity with SqliteTransactionWithShadowTest.
+ * @spec SPEC-4.8
  */
 class PostgresTransactionWithShadowTest extends TestCase
 {

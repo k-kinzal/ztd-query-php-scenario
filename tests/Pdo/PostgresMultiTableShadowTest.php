@@ -5,57 +5,41 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests cross-table shadow consistency on PostgreSQL via PDO: operations spanning
  * multiple shadow tables, subquery interactions, and data flow
  * between tables within a single ZTD session.
+ * @spec pending
  */
-class PostgresMultiTableShadowTest extends TestCase
+class PostgresMultiTableShadowTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_mt_projects');
-        $raw->exec('DROP TABLE IF EXISTS pg_mt_employees');
-        $raw->exec('DROP TABLE IF EXISTS pg_mt_departments');
-        $raw->exec('CREATE TABLE pg_mt_departments (id INT PRIMARY KEY, name VARCHAR(255), budget NUMERIC(12,2))');
-        $raw->exec('CREATE TABLE pg_mt_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, salary NUMERIC(10,2))');
-        $raw->exec('CREATE TABLE pg_mt_projects (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, lead_id INT)');
+        return [
+            'CREATE TABLE pg_mt_departments (id INT PRIMARY KEY, name VARCHAR(255), budget NUMERIC(12,2))',
+            'CREATE TABLE pg_mt_employees (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, salary NUMERIC(10,2))',
+            'CREATE TABLE pg_mt_projects (id INT PRIMARY KEY, name VARCHAR(255), dept_id INT, lead_id INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_mt_projects', 'pg_mt_employees', 'pg_mt_departments'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_mt_departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
         $this->pdo->exec("INSERT INTO pg_mt_departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
-
         $this->pdo->exec("INSERT INTO pg_mt_employees (id, name, dept_id, salary) VALUES (1, 'Alice', 1, 90000)");
         $this->pdo->exec("INSERT INTO pg_mt_employees (id, name, dept_id, salary) VALUES (2, 'Bob', 2, 60000)");
         $this->pdo->exec("INSERT INTO pg_mt_employees (id, name, dept_id, salary) VALUES (3, 'Charlie', 1, 110000)");
         $this->pdo->exec("INSERT INTO pg_mt_employees (id, name, dept_id, salary) VALUES (4, 'Diana', 2, 75000)");
-
         $this->pdo->exec("INSERT INTO pg_mt_projects (id, name, dept_id, lead_id) VALUES (1, 'Project Alpha', 1, 1)");
         $this->pdo->exec("INSERT INTO pg_mt_projects (id, name, dept_id, lead_id) VALUES (2, 'Project Beta', 2, 2)");
     }
@@ -188,18 +172,5 @@ class PostgresMultiTableShadowTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) as c FROM pg_mt_projects');
         $this->assertSame(0, (int) $stmt->fetch(PDO::FETCH_ASSOC)['c']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_mt_projects');
-        $raw->exec('DROP TABLE IF EXISTS pg_mt_employees');
-        $raw->exec('DROP TABLE IF EXISTS pg_mt_departments');
     }
 }

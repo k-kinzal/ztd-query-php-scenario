@@ -5,32 +5,26 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests COLLATE clause in queries with shadow data on SQLite.
  *
  * SQLite supports BINARY, NOCASE, and RTRIM collations.
+ * @spec pending
  */
-class SqliteCollateInQueryTest extends TestCase
+class SqliteCollateInQueryTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_collate_test (id INTEGER PRIMARY KEY, name TEXT, code TEXT)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sl_collate_test VALUES (1, 'Alice', 'abc')");
-        $this->pdo->exec("INSERT INTO sl_collate_test VALUES (2, 'alice', 'ABC')");
-        $this->pdo->exec("INSERT INTO sl_collate_test VALUES (3, 'Bob', 'def')");
-        $this->pdo->exec("INSERT INTO sl_collate_test VALUES (4, 'CHARLIE', 'GHI')");
-        $this->pdo->exec("INSERT INTO sl_collate_test VALUES (5, 'charlie', 'ghi')");
+        return 'CREATE TABLE sl_collate_test (id INTEGER PRIMARY KEY, name TEXT, code TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_collate_test'];
+    }
+
 
     /**
      * WHERE with COLLATE NOCASE for case-insensitive comparison.

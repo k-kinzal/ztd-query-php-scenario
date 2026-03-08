@@ -4,55 +4,38 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests WHERE clause operators on MySQLi: LIKE, BETWEEN, EXISTS, NOT EXISTS,
  * comparison operators — all after mutations.
+ * @spec pending
  */
-class WhereClauseOperatorsTest extends TestCase
+class WhereClauseOperatorsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_wco_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_wco_products');
-        $raw->query('CREATE TABLE mi_wco_products (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(30), price DECIMAL(10,2), in_stock TINYINT)');
-        $raw->query('CREATE TABLE mi_wco_orders (id INT PRIMARY KEY, product_id INT, customer VARCHAR(50), qty INT)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_wco_products (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(30), price DECIMAL(10,2), in_stock TINYINT)',
+            'CREATE TABLE mi_wco_orders (id INT PRIMARY KEY, product_id INT, customer VARCHAR(50), qty INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_wco_orders', 'mi_wco_products'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_wco_products VALUES (1, 'Widget Alpha', 'electronics', 29.99, 1)");
         $this->mysqli->query("INSERT INTO mi_wco_products VALUES (2, 'Widget Beta', 'electronics', 49.99, 1)");
         $this->mysqli->query("INSERT INTO mi_wco_products VALUES (3, 'Gadget Pro', 'accessories', 15.00, 0)");
         $this->mysqli->query("INSERT INTO mi_wco_products VALUES (4, 'Super Tool', 'tools', 99.99, 1)");
         $this->mysqli->query("INSERT INTO mi_wco_products VALUES (5, 'Mini Tool', 'tools', 9.99, 1)");
-
         $this->mysqli->query("INSERT INTO mi_wco_orders VALUES (1, 1, 'Alice', 2)");
         $this->mysqli->query("INSERT INTO mi_wco_orders VALUES (2, 2, 'Bob', 1)");
         $this->mysqli->query("INSERT INTO mi_wco_orders VALUES (3, 4, 'Alice', 3)");
@@ -117,24 +100,5 @@ class WhereClauseOperatorsTest extends TestCase
         $result = $stmt->get_result();
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertCount(2, $rows);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_wco_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_wco_products');
-        $raw->close();
     }
 }

@@ -5,33 +5,18 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests that the shadow store correctly handles various SQL data types on PostgreSQL,
  * including DATE, TIMESTAMP, NUMERIC, BOOLEAN, and BIGINT.
+ * @spec pending
  */
-class PostgresDataTypeTest extends TestCase
+class PostgresDataTypeTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_dtype_test');
-        $raw->exec('CREATE TABLE pg_dtype_test (
+        return 'CREATE TABLE pg_dtype_test (
             id INT PRIMARY KEY,
             name VARCHAR(255),
             price NUMERIC(10,2),
@@ -39,18 +24,14 @@ class PostgresDataTypeTest extends TestCase
             created_at TIMESTAMP,
             is_active BOOLEAN,
             quantity BIGINT
-        )');
+        )';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['pg_dtype_test'];
     }
+
 
     public function testDateValue(): void
     {
@@ -164,16 +145,5 @@ class PostgresDataTypeTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT * FROM pg_dtype_test');
         $this->assertCount(0, $stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_dtype_test');
     }
 }

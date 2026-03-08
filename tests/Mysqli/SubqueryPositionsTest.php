@@ -4,53 +4,36 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests subqueries in various SQL positions on MySQLi.
+ * @spec pending
  */
-class SubqueryPositionsTest extends TestCase
+class SubqueryPositionsTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_sp_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_sp_products');
-        $raw->query('CREATE TABLE mi_sp_products (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), price DECIMAL(10,2))');
-        $raw->query('CREATE TABLE mi_sp_orders (id INT PRIMARY KEY, product_id INT, qty INT)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_sp_products (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), price DECIMAL(10,2))',
+            'CREATE TABLE mi_sp_orders (id INT PRIMARY KEY, product_id INT, qty INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_sp_orders', 'mi_sp_products'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_sp_products (id, name, category, price) VALUES (1, 'Widget', 'A', 10.00)");
         $this->mysqli->query("INSERT INTO mi_sp_products (id, name, category, price) VALUES (2, 'Gadget', 'A', 25.00)");
         $this->mysqli->query("INSERT INTO mi_sp_products (id, name, category, price) VALUES (3, 'Doohickey', 'B', 5.00)");
         $this->mysqli->query("INSERT INTO mi_sp_products (id, name, category, price) VALUES (4, 'Thingamajig', 'B', 50.00)");
-
         $this->mysqli->query("INSERT INTO mi_sp_orders (id, product_id, qty) VALUES (1, 1, 3)");
         $this->mysqli->query("INSERT INTO mi_sp_orders (id, product_id, qty) VALUES (2, 2, 1)");
         $this->mysqli->query("INSERT INTO mi_sp_orders (id, product_id, qty) VALUES (3, 1, 2)");
@@ -92,24 +75,5 @@ class SubqueryPositionsTest extends TestCase
         ");
         $names = array_column($result->fetch_all(MYSQLI_ASSOC), 'name');
         $this->assertSame(['Widget', 'Gadget'], $names);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_sp_orders');
-        $raw->query('DROP TABLE IF EXISTS mi_sp_products');
-        $raw->close();
     }
 }

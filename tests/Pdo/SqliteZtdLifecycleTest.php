@@ -5,26 +5,25 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests ZTD lifecycle edge cases: toggle cycles, re-enable after disable,
  * multiple enable/disable sequences, and shadow store behavior across cycles.
+ * @spec SPEC-2.1
  */
-class SqliteZtdLifecycleTest extends TestCase
+class SqliteZtdLifecycleTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE lifecycle_test (id INTEGER PRIMARY KEY, val TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE lifecycle_test (id INTEGER PRIMARY KEY, val TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['lifecycle_test'];
+    }
+
 
     public function testShadowDataClearedAfterDisableEnable(): void
     {

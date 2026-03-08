@@ -11,6 +11,7 @@ use Tests\Support\MySQLContainer;
 
 /**
  * Tests transaction behavior in ZTD mode on MySQL via PDO.
+ * @spec SPEC-4.8
  */
 class MysqlTransactionTest extends AbstractMysqlPdoTestCase
 {

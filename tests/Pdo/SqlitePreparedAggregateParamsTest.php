@@ -5,35 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared statements with parameters in HAVING, GROUP BY, and ORDER BY.
  *
  * KNOWN ISSUE (SQLite only): HAVING clause with prepared statement parameters
  * returns empty results. See https://github.com/k-kinzal/ztd-query-php/issues/22
+ * @spec pending
  */
-class SqlitePreparedAggregateParamsTest extends TestCase
+class SqlitePreparedAggregateParamsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE pap_orders (id INTEGER PRIMARY KEY, customer TEXT, product TEXT, amount REAL, status TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (1, 'Alice', 'Widget', 50.0, 'completed')");
-        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (2, 'Alice', 'Gadget', 30.0, 'completed')");
-        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (3, 'Bob', 'Widget', 120.0, 'completed')");
-        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (4, 'Bob', 'Doohickey', 15.0, 'pending')");
-        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (5, 'Charlie', 'Gadget', 30.0, 'completed')");
-        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (6, 'Charlie', 'Widget', 50.0, 'pending')");
+        return 'CREATE TABLE pap_orders (id INTEGER PRIMARY KEY, customer TEXT, product TEXT, amount REAL, status TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pap_orders'];
+    }
+
 
     public function testGroupByWithWhereParam(): void
     {

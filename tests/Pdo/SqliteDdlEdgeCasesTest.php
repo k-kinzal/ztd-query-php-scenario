@@ -5,28 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests DDL edge cases on SQLite:
  * CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS.
  * Note: SQLite does not support TRUNCATE TABLE syntax.
+ * @spec pending
  */
-class SqliteDdlEdgeCasesTest extends TestCase
+class SqliteDdlEdgeCasesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE ddl_edge (id INTEGER PRIMARY KEY, val TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE ddl_edge (id INTEGER PRIMARY KEY, val TEXT)',
+            'CREATE TABLE IF NOT EXISTS ddl_edge (id INTEGER PRIMARY KEY, val TEXT)',
+            'CREATE TABLE ddl_edge (id INTEGER PRIMARY KEY)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['nonexistent_ddl_table', 'IF', 'ddl_edge'];
+    }
+
 
     public function testCreateTableIfNotExistsOnExistingTable(): void
     {

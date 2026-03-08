@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 use ZtdQuery\Exception\ColumnAlreadyExistsException;
 use ZtdQuery\Exception\ColumnNotFoundException;
 
@@ -18,38 +14,20 @@ use ZtdQuery\Exception\ColumnNotFoundException;
  * - Drop/modify/change/rename nonexistent column throws ColumnNotFoundException
  * - Shadow store remains intact after ALTER TABLE errors
  * - ALTER on unreflected table throws SchemaNotFoundException
+ * @spec SPEC-5.1a
  */
-class AlterTableErrorTest extends TestCase
+class AlterTableErrorTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_alt_err');
-        $raw->query('CREATE TABLE mi_alt_err (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-        $raw->close();
+        return 'CREATE TABLE mi_alt_err (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_alt_err'];
     }
+
 
     public function testAddDuplicateColumnThrows(): void
     {
@@ -114,27 +92,5 @@ class AlterTableErrorTest extends TestCase
         $row = $result->fetch_assoc();
         $this->assertSame('Alice', $row['name']);
         $this->assertSame('alice@test.com', $row['email']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_alt_err');
-            $raw->close();
-        } catch (\Exception $e) {
-            // Container may be unavailable
-        }
     }
 }

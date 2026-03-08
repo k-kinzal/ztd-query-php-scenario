@@ -5,43 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests NULL handling edge cases on MySQL PDO: UPDATE SET NULL, IS NULL after mutation,
  * COALESCE chains, NULL in CASE, and prepared statements with NULL.
+ * @spec pending
  */
-class MysqlNullHandlingEdgeCasesTest extends TestCase
+class MysqlNullHandlingEdgeCasesTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_nhe_contacts');
-        $raw->exec('CREATE TABLE mysql_nhe_contacts (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), phone VARCHAR(20), notes TEXT)');
+        return 'CREATE TABLE mysql_nhe_contacts (id INT PRIMARY KEY, name VARCHAR(50), email VARCHAR(100), phone VARCHAR(20), notes TEXT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_nhe_contacts'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_nhe_contacts VALUES (1, 'Alice', 'alice@test.com', '555-0001', 'VIP customer')");
         $this->pdo->exec("INSERT INTO mysql_nhe_contacts VALUES (2, 'Bob', 'bob@test.com', NULL, NULL)");
@@ -140,16 +126,5 @@ class MysqlNullHandlingEdgeCasesTest extends TestCase
         $this->assertSame('555-0001', $rows[0]['phone_display']);
         $this->assertSame('N/A', $rows[1]['phone_display']);
         $this->assertSame('555-0003', $rows[2]['phone_display']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_nhe_contacts');
     }
 }

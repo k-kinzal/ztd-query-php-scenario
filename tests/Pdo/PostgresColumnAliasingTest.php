@@ -5,42 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests column aliasing patterns on PostgreSQL PDO.
+ * @spec pending
  */
-class PostgresColumnAliasingTest extends TestCase
+class PostgresColumnAliasingTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ca_items');
-        $raw->exec('CREATE TABLE ca_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), qty INT, category VARCHAR(10))');
+        return 'CREATE TABLE ca_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), qty INT, category VARCHAR(10))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['ca_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO ca_items (id, name, price, qty, category) VALUES (1, 'Widget', 10.50, 100, 'A')");
         $this->pdo->exec("INSERT INTO ca_items (id, name, price, qty, category) VALUES (2, 'Gadget', 25.00, 50, 'A')");
@@ -87,16 +73,5 @@ class PostgresColumnAliasingTest extends TestCase
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertSame('A', $rows[0]['display_cat']);
         $this->assertSame('Uncategorized', $rows[3]['display_cat']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS ca_items');
     }
 }

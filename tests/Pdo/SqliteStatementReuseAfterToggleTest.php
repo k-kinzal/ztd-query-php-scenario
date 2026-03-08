@@ -4,29 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared statement reuse after ZTD mode toggle.
  *
  * Queries are rewritten at prepare() time. Toggling ZTD mode after prepare()
  * does not change the prepared query's rewriting.
+ * @spec pending
  */
-class SqliteStatementReuseAfterToggleTest extends TestCase
+class SqliteStatementReuseAfterToggleTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:');
-        $raw->exec('CREATE TABLE srat_test (id INT PRIMARY KEY, name VARCHAR(50))');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO srat_test VALUES (1, 'Alice')");
-        $this->pdo->exec("INSERT INTO srat_test VALUES (2, 'Bob')");
+        return 'CREATE TABLE srat_test (id INT PRIMARY KEY, name VARCHAR(50))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['srat_test'];
+    }
+
 
     /**
      * Prepared in ZTD mode, executed after disabling ZTD.

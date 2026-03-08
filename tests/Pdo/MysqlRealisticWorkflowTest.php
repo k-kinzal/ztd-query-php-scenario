@@ -5,51 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests realistic user workflow scenarios on MySQL PDO:
  * e-commerce order processing, user registration, inventory management.
+ * @spec pending
  */
-class MysqlRealisticWorkflowTest extends TestCase
+class MysqlRealisticWorkflowTest extends AbstractMysqlPdoTestCase
 {
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE mysql_wf_customers (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), tier VARCHAR(50) DEFAULT \'standard\')',
+            'CREATE TABLE mysql_wf_products (id INT PRIMARY KEY, name VARCHAR(255), price DECIMAL(10,2), stock INT)',
+            'CREATE TABLE mysql_wf_orders (id INT PRIMARY KEY, customer_id INT, total DECIMAL(10,2), status VARCHAR(50), created_at DATE)',
+            'CREATE TABLE mysql_wf_order_items (id INT PRIMARY KEY, order_id INT, product_id INT, qty INT, unit_price DECIMAL(10,2))',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_wf_order_items', 'mysql_wf_orders', 'mysql_wf_products', 'mysql_wf_customers'];
+    }
+
     private PDO $raw;
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
-    {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_wf_order_items');
-        $raw->exec('DROP TABLE IF EXISTS mysql_wf_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_wf_products');
-        $raw->exec('DROP TABLE IF EXISTS mysql_wf_customers');
-        $raw->exec("CREATE TABLE mysql_wf_customers (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255), tier VARCHAR(50) DEFAULT 'standard')");
-        $raw->exec('CREATE TABLE mysql_wf_products (id INT PRIMARY KEY, name VARCHAR(255), price DECIMAL(10,2), stock INT)');
-        $raw->exec('CREATE TABLE mysql_wf_orders (id INT PRIMARY KEY, customer_id INT, total DECIMAL(10,2), status VARCHAR(50), created_at DATE)');
-        $raw->exec('CREATE TABLE mysql_wf_order_items (id INT PRIMARY KEY, order_id INT, product_id INT, qty INT, unit_price DECIMAL(10,2))');
-    }
-
-    protected function setUp(): void
-    {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-    }
 
     public function testEcommerceOrderWorkflow(): void
     {
@@ -185,19 +165,5 @@ class MysqlRealisticWorkflowTest extends TestCase
 
         $stmt = $this->pdo->query('SELECT COUNT(*) as c FROM mysql_wf_order_items WHERE order_id = 1');
         $this->assertSame(0, (int) $stmt->fetch(PDO::FETCH_ASSOC)['c']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_wf_order_items');
-        $raw->exec('DROP TABLE IF EXISTS mysql_wf_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_wf_products');
-        $raw->exec('DROP TABLE IF EXISTS mysql_wf_customers');
     }
 }

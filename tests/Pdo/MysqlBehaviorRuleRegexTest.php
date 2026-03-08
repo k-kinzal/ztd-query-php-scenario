@@ -18,6 +18,7 @@ use ZtdQuery\Config\ZtdConfig;
  *
  * Behavior rules require platform-specific unsupported SQL detection.
  * MySQL correctly classifies SET/SHOW as unsupported.
+ * @spec SPEC-6.2
  */
 class MysqlBehaviorRuleRegexTest extends TestCase
 {

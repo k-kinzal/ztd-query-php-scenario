@@ -4,44 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests exec() return values and rowCount() accuracy on PostgreSQL ZTD PDO.
+ * @spec SPEC-4.4
  */
-class PostgresExecReturnValueTest extends TestCase
+class PostgresExecReturnValueTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS rv_pg');
-        $raw->exec('CREATE TABLE rv_pg (id INT PRIMARY KEY, name VARCHAR(50), score INT, active INT)');
+        return 'CREATE TABLE rv_pg (id INT PRIMARY KEY, name VARCHAR(50), score INT, active INT)';
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['rv_pg'];
     }
+
 
     public function testExecInsertReturnsOne(): void
     {
@@ -77,16 +57,5 @@ class PostgresExecReturnValueTest extends TestCase
         $stmt = $this->pdo->prepare('UPDATE rv_pg SET score = ? WHERE active = ?');
         $stmt->execute([999, 1]);
         $this->assertSame(2, $stmt->rowCount());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS rv_pg');
     }
 }

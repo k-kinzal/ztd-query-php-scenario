@@ -5,22 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepare() with options array, cursor behavior, and
  * various execution patterns commonly used by PHP frameworks.
+ * @spec pending
  */
-class SqlitePrepareOptionsAndCursorTest extends TestCase
+class SqlitePrepareOptionsAndCursorTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE poc_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(20))';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['poc_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        parent::setUp();
 
         $this->pdo->exec('CREATE TABLE poc_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(20))');
         $this->pdo->exec("INSERT INTO poc_items VALUES (1, 'Widget', 9.99, 'tools')");
@@ -28,7 +35,8 @@ class SqlitePrepareOptionsAndCursorTest extends TestCase
         $this->pdo->exec("INSERT INTO poc_items VALUES (3, 'Sprocket', 4.50, 'tools')");
         $this->pdo->exec("INSERT INTO poc_items VALUES (4, 'Gizmo', 15.00, 'electronics')");
         $this->pdo->exec("INSERT INTO poc_items VALUES (5, 'Doohickey', 7.25, 'misc')");
-    }
+
+        }
 
     public function testPrepareWithEmptyOptionsArray(): void
     {

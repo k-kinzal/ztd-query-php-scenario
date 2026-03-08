@@ -5,45 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests how CTE snapshotting at prepare time affects visibility of mutations
  * that occur between prepare() and execute() on PostgreSQL.
+ * @spec pending
  */
-class PostgresPrepareTimeMutationVisibilityTest extends TestCase
+class PostgresPrepareTimeMutationVisibilityTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS vis_orders_pg');
-        $raw->exec('DROP TABLE IF EXISTS vis_users_pg');
-        $raw->exec('CREATE TABLE vis_users_pg (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->exec('CREATE TABLE vis_orders_pg (id INT PRIMARY KEY, user_id INT, amount INT)');
+        return [
+            'CREATE TABLE vis_users_pg (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE vis_orders_pg (id INT PRIMARY KEY, user_id INT, amount INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['vis_orders_pg', 'vis_users_pg'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO vis_users_pg VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO vis_users_pg VALUES (2, 'Bob')");
@@ -124,17 +111,5 @@ class PostgresPrepareTimeMutationVisibilityTest extends TestCase
         $stmt->execute();
         $prepCount = (int) $stmt->fetchColumn();
         $this->assertSame(2, $prepCount);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS vis_orders_pg');
-        $raw->exec('DROP TABLE IF EXISTS vis_users_pg');
     }
 }

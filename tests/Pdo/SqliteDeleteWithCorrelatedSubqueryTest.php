@@ -5,37 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests DELETE with correlated subqueries in WHERE clause on SQLite.
  *
  * DELETE ... WHERE EXISTS (SELECT ... WHERE outer.col = inner.col)
  * is a common pattern for removing orphaned or conditionally matched rows.
+ * @spec pending
  */
-class SqliteDeleteWithCorrelatedSubqueryTest extends TestCase
+class SqliteDeleteWithCorrelatedSubqueryTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE sl_del_customers (id INTEGER PRIMARY KEY, name TEXT, active INTEGER)');
-        $raw->exec('CREATE TABLE sl_del_orders (id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO sl_del_customers VALUES (1, 'Alice', 1)");
-        $this->pdo->exec("INSERT INTO sl_del_customers VALUES (2, 'Bob', 0)");
-        $this->pdo->exec("INSERT INTO sl_del_customers VALUES (3, 'Charlie', 1)");
-        $this->pdo->exec("INSERT INTO sl_del_customers VALUES (4, 'Diana', 0)");
-
-        $this->pdo->exec("INSERT INTO sl_del_orders VALUES (1, 1, 100.00)");
-        $this->pdo->exec("INSERT INTO sl_del_orders VALUES (2, 1, 200.00)");
-        $this->pdo->exec("INSERT INTO sl_del_orders VALUES (3, 3, 150.00)");
+        return [
+            'CREATE TABLE sl_del_customers (id INTEGER PRIMARY KEY, name TEXT, active INTEGER)',
+            'CREATE TABLE sl_del_orders (id INTEGER PRIMARY KEY, customer_id INTEGER, amount REAL)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['sl_del_customers', 'sl_del_orders'];
+    }
+
 
     /**
      * DELETE with EXISTS correlated subquery.

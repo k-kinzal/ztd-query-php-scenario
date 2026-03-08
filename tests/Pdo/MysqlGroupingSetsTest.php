@@ -5,44 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests GROUPING SETS, CUBE, and ROLLUP on MySQL 8+ via PDO.
  *
  * MySQL 8.0+ supports WITH ROLLUP but NOT GROUPING SETS or CUBE.
+ * @spec pending
  */
-class MysqlGroupingSetsTest extends TestCase
+class MysqlGroupingSetsTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_gs_sales');
-        $raw->exec('CREATE TABLE mysql_gs_sales (id INT PRIMARY KEY, region VARCHAR(20), product VARCHAR(20), amount INT)');
+        return 'CREATE TABLE mysql_gs_sales (id INT PRIMARY KEY, region VARCHAR(20), product VARCHAR(20), amount INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_gs_sales'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_gs_sales VALUES (1, 'East', 'Widget', 100)");
         $this->pdo->exec("INSERT INTO mysql_gs_sales VALUES (2, 'East', 'Gadget', 200)");
@@ -128,18 +114,5 @@ class MysqlGroupingSetsTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM mysql_gs_sales');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                MySQLContainer::getDsn(),
-                'root',
-                'root',
-            );
-            $raw->exec('DROP TABLE IF EXISTS mysql_gs_sales');
-        } catch (\Exception $e) {
-        }
     }
 }

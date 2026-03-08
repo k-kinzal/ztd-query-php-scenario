@@ -5,44 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests getColumnMeta() and FETCH_NAMED mode on PostgreSQL ZTD PDO.
+ * @spec pending
  */
-class PostgresColumnMetaAndNamedFetchTest extends TestCase
+class PostgresColumnMetaAndNamedFetchTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS cm_right_pg');
-        $raw->exec('DROP TABLE IF EXISTS cm_left_pg');
-        $raw->exec('CREATE TABLE cm_left_pg (id INT PRIMARY KEY, name VARCHAR(50))');
-        $raw->exec('CREATE TABLE cm_right_pg (id INT PRIMARY KEY, name VARCHAR(50), left_id INT)');
+        return [
+            'CREATE TABLE cm_left_pg (id INT PRIMARY KEY, name VARCHAR(50))',
+            'CREATE TABLE cm_right_pg (id INT PRIMARY KEY, name VARCHAR(50), left_id INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['cm_right_pg', 'cm_left_pg'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO cm_left_pg VALUES (1, 'LeftAlice')");
         $this->pdo->exec("INSERT INTO cm_right_pg VALUES (1, 'RightX', 1)");
@@ -100,17 +87,5 @@ class PostgresColumnMetaAndNamedFetchTest extends TestCase
         );
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertSame(2, (int) $rows[0]['item_count']);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS cm_right_pg');
-        $raw->exec('DROP TABLE IF EXISTS cm_left_pg');
     }
 }

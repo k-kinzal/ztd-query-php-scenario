@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests CREATE TABLE AS SELECT (CTAS) on PostgreSQL PDO.
@@ -19,36 +14,29 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *   may require explicit casting.
  * - CTAS with empty result set (WHERE 1=0) throws "Cannot determine columns"
  *   because column inference requires at least one row.
+ * @spec SPEC-5.1c
  */
-class PostgresCtasTest extends TestCase
+class PostgresCtasTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_ctas_copy');
-        $raw->exec('DROP TABLE IF EXISTS pg_ctas_filtered');
-        $raw->exec('DROP TABLE IF EXISTS pg_ctas_source');
-        $raw->exec('CREATE TABLE pg_ctas_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
+        return [
+            'CREATE TABLE pg_ctas_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
+            'CREATE TABLE pg_ctas_copy AS SELECT * FROM pg_ctas_source',
+            'CREATE TABLE pg_ctas_filtered AS SELECT * FROM pg_ctas_source WHERE score >= 85',
+            'CREATE TABLE pg_ctas_empty AS SELECT * FROM pg_ctas_source WHERE 1=0',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_ctas_copy', 'pg_ctas_filtered', 'pg_ctas_source', 'AS', 'pg_ctas_empty'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_ctas_source VALUES (1, 'Alice', 95)");
         $this->pdo->exec("INSERT INTO pg_ctas_source VALUES (2, 'Bob', 85)");
@@ -112,20 +100,5 @@ class PostgresCtasTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_ctas_source');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_ctas_copy');
-            $raw->exec('DROP TABLE IF EXISTS pg_ctas_filtered');
-            $raw->exec('DROP TABLE IF EXISTS pg_ctas_source');
-        } catch (\Exception $e) {
-        }
     }
 }

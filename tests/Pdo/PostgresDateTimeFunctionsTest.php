@@ -5,45 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL date/time functions through CTE shadow.
  *
  * PostgreSQL has specific date/time handling: EXTRACT returns 0 for shadow dates,
  * TO_CHAR works correctly, interval arithmetic may or may not work.
+ * @spec pending
  */
-class PostgresDateTimeFunctionsTest extends TestCase
+class PostgresDateTimeFunctionsTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_dt_events');
-        $raw->exec('CREATE TABLE pg_dt_events (id INT PRIMARY KEY, name VARCHAR(50), event_date DATE, event_ts TIMESTAMP)');
+        return 'CREATE TABLE pg_dt_events (id INT PRIMARY KEY, name VARCHAR(50), event_date DATE, event_ts TIMESTAMP)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_dt_events'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_dt_events VALUES (1, 'Launch', '2024-01-15', '2024-01-15 10:30:00')");
         $this->pdo->exec("INSERT INTO pg_dt_events VALUES (2, 'Update', '2024-06-20', '2024-06-20 14:00:00')");
@@ -138,18 +124,5 @@ class PostgresDateTimeFunctionsTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_dt_events');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_dt_events');
-        } catch (\Exception $e) {
-        }
     }
 }

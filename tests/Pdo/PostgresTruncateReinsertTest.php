@@ -15,6 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests TRUNCATE TABLE on PostgreSQL PDO.
  *
  * PostgreSQL supports CASCADE/RESTRICT modifiers on TRUNCATE.
+ * @spec SPEC-5.3
  */
 class PostgresTruncateReinsertTest extends TestCase
 {

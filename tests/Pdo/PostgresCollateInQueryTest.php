@@ -5,37 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests COLLATE clause in queries with shadow data on PostgreSQL.
  *
  * PostgreSQL uses different collation names than MySQL.
  * Tests whether COLLATE works correctly in CTE-rewritten shadow queries.
+ * @spec pending
  */
-class PostgresCollateInQueryTest extends TestCase
+class PostgresCollateInQueryTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_collate_test');
-        $raw->exec('CREATE TABLE pg_collate_test (id INT PRIMARY KEY, name VARCHAR(50), code VARCHAR(20))');
+        return 'CREATE TABLE pg_collate_test (id INT PRIMARY KEY, name VARCHAR(50), code VARCHAR(20))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_collate_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pg_collate_test VALUES (1, 'Alice', 'abc')");
         $this->pdo->exec("INSERT INTO pg_collate_test VALUES (2, 'alice', 'ABC')");
         $this->pdo->exec("INSERT INTO pg_collate_test VALUES (3, 'Bob', 'def')");
         $this->pdo->exec("INSERT INTO pg_collate_test VALUES (4, 'CHARLIE', 'GHI')");
@@ -87,14 +82,5 @@ class PostgresCollateInQueryTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_collate_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_collate_test');
-        } catch (\Exception $e) {
-        }
     }
 }

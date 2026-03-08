@@ -5,46 +5,32 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests FETCH_LAZY mode, exec() with SELECT, and other edge cases on PostgreSQL.
+ * @spec pending
  */
-class PostgresFetchLazyAndEdgeCaseTest extends TestCase
+class PostgresFetchLazyAndEdgeCaseTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS fl_orders_pg');
-        $raw->exec('DROP TABLE IF EXISTS fl_flags_pg');
-        $raw->exec('DROP TABLE IF EXISTS fl_users_pg');
-        $raw->exec('CREATE TABLE fl_users_pg (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20), score INT)');
-        $raw->exec('CREATE TABLE fl_flags_pg (id INT PRIMARY KEY, active INT)');
-        $raw->exec('CREATE TABLE fl_orders_pg (id INT PRIMARY KEY, user_id INT, name VARCHAR(50))');
+        return [
+            'CREATE TABLE fl_users_pg (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20), score INT)',
+            'CREATE TABLE fl_flags_pg (id INT PRIMARY KEY, active INT)',
+            'CREATE TABLE fl_orders_pg (id INT PRIMARY KEY, user_id INT, name VARCHAR(50))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['fl_orders_pg', 'fl_flags_pg', 'fl_users_pg'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO fl_users_pg VALUES (1, 'Alice', 'admin', 90)");
         $this->pdo->exec("INSERT INTO fl_users_pg VALUES (2, 'Bob', 'user', 70)");
@@ -151,18 +137,5 @@ class PostgresFetchLazyAndEdgeCaseTest extends TestCase
 
         $stmt->execute([1]);
         $this->assertSame('Alice', $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS fl_orders_pg');
-        $raw->exec('DROP TABLE IF EXISTS fl_flags_pg');
-        $raw->exec('DROP TABLE IF EXISTS fl_users_pg');
     }
 }

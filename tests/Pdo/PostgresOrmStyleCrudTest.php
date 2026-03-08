@@ -5,46 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests ORM-style CRUD patterns with ZTD shadow store on PostgreSQL PDO.
  * Uses exec() for INSERT (workaround for issue #23).
+ * @spec pending
  */
-class PostgresOrmStyleCrudTest extends TestCase
+class PostgresOrmStyleCrudTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS orm_posts_pg');
-        $raw->exec('DROP TABLE IF EXISTS orm_users_pg');
-        $raw->exec('CREATE TABLE orm_users_pg (id INT PRIMARY KEY, email VARCHAR(100), name VARCHAR(50), role VARCHAR(20))');
-        $raw->exec('CREATE TABLE orm_posts_pg (id INT PRIMARY KEY, user_id INT, title VARCHAR(100), published INT)');
+        return [
+            'CREATE TABLE orm_users_pg (id INT PRIMARY KEY, email VARCHAR(100), name VARCHAR(50), role VARCHAR(20))',
+            'CREATE TABLE orm_posts_pg (id INT PRIMARY KEY, user_id INT, title VARCHAR(100), published INT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        return ['orm_posts_pg', 'orm_users_pg'];
     }
+
 
     public function testTypicalCrudWorkflow(): void
     {
@@ -120,17 +102,5 @@ class PostgresOrmStyleCrudTest extends TestCase
         $page2 = $stmt->fetchAll(PDO::FETCH_COLUMN);
         $this->assertCount(5, $page2);
         $this->assertSame('User06', $page2[0]);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS orm_posts_pg');
-        $raw->exec('DROP TABLE IF EXISTS orm_users_pg');
     }
 }

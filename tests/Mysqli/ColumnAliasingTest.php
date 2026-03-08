@@ -4,45 +4,28 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests column aliasing patterns on MySQLi.
+ * @spec pending
  */
-class ColumnAliasingTest extends TestCase
+class ColumnAliasingTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_ca_items');
-        $raw->query('CREATE TABLE mi_ca_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), qty INT, category VARCHAR(10))');
-        $raw->close();
+        return 'CREATE TABLE mi_ca_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), qty INT, category VARCHAR(10))';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_ca_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_ca_items (id, name, price, qty, category) VALUES (1, 'Widget', 10.50, 100, 'A')");
         $this->mysqli->query("INSERT INTO mi_ca_items (id, name, price, qty, category) VALUES (2, 'Gadget', 25.00, 50, 'A')");
@@ -78,23 +61,5 @@ class ColumnAliasingTest extends TestCase
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertSame('A', $rows[0]['display_cat']);
         $this->assertSame('Uncategorized', $rows[3]['display_cat']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_ca_items');
-        $raw->close();
     }
 }

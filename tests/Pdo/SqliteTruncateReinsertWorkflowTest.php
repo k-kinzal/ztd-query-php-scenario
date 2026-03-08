@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests truncate-like workflow on SQLite ZTD.
@@ -14,19 +13,20 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * SQLite doesn't support TRUNCATE statement. The equivalent is DELETE FROM table.
  *
  * @see https://github.com/k-kinzal/ztd-query-php/issues/7
+ * @spec SPEC-5.3
  */
-class SqliteTruncateReinsertWorkflowTest extends TestCase
+class SqliteTruncateReinsertWorkflowTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE trunc_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)');
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE trunc_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['trunc_test'];
+    }
+
 
     /**
      * DELETE FROM table without WHERE should clear all rows.

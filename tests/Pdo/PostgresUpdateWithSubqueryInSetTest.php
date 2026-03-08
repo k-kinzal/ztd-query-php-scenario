@@ -4,13 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
-use ZtdQuery\Adapter\Pdo\ZtdPdoException;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests UPDATE with subquery in SET clause on PostgreSQL.
@@ -22,28 +16,28 @@ use ZtdQuery\Adapter\Pdo\ZtdPdoException;
  *   rewriter generates an invalid SELECT with aggregate + non-aggregate columns.
  *
  * This is a platform-specific limitation not seen on MySQL or SQLite.
+ * @spec pending
  */
-class PostgresUpdateWithSubqueryInSetTest extends TestCase
+class PostgresUpdateWithSubqueryInSetTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-        $raw->exec('DROP TABLE IF EXISTS pg_updsub_products');
-        $raw->exec('DROP TABLE IF EXISTS pg_updsub_categories');
-        $raw->exec('CREATE TABLE pg_updsub_categories (id INT PRIMARY KEY, name VARCHAR(50), avg_price NUMERIC(10,2))');
-        $raw->exec('CREATE TABLE pg_updsub_products (id INT PRIMARY KEY, name VARCHAR(50), price NUMERIC(10,2), category_id INT)');
+        return [
+            'CREATE TABLE pg_updsub_categories (id INT PRIMARY KEY, name VARCHAR(50), avg_price NUMERIC(10,2))',
+            'CREATE TABLE pg_updsub_products (id INT PRIMARY KEY, name VARCHAR(50), price NUMERIC(10,2), category_id INT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_updsub_products', 'pg_updsub_categories'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(PostgreSQLContainer::getDsn(), 'test', 'test');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pg_updsub_categories VALUES (1, 'Electronics', 0)");
         $this->pdo->exec("INSERT INTO pg_updsub_products VALUES (1, 'Laptop', 1000.00, 1)");
         $this->pdo->exec("INSERT INTO pg_updsub_products VALUES (2, 'Phone', 500.00, 1)");
     }
@@ -98,15 +92,5 @@ class PostgresUpdateWithSubqueryInSetTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_updsub_categories');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(PostgreSQLContainer::getDsn(), 'test', 'test');
-            $raw->exec('DROP TABLE IF EXISTS pg_updsub_products');
-            $raw->exec('DROP TABLE IF EXISTS pg_updsub_categories');
-        } catch (\Exception $e) {
-        }
     }
 }

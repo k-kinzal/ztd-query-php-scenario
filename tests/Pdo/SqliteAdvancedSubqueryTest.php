@@ -5,42 +5,29 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests advanced subquery patterns on SQLite to stress the CTE rewriter:
  * nested subqueries, subqueries in UPDATE SET, CASE in WHERE, scalar subqueries.
+ * @spec pending
  */
-class SqliteAdvancedSubqueryTest extends TestCase
+class SqliteAdvancedSubqueryTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT, budget REAL)');
-        $raw->exec('CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept_id INTEGER, salary REAL, active INTEGER DEFAULT 1)');
-        $raw->exec('CREATE TABLE projects (id INTEGER PRIMARY KEY, name TEXT, dept_id INTEGER, status TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
-        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
-        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (3, 'Sales', 300000)");
-
-        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (1, 'Alice', 1, 120000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (2, 'Bob', 1, 110000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (3, 'Charlie', 2, 90000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (4, 'Diana', 3, 95000)");
-        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (5, 'Eve', 1, 130000)");
-
-        $this->pdo->exec("INSERT INTO projects (id, name, dept_id, status) VALUES (1, 'Alpha', 1, 'active')");
-        $this->pdo->exec("INSERT INTO projects (id, name, dept_id, status) VALUES (2, 'Beta', 1, 'completed')");
-        $this->pdo->exec("INSERT INTO projects (id, name, dept_id, status) VALUES (3, 'Gamma', 2, 'active')");
+        return [
+            'CREATE TABLE departments (id INTEGER PRIMARY KEY, name TEXT, budget REAL)',
+            'CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, dept_id INTEGER, salary REAL, active INTEGER DEFAULT 1)',
+            'CREATE TABLE projects (id INTEGER PRIMARY KEY, name TEXT, dept_id INTEGER, status TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['departments', 'employees', 'projects'];
+    }
+
 
     public function testNestedSubqueryInWhere(): void
     {

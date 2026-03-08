@@ -5,29 +5,30 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests a realistic batch processing workflow that accumulates many shadow
  * operations — inserts, updates, deletes, and complex queries — to verify
  * the shadow store correctly tracks all changes in sequence.
+ * @spec pending
  */
-class SqliteBatchProcessingWorkflowTest extends TestCase
+class SqliteBatchProcessingWorkflowTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE bp_accounts (id INTEGER PRIMARY KEY, name TEXT, balance REAL, status TEXT)');
-        $raw->exec('CREATE TABLE bp_transactions (id INTEGER PRIMARY KEY, account_id INTEGER, amount REAL, type TEXT, processed INTEGER DEFAULT 0)');
-        $raw->exec('CREATE TABLE bp_audit (id INTEGER PRIMARY KEY, action TEXT, details TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE bp_accounts (id INTEGER PRIMARY KEY, name TEXT, balance REAL, status TEXT)',
+            'CREATE TABLE bp_transactions (id INTEGER PRIMARY KEY, account_id INTEGER, amount REAL, type TEXT, processed INTEGER DEFAULT 0)',
+            'CREATE TABLE bp_audit (id INTEGER PRIMARY KEY, action TEXT, details TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['bp_accounts', 'bp_transactions', 'bp_audit'];
+    }
+
 
     public function testFullBatchProcessingPipeline(): void
     {

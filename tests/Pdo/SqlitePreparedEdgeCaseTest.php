@@ -5,27 +5,26 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests prepared statement edge cases in ZTD mode on SQLite:
  * parameter types, NULL binding, re-execution patterns,
  * and mixed parameter modes.
+ * @spec pending
  */
-class SqlitePreparedEdgeCaseTest extends TestCase
+class SqlitePreparedEdgeCaseTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE prep_edge (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, active INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return 'CREATE TABLE prep_edge (id INTEGER PRIMARY KEY, name TEXT, score INTEGER, active INTEGER)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['prep_edge'];
+    }
+
 
     public function testBindParamNullType(): void
     {

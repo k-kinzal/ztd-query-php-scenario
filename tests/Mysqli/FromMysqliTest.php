@@ -11,6 +11,7 @@ use Testcontainers\Testcontainers;
 use Tests\Support\MySQLContainer;
 use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
+/** @spec SPEC-1.1, SPEC-1.3 */
 class FromMysqliTest extends TestCase
 {
     public static function setUpBeforeClass(): void

@@ -4,59 +4,32 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests string edge cases, wide table handling, and value boundary patterns via MySQLi.
  *
  * Cross-platform parity with MysqlStringAndWidenessEdgeCaseTest (PDO).
+ * @spec pending
  */
-class StringAndWidenessEdgeCaseTest extends TestCase
+class StringAndWidenessEdgeCaseTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_sw_str');
-        $raw->query('DROP TABLE IF EXISTS mi_sw_long');
-        $raw->query('DROP TABLE IF EXISTS mi_sw_wide');
-        $raw->query('DROP TABLE IF EXISTS mi_sw_int');
-        $raw->query('CREATE TABLE mi_sw_str (id INT PRIMARY KEY, val TEXT)');
-        $raw->query('CREATE TABLE mi_sw_long (id INT PRIMARY KEY, content LONGTEXT)');
-        $raw->query('CREATE TABLE mi_sw_int (id INT PRIMARY KEY, big_val BIGINT)');
-
-        $cols = [];
-        for ($i = 1; $i <= 20; $i++) {
-            $cols[] = "col{$i} VARCHAR(50)";
-        }
-        $raw->query('CREATE TABLE mi_sw_wide (id INT PRIMARY KEY, ' . implode(', ', $cols) . ')');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_sw_str (id INT PRIMARY KEY, val TEXT)',
+            'CREATE TABLE mi_sw_long (id INT PRIMARY KEY, content LONGTEXT)',
+            'CREATE TABLE mi_sw_int (id INT PRIMARY KEY, big_val BIGINT)',
+            'CREATE TABLE mi_sw_wide (id INT PRIMARY KEY,',
+            'CREATE TABLE mi_sw_cond (id INT PRIMARY KEY, a INT, b INT, c INT)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_sw_str', 'mi_sw_long', 'mi_sw_wide', 'mi_sw_int', 'mi_sw_cond'];
     }
+
 
     public function testEmptyStringVsNull(): void
     {
@@ -128,32 +101,5 @@ class StringAndWidenessEdgeCaseTest extends TestCase
         $this->assertCount(2, $ids);
         $this->assertEquals(2, $ids[0]);
         $this->assertEquals(3, $ids[1]);
-    }
-
-    protected function tearDown(): void
-    {
-        if (isset($this->mysqli)) {
-            $this->mysqli->close();
-        }
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new \mysqli(
-                MySQLContainer::getHost(),
-                'root',
-                'root',
-                'test',
-                MySQLContainer::getPort(),
-            );
-            $raw->query('DROP TABLE IF EXISTS mi_sw_str');
-            $raw->query('DROP TABLE IF EXISTS mi_sw_long');
-            $raw->query('DROP TABLE IF EXISTS mi_sw_wide');
-            $raw->query('DROP TABLE IF EXISTS mi_sw_int');
-            $raw->query('DROP TABLE IF EXISTS mi_sw_cond');
-            $raw->close();
-        } catch (\Exception $e) {
-        }
     }
 }

@@ -5,58 +5,42 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests a realistic analytics workflow on MySQL with window functions, CTEs,
  * prepared statements with date params, and reporting queries.
+ * @spec pending
  */
-class MysqlAnalyticsWorkflowTest extends TestCase
+class MysqlAnalyticsWorkflowTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_aw_order_items');
-        $raw->exec('DROP TABLE IF EXISTS mysql_aw_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_aw_customers');
-        $raw->exec('CREATE TABLE mysql_aw_customers (id INT PRIMARY KEY, name VARCHAR(255), segment VARCHAR(50))');
-        $raw->exec('CREATE TABLE mysql_aw_orders (id INT PRIMARY KEY, customer_id INT, order_date DATE, total DECIMAL(10,2), status VARCHAR(20))');
-        $raw->exec('CREATE TABLE mysql_aw_order_items (id INT PRIMARY KEY, order_id INT, product VARCHAR(255), quantity INT, price DECIMAL(10,2))');
+        return [
+            'CREATE TABLE mysql_aw_customers (id INT PRIMARY KEY, name VARCHAR(255), segment VARCHAR(50))',
+            'CREATE TABLE mysql_aw_orders (id INT PRIMARY KEY, customer_id INT, order_date DATE, total DECIMAL(10,2), status VARCHAR(20))',
+            'CREATE TABLE mysql_aw_order_items (id INT PRIMARY KEY, order_id INT, product VARCHAR(255), quantity INT, price DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mysql_aw_order_items', 'mysql_aw_orders', 'mysql_aw_customers'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO mysql_aw_customers VALUES (1, 'Alice', 'premium')");
         $this->pdo->exec("INSERT INTO mysql_aw_customers VALUES (2, 'Bob', 'standard')");
         $this->pdo->exec("INSERT INTO mysql_aw_customers VALUES (3, 'Charlie', 'premium')");
-
         $this->pdo->exec("INSERT INTO mysql_aw_orders VALUES (1, 1, '2024-01-15', 150.00, 'completed')");
         $this->pdo->exec("INSERT INTO mysql_aw_orders VALUES (2, 1, '2024-02-10', 200.00, 'completed')");
         $this->pdo->exec("INSERT INTO mysql_aw_orders VALUES (3, 2, '2024-01-20', 75.00, 'completed')");
         $this->pdo->exec("INSERT INTO mysql_aw_orders VALUES (4, 3, '2024-02-25', 300.00, 'completed')");
         $this->pdo->exec("INSERT INTO mysql_aw_orders VALUES (5, 2, '2024-03-01', 120.00, 'cancelled')");
-
         $this->pdo->exec("INSERT INTO mysql_aw_order_items VALUES (1, 1, 'Widget', 3, 50.00)");
         $this->pdo->exec("INSERT INTO mysql_aw_order_items VALUES (2, 2, 'Gadget', 2, 100.00)");
         $this->pdo->exec("INSERT INTO mysql_aw_order_items VALUES (3, 3, 'Widget', 5, 15.00)");
@@ -149,18 +133,5 @@ class MysqlAnalyticsWorkflowTest extends TestCase
         ");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $this->assertCount(3, $rows);
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS mysql_aw_order_items');
-        $raw->exec('DROP TABLE IF EXISTS mysql_aw_orders');
-        $raw->exec('DROP TABLE IF EXISTS mysql_aw_customers');
     }
 }

@@ -4,48 +4,27 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests batch processing workflow on MySQLi.
+ * @spec pending
  */
-class BatchProcessingWorkflowTest extends TestCase
+class BatchProcessingWorkflowTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_bp_transactions');
-        $raw->query('DROP TABLE IF EXISTS mi_bp_accounts');
-        $raw->query('CREATE TABLE mi_bp_accounts (id INT PRIMARY KEY, name VARCHAR(50), balance DECIMAL(10,2), status VARCHAR(20))');
-        $raw->query('CREATE TABLE mi_bp_transactions (id INT PRIMARY KEY, account_id INT, amount DECIMAL(10,2), type VARCHAR(20), processed INT DEFAULT 0)');
-        $raw->close();
+        return [
+            'CREATE TABLE mi_bp_accounts (id INT PRIMARY KEY, name VARCHAR(50), balance DECIMAL(10,2), status VARCHAR(20))',
+            'CREATE TABLE mi_bp_transactions (id INT PRIMARY KEY, account_id INT, amount DECIMAL(10,2), type VARCHAR(20), processed INT DEFAULT 0)',
+        ];
     }
 
-    protected function setUp(): void
+    protected function getTableNames(): array
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        return ['mi_bp_transactions', 'mi_bp_accounts'];
     }
+
 
     public function testBatchDebitCreditProcessing(): void
     {
@@ -83,24 +62,5 @@ class BatchProcessingWorkflowTest extends TestCase
         $this->assertEqualsWithDelta(850.00, (float) $accounts[0]['balance'], 0.01);
         $this->assertEqualsWithDelta(400.00, (float) $accounts[1]['balance'], 0.01);
         $this->assertEqualsWithDelta(250.00, (float) $accounts[2]['balance'], 0.01);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_bp_transactions');
-        $raw->query('DROP TABLE IF EXISTS mi_bp_accounts');
-        $raw->close();
     }
 }

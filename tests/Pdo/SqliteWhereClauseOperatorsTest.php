@@ -5,37 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests WHERE clause operators: LIKE, NOT LIKE, BETWEEN, NOT BETWEEN,
  * EXISTS, NOT EXISTS, IN with subquery, comparison operators — all after mutations.
+ * @spec pending
  */
-class SqliteWhereClauseOperatorsTest extends TestCase
+class SqliteWhereClauseOperatorsTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL, in_stock INTEGER)');
-        $raw->exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, product_id INTEGER, customer TEXT, qty INTEGER)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
-
-        $this->pdo->exec("INSERT INTO products VALUES (1, 'Widget Alpha', 'electronics', 29.99, 1)");
-        $this->pdo->exec("INSERT INTO products VALUES (2, 'Widget Beta', 'electronics', 49.99, 1)");
-        $this->pdo->exec("INSERT INTO products VALUES (3, 'Gadget Pro', 'accessories', 15.00, 0)");
-        $this->pdo->exec("INSERT INTO products VALUES (4, 'Super Tool', 'tools', 99.99, 1)");
-        $this->pdo->exec("INSERT INTO products VALUES (5, 'Mini Tool', 'tools', 9.99, 1)");
-
-        $this->pdo->exec("INSERT INTO orders VALUES (1, 1, 'Alice', 2)");
-        $this->pdo->exec("INSERT INTO orders VALUES (2, 2, 'Bob', 1)");
-        $this->pdo->exec("INSERT INTO orders VALUES (3, 4, 'Alice', 3)");
+        return [
+            'CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, category TEXT, price REAL, in_stock INTEGER)',
+            'CREATE TABLE orders (id INTEGER PRIMARY KEY, product_id INTEGER, customer TEXT, qty INTEGER)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['products', 'orders'];
+    }
+
 
     public function testLikeWithPercentWildcard(): void
     {

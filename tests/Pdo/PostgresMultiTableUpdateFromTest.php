@@ -4,58 +4,41 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
-use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\PostgreSQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL UPDATE ... FROM syntax (multi-table update).
  *
  * PostgreSQL uses: UPDATE t1 SET col = t2.col FROM t2 WHERE t1.id = t2.id
  * This is different from MySQL's UPDATE ... JOIN syntax.
+ * @spec pending
  */
-class PostgresMultiTableUpdateFromTest extends TestCase
+class PostgresMultiTableUpdateFromTest extends AbstractPostgresPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
-        $raw->exec('DROP TABLE IF EXISTS pg_mtu_prices');
-        $raw->exec('DROP TABLE IF EXISTS pg_mtu_products');
-        $raw->exec('DROP TABLE IF EXISTS pg_mtu_categories');
-        $raw->exec('CREATE TABLE pg_mtu_categories (id INT PRIMARY KEY, name VARCHAR(50), discount_pct INT DEFAULT 0)');
-        $raw->exec('CREATE TABLE pg_mtu_products (id INT PRIMARY KEY, name VARCHAR(50), cat_id INT, price DECIMAL(10,2))');
-        $raw->exec('CREATE TABLE pg_mtu_prices (product_id INT PRIMARY KEY, new_price DECIMAL(10,2))');
+        return [
+            'CREATE TABLE pg_mtu_categories (id INT PRIMARY KEY, name VARCHAR(50), discount_pct INT DEFAULT 0)',
+            'CREATE TABLE pg_mtu_products (id INT PRIMARY KEY, name VARCHAR(50), cat_id INT, price DECIMAL(10,2))',
+            'CREATE TABLE pg_mtu_prices (product_id INT PRIMARY KEY, new_price DECIMAL(10,2))',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_mtu_prices', 'pg_mtu_products', 'pg_mtu_categories'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
-        );
+        parent::setUp();
 
         $this->pdo->exec("INSERT INTO pg_mtu_categories VALUES (1, 'Electronics', 10)");
         $this->pdo->exec("INSERT INTO pg_mtu_categories VALUES (2, 'Books', 5)");
-
         $this->pdo->exec("INSERT INTO pg_mtu_products VALUES (1, 'Laptop', 1, 1000.00)");
         $this->pdo->exec("INSERT INTO pg_mtu_products VALUES (2, 'Phone', 1, 500.00)");
         $this->pdo->exec("INSERT INTO pg_mtu_products VALUES (3, 'Novel', 2, 20.00)");
-
         $this->pdo->exec("INSERT INTO pg_mtu_prices VALUES (1, 899.99)");
         $this->pdo->exec("INSERT INTO pg_mtu_prices VALUES (2, 449.99)");
     }
@@ -122,20 +105,5 @@ class PostgresMultiTableUpdateFromTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_mtu_products');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(
-                PostgreSQLContainer::getDsn(),
-                'test',
-                'test',
-            );
-            $raw->exec('DROP TABLE IF EXISTS pg_mtu_prices');
-            $raw->exec('DROP TABLE IF EXISTS pg_mtu_products');
-            $raw->exec('DROP TABLE IF EXISTS pg_mtu_categories');
-        } catch (\Exception $e) {
-        }
     }
 }

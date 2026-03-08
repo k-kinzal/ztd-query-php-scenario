@@ -5,36 +5,31 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests window functions with prepared statements on MySQL.
  *
  * Cross-platform parity with SqliteWindowFunctionWithPreparedStmtTest.
+ * @spec pending
  */
-class MysqlWindowFunctionWithPreparedStmtTest extends TestCase
+class MysqlWindowFunctionWithPreparedStmtTest extends AbstractMysqlPdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-        $raw->exec('DROP TABLE IF EXISTS pdo_wfprep_test');
-        $raw->exec('CREATE TABLE pdo_wfprep_test (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(50), salary INT)');
+        return 'CREATE TABLE pdo_wfprep_test (id INT PRIMARY KEY, name VARCHAR(50), dept VARCHAR(50), salary INT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['pdo_wfprep_test'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->pdo = new ZtdPdo(MySQLContainer::getDsn(), 'root', 'root');
+        parent::setUp();
 
-        $this->pdo->exec("INSERT INTO pdo_wfprep_test VALUES (1, 'Alice', 'Engineering', 90000)");
         $this->pdo->exec("INSERT INTO pdo_wfprep_test VALUES (2, 'Bob', 'Engineering', 85000)");
         $this->pdo->exec("INSERT INTO pdo_wfprep_test VALUES (3, 'Charlie', 'Sales', 70000)");
         $this->pdo->exec("INSERT INTO pdo_wfprep_test VALUES (4, 'Diana', 'Sales', 75000)");
@@ -101,14 +96,5 @@ class MysqlWindowFunctionWithPreparedStmtTest extends TestCase
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pdo_wfprep_test');
         $this->assertSame(0, (int) $stmt->fetchColumn());
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        try {
-            $raw = new PDO(MySQLContainer::getDsn(), 'root', 'root');
-            $raw->exec('DROP TABLE IF EXISTS pdo_wfprep_test');
-        } catch (\Exception $e) {
-        }
     }
 }

@@ -4,47 +4,30 @@ declare(strict_types=1);
 
 namespace Tests\Mysqli;
 
-use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
-use Tests\Support\MySQLContainer;
-use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
+use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests prepared statement parameter binding edge cases on MySQLi,
  * matching PDO parity tests: positional params, by-reference rebinding,
  * CTE data snapshotting, and re-execution with different params.
+ * @spec pending
  */
-class ParamBindingEdgeCasesTest extends TestCase
+class ParamBindingEdgeCasesTest extends AbstractMysqliTestCase
 {
-    private ZtdMysqli $mysqli;
-
-    public static function setUpBeforeClass(): void
+    protected function getTableDDL(): string|array
     {
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
-
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pb_items');
-        $raw->query('CREATE TABLE mi_pb_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), active TINYINT)');
-        $raw->close();
+        return 'CREATE TABLE mi_pb_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), active TINYINT)';
     }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_pb_items'];
+    }
+
 
     protected function setUp(): void
     {
-        $this->mysqli = new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
+        parent::setUp();
 
         $this->mysqli->query("INSERT INTO mi_pb_items (id, name, price, active) VALUES (1, 'Widget', 10.50, 1)");
         $this->mysqli->query("INSERT INTO mi_pb_items (id, name, price, active) VALUES (2, 'Gadget', 25.00, 0)");
@@ -123,23 +106,5 @@ class ParamBindingEdgeCasesTest extends TestCase
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertCount(1, $rows);
         $this->assertSame('Widget', $rows[0]['name']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mysqli->close();
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
-        );
-        $raw->query('DROP TABLE IF EXISTS mi_pb_items');
-        $raw->close();
     }
 }

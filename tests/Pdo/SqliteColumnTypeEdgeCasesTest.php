@@ -5,27 +5,28 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use PHPUnit\Framework\TestCase;
-use ZtdQuery\Adapter\Pdo\ZtdPdo;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests column type edge cases: TIME, BLOB, BOOLEAN, mixed types in same query,
  * type coercion in CASE, arithmetic with mixed types.
+ * @spec pending
  */
-class SqliteColumnTypeEdgeCasesTest extends TestCase
+class SqliteColumnTypeEdgeCasesTest extends AbstractSqlitePdoTestCase
 {
-    private ZtdPdo $pdo;
-
-    protected function setUp(): void
+    protected function getTableDDL(): string|array
     {
-        $raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $raw->exec('CREATE TABLE events (id INTEGER PRIMARY KEY, name TEXT, event_time TEXT, event_date TEXT, is_active INTEGER, payload BLOB)');
-        $raw->exec('CREATE TABLE metrics (id INTEGER PRIMARY KEY, label TEXT, int_val INTEGER, float_val REAL, text_val TEXT)');
-
-        $this->pdo = ZtdPdo::fromPdo($raw);
+        return [
+            'CREATE TABLE events (id INTEGER PRIMARY KEY, name TEXT, event_time TEXT, event_date TEXT, is_active INTEGER, payload BLOB)',
+            'CREATE TABLE metrics (id INTEGER PRIMARY KEY, label TEXT, int_val INTEGER, float_val REAL, text_val TEXT)',
+        ];
     }
+
+    protected function getTableNames(): array
+    {
+        return ['events', 'metrics'];
+    }
+
 
     public function testTimeValuesInShadowStore(): void
     {

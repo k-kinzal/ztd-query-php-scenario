@@ -104,6 +104,15 @@ UPDATE and DELETE statements with subqueries referencing other shadow tables sha
 
 User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CTE shadowing on MySQL and SQLite. On PostgreSQL, table references inside user CTEs are not rewritten, causing the inner CTE to read from the physical table rather than the shadow store (see 10.3).
 
+### 3.3e CTE-based DML (WITH ... INSERT/UPDATE/DELETE)
+`WITH ... INSERT INTO ... SELECT`, `WITH ... UPDATE`, and `WITH ... DELETE` (CTE-based DML) are NOT supported on any platform:
+
+- **MySQL (MySQLi and PDO)**: The `MySqlQueryGuard::classifyWithFallback()` correctly classifies CTE DML as `WRITE_SIMULATED`, but the mutation resolver receives a `WithStatement` (not an `InsertStatement`/`UpdateStatement`/`DeleteStatement`) and throws `RuntimeException` ("Missing shadow mutation for write simulation").
+- **SQLite**: The CTE rewriter prepends shadow CTEs, which causes the user's CTE name to become invisible in the DML part of the statement. This produces "no such table: cte_name" errors.
+- **PostgreSQL**: The CTE rewriter produces invalid SQL — it does not properly handle user CTEs combined with DML statements. Errors include syntax errors and "relation does not exist".
+
+The shadow store is not corrupted by CTE DML failures — previously inserted data remains intact after the error. Users needing CTE-based DML should either disable ZTD for those queries or rewrite the query as a standard DML with subqueries.
+
 ### 3.3a Derived Tables (Subqueries in FROM)
 Derived tables (subqueries in the FROM clause) are NOT fully supported by the CTE rewriter. Table references inside derived subqueries are generally not rewritten:
 
@@ -613,6 +622,10 @@ The following behaviors are verified as consistent across MySQL, PostgreSQL, and
 - exec() with SELECT: `exec()` on a SELECT query goes through ZTD rewriter and returns `rowCount()` (typically 0 on SQLite, may return actual row count on MySQL/PostgreSQL). Not an error. Verified on all 3 PDO platforms.
 - Very long string values: string values of 10,000+ characters stored and retrieved correctly through shadow store via prepared statements. Verified on all 3 PDO platforms.
 - Wide tables (20+ columns): tables with 20 columns correctly store and retrieve all column values through CTE rewriting. Verified on all 3 PDO platforms.
+- Sequential mutations: insert-then-update, insert-then-delete, update-then-delete, multiple updates on same row (last write wins), delete-all-then-insert, interleaved inserts and deletes, bulk update then selective delete — all correctly accumulate in shadow store. Physical isolation confirmed (no data leaks). Verified on all 4 adapters (MySQLi, MySQL PDO, PostgreSQL PDO, SQLite PDO).
+- MySQL DELETE/UPDATE with ORDER BY + LIMIT: `DELETE FROM t ORDER BY col LIMIT n` and `UPDATE t SET ... ORDER BY col LIMIT n` correctly select and affect only the first N rows in the specified order. Works with LIMIT only, ORDER BY + LIMIT, and WHERE + ORDER BY + LIMIT. Physical isolation confirmed. Verified on MySQL MySQLi and MySQL PDO.
+- Multi-row REPLACE INTO: `REPLACE INTO t (cols) VALUES (...), (...), (...)` correctly inserts all rows when none exist, replaces matching rows on primary key, and handles partial overlap. Physical isolation confirmed. Verified on MySQL MySQLi and MySQL PDO.
+- CTE-based DML (WITH ... INSERT/UPDATE/DELETE): NOT supported on any platform. MySQL throws RuntimeException ("Missing shadow mutation"); SQLite throws "no such table" for user CTE names; PostgreSQL produces syntax errors. Shadow store remains intact after failures. Verified on all 4 adapters.
 - Empty string vs NULL: empty string (`''`) and NULL are correctly distinguished in shadow store — `IS NULL` does not match empty strings, `= ''` does not match NULL. Verified on all 3 PDO platforms.
 - PARAM_BOOL binding: `bindValue()` with `PDO::PARAM_BOOL` works for boolean-to-integer column comparisons on SQLite and MySQL. On PostgreSQL, PARAM_BOOL sends 't'/'f' strings which fail for INT columns — use PARAM_INT instead. Verified on all 3 PDO platforms.
 - prepare() with empty options array: `prepare($sql, [])` works identically to `prepare($sql)`. Verified on all 3 PDO platforms.
@@ -696,6 +709,8 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **UPDATE with correlated subquery in SET clause**: `UPDATE t1 SET col = (SELECT SUM(col2) FROM t2 WHERE t2.fk = t1.pk)` works on MySQL. On SQLite, the CTE rewriter produces "near FROM: syntax error". On PostgreSQL, the CTE rewriter produces "column must appear in GROUP BY clause" error.
 
 - **DELETE without WHERE clause (SQLite)** (Issue #7): On MySQL and PostgreSQL, `DELETE FROM table` (without WHERE clause) correctly clears the shadow store. On SQLite, `DELETE FROM table` without a WHERE clause is silently ignored — the shadow store retains all rows. The workaround is to use `DELETE FROM table WHERE 1=1` which works correctly on all platforms.
+
+- **CTE-based DML (WITH ... INSERT/UPDATE/DELETE)**: Not supported on any platform. On MySQL (both MySQLi and PDO), `classifyWithFallback()` correctly identifies WITH DML as `WRITE_SIMULATED`, but the mutation resolver receives a `WithStatement` and throws `RuntimeException` ("Missing shadow mutation for write simulation"). On SQLite, the CTE rewriter prepends shadow CTEs, making user CTE names invisible and producing "no such table" errors. On PostgreSQL, the CTE rewriter produces invalid SQL (syntax errors or "relation does not exist"). The shadow store is not corrupted by these failures. Users should rewrite CTE-based DML as standard DML with subqueries, or disable ZTD for those queries.
 
 - **Recursive CTEs with shadow tables**: On MySQL, `WITH RECURSIVE` referencing a shadow table causes a syntax error because the CTE rewriter prepends `WITH ztd_shadow AS (...)` before the `RECURSIVE` keyword, producing `WITH ztd_shadow AS (...), RECURSIVE cat_tree AS (...)` — invalid SQL. On SQLite, the query executes but returns empty results (table references not rewritten). On PostgreSQL, same as SQLite (returns empty). Non-recursive `WITH` works on MySQL and SQLite but not PostgreSQL (documented separately). Users needing hierarchical queries with ZTD should use application-level recursion or disable ZTD for those queries.
 

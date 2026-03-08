@@ -109,6 +109,7 @@ Maps SPEC-IDs to test classes and verified versions.
 |---------|-------------|----|----|----|----|--------|
 | SPEC-8.1 | `*ConstraintBehaviorTest`, `*CheckConstraintBehaviorTest` | V | V | V | V | V |
 | SPEC-8.2 | `*ErrorRecoveryTest`, `*ErrorBoundaryTest` | V | V | V | V | V |
+| SPEC-8.3 | `*TriggerInteractionTest` | ? | ? | ? | ? | Pending |
 
 ## 9. Configuration
 
@@ -123,6 +124,9 @@ Maps SPEC-IDs to test classes and verified versions.
 |---------|-------------|----|----|----|----|--------|
 | SPEC-10.2.17 | `Pdo/MysqlOffsetPaginationTest` | — | V | — | — | V |
 | SPEC-10.2.18 | `*DateTimeFunctionsTest` | V | V | V | V | V |
+| SPEC-10.2.19 | `Pdo/PostgresEnumTypeTest` | — | — | ? | — | Pending |
+| SPEC-10.2.20 | `Pdo/MysqlInformationSchemaTest`, `Pdo/PostgresInformationSchemaTest`, `Pdo/SqliteSchemaIntrospectionTest` | — | ? | ? | ? | Pending |
+| SPEC-10.2.21 | `*MultiTenantPatternTest` | ? | ? | ? | ? | Pending |
 
 ## Legend
 

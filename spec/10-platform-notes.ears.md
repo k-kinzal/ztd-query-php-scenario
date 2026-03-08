@@ -119,3 +119,24 @@ Platform-specific date/time functions work correctly with CTE shadow data:
 - **SQLite**: strftime(), date(), julianday(), date modifiers ('+1 month') all work correctly with shadow data. Date comparison and ordering work.
 
 Date values survive INSERT, UPDATE, and SELECT roundtrip. Prepared statements with date range parameters work on all platforms.
+
+## SPEC-10.2.19 PostgreSQL ENUM types
+**Status:** Pending Verification
+**Platforms:** PostgreSQL-PDO
+**Tests:** `Pdo/PostgresEnumTypeTest`
+
+PostgreSQL native ENUM types (CREATE TYPE ... AS ENUM) work through ZTD shadow store. INSERT, UPDATE, WHERE comparison, NULL values, and prepared statements with ENUM parameters all function correctly. Cross-platform parity with MySQL column-level ENUM (MySQLi/EnumTypeTest, Pdo/MysqlEnumTypeTest).
+
+## SPEC-10.2.20 Schema introspection queries
+**Status:** Pending Verification
+**Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/MysqlInformationSchemaTest`, `Pdo/PostgresInformationSchemaTest`, `Pdo/SqliteSchemaIntrospectionTest`
+
+Schema introspection queries (INFORMATION_SCHEMA on MySQL/PostgreSQL, sqlite_master/PRAGMA on SQLite) may pass through or be treated as unsupported SQL depending on the adapter. These queries read physical database metadata, not shadow store state. Shadow operations should continue to work alongside schema queries.
+
+## SPEC-10.2.21 Multi-tenant query patterns
+**Status:** Pending Verification
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/MultiTenantPatternTest`, `Pdo/MysqlMultiTenantPatternTest`, `Pdo/PostgresMultiTenantPatternTest`, `Pdo/SqliteMultiTenantPatternTest`
+
+Multi-tenant query patterns (WHERE tenant_id = ?) work correctly through ZTD shadow store for all CRUD operations. Tenant-filtered SELECT, INSERT, UPDATE, DELETE, JOINs across tenant-filtered tables, and per-tenant aggregation (GROUP BY tenant_id) all return correct results. Mutations for one tenant do not affect other tenants' data.

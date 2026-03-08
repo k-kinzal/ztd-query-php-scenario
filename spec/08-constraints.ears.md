@@ -30,3 +30,20 @@ When malformed SQL is executed with ZTD enabled, the ztd-query transformer may t
 When a SQL error occurs, the shadow store shall remain consistent. Previously inserted/updated/deleted shadow data is not rolled back or corrupted by a subsequent error. Subsequent valid operations after an error shall execute correctly against the intact shadow store.
 
 **Verified behavior:** Multiple consecutive errors do not compound. Error code cleared after successful recovery. Mid-workflow error recovery maintains shadow consistency.
+
+## SPEC-8.3 Trigger Behavior
+**Status:** Pending Verification
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/TriggerInteractionTest`, `Pdo/MysqlTriggerInteractionTest`, `Pdo/PostgresTriggerInteractionTest`, `Pdo/SqliteTriggerInteractionTest`
+
+Database triggers (BEFORE/AFTER INSERT/UPDATE/DELETE) do NOT fire for shadow operations. Since ZTD rewrites DML to CTE-based simulations, no actual INSERT/UPDATE/DELETE reaches the physical table, and therefore triggers defined on those tables are not executed.
+
+This applies to all trigger types:
+- **AFTER INSERT**: Not fired when shadow INSERT occurs.
+- **AFTER UPDATE**: Not fired when shadow UPDATE occurs.
+- **AFTER DELETE**: Not fired when shadow DELETE occurs.
+- **BEFORE** triggers: Same behavior — not fired.
+
+The presence of triggers on a table does NOT interfere with shadow CRUD operations — INSERT, UPDATE, DELETE, and SELECT all work correctly through ZTD even when triggers are defined on the physical table.
+
+This is by design — the shadow store operates at the SQL rewrite level, not the storage engine level.

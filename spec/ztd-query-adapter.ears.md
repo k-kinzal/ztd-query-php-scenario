@@ -183,6 +183,8 @@ Multi-row INSERT (e.g., `INSERT INTO t VALUES (1, 'a'), (2, 'b')`) is supported.
 
 INSERT with NULL values is supported. NULL values are correctly stored in the shadow store and queryable via `IS NULL` / `IS NOT NULL`.
 
+**Limitation (PDO prepared INSERT):** On the PDO adapter, rows inserted via prepared statements (`prepare()` + `execute()`) cannot be subsequently updated or deleted — UPDATE/DELETE operations report affected rows but the shadow store data remains unchanged. Rows inserted via `exec()` work correctly. The MySQLi adapter is NOT affected. See 10.3 for details.
+
 ### 4.1a INSERT ... SELECT
 When an `INSERT ... SELECT` is executed with ZTD enabled, the system shall insert rows from the SELECT result (which reads from the shadow store) into the target table's shadow store.
 

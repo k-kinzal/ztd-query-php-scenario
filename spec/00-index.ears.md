@@ -31,7 +31,7 @@ Version: ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1
 | 8.2.30 | 1347 | 1173 | 129 | 12 |
 | 8.3.30 | 1347 | 1173 | 129 | 12 |
 | 8.4.18 | 1347 | 1180 | 122 | 12 |
-| 8.5.1 (local) | 1765 | 1610 | 111 | 11 |
+| 8.5.1 (local) | 1812 | 1655 | 111 | 11 |
 
 Errors are ZTD CTE rewriter bugs (SQL syntax errors in generated queries), not test or adapter issues.
 

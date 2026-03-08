@@ -55,7 +55,7 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
 | SPEC-4.1 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all), `*BatchInsertTest`, `*DecimalPrecisionTest`, `*TypeRoundtripTest` | V | V | V | V | V |
-| SPEC-4.1a | `*InsertSelectUpsertTest`, `*InsertSubqueryPatternsTest` | V | V | V | V | P |
+| SPEC-4.1a | `*InsertSelectUpsertTest`, `*InsertSubqueryPatternsTest`, `Pdo/SqliteInsertSelectExpressionsTest` | V | V | V | V | P |
 | SPEC-4.2 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all), `*OptimisticLockingTest`, `*SoftDeletePatternTest`, `*DecimalPrecisionTest` | V | V | V | V | V |
 | SPEC-4.2a | `*UpsertTest`, `*PreparedUpsertTest`, `Mysqli/InsertModifiersTest` | V | V | V | V | P |
 | SPEC-4.2b | `*HavingAndReplaceTest`, `*ReplaceMultiRowTest`, `*ConflictResolutionTest`, `Mysqli/InsertModifiersTest` | V | V | — | V | P |
@@ -78,9 +78,9 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
 | SPEC-5.1 | `*DdlOperationsTest` | V | V | V | V | V |
-| SPEC-5.1a | `*AlterTableTest`, `*AlterTableAdvancedTest`, `*AlterTableAfterDataTest`, `*AlterTableErrorTest` | V | V | V | V | P |
+| SPEC-5.1a | `*AlterTableTest`, `*AlterTableAdvancedTest`, `*AlterTableAfterDataTest`, `*AlterTableErrorTest`, `Pdo/SqliteAlterTableSilentFailureTest` | V | V | V | V | P |
 | SPEC-5.1b | `*CreateTableVariantsTest` | V | V | V | V | V |
-| SPEC-5.1c | `*CtasTest`, `Pdo/SqliteCtasEmptyResultTest` | V | V | V | V | P |
+| SPEC-5.1c | `*CtasTest`, `Pdo/SqliteCtasEmptyResultTest`, `Pdo/SqliteCtasDataLossTest` | V | V | V | V | P |
 | SPEC-5.2 | `*DdlOperationsTest`, `Pdo/PostgresDropTableCascadeTest` | V | V | V | V | V |
 | SPEC-5.3 | `*TruncateReinsertTest`, `Pdo/PostgresTruncateOptionsTest` | V | V | V | — | V |
 
@@ -98,10 +98,10 @@ Maps SPEC-IDs to test classes and verified versions.
 
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
-| SPEC-7.1 | `*UnknownSchemaTest` | V | V | V | V | P |
-| SPEC-7.2 | `*UnknownSchemaTest` | V | V | V | V | P |
-| SPEC-7.3 | `Pdo/*UnknownSchemaTest` | — | V | V | V | P |
-| SPEC-7.4 | `*UnknownSchemaTest` | V | V | V | V | P |
+| SPEC-7.1 | `*UnknownSchemaTest`, `*UnknownSchemaWorkflowTest` | V | V | V | V | P |
+| SPEC-7.2 | `*UnknownSchemaTest`, `*UnknownSchemaWorkflowTest` | V | V | V | V | P |
+| SPEC-7.3 | `Pdo/*UnknownSchemaTest`, `*UnknownSchemaWorkflowTest` | — | V | V | V | P |
+| SPEC-7.4 | `*UnknownSchemaTest`, `*UnknownSchemaWorkflowTest` | V | V | V | V | P |
 
 ## 8. Constraints
 
@@ -122,7 +122,7 @@ Maps SPEC-IDs to test classes and verified versions.
 
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
-| SPEC-3.5 | `*JsonFunctionsTest`, `*JsonAndCrossJoinTest`, `Pdo/PostgresJsonbFunctionsTest`, `Pdo/PostgresJsonbOperatorsTest` | P | P | P | P | P |
+| SPEC-3.5 | `*JsonFunctionsTest`, `*JsonAndCrossJoinTest`, `Pdo/PostgresJsonbFunctionsTest`, `Pdo/PostgresJsonbOperatorsTest`, `*JsonAggregationEdgeCasesTest`, `Pdo/PostgresJsonbAggregationEdgeCasesTest` | P | P | P | P | P |
 | SPEC-3.6 | `*CompositePrimaryKeyTest`, `Mysqli/CompositePkUpsertTest`, `Pdo/PostgresCompositePkUpsertTest`, `*CompositePkEdgeCasesTest` | V | V | V | V | V |
 | SPEC-3.7 | `*NullHandlingEdgeCasesTest`, `*NullInAggregatesTest` | V | V | V | V | V |
 
@@ -231,7 +231,7 @@ The following test classes exercise combinations of multiple specs in realistic 
 |---------|-------------|----|----|----|----|--------|
 | SPEC-11.UPDATE-FROM | `Pdo/SqliteUpdateFromJoinTest` | — | — | — | K | K |
 | SPEC-11.PG-LATERAL | `Pdo/PostgresLateralSubqueryTest` | — | — | K | — | K |
-| SPEC-11.BARE-SUBQUERY-REWRITE | `Pdo/SqliteScalarSubqueryInSelectTest`, `Pdo/SqlitePivotReportTest` | — | — | — | K | K |
+| SPEC-11.BARE-SUBQUERY-REWRITE | `Pdo/SqliteScalarSubqueryInSelectTest`, `Pdo/SqlitePivotReportTest`, `Pdo/SqliteScalarSubqueryWorkaroundTest` | — | — | — | K | K |
 | SPEC-11.UPDATE-AGGREGATE-SUBQUERY | `Pdo/SqliteBulkConditionalUpgradeTest`, `Pdo/SqliteDeduplicationEdgeCasesTest` | — | — | — | K | K |
 
 ## Legend

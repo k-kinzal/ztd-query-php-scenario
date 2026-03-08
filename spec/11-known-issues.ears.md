@@ -265,15 +265,16 @@ Workarounds:
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
 **Related specs:** [SPEC-3.3](03-read-operations.ears.md)
-**Tests:** `Pdo/SqliteScalarSubqueryInSelectTest`, `Pdo/SqlitePivotReportTest`
+**Tests:** `Pdo/SqliteScalarSubqueryInSelectTest`, `Pdo/SqlitePivotReportTest`, `Pdo/SqliteSubqueryNestingTest`
 
 On SQLite, the CTE rewriter does not rewrite table references inside subqueries that contain a bare `SELECT ... FROM table` without a WHERE or GROUP BY clause. This affects:
 
 1. **Scalar subqueries in SELECT list**: `SELECT col, (SELECT SUM(x) FROM t) AS total FROM t` — the inner subquery reads from the physical table (empty), causing the entire outer query to return empty results.
 2. **User CTEs without WHERE/GROUP BY**: `WITH cte AS (SELECT * FROM t) SELECT * FROM cte` — the CTE reads from the physical table, returning 0 rows.
 3. **User CTE + CROSS JOIN**: Even with `WHERE 1=1` in the user CTE, combining a user CTE via CROSS JOIN with an outer query that also references a shadow table returns empty.
+4. **Scalar subqueries in CASE WHEN**: `CASE WHEN col > (SELECT AVG(x) FROM t) THEN ...` — the inner subquery reads from the physical table (empty), causing AVG to return NULL and all comparisons to fail. The entire outer query returns empty.
 
-**MySQL:** Scalar subqueries in SELECT now work correctly on both MySQLi and MySQL-PDO. The CTE rewriter rewrites table references inside scalar subqueries in the SELECT expression list on MySQL.
+**MySQL and PostgreSQL:** Scalar subqueries in SELECT and CASE WHEN now work correctly on MySQLi, MySQL-PDO, and PostgreSQL-PDO. The CTE rewriter rewrites table references inside scalar subqueries on these platforms.
 
 Adding `WHERE 1=1` to the bare subquery forces the rewriter to recognize and rewrite the table reference, except in the CTE + CROSS JOIN case.
 

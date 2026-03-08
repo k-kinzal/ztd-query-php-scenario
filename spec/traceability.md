@@ -38,10 +38,10 @@ Maps SPEC-IDs to test classes and verified versions.
 
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
-| SPEC-3.1 | `Scenarios/BasicCrudScenario` (all), `*CursorPaginationTest`, `*SoftDeletePatternTest`, `*DecimalPrecisionTest`, `*OffsetPaginationTest`, `*TypeRoundtripTest` | V | V | V | V | V |
+| SPEC-3.1 | `Scenarios/BasicCrudScenario` (all), `*CursorPaginationTest`, `*SoftDeletePatternTest`, `*DecimalPrecisionTest`, `*OffsetPaginationTest`, `*TypeRoundtripTest`, `*EagerLoadingPatternTest` | V | V | V | V | V |
 | SPEC-3.2 | `Scenarios/PreparedStatementScenario` (all), `*PreparedStatementTest`, `Mysqli/StatementReusePatternTest`, `*CursorPaginationTest`, `*OptimisticLockingTest`, `*PreparedInListTest`, `*OffsetPaginationTest` | V | V | V | V | V |
-| SPEC-3.3 | `Scenarios/JoinAndSubqueryScenario` (all), `*ComplexQueryTest`, `*AdvancedQueryPatternsTest`, `*SubqueryPositionsTest`, `*DateTimeFunctionsTest`, `Pdo/SqliteNestedCaseExpressionTest` | V | V | V | V | V |
-| SPEC-3.3a | `*DerivedTableAndViewTest` | V | V | V | V | K |
+| SPEC-3.3 | `Scenarios/JoinAndSubqueryScenario` (all), `*ComplexQueryTest`, `*AdvancedQueryPatternsTest`, `*SubqueryPositionsTest`, `*DateTimeFunctionsTest`, `Pdo/SqliteNestedCaseExpressionTest`, `*MultiAliasJoinTest`, `*SubqueryNestingTest` | V | V | V | V | V |
+| SPEC-3.3a | `*DerivedTableAndViewTest`, `*SubqueryNestingTest` | V | V | V | V | K |
 | SPEC-3.3b | `*ViewThroughZtdTest` | V | V | V | V | K |
 | SPEC-3.3c | `*RecursiveCteAndRightJoinTest` | V | V | V | V | K |
 | SPEC-3.3d | `*ExceptIntersectTest`, `*SetOperationsAndFunctionsTest` | V | V | V | V | P |

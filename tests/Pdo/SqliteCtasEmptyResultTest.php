@@ -22,16 +22,12 @@ class SqliteCtasEmptyResultTest extends AbstractSqlitePdoTestCase
     {
         return [
             'CREATE TABLE ctas_source (id INT PRIMARY KEY, name VARCHAR(50), score INT)',
-            'CREATE TABLE ctas_copy AS SELECT * FROM ctas_source',
-            'CREATE TABLE ctas_empty AS SELECT * FROM ctas_source WHERE 1=0',
-            'CREATE TABLE ctas_source (id INT PRIMARY KEY, label VARCHAR(50))',
-            'CREATE TABLE ctas_chain (id INT PRIMARY KEY, value VARCHAR(50))',
         ];
     }
 
     protected function getTableNames(): array
     {
-        return ['ctas_chain', 'AS', 'ctas_source', 'ctas_copy', 'ctas_empty'];
+        return ['ctas_chain', 'ctas_source', 'ctas_copy', 'ctas_empty'];
     }
 
 

@@ -429,7 +429,9 @@ Rules support two pattern types:
 - Regex match: e.g., `'/^SET\s+/i'` matches SQL matching the regex. Patterns starting with `/` are treated as regex.
 
 ### 6.3 Transaction Statements
-Transaction control statements (BEGIN, COMMIT, ROLLBACK, SAVEPOINT) are not rewritten and shall be delegated directly to the underlying connection.
+Transaction control statements (BEGIN, COMMIT, ROLLBACK) are not rewritten and shall be delegated directly to the underlying connection.
+
+SAVEPOINT, RELEASE SAVEPOINT, and ROLLBACK TO SAVEPOINT are NOT supported on SQLite and MySQL — they throw exceptions. On PostgreSQL, these commands pass through to the physical database without error, but the shadow store does NOT participate in savepoint semantics (shadow data persists after ROLLBACK TO SAVEPOINT).
 
 For `ZtdMysqli`, transaction control should use the dedicated methods (`begin_transaction()`, `commit()`, `rollback()`) rather than SQL strings via `query()`.
 

@@ -917,3 +917,33 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **Chained DDL → DML sequences**: Complex sequences of CREATE, DROP, INSERT, UPDATE, DELETE, and SELECT maintain shadow store consistency. INSERT → UPDATE cycles correctly update shadow data. DELETE → reinsert with same ID returns new values. DROP TABLE → CREATE TABLE → INSERT with same or different schema works. Multi-table operation sequences with JOINs across both tables produce correct aggregation results. Verified on SQLite.
 
 - **INSERT IGNORE with multi-row and edge cases (MySQL)**: `INSERT IGNORE INTO t VALUES (dup_id, ...)` silently skips duplicate rows while inserting non-duplicate rows. Multi-row INSERT IGNORE correctly inserts new rows and skips duplicates in the same statement. `ON DUPLICATE KEY UPDATE counter = counter + 1` (self-referencing) loses the original value — counter becomes 0 instead of incrementing. `ON DUPLICATE KEY UPDATE name = VALUES(name)` (using VALUES function) works correctly. Verified on MySQL PDO.
+
+- **SQL comments handling (SQLite)**: Single-line comments (`--`), block comments (`/* ... */`), and multi-line block comments are correctly handled by the CTE rewriter and do not break query parsing. Comments at end of statements, within SELECT/INSERT/UPDATE/DELETE, and spanning multiple lines all work. Leading comments before a statement may not be supported. Verified on SQLite.
+
+- **EXPLAIN and PRAGMA handling (SQLite)**: EXPLAIN QUERY PLAN and EXPLAIN on SELECT queries pass through to the physical database when ZTD is enabled — the CTE rewriter does not interfere. PRAGMA statements (table_info, foreign_keys, journal_mode) also pass through successfully. Shadow operations remain functional after EXPLAIN/PRAGMA queries. Verified on SQLite.
+
+- **LATERAL subqueries (PostgreSQL)**: LATERAL subqueries (`FROM table, LATERAL (SELECT ...)`, `LEFT JOIN LATERAL (SELECT ...)`) return empty results through CTE-rewritten shadow queries. The CTE rewriter does not rewrite table references inside LATERAL subqueries, similar to derived tables on PostgreSQL. Workaround: use correlated subqueries in the SELECT list instead. Verified on PostgreSQL.
+
+- **PostgreSQL DISTINCT ON**: `SELECT DISTINCT ON (column) ...` works correctly through CTE-rewritten shadow queries, returning the first row per distinct value ordered by the specified ORDER BY. DISTINCT ON correctly reflects shadow mutations (INSERT). Verified on PostgreSQL.
+
+- **FETCH FIRST N ROWS ONLY (SQL standard LIMIT)**: PostgreSQL's SQL-standard pagination syntax (`FETCH FIRST N ROWS ONLY`, `OFFSET M ROWS FETCH NEXT N ROWS ONLY`) works correctly through CTE-rewritten shadow queries. Verified on PostgreSQL.
+
+- **FOR UPDATE SKIP LOCKED / NOWAIT (PostgreSQL)**: Advanced locking clauses (`FOR UPDATE SKIP LOCKED`, `FOR UPDATE NOWAIT`, `FOR NO KEY UPDATE`, `FOR KEY SHARE`) are preserved in CTE-rewritten queries and do not cause errors. Since the query reads from CTE data, no actual locks are acquired (no-op locking). Shadow mutations are correctly reflected. Verified on PostgreSQL.
+
+- **SHOW statements (MySQL)**: MySQL SHOW statements (SHOW TABLES, SHOW COLUMNS, SHOW CREATE TABLE) may or may not pass through ZTD depending on the behavior rule configuration. By default they may throw as unsupported SQL. With `UnsupportedSqlBehavior::Ignore` behavior rule for 'SHOW', they are silently ignored (returning false). Shadow operations remain functional after SHOW statement attempts. Verified on MySQL (MySQLi).
+
+- **INSERT column count mismatch**: When INSERT VALUES clause has fewer or more values than the table's column count, the CTE rewriter may throw or produce unexpected results. With explicit column lists, column/value count mismatches produce errors. The shadow store remains consistent after column mismatch errors — previously inserted data is preserved. Verified on SQLite.
+
+- **MySQL JSON functions through CTE shadow**: MySQL JSON functions (JSON_EXTRACT, JSON_UNQUOTE, JSON_CONTAINS, JSON_LENGTH) work correctly in CTE-rewritten shadow queries. JSON_EXTRACT in WHERE clause for filtering works. The `->>` arrow operator for unquoted extraction also works. INSERT with JSON column values and subsequent JSON function queries work correctly. Verified on MySQL PDO.
+
+- **Prepared statement edge cases**: Prepared statements with no parameters (literal SQL), prepared statements returning empty results (fetch returns false), multiple concurrent prepared statements on the same connection, re-execution with different parameters, prepared INSERT followed by fresh prepared SELECT, named parameters with bindValue, prepared DELETE/UPDATE with rowCount(), and columnCount() all work correctly. Verified on SQLite.
+
+- **Multi-statement SQL detection (MySQL)**: Multiple SQL statements separated by semicolons are correctly detected and rejected with `UnsupportedSqlException("Multi-statement SQL statement")`. Semicolons within string literals (e.g., `'semi;colon'`) are correctly recognized as part of the string and do not trigger multi-statement detection. Single statements with trailing semicolons may or may not be accepted. Shadow operations remain functional after rejected multi-statement attempts. Verified on MySQL PDO.
+
+- **INSERT...SELECT with UNION ALL on MySQL**: `INSERT INTO t SELECT ... UNION ALL SELECT ...` is incorrectly detected as multi-statement SQL by the MySQL CTE rewriter and throws `UnsupportedSqlException`. This is the same parser issue as with EXCEPT/INTERSECT. `INSERT...SELECT` without UNION works correctly. Workaround: perform multiple individual INSERT...SELECT statements. Verified on MySQL (MySQLi).
+
+- **PostgreSQL date/time functions through CTE shadow**: `TO_CHAR(date_column::DATE, 'YYYY-MM')` works correctly for date formatting. `EXTRACT(YEAR FROM date_column::DATE)` returns 0 for shadow-stored dates (known limitation — dates stored as strings). Date comparison (`>=`, `<`) with `::DATE` casting works correctly. `CURRENT_DATE` in SELECT alongside shadow data works. Date-based ORDER BY works correctly. Verified on PostgreSQL.
+
+- **Correlated subqueries in SELECT list**: Scalar correlated subqueries with COUNT and AVG, EXISTS/NOT EXISTS subqueries in WHERE, and subqueries inside CASE WHEN expressions all work correctly through CTE-rewritten shadow queries. Subquery results correctly reflect shadow mutations. Verified on SQLite.
+
+- **Conditional INSERT patterns (MySQL MySQLi)**: `INSERT...SELECT WHERE NOT EXISTS` (conditional insert) works correctly — inserts when no match, skips when duplicate exists. `INSERT...SELECT` with WHERE condition on source table works correctly for cross-table insertions. Verified on MySQL (MySQLi).

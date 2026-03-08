@@ -57,6 +57,8 @@ abstract class AbstractMysqlPdoTestCase extends TestCase
             'root',
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
+
+        VersionRecorder::setVersionInfo(static::class, $this->getDbVersion(), $this->getZtdVersion());
     }
 
     protected function ztdExec(string $sql): int|false

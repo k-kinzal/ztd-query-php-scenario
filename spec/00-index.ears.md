@@ -1,5 +1,11 @@
 # ZTD Query Adapter Specifications — Index
 
+> **Single source of truth.** The numbered section files listed below
+> (`01-connection.ears.md` through `11-known-issues.ears.md`) are the
+> authoritative specifications. All spec updates must target these files.
+> The original monolith (`ztd-query-adapter.ears.md`) is preserved for
+> historical reference only and must not be updated.
+
 Version: ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1
 
 ## Version Matrix

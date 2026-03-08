@@ -27,6 +27,9 @@ final class VersionRecorder implements Extension
     /** @var array<string, array{phpVersion: string, dbVersion: string, ztdVersion: string, adapter: string}> */
     private static array $entries = [];
 
+    /** @var array<string, array{dbVersion: string, ztdVersion: string}> Version info set by base class setUp(), before TestFinished fires */
+    private static array $versionInfo = [];
+
     /** @var string|null */
     private static ?string $outputPath = null;
 
@@ -34,6 +37,7 @@ final class VersionRecorder implements Extension
     {
         self::$outputPath = dirname(__DIR__, 2) . '/spec/verification-log.json';
         self::$entries = [];
+        self::$versionInfo = [];
 
         $facade->registerSubscriber(new class implements TestFinishedSubscriber {
             public function notify(TestFinished $event): void
@@ -61,10 +65,14 @@ final class VersionRecorder implements Extension
 
         $adapter = self::detectAdapter($testClassName);
 
+        // Use version info set by base class setUp() if available
+        $dbVersion = self::$versionInfo[$testClassName]['dbVersion'] ?? 'pending';
+        $ztdVersion = self::$versionInfo[$testClassName]['ztdVersion'] ?? self::detectZtdVersion($adapter);
+
         self::$entries[$testClassName] = [
             'phpVersion' => PHP_VERSION,
-            'dbVersion' => 'pending', // Populated by base class setUp if available
-            'ztdVersion' => self::detectZtdVersion($adapter),
+            'dbVersion' => $dbVersion,
+            'ztdVersion' => $ztdVersion,
             'adapter' => $adapter,
             'timestamp' => date('c'),
         ];
@@ -98,9 +106,18 @@ final class VersionRecorder implements Extension
 
     /**
      * Set version info from a test base class setUp method.
+     *
+     * Called during setUp() (before TestFinished fires), so the info is stored
+     * separately and merged when recordTest() creates the entry.
      */
     public static function setVersionInfo(string $testClassName, string $dbVersion, string $ztdVersion): void
     {
+        self::$versionInfo[$testClassName] = [
+            'dbVersion' => $dbVersion,
+            'ztdVersion' => $ztdVersion,
+        ];
+
+        // Also update existing entry if already recorded
         if (isset(self::$entries[$testClassName])) {
             self::$entries[$testClassName]['dbVersion'] = $dbVersion;
             self::$entries[$testClassName]['ztdVersion'] = $ztdVersion;

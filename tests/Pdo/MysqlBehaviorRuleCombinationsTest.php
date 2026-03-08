@@ -21,7 +21,7 @@ use ZtdQuery\Config\ZtdConfig;
  * Validates that rule ordering, regex/prefix matching, and behavior resolution
  * are consistent across adapters.
  */
-class BehaviorRuleCombinationsTest extends TestCase
+class MysqlBehaviorRuleCombinationsTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {

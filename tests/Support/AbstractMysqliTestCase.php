@@ -54,6 +54,8 @@ abstract class AbstractMysqliTestCase extends TestCase
             'test',
             MySQLContainer::getPort(),
         );
+
+        VersionRecorder::setVersionInfo(static::class, $this->getDbVersion(), $this->getZtdVersion());
     }
 
     protected function ztdExec(string $sql): int|false

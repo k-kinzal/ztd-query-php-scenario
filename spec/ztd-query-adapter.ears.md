@@ -1,3 +1,8 @@
+> **SUPERSEDED** — This file is preserved for historical reference only.
+> The authoritative specifications are the numbered section files
+> (`01-connection.ears.md` through `11-known-issues.ears.md`).
+> Do not update this file.
+
 # ZTD Query Adapter Specifications (EARS Notation)
 
 Version: ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1

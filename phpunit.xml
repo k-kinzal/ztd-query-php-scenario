@@ -10,6 +10,9 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+    <logging>
+        <junit outputFile="build/junit.xml"/>
+    </logging>
     <extensions>
         <bootstrap class="Tests\Support\VersionRecorder"/>
     </extensions>

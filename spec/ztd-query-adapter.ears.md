@@ -183,7 +183,7 @@ Multi-row INSERT (e.g., `INSERT INTO t VALUES (1, 'a'), (2, 'b')`) is supported.
 
 INSERT with NULL values is supported. NULL values are correctly stored in the shadow store and queryable via `IS NULL` / `IS NOT NULL`.
 
-**Limitation (PDO prepared INSERT):** On the PDO adapter, rows inserted via prepared statements (`prepare()` + `execute()`) cannot be subsequently updated or deleted — UPDATE/DELETE operations report affected rows but the shadow store data remains unchanged. Rows inserted via `exec()` work correctly. The MySQLi adapter is NOT affected. See 10.3 for details.
+**Limitation (PDO prepared INSERT — all PDO platforms):** On the PDO adapter (MySQL, PostgreSQL, and SQLite), rows inserted via prepared statements (`prepare()` + `execute()`) cannot be subsequently updated or deleted — UPDATE/DELETE operations report affected rows but the shadow store data remains unchanged. Rows inserted via `exec()` work correctly. The MySQLi adapter is NOT affected. See 10.3 for details.
 
 ### 4.1a INSERT ... SELECT
 When an `INSERT ... SELECT` is executed with ZTD enabled, the system shall insert rows from the SELECT result (which reads from the shadow store) into the target table's shadow store.
@@ -379,7 +379,7 @@ Advanced ALTER TABLE operations (RENAME TABLE, CHANGE COLUMN with existing shado
 - The shadow store remains intact after ALTER TABLE errors — previously inserted data is not lost.
 - After a successful ALTER TABLE ADD COLUMN followed by a failed duplicate ADD, subsequent INSERT must include the new column (schema has been updated).
 
-**SQLite** — Partially supported. The mutation resolver accepts ALTER TABLE (ADD/DROP/RENAME COLUMN, RENAME TO) without throwing exceptions, but the CTE rewriter does NOT reflect schema changes in query results:
+**SQLite** — Accepted but ineffective. The mutation resolver accepts ALTER TABLE (ADD/DROP/RENAME COLUMN, RENAME TO) without throwing exceptions, but the CTE rewriter does NOT reflect schema changes in query results:
 - ADD COLUMN: new column is silently dropped from SELECT results (not included in CTE)
 - DROP COLUMN: column still appears in SELECT results (CTE uses original schema)
 - RENAME COLUMN: old column name is still used in SELECT results
@@ -769,8 +769,6 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **PostgreSQL RETURNING clause not supported**: PostgreSQL's `RETURNING` clause on DML statements (`INSERT ... RETURNING`, `UPDATE ... RETURNING`, `DELETE ... RETURNING`, `INSERT ... ON CONFLICT ... RETURNING`) is not supported under ZTD. The CTE rewriter does not preserve the RETURNING clause, causing all such statements to fail. This affects all DML types. Workaround: execute the DML operation first, then run a separate SELECT to read the affected data.
 
 - **TRUNCATE TABLE + re-insert workflow (MySQL)**: On MySQL, `TRUNCATE TABLE t` followed by new INSERTs works correctly in ZTD shadow mode. The `TruncateMutation` clears the shadow store, and subsequent inserts populate it cleanly. Multiple truncate-reinsert cycles work correctly, including re-using the same primary key values.
-
-- **DELETE FROM table without WHERE is a no-op on shadow store (SQLite)**: On SQLite, `DELETE FROM table` without a WHERE clause does **not** delete rows from the shadow store (see also Section 4.3 Limitation). The CTE rewriter appears to require a WHERE clause to identify deletable rows. The statement returns 0 affected rows and the shadow data remains intact. Workaround: use `DELETE FROM table WHERE 1=1` which correctly matches and deletes all shadow rows.
 
 - **stmt_init() bypasses ZTD (MySQLi)**: `ZtdMysqli::stmt_init()` returns a raw `mysqli_stmt` (NOT a `ZtdMysqliStatement`), meaning all queries prepared via `stmt_init()` bypass ZTD entirely and operate directly on the physical database. INSERT via `stmt_init()` writes to the physical DB, and the data is invisible through ZTD-enabled SELECT. SELECT via `stmt_init()` reads from the physical DB, not the shadow store. Users should always use `ZtdMysqli::prepare()` instead of `stmt_init()` when ZTD behavior is desired. Verified on MySQLi.
 

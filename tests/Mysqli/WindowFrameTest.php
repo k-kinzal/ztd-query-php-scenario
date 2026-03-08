@@ -22,7 +22,6 @@ class WindowFrameTest extends AbstractMysqliTestCase
         return ['mi_wf_sales'];
     }
 
-
     protected function setUp(): void
     {
         parent::setUp();

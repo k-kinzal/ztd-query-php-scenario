@@ -7,9 +7,10 @@ namespace Tests\Mysqli;
 use Tests\Support\AbstractMysqliTestCase;
 
 /**
- * Tests SELECT...FOR UPDATE locking clause via MySQLi.
+ * Tests SELECT...FOR UPDATE locking clause on MySQLi.
  *
- * Cross-platform parity with MysqlSelectForUpdateTest (PDO).
+ * FOR UPDATE is preserved in CTE-rewritten SQL but is effectively a no-op
+ * since the query reads from CTE data, not physical rows.
  * @spec pending
  */
 class SelectForUpdateTest extends AbstractMysqliTestCase
@@ -23,7 +24,6 @@ class SelectForUpdateTest extends AbstractMysqliTestCase
     {
         return ['mi_fu_test'];
     }
-
 
     protected function setUp(): void
     {
@@ -50,7 +50,18 @@ class SelectForUpdateTest extends AbstractMysqliTestCase
     public function testSelectForShareReturnsData(): void
     {
         $result = $this->mysqli->query('SELECT name FROM mi_fu_test WHERE id = 2 FOR SHARE');
-        $this->assertSame('Bob', $result->fetch_assoc()['name']);
+        $row = $result->fetch_assoc();
+        $this->assertSame('Bob', $row['name']);
+    }
+
+    /**
+     * SELECT...LOCK IN SHARE MODE (MySQL-specific) works.
+     */
+    public function testLockInShareModeReturnsData(): void
+    {
+        $result = $this->mysqli->query('SELECT name FROM mi_fu_test WHERE id = 1 LOCK IN SHARE MODE');
+        $row = $result->fetch_assoc();
+        $this->assertSame('Alice', $row['name']);
     }
 
     /**
@@ -60,6 +71,7 @@ class SelectForUpdateTest extends AbstractMysqliTestCase
     {
         $this->mysqli->disableZtd();
         $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_fu_test');
-        $this->assertSame(0, (int) $result->fetch_assoc()['cnt']);
+        $row = $result->fetch_assoc();
+        $this->assertSame(0, (int) $row['cnt']);
     }
 }

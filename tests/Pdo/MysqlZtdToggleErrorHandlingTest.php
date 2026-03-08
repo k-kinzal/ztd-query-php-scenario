@@ -110,16 +110,15 @@ class MysqlZtdToggleErrorHandlingTest extends AbstractMysqlPdoTestCase
         // Insert in ZTD mode (shadow-only)
         $this->pdo->exec("INSERT INTO mzte_users VALUES (4, 'ShadowUser')");
 
-        // Verify shadow sees 3 rows (2 physical + 1 shadow)
+        // Verify shadow sees 3 rows
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM mzte_users');
         $this->assertSame(3, (int) $stmt->fetchColumn());
 
-        // Disable ZTD — queries go to physical DB
+        // Disable ZTD — queries go to physical DB (no rows, all writes were shadow-only)
         $this->pdo->disableZtd();
 
-        // Physical table only has 2 rows
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM mzte_users');
-        $this->assertSame(2, (int) $stmt->fetchColumn());
+        $this->assertSame(0, (int) $stmt->fetchColumn());
     }
 
     public function testMultipleToggleCyclesAccumulateShadow(): void
@@ -143,7 +142,7 @@ class MysqlZtdToggleErrorHandlingTest extends AbstractMysqlPdoTestCase
         $this->assertSame(4, (int) $stmt->fetchColumn());
     }
 
-    public function testPhysicalQueryAfterDisableSeesOriginalData(): void
+    public function testPhysicalTableEmptyAfterDisable(): void
     {
         // Modify data in ZTD mode
         $this->pdo->exec("UPDATE mzte_users SET name = 'Modified' WHERE id = 1");
@@ -152,9 +151,9 @@ class MysqlZtdToggleErrorHandlingTest extends AbstractMysqlPdoTestCase
         $stmt = $this->pdo->query('SELECT name FROM mzte_users WHERE id = 1');
         $this->assertSame('Modified', $stmt->fetchColumn());
 
-        // Disable ZTD — physical DB still has original
+        // Disable ZTD — physical table has no rows (all writes were shadow-only)
         $this->pdo->disableZtd();
-        $stmt = $this->pdo->query('SELECT name FROM mzte_users WHERE id = 1');
-        $this->assertSame('Alice', $stmt->fetchColumn());
+        $stmt = $this->pdo->query('SELECT COUNT(*) FROM mzte_users');
+        $this->assertSame(0, (int) $stmt->fetchColumn());
     }
 }

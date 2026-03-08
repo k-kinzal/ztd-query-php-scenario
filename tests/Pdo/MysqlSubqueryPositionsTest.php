@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests subqueries in various SQL positions on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MysqlSubqueryPositionsTest extends AbstractMysqlPdoTestCase
 {

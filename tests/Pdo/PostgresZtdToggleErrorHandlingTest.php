@@ -103,10 +103,10 @@ class PostgresZtdToggleErrorHandlingTest extends AbstractPostgresPdoTestCase
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pgzte_users');
         $this->assertSame(3, (int) $stmt->fetchColumn());
 
-        // Disable ZTD — physical DB only has original 2 rows
+        // Disable ZTD — queries go to physical DB (no rows, all writes were shadow-only)
         $this->pdo->disableZtd();
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM pgzte_users');
-        $this->assertSame(2, (int) $stmt->fetchColumn());
+        $this->assertSame(0, (int) $stmt->fetchColumn());
     }
 
     public function testMultipleToggleCyclesAccumulateShadow(): void
@@ -127,7 +127,7 @@ class PostgresZtdToggleErrorHandlingTest extends AbstractPostgresPdoTestCase
         $this->assertSame(4, (int) $stmt->fetchColumn());
     }
 
-    public function testPhysicalQueryAfterDisableSeesOriginalData(): void
+    public function testPhysicalTableEmptyAfterDisable(): void
     {
         // Modify data in ZTD mode (shadow only)
         $this->pdo->exec("UPDATE pgzte_users SET name = 'Modified' WHERE id = 1");
@@ -136,9 +136,9 @@ class PostgresZtdToggleErrorHandlingTest extends AbstractPostgresPdoTestCase
         $stmt = $this->pdo->query('SELECT name FROM pgzte_users WHERE id = 1');
         $this->assertSame('Modified', $stmt->fetchColumn());
 
-        // Disable ZTD — physical DB still has original
+        // Disable ZTD — physical table has no rows (all writes were shadow-only)
         $this->pdo->disableZtd();
-        $stmt = $this->pdo->query('SELECT name FROM pgzte_users WHERE id = 1');
-        $this->assertSame('Alice', $stmt->fetchColumn());
+        $stmt = $this->pdo->query('SELECT COUNT(*) FROM pgzte_users');
+        $this->assertSame(0, (int) $stmt->fetchColumn());
     }
 }

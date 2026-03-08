@@ -30,11 +30,9 @@ class SqliteZtdToggleErrorHandlingTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE zte_users (id INT PRIMARY KEY, name VARCHAR(50))');
         $this->pdo->exec("INSERT INTO zte_users VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO zte_users VALUES (2, 'Bob')");
-
-        }
+    }
 
     public function testErrorWithZtdEnabledDoesNotCorruptShadow(): void
     {
@@ -104,14 +102,15 @@ class SqliteZtdToggleErrorHandlingTest extends AbstractSqlitePdoTestCase
         $this->assertSame('Alice', $name);
     }
 
-    public function testInsertDuringDisabledFailsOnShadowOnlyTable(): void
+    public function testInsertDuringDisabledGoesToPhysicalTable(): void
     {
-        // The table was created in ZTD mode (shadow-only), so it doesn't exist physically
+        // Table exists physically (created by raw PDO in setUp), so INSERT succeeds
         $this->pdo->disableZtd();
-
-        // Inserting to a shadow-only table with ZTD disabled should fail
-        $this->expectException(\PDOException::class);
         $this->pdo->exec("INSERT INTO zte_users VALUES (3, 'Charlie')");
+
+        // Physical table now has 1 row
+        $stmt = $this->pdo->query('SELECT COUNT(*) FROM zte_users');
+        $this->assertSame(1, (int) $stmt->fetchColumn());
     }
 
     public function testMultipleToggleCyclesAccumulateShadow(): void
@@ -135,16 +134,15 @@ class SqliteZtdToggleErrorHandlingTest extends AbstractSqlitePdoTestCase
         $this->assertSame(4, (int) $stmt->fetchColumn());
     }
 
-    public function testQueryPhysicalDuringDisabledFailsOnShadowTable(): void
+    public function testQueryPhysicalDuringDisabledReturnsNoShadowData(): void
     {
         // Insert shadow data
         $this->pdo->exec("INSERT INTO zte_users VALUES (3, 'ShadowUser')");
 
-        // Disable ZTD — table only exists in shadow, not physically
+        // Disable ZTD — physical table exists but has no data (all writes were shadow-only)
         $this->pdo->disableZtd();
 
-        // Querying the shadow-only table with ZTD disabled should fail
-        $this->expectException(\PDOException::class);
-        $this->pdo->query('SELECT COUNT(*) FROM zte_users');
+        $stmt = $this->pdo->query('SELECT COUNT(*) FROM zte_users');
+        $this->assertSame(0, (int) $stmt->fetchColumn());
     }
 }

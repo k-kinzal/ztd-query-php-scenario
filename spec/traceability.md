@@ -29,9 +29,9 @@ Maps SPEC-IDs to test classes and verified versions.
 
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
-| SPEC-2.1 | `Scenarios/BasicCrudScenario` (all), `*ZtdLifecycleTest` | V | V | V | V | V |
-| SPEC-2.2 | `Scenarios/BasicCrudScenario` (all), `*PhysicalShadowOverlayTest` | V | V | V | V | V |
-| SPEC-2.3 | `Scenarios/BasicCrudScenario` (all) | V | V | V | V | V |
+| SPEC-2.1 | `Scenarios/BasicCrudScenario` (all), `*ZtdLifecycleTest`, `*ZtdToggleErrorHandlingTest` | V | V | V | V | V |
+| SPEC-2.2 | `Scenarios/BasicCrudScenario` (all), `*PhysicalShadowOverlayTest`, `*ZtdToggleErrorHandlingTest` | V | V | V | V | V |
+| SPEC-2.3 | `Scenarios/BasicCrudScenario` (all), `*ZtdToggleErrorHandlingTest` | V | V | V | V | V |
 | SPEC-2.4 | `*SessionIsolationTest`, `*ConcurrentInstancesTest` | V | V | V | V | V |
 
 ## 3. Read Operations
@@ -39,8 +39,8 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
 | SPEC-3.1 | `Scenarios/BasicCrudScenario` (all) | V | V | V | V | V |
-| SPEC-3.2 | `Scenarios/PreparedStatementScenario` (all), `*PreparedStatementTest` | V | V | V | V | V |
-| SPEC-3.3 | `Scenarios/JoinAndSubqueryScenario` (all), `*ComplexQueryTest`, `*AdvancedQueryPatternsTest` | V | V | V | V | V |
+| SPEC-3.2 | `Scenarios/PreparedStatementScenario` (all), `*PreparedStatementTest`, `Mysqli/StatementReusePatternTest` | V | V | V | V | V |
+| SPEC-3.3 | `Scenarios/JoinAndSubqueryScenario` (all), `*ComplexQueryTest`, `*AdvancedQueryPatternsTest`, `*SubqueryPositionsTest` | V | V | V | V | V |
 | SPEC-3.3a | `*DerivedTableAndViewTest` | V | V | V | V | K |
 | SPEC-3.3b | `*ViewThroughZtdTest` | V | V | V | V | K |
 | SPEC-3.3c | `*RecursiveCteAndRightJoinTest` | V | V | V | V | K |
@@ -55,11 +55,11 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-4.1 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all), `*BatchInsertTest` | V | V | V | V | V |
 | SPEC-4.1a | `*InsertSelectUpsertTest`, `*InsertSubqueryPatternsTest` | V | V | V | V | P |
 | SPEC-4.2 | `Scenarios/BasicCrudScenario` (all), `Scenarios/WriteOperationScenario` (all) | V | V | V | V | V |
-| SPEC-4.2a | `*UpsertTest`, `*PreparedUpsertTest` | V | V | V | V | P |
-| SPEC-4.2b | `*HavingAndReplaceTest`, `*ReplaceMultiRowTest`, `*ConflictResolutionTest` | V | V | — | V | P |
+| SPEC-4.2a | `*UpsertTest`, `*PreparedUpsertTest`, `Mysqli/InsertModifiersTest` | V | V | V | V | P |
+| SPEC-4.2b | `*HavingAndReplaceTest`, `*ReplaceMultiRowTest`, `*ConflictResolutionTest`, `Mysqli/InsertModifiersTest` | V | V | — | V | P |
 | SPEC-4.2c | `*MultiTableOperationsTest` | V | V | V | — | V |
 | SPEC-4.2d | `*MultiTableDeleteTest`, `*MultiTableOperationsTest` | V | V | V | — | P |
-| SPEC-4.2e | `*InsertIgnoreTest` | V | V | V | V | V |
+| SPEC-4.2e | `*InsertIgnoreTest`, `Mysqli/InsertModifiersTest` | V | V | V | V | V |
 | SPEC-4.3 | `Scenarios/BasicCrudScenario` (all), `*DeleteWithoutWhereTest` | V | V | V | V | V |
 | SPEC-4.4 | `*ExecReturnValueTest`, `*RowCountTest` | V | V | V | V | V |
 | SPEC-4.5 | `*WriteResultSetTest` | V | V | V | V | V |

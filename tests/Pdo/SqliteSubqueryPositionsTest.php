@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests subqueries in various SQL positions (ORDER BY, HAVING, SELECT list,
  * CASE, nested WHERE) to verify CTE rewriting handles them correctly.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteSubqueryPositionsTest extends AbstractSqlitePdoTestCase
 {

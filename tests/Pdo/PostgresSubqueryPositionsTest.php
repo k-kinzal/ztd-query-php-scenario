@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests subqueries in various SQL positions on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class PostgresSubqueryPositionsTest extends AbstractPostgresPdoTestCase
 {

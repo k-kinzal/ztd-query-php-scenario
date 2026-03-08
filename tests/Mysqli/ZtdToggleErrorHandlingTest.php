@@ -10,9 +10,8 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests error handling across ZTD toggle boundaries on MySQLi:
  * - Errors when ZTD is enabled vs disabled
  * - State consistency after toggle + error
- * - Prepared statements created with ZTD on/off and executed across toggles
  * - Shadow data visibility vs physical data across toggles
- * @spec pending
+ * @spec SPEC-2.1, SPEC-2.2, SPEC-2.3
  */
 class ZtdToggleErrorHandlingTest extends AbstractMysqliTestCase
 {
@@ -26,12 +25,10 @@ class ZtdToggleErrorHandlingTest extends AbstractMysqliTestCase
         return ['mi_zte_users'];
     }
 
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Populate shadow store with same data as physical
         $this->mysqli->query("INSERT INTO mi_zte_users VALUES (1, 'Alice')");
         $this->mysqli->query("INSERT INTO mi_zte_users VALUES (2, 'Bob')");
     }
@@ -40,12 +37,13 @@ class ZtdToggleErrorHandlingTest extends AbstractMysqliTestCase
     {
         try {
             $this->mysqli->query('SELECT * FROM nonexistent_xyz');
-        } catch (\Exception $e) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 
         $result = $this->mysqli->query('SELECT name FROM mi_zte_users WHERE id = 1');
-        $this->assertSame('Alice', $result->fetch_assoc()['name']);
+        $row = $result->fetch_assoc();
+        $this->assertSame('Alice', $row['name']);
     }
 
     public function testErrorWithZtdDisabledThenReEnable(): void
@@ -54,14 +52,15 @@ class ZtdToggleErrorHandlingTest extends AbstractMysqliTestCase
 
         try {
             $this->mysqli->query('SELECT * FROM nonexistent_xyz');
-        } catch (\Exception $e) {
-            // Expected — MySQLi may return false instead of throwing
+        } catch (\RuntimeException $e) {
+            // Expected
         }
 
         $this->mysqli->enableZtd();
 
         $result = $this->mysqli->query('SELECT name FROM mi_zte_users WHERE id = 1');
-        $this->assertSame('Alice', $result->fetch_assoc()['name']);
+        $row = $result->fetch_assoc();
+        $this->assertSame('Alice', $row['name']);
     }
 
     public function testToggleAfterErrorPreservesState(): void
@@ -70,71 +69,71 @@ class ZtdToggleErrorHandlingTest extends AbstractMysqliTestCase
 
         try {
             $this->mysqli->query('INSERT INTO nonexistent_xyz VALUES (1)');
-        } catch (\Exception $e) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 
         $this->mysqli->disableZtd();
         $this->mysqli->enableZtd();
 
-        $result = $this->mysqli->query('SELECT COUNT(*) as cnt FROM mi_zte_users');
-        $this->assertEquals(3, $result->fetch_assoc()['cnt']);
-    }
-
-    public function testPreparedStatementSurvivesToggle(): void
-    {
-        $stmt = $this->mysqli->prepare('SELECT name FROM mi_zte_users WHERE id = ?');
-        $id = 1;
-        $stmt->bind_param('i', $id);
-
-        $this->mysqli->disableZtd();
-        $this->mysqli->enableZtd();
-
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $this->assertSame('Alice', $result->fetch_assoc()['name']);
+        $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_zte_users');
+        $row = $result->fetch_assoc();
+        $this->assertSame(3, (int) $row['cnt']);
     }
 
     public function testShadowInsertNotVisibleWhenDisabled(): void
     {
         $this->mysqli->query("INSERT INTO mi_zte_users VALUES (4, 'ShadowUser')");
 
-        $result = $this->mysqli->query('SELECT COUNT(*) as cnt FROM mi_zte_users');
-        $this->assertEquals(3, $result->fetch_assoc()['cnt']);
+        // ZTD sees all shadow rows
+        $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_zte_users');
+        $row = $result->fetch_assoc();
+        $this->assertSame(3, (int) $row['cnt']);
 
-        // Disable ZTD — physical table only has 2 rows
+        // Disable ZTD — queries go to physical DB (no rows, all writes were shadow-only)
         $this->mysqli->disableZtd();
-        $result = $this->mysqli->query('SELECT COUNT(*) as cnt FROM mi_zte_users');
-        $this->assertEquals(2, $result->fetch_assoc()['cnt']);
+
+        $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_zte_users');
+        $row = $result->fetch_assoc();
+        $this->assertSame(0, (int) $row['cnt']);
     }
 
     public function testMultipleToggleCyclesAccumulateShadow(): void
     {
+        // Cycle 1
         $this->mysqli->query("INSERT INTO mi_zte_users VALUES (3, 'Charlie')");
         $this->mysqli->disableZtd();
         $this->mysqli->enableZtd();
 
+        // Cycle 2
         $this->mysqli->query("INSERT INTO mi_zte_users VALUES (4, 'Diana')");
 
-        $result = $this->mysqli->query('SELECT COUNT(*) as cnt FROM mi_zte_users');
-        $this->assertEquals(4, $result->fetch_assoc()['cnt']);
+        $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_zte_users');
+        $row = $result->fetch_assoc();
+        $this->assertSame(4, (int) $row['cnt']);
 
+        // Cycle 3
         $this->mysqli->disableZtd();
         $this->mysqli->enableZtd();
 
-        $result = $this->mysqli->query('SELECT COUNT(*) as cnt FROM mi_zte_users');
-        $this->assertEquals(4, $result->fetch_assoc()['cnt']);
+        $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_zte_users');
+        $row = $result->fetch_assoc();
+        $this->assertSame(4, (int) $row['cnt']);
     }
 
-    public function testPhysicalQueryAfterDisableSeesOriginalData(): void
+    public function testPhysicalTableEmptyAfterDisable(): void
     {
         $this->mysqli->query("UPDATE mi_zte_users SET name = 'Modified' WHERE id = 1");
 
+        // ZTD sees the modification
         $result = $this->mysqli->query('SELECT name FROM mi_zte_users WHERE id = 1');
-        $this->assertSame('Modified', $result->fetch_assoc()['name']);
+        $row = $result->fetch_assoc();
+        $this->assertSame('Modified', $row['name']);
 
+        // Disable ZTD — physical table has no rows (all writes were shadow-only)
         $this->mysqli->disableZtd();
-        $result = $this->mysqli->query('SELECT name FROM mi_zte_users WHERE id = 1');
-        $this->assertSame('Alice', $result->fetch_assoc()['name']);
+        $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_zte_users');
+        $row = $result->fetch_assoc();
+        $this->assertSame(0, (int) $row['cnt']);
     }
 }

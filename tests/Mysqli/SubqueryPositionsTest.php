@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests subqueries in various SQL positions on MySQLi.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SubqueryPositionsTest extends AbstractMysqliTestCase
 {
@@ -24,7 +24,6 @@ class SubqueryPositionsTest extends AbstractMysqliTestCase
     {
         return ['mi_sp_orders', 'mi_sp_products'];
     }
-
 
     protected function setUp(): void
     {
@@ -50,7 +49,22 @@ class SubqueryPositionsTest extends AbstractMysqliTestCase
         ");
         $rows = $result->fetch_all(MYSQLI_ASSOC);
         $this->assertSame(5, (int) $rows[0]['total_qty']);
+        $this->assertSame(1, (int) $rows[1]['total_qty']);
+        $this->assertSame(5, (int) $rows[2]['total_qty']);
         $this->assertNull($rows[3]['total_qty']);
+    }
+
+    public function testSubqueryInOrderBy(): void
+    {
+        $result = $this->mysqli->query("
+            SELECT p.name
+            FROM mi_sp_products p
+            ORDER BY (SELECT COALESCE(SUM(o.qty), 0) FROM mi_sp_orders o WHERE o.product_id = p.id) DESC
+        ");
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        $names = array_column($rows, 'name');
+        $this->assertSame('Thingamajig', $names[3]);
+        $this->assertSame('Gadget', $names[2]);
     }
 
     public function testNestedWhereWithMultipleOperators(): void
@@ -61,7 +75,8 @@ class SubqueryPositionsTest extends AbstractMysqliTestCase
                OR (p.price < 10 AND p.id IN (SELECT o.product_id FROM mi_sp_orders o WHERE o.qty >= 5))
             ORDER BY p.id
         ");
-        $names = array_column($result->fetch_all(MYSQLI_ASSOC), 'name');
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        $names = array_column($rows, 'name');
         $this->assertSame(['Widget', 'Gadget', 'Doohickey'], $names);
     }
 
@@ -73,7 +88,20 @@ class SubqueryPositionsTest extends AbstractMysqliTestCase
               AND NOT EXISTS (SELECT 1 FROM mi_sp_orders o WHERE o.product_id = p.id AND o.qty > 4)
             ORDER BY p.id
         ");
-        $names = array_column($result->fetch_all(MYSQLI_ASSOC), 'name');
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        $names = array_column($rows, 'name');
         $this->assertSame(['Widget', 'Gadget'], $names);
+    }
+
+    public function testSubqueryReflectsMutations(): void
+    {
+        $this->mysqli->query("DELETE FROM mi_sp_orders WHERE product_id = 1");
+
+        $result = $this->mysqli->query("
+            SELECT (SELECT SUM(o.qty) FROM mi_sp_orders o WHERE o.product_id = p.id) AS total_qty
+            FROM mi_sp_products p WHERE p.id = 1
+        ");
+        $row = $result->fetch_assoc();
+        $this->assertNull($row['total_qty']);
     }
 }

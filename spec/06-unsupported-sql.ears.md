@@ -42,3 +42,28 @@ SAVEPOINT, RELEASE SAVEPOINT, and ROLLBACK TO SAVEPOINT are NOT supported:
 - **PostgreSQL**: Silently pass through, but shadow store does NOT participate in savepoint semantics.
 
 For `ZtdMysqli`, use dedicated methods (`begin_transaction()`, `commit()`, `rollback()`) rather than SQL strings.
+
+## SPEC-6.4 EXPLAIN Statements
+**Status:** Pending Verification
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ExplainQueryTest`, `Pdo/MysqlExplainQueryTest`, `Pdo/PostgresExplainQueryTest`, `Pdo/SqliteExplainPragmaTest`
+
+EXPLAIN is a utility statement used for performance debugging. Behavior through ZTD:
+
+- **MySQL**: `EXPLAIN SELECT/UPDATE/DELETE` and `EXPLAIN FORMAT=JSON`. May be treated as unsupported SQL or may execute against the CTE-rewritten query.
+- **PostgreSQL**: `EXPLAIN`, `EXPLAIN ANALYZE`, `EXPLAIN (FORMAT JSON)`, `EXPLAIN (COSTS OFF)`. May be treated as unsupported SQL or may execute.
+- **SQLite**: `EXPLAIN QUERY PLAN` and `EXPLAIN`. See also `Pdo/SqliteExplainPragmaTest`.
+
+EXPLAIN should not modify shadow state. Shadow operations should continue to work after an EXPLAIN attempt (whether it succeeds or throws).
+
+## SPEC-6.5 CALL Stored Procedures
+**Status:** Pending Verification
+**Platforms:** MySQLi, MySQL-PDO
+**Tests:** `Mysqli/StoredProcedureTest`, `Pdo/MysqlStoredProcedureTest`
+
+`CALL procedure_name(args)` is MySQL-specific syntax for invoking stored procedures. CALL statements may be treated as unsupported SQL by the ZTD adapter because they are neither SELECT, INSERT, UPDATE, DELETE, nor DDL.
+
+- Stored procedures that perform SELECT internally read from the physical table, not the shadow store.
+- Stored procedures that perform INSERT/UPDATE/DELETE modify the physical table, bypassing the shadow store.
+
+Shadow operations should continue to work after a CALL attempt (whether it succeeds or throws). PostgreSQL does not use CALL for function invocation (uses `SELECT func()` instead, which is covered by [SPEC-3.3g](#spec-33g-user-defined-functions-in-queries)).

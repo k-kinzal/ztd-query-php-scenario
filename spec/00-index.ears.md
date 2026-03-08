@@ -57,7 +57,7 @@ vendor/bin/phpunit --filter MysqlBasicCrudTest
 | [03-read-operations.ears.md](03-read-operations.ears.md) | 3. Read Operations | SPEC-3.1 – SPEC-3.4 | SELECT, prepared SELECT, complex queries, fetch methods |
 | [04-write-operations.ears.md](04-write-operations.ears.md) | 4. Write Operations | SPEC-4.1 – SPEC-4.12 | INSERT, UPDATE, DELETE, UPSERT, transactions, utility methods |
 | [05-ddl-operations.ears.md](05-ddl-operations.ears.md) | 5. DDL Operations | SPEC-5.1 – SPEC-5.3 | CREATE TABLE, ALTER TABLE, DROP TABLE, TRUNCATE |
-| [06-unsupported-sql.ears.md](06-unsupported-sql.ears.md) | 6. Unsupported SQL | SPEC-6.1 – SPEC-6.3 | Default behavior, behavior rules, transaction statements |
+| [06-unsupported-sql.ears.md](06-unsupported-sql.ears.md) | 6. Unsupported SQL | SPEC-6.1 – SPEC-6.5 | Default behavior, behavior rules, transaction statements, EXPLAIN, CALL |
 | [07-unknown-schema.ears.md](07-unknown-schema.ears.md) | 7. Unknown Schema | SPEC-7.1 – SPEC-7.4 | Passthrough, Exception, EmptyResult, Notice modes |
 | [08-constraints.ears.md](08-constraints.ears.md) | 8. Constraints | SPEC-8.1 – SPEC-8.2 | Shadow store constraint behavior, error recovery |
 | [09-configuration.ears.md](09-configuration.ears.md) | 9. Configuration | SPEC-9.1 – SPEC-9.2 | ZtdConfig, default configuration |

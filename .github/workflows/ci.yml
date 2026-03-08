@@ -46,7 +46,7 @@ jobs:
 
       - name: Upload JUnit XML
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: junit-php${{ matrix.php }}
           path: build/junit.xml
@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload verification log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: verification-log-php${{ matrix.php }}
           path: spec/verification-log.json
@@ -63,7 +63,7 @@ jobs:
 
       - name: Upload baseline
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: baseline-php${{ matrix.php }}
           path: baseline.json

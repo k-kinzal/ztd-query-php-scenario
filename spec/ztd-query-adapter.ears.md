@@ -819,3 +819,13 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **Multiple ZtdPdo instances with independent shadow stores**: Each ZtdPdo instance maintains its own independent shadow store. Mutations (INSERT, UPDATE, DELETE) in one instance are NOT visible to another instance, even when both wrap connections to the same database schema. Disabling ZTD on one instance does not affect the other. Verified on SQLite.
 
 - **ENUM column type in shadow store (MySQL)**: MySQL ENUM columns (`ENUM('active', 'inactive', 'pending')`) work correctly in ZTD shadow store. INSERT with valid ENUM values, UPDATE to different ENUM values, WHERE comparison against ENUM values, and NULL ENUM values all work correctly. Verified on MySQLi.
+
+- **Prepared DELETE with subqueries across platforms**: Prepared DELETE with IN subquery (`DELETE FROM t WHERE col IN (SELECT id FROM t2 WHERE tier = ?)`) and prepared DELETE with simple WHERE both work correctly via the prepare path on all platforms. Prepared DELETE followed by correlated SELECT correctly reflects the deletion. Verified on SQLite, MySQL (PDO and MySQLi), and PostgreSQL.
+
+- **Prepared UPDATE with self-referencing arithmetic across platforms**: Prepared `UPDATE SET col = col + ?` with parameter binding works correctly on all platforms — increment, decrement, and conditional matching (WHERE counter >= ?) all produce correct results. Verified on SQLite, MySQL (PDO and MySQLi), and PostgreSQL.
+
+- **JOIN + aggregate queries correctly reflect shadow mutations**: LEFT JOIN with COUNT, INNER JOIN with SUM, and HAVING filters all correctly reflect shadow mutations (INSERT new orders, UPDATE amounts, DELETE orders). Multi-table GROUP BY aggregation produces correct results after each mutation type. Verified on SQLite, MySQL (PDO and MySQLi), and PostgreSQL.
+
+- **Prepared pagination (LIMIT/OFFSET) after mutations**: Prepared SELECT with parameterized LIMIT/OFFSET correctly reflects shadow mutations. INSERT adds rows to pagination results, DELETE reduces total pages, and UPDATE with category change correctly alters filtered pagination. Verified on SQLite.
+
+- **ZTD enable/disable cycle data persistence**: Shadow data (INSERT, UPDATE, DELETE) persists through disable/re-enable toggle cycles. Physical INSERT during disabled period is invisible after re-enabling (shadow replaces physical). Multiple toggle cycles correctly accumulate shadow data. Verified on SQLite.

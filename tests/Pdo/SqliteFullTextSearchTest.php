@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * SQLite uses FTS5 virtual tables for full-text search. Tests verify
  * MATCH operator, bm25() ranking, snippet(), and highlight() work
  * through shadow queries.
- * @spec pending
+ * @spec SPEC-3.3f
  */
 class SqliteFullTextSearchTest extends AbstractSqlitePdoTestCase
 {

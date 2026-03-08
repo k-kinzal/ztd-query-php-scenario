@@ -13,7 +13,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * INFORMATION_SCHEMA is a standard metadata schema. Queries to it
  * should pass through to the physical database since INFORMATION_SCHEMA
  * tables are not reflected by ZTD.
- * @spec pending
+ * @spec SPEC-10.2.20
  */
 class MysqlInformationSchemaTest extends AbstractMysqlPdoTestCase
 {

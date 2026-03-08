@@ -15,7 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests multi-tenant query patterns on PostgreSQL PDO.
  *
  * Cross-platform parity with MultiTenantPatternTest (MySQLi).
- * @spec pending
+ * @spec SPEC-10.2.21
  */
 class PostgresMultiTenantPatternTest extends TestCase
 {

@@ -13,7 +13,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * counter updates). Since ZTD operations go to the shadow store rather than
  * the physical database, triggers on physical tables should NOT fire for
  * shadow operations.
- * @spec pending
+ * @spec SPEC-8.3
  */
 class TriggerInteractionTest extends AbstractMysqliTestCase
 {

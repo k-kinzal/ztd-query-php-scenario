@@ -59,7 +59,7 @@ vendor/bin/phpunit --filter MysqlBasicCrudTest
 | [05-ddl-operations.ears.md](05-ddl-operations.ears.md) | 5. DDL Operations | SPEC-5.1 – SPEC-5.3 | CREATE TABLE, ALTER TABLE, DROP TABLE, TRUNCATE |
 | [06-unsupported-sql.ears.md](06-unsupported-sql.ears.md) | 6. Unsupported SQL | SPEC-6.1 – SPEC-6.5 | Default behavior, behavior rules, transaction statements, EXPLAIN, CALL |
 | [07-unknown-schema.ears.md](07-unknown-schema.ears.md) | 7. Unknown Schema | SPEC-7.1 – SPEC-7.4 | Passthrough, Exception, EmptyResult, Notice modes |
-| [08-constraints.ears.md](08-constraints.ears.md) | 8. Constraints | SPEC-8.1 – SPEC-8.2 | Shadow store constraint behavior, error recovery |
+| [08-constraints.ears.md](08-constraints.ears.md) | 8. Constraints | SPEC-8.1 – SPEC-8.3 | Shadow store constraint behavior, error recovery, trigger behavior |
 | [09-configuration.ears.md](09-configuration.ears.md) | 9. Configuration | SPEC-9.1 – SPEC-9.2 | ZtdConfig, default configuration |
 | [10-platform-notes.ears.md](10-platform-notes.ears.md) | 10. Platform Notes | SPEC-10.2.x | Platform-specific behavioral notes |
 | [11-known-issues.ears.md](11-known-issues.ears.md) | 11. Known Issues | SPEC-11.x | Cross-platform inconsistencies with issue tags |

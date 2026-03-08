@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * Tests multi-tenant query patterns on MySQL PDO.
  *
  * Cross-platform parity with MultiTenantPatternTest (MySQLi).
- * @spec pending
+ * @spec SPEC-10.2.21
  */
 class MysqlMultiTenantPatternTest extends AbstractMysqlPdoTestCase
 {

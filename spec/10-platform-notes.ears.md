@@ -121,22 +121,31 @@ Platform-specific date/time functions work correctly with CTE shadow data:
 Date values survive INSERT, UPDATE, and SELECT roundtrip. Prepared statements with date range parameters work on all platforms.
 
 ## SPEC-10.2.19 PostgreSQL ENUM types
-**Status:** Pending Verification
+**Status:** Verified
 **Platforms:** PostgreSQL-PDO
+**Tested versions:** ztd-query-pdo-adapter v0.1.1, PostgreSQL 16, PHP 8.5
 **Tests:** `Pdo/PostgresEnumTypeTest`
 
-PostgreSQL native ENUM types (CREATE TYPE ... AS ENUM) work through ZTD shadow store. INSERT, UPDATE, WHERE comparison, NULL values, and prepared statements with ENUM parameters all function correctly. Cross-platform parity with MySQL column-level ENUM (MySQLi/EnumTypeTest, Pdo/MysqlEnumTypeTest).
+PostgreSQL native ENUM types (CREATE TYPE ... AS ENUM) work correctly through ZTD shadow store. INSERT, UPDATE, WHERE comparison, NULL values, filtering, ordering, and prepared statements with ENUM parameters all function correctly. Cross-platform parity with MySQL column-level ENUM (MySQLi/EnumTypeTest, Pdo/MysqlEnumTypeTest).
 
 ## SPEC-10.2.20 Schema introspection queries
-**Status:** Pending Verification
+**Status:** Verified
 **Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tested versions:** ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.5
 **Tests:** `Pdo/MysqlInformationSchemaTest`, `Pdo/PostgresInformationSchemaTest`, `Pdo/SqliteSchemaIntrospectionTest`
 
-Schema introspection queries (INFORMATION_SCHEMA on MySQL/PostgreSQL, sqlite_master/PRAGMA on SQLite) may pass through or be treated as unsupported SQL depending on the adapter. These queries read physical database metadata, not shadow store state. Shadow operations should continue to work alongside schema queries.
+Schema introspection queries read physical database metadata and may pass through or be treated as unsupported SQL depending on the adapter and query:
+
+- **MySQL PDO**: `SELECT ... FROM INFORMATION_SCHEMA.TABLES` and `INFORMATION_SCHEMA.COLUMNS` execute correctly (pass through).
+- **PostgreSQL PDO**: `SELECT ... FROM information_schema.tables` and `information_schema.columns` execute correctly (pass through).
+- **SQLite PDO**: `SELECT ... FROM sqlite_master` and `PRAGMA table_info()` may execute or throw depending on adapter behavior.
+
+**Verified behavior:** Shadow operations (INSERT, SELECT, UPDATE, DELETE) continue to work correctly alongside schema introspection queries on all platforms. The shadow store is not affected by schema queries.
 
 ## SPEC-10.2.21 Multi-tenant query patterns
-**Status:** Pending Verification
+**Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.5
 **Tests:** `Mysqli/MultiTenantPatternTest`, `Pdo/MysqlMultiTenantPatternTest`, `Pdo/PostgresMultiTenantPatternTest`, `Pdo/SqliteMultiTenantPatternTest`
 
-Multi-tenant query patterns (WHERE tenant_id = ?) work correctly through ZTD shadow store for all CRUD operations. Tenant-filtered SELECT, INSERT, UPDATE, DELETE, JOINs across tenant-filtered tables, and per-tenant aggregation (GROUP BY tenant_id) all return correct results. Mutations for one tenant do not affect other tenants' data.
+**Verified behavior:** Multi-tenant query patterns (WHERE tenant_id = ?) work correctly through ZTD shadow store for all CRUD operations. Tenant-filtered SELECT, INSERT, UPDATE, DELETE, prepared SELECT with tenant_id parameter, JOINs across tenant-filtered tables, and per-tenant aggregation (GROUP BY tenant_id) all return correct results. Mutations for one tenant do not affect other tenants' data. Physical isolation confirmed on all platforms.

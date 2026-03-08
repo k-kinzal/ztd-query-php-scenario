@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * SQLite uses sqlite_master / sqlite_schema instead of INFORMATION_SCHEMA.
  * ORMs like Doctrine and Eloquent query sqlite_master for table metadata.
  * Cross-platform parity with MysqlInformationSchemaTest and PostgresInformationSchemaTest.
- * @spec pending
+ * @spec SPEC-10.2.20
  */
 class SqliteSchemaIntrospectionTest extends AbstractSqlitePdoTestCase
 {

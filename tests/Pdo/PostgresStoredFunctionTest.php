@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * PostgreSQL uses CREATE FUNCTION and SELECT func() for function calls.
  * Tests verify SQL functions, PL/pgSQL functions, and interaction with
  * shadow data through CTE-rewritten queries.
- * @spec pending
+ * @spec SPEC-3.3g
  */
 class PostgresStoredFunctionTest extends AbstractPostgresPdoTestCase
 {

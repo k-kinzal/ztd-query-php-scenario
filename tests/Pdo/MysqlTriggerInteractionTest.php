@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * Tests database trigger interaction with ZTD on MySQL PDO.
  *
  * Cross-platform parity with TriggerInteractionTest (MySQLi).
- * @spec pending
+ * @spec SPEC-8.3
  */
 class MysqlTriggerInteractionTest extends AbstractMysqlPdoTestCase
 {

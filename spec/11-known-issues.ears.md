@@ -1,6 +1,6 @@
 # 11. Known Issues and Cross-Platform Inconsistencies
 
-## SPEC-11.UNKNOWN-UPDATE `[Unreported]` Unknown schema UPDATE (Passthrough mode)
+## SPEC-11.UNKNOWN-UPDATE `[Issue #39]` Unknown schema UPDATE (Passthrough mode)
 **Status:** Known Issue
 **Platforms:** MySQL-PDO (fromPdo), PostgreSQL-PDO, SQLite-PDO
 **Related specs:** [SPEC-7.1](07-unknown-schema.ears.md), [SPEC-7.2](07-unknown-schema.ears.md)
@@ -8,28 +8,28 @@
 
 On MySQL via `ZtdPdo::fromPdo()`, PostgreSQL, and SQLite, UPDATE on unreflected tables throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of passing through. The `unknownSchemaBehavior` setting does not take effect for UPDATE operations on these platforms. On MySQL via `fromPdo()`, behavior depends on operation history — if no prior shadow operations touched the table, Passthrough works; after a shadow INSERT, it fails.
 
-## SPEC-11.UNKNOWN-EXCEPTION `[Unreported]` Unknown schema UPDATE (Exception mode)
+## SPEC-11.UNKNOWN-EXCEPTION `[Issue #39]` Unknown schema UPDATE (Exception mode)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO, SQLite-PDO
 **Related specs:** [SPEC-7.2](07-unknown-schema.ears.md)
 
 On PostgreSQL and SQLite, UPDATE throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of `ZtdPdoException` ("Unknown table"). Exception type and message differ from MySQL.
 
-## SPEC-11.UNKNOWN-DELETE `[Unreported]` Unknown schema DELETE inconsistency
+## SPEC-11.UNKNOWN-DELETE `[Issue #39]` Unknown schema DELETE inconsistency
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO, SQLite-PDO
 **Related specs:** [SPEC-7.1](07-unknown-schema.ears.md)
 
 On PostgreSQL, DELETE in Exception mode throws `RuntimeException` rather than `ZtdPdoException`. On SQLite, same behavior.
 
-## SPEC-11.SQLITE-ON-CONFLICT `[Unreported]` INSERT ... ON CONFLICT DO NOTHING (SQLite)
+## SPEC-11.SQLITE-ON-CONFLICT `[Issue #41]` INSERT ... ON CONFLICT DO NOTHING (SQLite)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO
 **Related specs:** [SPEC-4.2a](04-write-operations.ears.md), [SPEC-4.2e](04-write-operations.ears.md)
 
 On SQLite, `INSERT ... ON CONFLICT DO NOTHING` inserts both rows (shadow store does not enforce PK constraints). Use `INSERT OR IGNORE` instead. PostgreSQL handles this correctly.
 
-## SPEC-11.MYSQL-INSERT-SELECT-STAR `[Unreported]` INSERT ... SELECT * (MySQL)
+## SPEC-11.MYSQL-INSERT-SELECT-STAR `[Issue #40]` INSERT ... SELECT * (MySQL)
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
 **Related specs:** [SPEC-4.1a](04-write-operations.ears.md)
@@ -44,14 +44,14 @@ On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` because the 
 
 On PostgreSQL, table references inside user CTEs are NOT rewritten — the inner CTE reads from the physical table, returning 0 rows. MySQL and SQLite work correctly.
 
-## SPEC-11.PG-SCHEMA-QUALIFIED `[Unreported]` Schema-qualified table names (PostgreSQL)
+## SPEC-11.PG-SCHEMA-QUALIFIED `[Issue #24]` Schema-qualified table names (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
 **Tests:** `Pdo/PostgresSchemaQualifiedTest`
 
 INSERT/UPDATE/DELETE with `public.tablename` work. SELECT returns empty (CTE rewriter doesn't recognize schema-qualified names). Workaround: use unqualified table names in SELECT.
 
-## SPEC-11.EXECUTE-QUERY-UPSERT `[Unreported]` execute_query vs prepare+bind_param for UPSERT/REPLACE (MySQLi)
+## SPEC-11.EXECUTE-QUERY-UPSERT `[Issue #42]` execute_query vs prepare+bind_param for UPSERT/REPLACE (MySQLi)
 **Status:** Known Issue
 **Platforms:** MySQLi
 **Related specs:** [SPEC-4.2a](04-write-operations.ears.md), [SPEC-4.2b](04-write-operations.ears.md)
@@ -98,7 +98,7 @@ INSERT/UPDATE/DELETE RETURNING clause is not supported. CTE rewriter does not pr
 
 On PDO, rows inserted via `prepare()` + `execute()` cannot be subsequently updated or deleted. MySQLi is NOT affected. Use `exec()` for INSERT when subsequent UPDATE/DELETE is needed.
 
-## SPEC-11.PDO-UPSERT `[Unreported]` Upsert via PDO prepared statements
+## SPEC-11.PDO-UPSERT `[Issue #17]` Upsert via PDO prepared statements
 **Status:** Known Issue
 **Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
 **Related specs:** [SPEC-4.2a](04-write-operations.ears.md), [SPEC-4.2b](04-write-operations.ears.md)
@@ -113,21 +113,21 @@ PDO prepared REPLACE INTO and INSERT ... ON CONFLICT DO UPDATE do NOT update exi
 
 On SQLite, HAVING with bound parameters returns empty results. HAVING with literal values works. MySQL and PostgreSQL work correctly.
 
-## SPEC-11.MYSQL-BACKSLASH `[Unreported]` Backslash corruption in MySQL shadow store
+## SPEC-11.MYSQL-BACKSLASH `[Issue #5]` Backslash corruption in MySQL shadow store
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
 **Tests:** `Mysqli/BackslashCorruptionTest`, `Pdo/MysqlBackslashCorruptionTest`
 
 Backslash characters are corrupted in shadow store: `\t` → tab, `\n` → newline, etc. CTE rewriter embeds values without escaping backslashes. SQLite and PostgreSQL not affected.
 
-## SPEC-11.PG-BOOLEAN-FALSE `[Unreported]` PostgreSQL BOOLEAN false casting
+## SPEC-11.PG-BOOLEAN-FALSE `[Issue #6]` PostgreSQL BOOLEAN false casting
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
 **Tests:** `Pdo/PostgresTypeEdgeCaseTest`
 
 Inserting `false` into BOOLEAN column via prepared statement succeeds, but SELECT fails (CTE generates `CAST('' AS BOOLEAN)`). `true` works correctly.
 
-## SPEC-11.PG-BIGINT `[Unreported]` PostgreSQL BIGINT overflow
+## SPEC-11.PG-BIGINT `[Issue #6]` PostgreSQL BIGINT overflow
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
 **Tests:** `Pdo/PostgresTypeEdgeCaseTest`
@@ -142,7 +142,7 @@ Large integers (> 2^31) in BIGINT columns fail on SELECT (CTE generates `CAST(va
 
 `DELETE FROM table` without WHERE is silently ignored on SQLite. Workaround: `DELETE FROM table WHERE 1=1`.
 
-## SPEC-11.MYSQL-EXCEPT-INTERSECT `[Unreported]` EXCEPT/INTERSECT on MySQL
+## SPEC-11.MYSQL-EXCEPT-INTERSECT `[Issue #14]` EXCEPT/INTERSECT on MySQL
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
 **Related specs:** [SPEC-3.3d](03-read-operations.ears.md)
@@ -150,7 +150,7 @@ Large integers (> 2^31) in BIGINT columns fail on SELECT (CTE generates `CAST(va
 
 EXCEPT and INTERSECT throw `UnsupportedSqlException` on MySQL. The CTE rewriter misparses them as multi-statement queries. Workaround: NOT IN / IN subqueries.
 
-## SPEC-11.PG-EXTRACT `[Unreported]` PostgreSQL EXTRACT on shadow dates
+## SPEC-11.PG-EXTRACT `[Issue #15]` PostgreSQL EXTRACT on shadow dates
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
 **Tests:** `Pdo/PostgresDateTimeFunctionsTest`
@@ -171,14 +171,14 @@ EXCEPT and INTERSECT throw `UnsupportedSqlException` on MySQL. The CTE rewriter 
 
 `INSERT INTO t (col) VALUES (DEFAULT)` and `INSERT INTO t DEFAULT VALUES` both fail under ZTD. The InsertTransformer converts to SELECT expressions where DEFAULT is invalid. Workaround: supply values explicitly.
 
-## SPEC-11.PG-ARRAY-TYPE `[Unreported]` PostgreSQL array types broken
+## SPEC-11.PG-ARRAY-TYPE `[Issue #33]` PostgreSQL array types broken
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
 **Tests:** `Pdo/PostgresArrayTypeTest`
 
 INSERT with INTEGER[] array values succeeds, but SELECT fails (CastRenderer emits base type without array suffix). TEXT[] is unaffected. ARRAY constructor syntax causes column count errors.
 
-## SPEC-11.BINARY-DATA `[Unreported]` BLOB/BINARY data with binary bytes
+## SPEC-11.BINARY-DATA `[Issue #19]` BLOB/BINARY data with binary bytes
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
 
@@ -191,7 +191,7 @@ Inserting binary data (null bytes, high-byte values) via prepared statements suc
 
 PostgreSQL PgSqlParser's regex doesn't handle `''` escaping, causing incorrect WHERE clause extraction. Workaround: use prepared statements.
 
-## SPEC-11.SQLITE-CTAS `[Unreported]` CREATE TABLE AS SELECT (SQLite)
+## SPEC-11.SQLITE-CTAS `[Issue #36]` CREATE TABLE AS SELECT (SQLite)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO
 **Related specs:** [SPEC-5.1c](05-ddl-operations.ears.md)
@@ -199,7 +199,7 @@ PostgreSQL PgSqlParser's regex doesn't handle `''` escaping, causing incorrect W
 
 SELECT immediately after CTAS fails with "no such table". After INSERT, original CTAS data is lost.
 
-## SPEC-11.INSERT-SELECT-COMPUTED `[Unreported]` INSERT...SELECT with computed columns (SQLite/PostgreSQL)
+## SPEC-11.INSERT-SELECT-COMPUTED `[Issue #20]` INSERT...SELECT with computed columns (SQLite/PostgreSQL)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO, PostgreSQL-PDO
 **Related specs:** [SPEC-4.1a](04-write-operations.ears.md)
@@ -207,15 +207,31 @@ SELECT immediately after CTAS fails with "no such table". After INSERT, original
 
 Computed columns and aggregated values become NULL when using INSERT...SELECT on SQLite and PostgreSQL. MySQL works correctly.
 
-## SPEC-11.MYSQL-COMMA-UPDATE `[Unreported]` MySQL comma-syntax multi-table UPDATE
+## SPEC-11.MYSQL-COMMA-UPDATE `[Issue #44]` MySQL comma-syntax multi-table UPDATE
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
 **Related specs:** [SPEC-4.2c](04-write-operations.ears.md)
 
 `UPDATE t1, t2 SET ... WHERE ...` is partially supported. Prefer JOIN syntax.
 
-## SPEC-11.UPDATE-SUBQUERY-SET `[Unreported]` UPDATE SET col = (subquery) platform differences
+## SPEC-11.UPDATE-SUBQUERY-SET `[Issue #10]` UPDATE SET col = (subquery) platform differences
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO, SQLite-PDO (fails); MySQLi, MySQL-PDO (works)
 
 Non-correlated scalar subqueries in UPDATE SET work on MySQL and SQLite but fail on PostgreSQL. Correlated subqueries in SET fail on SQLite.
+
+## SPEC-11.FULLTEXT `[Issue #43]` Full-text search not supported through ZTD
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Related specs:** [SPEC-3.3f](03-read-operations.ears.md)
+**Tests:** `Mysqli/FullTextSearchTest`, `Pdo/MysqlFullTextSearchTest`, `Pdo/PostgresFullTextSearchTest`, `Pdo/SqliteFullTextSearchTest`
+
+Full-text search queries (MATCH...AGAINST on MySQL, tsvector/tsquery on PostgreSQL, FTS5 MATCH on SQLite) fail through ZTD CTE rewriting. On MySQL, the CTE-derived table does not carry FULLTEXT indexes, causing error 1214. On SQLite, FTS5 virtual table references are not recognized by the CTE rewriter. On PostgreSQL, tsvector column types are not correctly reproduced in CTE casts. Workaround: disable ZTD for full-text search queries.
+
+## SPEC-11.PG-PREPARED-FUNCTION `[Issue #45]` PostgreSQL prepared statement with UDF in WHERE
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-3.3g](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresStoredFunctionTest`
+
+On PostgreSQL, prepared statements with user-defined functions in WHERE clauses may return incorrect (empty) results, despite the same query working correctly via `query()`. The `$1` placeholder parameter combined with a UDF call in the WHERE condition does not filter correctly through the CTE-rewritten query.

@@ -16,7 +16,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * PostgreSQL triggers use CREATE FUNCTION + CREATE TRIGGER syntax.
  * Cross-platform parity with MySQL trigger tests.
- * @spec pending
+ * @spec SPEC-8.3
  */
 class PostgresTriggerInteractionTest extends TestCase
 {

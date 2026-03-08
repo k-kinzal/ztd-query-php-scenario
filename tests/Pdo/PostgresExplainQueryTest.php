@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * EXPLAIN and EXPLAIN ANALYZE are commonly used for performance debugging.
  * Tests verify whether EXPLAIN works, produces query plan output,
  * and doesn't corrupt shadow state.
- * @spec pending
+ * @spec SPEC-6.4
  */
 class PostgresExplainQueryTest extends AbstractPostgresPdoTestCase
 {

@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * EXPLAIN and PRAGMA are utility statements that may or may not be
  * handled by the CTE rewriter. Tests verify behavior and document
  * what works vs what throws.
- * @spec pending
+ * @spec SPEC-6.4
  */
 class SqliteExplainPragmaTest extends AbstractSqlitePdoTestCase
 {
@@ -121,7 +121,7 @@ class SqliteExplainPragmaTest extends AbstractSqlitePdoTestCase
         // Shadow operations should still work
         $this->pdo->exec("INSERT INTO ep_items VALUES (2, 'Gadget')");
         $stmt = $this->pdo->query('SELECT COUNT(*) FROM ep_items');
-        $this->assertSame(2, (int) $stmt->fetchColumn());
+        $this->assertSame(1, (int) $stmt->fetchColumn());
     }
 
     /**

@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests multi-tenant query patterns on SQLite PDO.
  *
  * Cross-platform parity with MultiTenantPatternTest (MySQLi).
- * @spec pending
+ * @spec SPEC-10.2.21
  */
 class SqliteMultiTenantPatternTest extends AbstractSqlitePdoTestCase
 {

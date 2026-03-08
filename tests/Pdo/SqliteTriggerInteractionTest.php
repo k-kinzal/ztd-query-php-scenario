@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests database trigger interaction with ZTD on SQLite PDO.
  *
  * Cross-platform parity with MySQL/PostgreSQL trigger tests.
- * @spec pending
+ * @spec SPEC-8.3
  */
 class SqliteTriggerInteractionTest extends AbstractSqlitePdoTestCase
 {

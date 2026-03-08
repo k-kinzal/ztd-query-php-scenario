@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * Stored procedures are common in enterprise applications.
  * Tests verify CALL, stored functions, and interaction with shadow data.
- * @spec pending
+ * @spec SPEC-3.3g, SPEC-6.5
  */
 class MysqlStoredProcedureTest extends AbstractMysqlPdoTestCase
 {

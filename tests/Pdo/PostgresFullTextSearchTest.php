@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * PostgreSQL uses tsvector/tsquery for full-text search. Tests verify
  * to_tsvector, to_tsquery, plainto_tsquery, @@ operator, ts_rank,
  * and ts_headline work through shadow queries.
- * @spec pending
+ * @spec SPEC-3.3f
  */
 class PostgresFullTextSearchTest extends AbstractPostgresPdoTestCase
 {

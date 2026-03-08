@@ -46,8 +46,8 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-3.3c | `*RecursiveCteAndRightJoinTest` | V | V | V | V | K |
 | SPEC-3.3d | `*ExceptIntersectTest`, `*SetOperationsAndFunctionsTest` | V | V | V | V | P |
 | SPEC-3.3e | `*CteDmlTest` | V | V | V | V | K |
-| SPEC-3.3f | `*FullTextSearchTest` | ? | ? | ? | ? | Pending |
-| SPEC-3.3g | `*StoredProcedureTest`, `Pdo/PostgresStoredFunctionTest` | ? | ? | ? | — | Pending |
+| SPEC-3.3f | `*FullTextSearchTest` | K | K | K | K | K |
+| SPEC-3.3g | `*StoredProcedureTest`, `Pdo/PostgresStoredFunctionTest` | V | V | P | — | V |
 | SPEC-3.4 | `*FetchMethodsTest`, `*FetchModesTest`, `*FetchModeAdvancedTest` | V | V | V | V | V |
 
 ## 4. Write Operations
@@ -91,8 +91,8 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-6.1 | `*UnsupportedSqlTest` | V | V | V | V | V |
 | SPEC-6.2 | `*BehaviorRuleCombinationsTest`, `*BehaviorRuleConfigTest` | V | V | V | V | V |
 | SPEC-6.3 | `*SavepointTest`, `*SavepointBehaviorTest` | V | V | V | V | V |
-| SPEC-6.4 | `*ExplainQueryTest`, `Pdo/SqliteExplainPragmaTest` | ? | ? | ? | ? | Pending |
-| SPEC-6.5 | `Mysqli/StoredProcedureTest`, `Pdo/MysqlStoredProcedureTest` | ? | ? | — | — | Pending |
+| SPEC-6.4 | `*ExplainQueryTest`, `Pdo/SqliteExplainPragmaTest` | V | V | V | V | V |
+| SPEC-6.5 | `Mysqli/StoredProcedureTest`, `Pdo/MysqlStoredProcedureTest` | V | V | — | — | V |
 
 ## 7. Unknown Schema
 
@@ -109,7 +109,7 @@ Maps SPEC-IDs to test classes and verified versions.
 |---------|-------------|----|----|----|----|--------|
 | SPEC-8.1 | `*ConstraintBehaviorTest`, `*CheckConstraintBehaviorTest` | V | V | V | V | V |
 | SPEC-8.2 | `*ErrorRecoveryTest`, `*ErrorBoundaryTest` | V | V | V | V | V |
-| SPEC-8.3 | `*TriggerInteractionTest` | ? | ? | ? | ? | Pending |
+| SPEC-8.3 | `*TriggerInteractionTest` | V | V | V | V | V |
 
 ## 9. Configuration
 
@@ -124,9 +124,9 @@ Maps SPEC-IDs to test classes and verified versions.
 |---------|-------------|----|----|----|----|--------|
 | SPEC-10.2.17 | `Pdo/MysqlOffsetPaginationTest` | — | V | — | — | V |
 | SPEC-10.2.18 | `*DateTimeFunctionsTest` | V | V | V | V | V |
-| SPEC-10.2.19 | `Pdo/PostgresEnumTypeTest` | — | — | ? | — | Pending |
-| SPEC-10.2.20 | `Pdo/MysqlInformationSchemaTest`, `Pdo/PostgresInformationSchemaTest`, `Pdo/SqliteSchemaIntrospectionTest` | — | ? | ? | ? | Pending |
-| SPEC-10.2.21 | `*MultiTenantPatternTest` | ? | ? | ? | ? | Pending |
+| SPEC-10.2.19 | `Pdo/PostgresEnumTypeTest` | — | — | V | — | V |
+| SPEC-10.2.20 | `Pdo/MysqlInformationSchemaTest`, `Pdo/PostgresInformationSchemaTest`, `Pdo/SqliteSchemaIntrospectionTest` | — | V | V | V | V |
+| SPEC-10.2.21 | `*MultiTenantPatternTest` | V | V | V | V | V |
 
 ## Legend
 

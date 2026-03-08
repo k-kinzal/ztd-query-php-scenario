@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * EXPLAIN is commonly used for performance debugging.
  * Tests verify whether EXPLAIN works, produces query plan output,
  * and doesn't corrupt shadow state.
- * @spec pending
+ * @spec SPEC-6.4
  */
 class ExplainQueryTest extends AbstractMysqliTestCase
 {

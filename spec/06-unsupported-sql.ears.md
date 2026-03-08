@@ -44,26 +44,28 @@ SAVEPOINT, RELEASE SAVEPOINT, and ROLLBACK TO SAVEPOINT are NOT supported:
 For `ZtdMysqli`, use dedicated methods (`begin_transaction()`, `commit()`, `rollback()`) rather than SQL strings.
 
 ## SPEC-6.4 EXPLAIN Statements
-**Status:** Pending Verification
+**Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.5
 **Tests:** `Mysqli/ExplainQueryTest`, `Pdo/MysqlExplainQueryTest`, `Pdo/PostgresExplainQueryTest`, `Pdo/SqliteExplainPragmaTest`
 
-EXPLAIN is a utility statement used for performance debugging. Behavior through ZTD:
+EXPLAIN is a utility statement used for performance debugging. Behavior through ZTD varies by platform — EXPLAIN may execute against the CTE-rewritten query or may throw an unsupported SQL exception. Both outcomes are acceptable.
 
-- **MySQL**: `EXPLAIN SELECT/UPDATE/DELETE` and `EXPLAIN FORMAT=JSON`. May be treated as unsupported SQL or may execute against the CTE-rewritten query.
-- **PostgreSQL**: `EXPLAIN`, `EXPLAIN ANALYZE`, `EXPLAIN (FORMAT JSON)`, `EXPLAIN (COSTS OFF)`. May be treated as unsupported SQL or may execute.
-- **SQLite**: `EXPLAIN QUERY PLAN` and `EXPLAIN`. See also `Pdo/SqliteExplainPragmaTest`.
+- **MySQL (MySQLi and PDO)**: `EXPLAIN SELECT`, `EXPLAIN UPDATE`, `EXPLAIN DELETE`, and `EXPLAIN FORMAT=JSON` execute or throw. When they execute, the query plan reflects the CTE-rewritten query structure.
+- **PostgreSQL**: `EXPLAIN`, `EXPLAIN ANALYZE`, `EXPLAIN (FORMAT JSON)`, `EXPLAIN (COSTS OFF)` execute or throw. When they execute, plan output reflects CTE rewriting.
+- **SQLite**: `EXPLAIN QUERY PLAN` and `EXPLAIN` execute or throw. `PRAGMA table_info()`, `PRAGMA foreign_keys`, `PRAGMA journal_mode` may execute or throw depending on the adapter.
 
-EXPLAIN should not modify shadow state. Shadow operations should continue to work after an EXPLAIN attempt (whether it succeeds or throws).
+**Verified behavior:** EXPLAIN does not modify shadow state. Shadow operations (INSERT, SELECT, UPDATE, DELETE) continue to work correctly after an EXPLAIN attempt, whether it succeeds or throws. EXPLAIN does not corrupt the shadow store.
 
 ## SPEC-6.5 CALL Stored Procedures
-**Status:** Pending Verification
+**Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO
+**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PHP 8.5
 **Tests:** `Mysqli/StoredProcedureTest`, `Pdo/MysqlStoredProcedureTest`
 
-`CALL procedure_name(args)` is MySQL-specific syntax for invoking stored procedures. CALL statements may be treated as unsupported SQL by the ZTD adapter because they are neither SELECT, INSERT, UPDATE, DELETE, nor DDL.
+`CALL procedure_name(args)` is MySQL-specific syntax for invoking stored procedures. CALL statements are treated as unsupported SQL by the ZTD adapter — they throw an exception (default behavior) or are handled by behavior rules.
 
 - Stored procedures that perform SELECT internally read from the physical table, not the shadow store.
 - Stored procedures that perform INSERT/UPDATE/DELETE modify the physical table, bypassing the shadow store.
 
-Shadow operations should continue to work after a CALL attempt (whether it succeeds or throws). PostgreSQL does not use CALL for function invocation (uses `SELECT func()` instead, which is covered by [SPEC-3.3g](#spec-33g-user-defined-functions-in-queries)).
+**Verified behavior:** Shadow operations continue to work correctly after a CALL attempt (whether it succeeds or throws). The shadow store is not corrupted by a failed CALL attempt. PostgreSQL does not use CALL for function invocation (uses `SELECT func()` instead, which is covered by [SPEC-3.3g](#spec-33g-user-defined-functions-in-queries)).

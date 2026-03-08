@@ -16,7 +16,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * PostgreSQL uses CREATE TYPE ... AS ENUM for enums, unlike MySQL's
  * column-level ENUM definition. Cross-platform parity with MysqlEnumTypeTest.
- * @spec pending
+ * @spec SPEC-10.2.19
  */
 class PostgresEnumTypeTest extends TestCase
 {

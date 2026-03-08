@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Multi-tenant applications filter all queries by tenant_id. This is a
  * very common SaaS pattern that exercises WHERE-filtered CRUD, JOINs
  * with tenant isolation, and aggregation per tenant through ZTD.
- * @spec pending
+ * @spec SPEC-10.2.21
  */
 class MultiTenantPatternTest extends AbstractMysqliTestCase
 {

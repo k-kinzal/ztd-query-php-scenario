@@ -16,7 +16,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * ORMs and migration tools frequently query information_schema for metadata.
  * Cross-platform parity with MysqlInformationSchemaTest.
- * @spec pending
+ * @spec SPEC-10.2.20
  */
 class PostgresInformationSchemaTest extends TestCase
 {

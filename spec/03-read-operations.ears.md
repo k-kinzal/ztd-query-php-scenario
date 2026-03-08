@@ -72,28 +72,34 @@ User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CT
 **Verified behavior:** Prepared statements with complex queries work (JOINs, IN/NOT IN, CASE WHEN, aggregation GROUP BY, subqueries). Advanced subquery patterns (3-level nesting, scalar subqueries, combined AND/OR/IN). 4-table and 5-table JOINs work. Platform-specific functions (MySQL: IF, IFNULL, FIND_IN_SET, CONCAT_WS, REVERSE, LPAD, GROUP_CONCAT ORDER BY; PostgreSQL: ILIKE, `::` casting, `||` concat, POSITION, FILTER clause, STRING_AGG ORDER BY, GREATEST/LEAST, DISTINCT ON; SQLite: typeof, INSTR, IIF, printf, HEX, NULLIF, CAST, GLOB).
 
 ## SPEC-3.3f Full-Text Search
-**Status:** Pending Verification
+**Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.5
 **Tests:** `Mysqli/FullTextSearchTest`, `Pdo/MysqlFullTextSearchTest`, `Pdo/PostgresFullTextSearchTest`, `Pdo/SqliteFullTextSearchTest`
 
-Full-text search is a common real-world pattern for search features. Each platform uses different syntax:
+Full-text search is NOT supported through ZTD CTE rewriting on any platform. Each platform fails for a different reason:
 
-- **MySQL**: `MATCH(col1, col2) AGAINST('terms')` with NATURAL LANGUAGE MODE and BOOLEAN MODE. Requires FULLTEXT index. MATCH expression can appear in WHERE (for filtering) and SELECT (for relevance scoring).
-- **PostgreSQL**: `to_tsvector('config', text) @@ to_tsquery('config', 'terms')`. Supports `plainto_tsquery()` for plain text input, `ts_rank()` for relevance scoring, `ts_headline()` for result highlighting, and boolean operators (`&`, `|`, `!`).
-- **SQLite**: FTS5 virtual tables with `MATCH` operator, `bm25()` ranking, `highlight()`, and `snippet()` functions.
+- **MySQL (MySQLi and PDO)**: `MATCH(col1, col2) AGAINST('terms')` throws `General error: 1214 The used table type doesn't support FULLTEXT indexes`. The CTE-derived temporary table does not carry the FULLTEXT index from the physical table, so the MATCH expression cannot execute.
+- **PostgreSQL**: `to_tsvector()` / `@@` / `to_tsquery()` queries throw errors because the tsvector column type metadata is not correctly reproduced in the CTE cast. See [SPEC-11.FULLTEXT](11-known-issues.ears.md).
+- **SQLite**: FTS5 virtual tables fail with `no such column: table_name` because the CTE rewriter does not recognize FTS5 virtual table references. FTS5 tables cannot be wrapped in CTEs.
 
-Scenarios verify: keyword matching, boolean operators (required/excluded terms), relevance scoring, highlight/snippet generation, no-match returns empty, search after INSERT reflects shadow data, and prepared statement parameters.
+All platforms: physical isolation is confirmed (shadow INSERTs do not reach the physical table). Shadow operations (regular CRUD) continue to work correctly after a full-text search attempt (whether it throws or is caught).
+
+Workaround: disable ZTD for full-text search queries, or use LIKE-based pattern matching through ZTD instead.
 
 ## SPEC-3.3g User-Defined Functions in Queries
-**Status:** Pending Verification
+**Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO
+**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, PHP 8.5
 **Tests:** `Mysqli/StoredProcedureTest`, `Pdo/MysqlStoredProcedureTest`, `Pdo/PostgresStoredFunctionTest`
 
-User-defined functions (MySQL stored functions, PostgreSQL PL/pgSQL functions) called within SELECT, WHERE, and ORDER BY clauses should work through the CTE-rewritten shadow queries because the function call is a scalar expression evaluated by the database engine on the CTE-derived data.
+User-defined functions (MySQL stored functions, PostgreSQL PL/pgSQL functions) called within SELECT, WHERE, and ORDER BY clauses work through the CTE-rewritten shadow queries. The function call is a scalar expression evaluated by the database engine on the CTE-derived data.
 
-However, if a user-defined function internally reads from a table that is shadow-stored, the function reads from the physical table (empty), not the shadow store. This is a fundamental limitation: the CTE rewriter only rewrites table references in the outer query, not inside function bodies.
+**Verified behavior:** Function in SELECT expression returns correct computed values. Function in WHERE clause correctly filters shadow data. Function in ORDER BY clause correctly sorts shadow data. Multiple functions in the same query work. Prepared statements with stored function calls work on MySQL (MySQLi and PDO).
 
-Scenarios verify: function in SELECT expression, function in WHERE clause, function in ORDER BY clause, multiple functions in same query, function that reads from shadow table (expected to read physical), and prepared statements with function parameters.
+**Limitation:** PostgreSQL prepared statements with user-defined functions in WHERE clauses may return incorrect results (empty result set) despite the same query working via `query()`. See [SPEC-11.PG-PREPARED-FUNCTION](11-known-issues.ears.md).
+
+If a user-defined function internally reads from a table that is shadow-stored, the function reads from the physical table (empty), not the shadow store. This is a fundamental limitation: the CTE rewriter only rewrites table references in the outer query, not inside function bodies.
 
 ## SPEC-3.3e CTE-based DML (WITH ... INSERT/UPDATE/DELETE)
 **Status:** Known Issue

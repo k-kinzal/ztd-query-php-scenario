@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Full-text search (MATCH ... AGAINST) is a common real-world pattern
  * for search features. Tests verify FULLTEXT indexes, NATURAL LANGUAGE
  * MODE, BOOLEAN MODE, and relevance scoring work through shadow queries.
- * @spec pending
+ * @spec SPEC-3.3f
  */
 class FullTextSearchTest extends AbstractMysqliTestCase
 {

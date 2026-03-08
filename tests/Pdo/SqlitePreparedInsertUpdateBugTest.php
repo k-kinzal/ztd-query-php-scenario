@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * on the PDO adapter.
  *
  * @see https://github.com/k-kinzal/ztd-query-php/issues/23
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqlitePreparedInsertUpdateBugTest extends AbstractSqlitePdoTestCase
 {
@@ -30,10 +30,7 @@ class SqlitePreparedInsertUpdateBugTest extends AbstractSqlitePdoTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->pdo->exec('CREATE TABLE bug_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-
-        }
+    }
 
     public function testExecInsertThenExecUpdateWorks(): void
     {

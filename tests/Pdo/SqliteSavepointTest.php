@@ -28,7 +28,6 @@ class SqliteSavepointTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE sp_test (id INT PRIMARY KEY, name VARCHAR(50))');
         $this->pdo->exec("INSERT INTO sp_test VALUES (1, 'Alice')");
 
         }

@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests MySQL generated (virtual/stored) column handling via MySQLi.
  *
  * Cross-platform parity with MysqlGeneratedColumnTest (PDO).
- * @spec pending
+ * @spec SPEC-10.2.22
  */
 class GeneratedColumnTest extends AbstractMysqliTestCase
 {

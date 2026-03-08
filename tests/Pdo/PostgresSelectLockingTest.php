@@ -18,7 +18,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * This is important to document: user code with FOR UPDATE will run without
  * errors but will NOT actually acquire any row locks.
- * @spec pending
+ * @spec SPEC-10.2.11
  */
 class PostgresSelectLockingTest extends AbstractPostgresPdoTestCase
 {

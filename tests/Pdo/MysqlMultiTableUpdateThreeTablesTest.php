@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * Tests multi-table UPDATE with 3+ tables on MySQL PDO.
  *
  * Cross-platform parity with MultiTableUpdateThreeTablesTest (MySQLi).
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class MysqlMultiTableUpdateThreeTablesTest extends AbstractMysqlPdoTestCase
 {

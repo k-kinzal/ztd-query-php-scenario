@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * DELETE FROM ... PARTITION and UPDATE ... PARTITION are
  * not supported by the CTE rewriter and should throw.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlPartitionClauseTest extends AbstractMysqlPdoTestCase
 {

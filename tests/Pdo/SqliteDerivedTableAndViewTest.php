@@ -30,6 +30,20 @@ class SqliteDerivedTableAndViewTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (1, 'Alice', 'Engineering', 120000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (2, 'Bob', 'Engineering', 110000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (3, 'Charlie', 'Marketing', 90000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (4, 'Diana', 'Marketing', 85000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (5, 'Eve', 'Sales', 95000)");
+        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
+        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
+        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (3, 'Sales', 300000)");
+    }
     /**
      * Derived table as the sole FROM source — CTE rewriter does NOT rewrite table
      * references inside the derived subquery, so it reads from the physical table (empty).

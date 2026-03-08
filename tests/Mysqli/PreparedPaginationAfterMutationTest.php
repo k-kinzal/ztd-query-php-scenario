@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests prepared pagination (LIMIT/OFFSET) with shadow mutations via MySQLi.
  *
  * Cross-platform parity with SqlitePreparedPaginationAfterMutationTest (PDO).
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PreparedPaginationAfterMutationTest extends AbstractMysqliTestCase
 {

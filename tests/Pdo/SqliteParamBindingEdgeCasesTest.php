@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests prepared statement parameter binding edge cases — mixed param types,
  * named vs positional params, rebinding, NULL binding, and type coercion.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqliteParamBindingEdgeCasesTest extends AbstractSqlitePdoTestCase
 {
@@ -25,6 +25,15 @@ class SqliteParamBindingEdgeCasesTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO pb_items (id, name, price, active) VALUES (1, 'Widget', 10.50, 1)");
+        $this->pdo->exec("INSERT INTO pb_items (id, name, price, active) VALUES (2, 'Gadget', 25.00, 0)");
+        $this->pdo->exec("INSERT INTO pb_items (id, name, price, active) VALUES (3, 'Doohickey', 5.75, 1)");
+    }
     public function testPositionalParams(): void
     {
         $stmt = $this->pdo->prepare('SELECT name FROM pb_items WHERE price > ? AND active = ?');

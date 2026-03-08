@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests string edge cases, wide table handling, and value boundary patterns on PostgreSQL.
- * @spec pending
+ * @spec SPEC-4.11
  */
 class PostgresStringAndWidenessEdgeCaseTest extends AbstractPostgresPdoTestCase
 {

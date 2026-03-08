@@ -16,7 +16,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Tests whether generated column values are correctly handled
  * in the shadow store via CTE rewriting.
- * @spec pending
+ * @spec SPEC-10.2.22
  */
 class SqliteGeneratedColumnTest extends AbstractSqlitePdoTestCase
 {

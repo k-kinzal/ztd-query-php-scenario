@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests column type edge cases on MySQL PDO: TIME, BINARY, mixed-type arithmetic,
  * CASE with mixed return types.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlColumnTypeEdgeCasesTest extends AbstractMysqlPdoTestCase
 {

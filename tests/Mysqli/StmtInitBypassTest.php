@@ -7,7 +7,7 @@ namespace Tests\Mysqli;
 use Tests\Support\AbstractMysqliTestCase;
 use Tests\Support\MySQLContainer;
 
-/** @spec pending */
+/** @spec SPEC-6.1 */
 class StmtInitBypassTest extends AbstractMysqliTestCase
 {
     protected function getTableDDL(): string

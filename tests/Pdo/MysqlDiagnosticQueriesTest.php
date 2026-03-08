@@ -22,7 +22,7 @@ use ZtdQuery\Config\ZtdConfig;
  *   - SELECT from information_schema
  *
  * These may be unsupported by the SQL parser and require behavior rules.
- * @spec pending
+ * @spec SPEC-6.4
  */
 class MysqlDiagnosticQueriesTest extends TestCase
 {

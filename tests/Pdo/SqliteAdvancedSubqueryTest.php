@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests advanced subquery patterns on SQLite to stress the CTE rewriter:
  * nested subqueries, subqueries in UPDATE SET, CASE in WHERE, scalar subqueries.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteAdvancedSubqueryTest extends AbstractSqlitePdoTestCase
 {
@@ -29,6 +29,23 @@ class SqliteAdvancedSubqueryTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
+        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
+        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (3, 'Sales', 300000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (1, 'Alice', 1, 120000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (2, 'Bob', 1, 110000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (3, 'Charlie', 2, 90000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (4, 'Diana', 3, 95000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (5, 'Eve', 1, 130000)");
+        $this->pdo->exec("INSERT INTO projects (id, name, dept_id, status) VALUES (1, 'Alpha', 1, 'active')");
+        $this->pdo->exec("INSERT INTO projects (id, name, dept_id, status) VALUES (2, 'Beta', 1, 'completed')");
+        $this->pdo->exec("INSERT INTO projects (id, name, dept_id, status) VALUES (3, 'Gamma', 2, 'active')");
+    }
     public function testNestedSubqueryInWhere(): void
     {
         // Find employees in departments that have active projects

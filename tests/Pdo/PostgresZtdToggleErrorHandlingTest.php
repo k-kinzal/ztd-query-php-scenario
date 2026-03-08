@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * - State consistency after toggle + error
  * - Prepared statements created with ZTD on/off and executed across toggles
  * - Shadow data visibility vs physical data across toggles
- * @spec pending
+ * @spec SPEC-2.1
  */
 class PostgresZtdToggleErrorHandlingTest extends AbstractPostgresPdoTestCase
 {

@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests using reserved SQL keywords as column/table names through ZTD.
  *
  * Verifies that identifier quoting handles reserved keywords correctly.
- * @spec pending
+ * @spec SPEC-10.2.26
  */
 class SqliteReservedKeywordIdentifierTest extends AbstractSqlitePdoTestCase
 {

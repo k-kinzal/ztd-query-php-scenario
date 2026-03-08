@@ -23,6 +23,16 @@ class SqliteRowCountTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO rc_items (id, name, category, active) VALUES (1, 'Alpha', 'A', 1)");
+        $this->pdo->exec("INSERT INTO rc_items (id, name, category, active) VALUES (2, 'Beta', 'A', 1)");
+        $this->pdo->exec("INSERT INTO rc_items (id, name, category, active) VALUES (3, 'Gamma', 'B', 0)");
+        $this->pdo->exec("INSERT INTO rc_items (id, name, category, active) VALUES (4, 'Delta', 'B', 1)");
+    }
     public function testRowCountAfterInsert(): void
     {
         $stmt = $this->pdo->prepare('INSERT INTO rc_items (id, name, category, active) VALUES (?, ?, ?, ?)');

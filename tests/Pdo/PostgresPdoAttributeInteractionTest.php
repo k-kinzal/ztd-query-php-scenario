@@ -12,7 +12,7 @@ use Tests\Support\PostgreSQLContainer;
  * Tests PDO attribute interactions with ZTD on PostgreSQL.
  * PostgreSQL does not support EMULATE_PREPARES the same way MySQL does,
  * but the attribute can still be set and should not break ZTD behavior.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class PostgresPdoAttributeInteractionTest extends AbstractPostgresPdoTestCase
 {

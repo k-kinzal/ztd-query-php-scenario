@@ -6,10 +6,11 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests INSERT...SELECT with aggregate functions through ZTD shadow store.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteInsertSelectAggregateTest extends AbstractSqlitePdoTestCase
 {
@@ -34,6 +35,17 @@ class SqliteInsertSelectAggregateTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO isa_orders VALUES (1, 'Electronics', 100.00)");
+        $this->pdo->exec("INSERT INTO isa_orders VALUES (2, 'Electronics', 200.00)");
+        $this->pdo->exec("INSERT INTO isa_orders VALUES (3, 'Books', 30.00)");
+        $this->pdo->exec("INSERT INTO isa_orders VALUES (4, 'Books', 25.00)");
+        $this->pdo->exec("INSERT INTO isa_orders VALUES (5, 'Electronics', 150.00)");
+    }
     /**
      * INSERT...SELECT with GROUP BY should transfer computed columns correctly.
      */

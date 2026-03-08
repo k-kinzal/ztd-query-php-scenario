@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Since shadow INSERTs don't physically write to the database,
  * lastInsertId() may not reflect shadow-only inserts.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteLastInsertIdTest extends AbstractSqlitePdoTestCase
 {

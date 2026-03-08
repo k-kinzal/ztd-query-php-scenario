@@ -14,7 +14,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * which PostgreSQL rejects: "DEFAULT is not allowed in this context".
  *
  * Both INSERT ... DEFAULT VALUES and INSERT ... VALUES (DEFAULT) fail under ZTD.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class PostgresInsertDefaultValuesTest extends AbstractPostgresPdoTestCase
 {

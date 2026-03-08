@@ -6,6 +6,7 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests various INSERT patterns involving subqueries — real-world patterns

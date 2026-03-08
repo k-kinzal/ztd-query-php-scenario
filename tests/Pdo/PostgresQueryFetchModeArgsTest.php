@@ -14,7 +14,7 @@ use Tests\Support\UserDto;
  * Same scenarios as MysqlQueryFetchModeArgsTest but against PostgreSQL.
  * Validates that query()'s setFetchMode($fetchMode, ...$fetchModeArgs)
  * works consistently across database drivers.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresQueryFetchModeArgsTest extends AbstractPostgresPdoTestCase
 {

@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests window functions with FRAME clauses and INSERT ON CONFLICT behavior on SQLite.
  * Window frames (ROWS/RANGE BETWEEN) are an advanced SQL feature.
  * INSERT ON CONFLICT DO NOTHING on SQLite is documented as broken (inserts both rows).
- * @spec pending
+ * @spec SPEC-10.2.23
  */
 class SqliteWindowFrameAndConflictTest extends AbstractSqlitePdoTestCase
 {

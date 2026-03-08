@@ -22,7 +22,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * - TEXT[] columns work because CAST to TEXT is compatible.
  * - NULL array values work correctly.
  * - ARRAY[] constructor syntax causes InsertTransformer to mismatch column count.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresArrayTypeTest extends AbstractPostgresPdoTestCase
 {

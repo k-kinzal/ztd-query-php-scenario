@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests bindColumn() and FETCH_BOUND mode on PostgreSQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresBindColumnTest extends AbstractPostgresPdoTestCase
 {

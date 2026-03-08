@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests fetchAll with FETCH_FUNC callback mode and other advanced fetch patterns on PostgreSQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresFetchCallbackTest extends AbstractPostgresPdoTestCase
 {

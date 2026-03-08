@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests sequential mutations on the same table on MySQLi to verify
  * shadow store correctly accumulates changes across multiple operations.
- * @spec pending
+ * @spec SPEC-4.8
  */
 class SequentialMutationsTest extends AbstractMysqliTestCase
 {

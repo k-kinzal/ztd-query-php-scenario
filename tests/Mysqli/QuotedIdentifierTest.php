@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests ZTD behavior with MySQLi backtick-quoted identifiers and SQL reserved
  * words as column/table names.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class QuotedIdentifierTest extends AbstractMysqliTestCase
 {

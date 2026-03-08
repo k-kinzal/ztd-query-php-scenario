@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests interoperability between shadow-created tables and reflected tables (MySQLi).
- * @spec pending
+ * @spec SPEC-5.1
  */
 class ShadowCreatedTableInteropTest extends AbstractMysqliTestCase
 {

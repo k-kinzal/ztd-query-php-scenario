@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests LIKE, BETWEEN, and IS NULL with prepared statement parameters on SQLite.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqlitePreparedPatternMatchTest extends AbstractSqlitePdoTestCase
 {
@@ -28,7 +28,6 @@ class SqlitePreparedPatternMatchTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE pattern_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, note TEXT)');
         $this->pdo->exec("INSERT INTO pattern_test VALUES (1, 'Alice', 80, 'Good student')");
         $this->pdo->exec("INSERT INTO pattern_test VALUES (2, 'Bob', 60, NULL)");
         $this->pdo->exec("INSERT INTO pattern_test VALUES (3, 'Charlie', 90, 'Top performer')");

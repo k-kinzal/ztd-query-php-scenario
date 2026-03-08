@@ -20,7 +20,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *   - INSERT prepared statements can re-execute (mutation is additive)
  *
  * To see updated shadow data, a new prepare() call is needed.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqlitePreparedReexecuteSnapshotTest extends AbstractSqlitePdoTestCase
 {

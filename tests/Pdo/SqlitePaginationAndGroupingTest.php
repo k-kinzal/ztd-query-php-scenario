@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests parameterized LIMIT/OFFSET, expression-based GROUP BY,
  * INSERT...SELECT with filtering, and correlated HAVING on SQLite.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqlitePaginationAndGroupingTest extends AbstractSqlitePdoTestCase
 {
@@ -29,6 +29,19 @@ class SqlitePaginationAndGroupingTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO products VALUES (1, 'Widget A', 'hardware', 9.99, 50)");
+        $this->pdo->exec("INSERT INTO products VALUES (2, 'Widget B', 'hardware', 14.99, 30)");
+        $this->pdo->exec("INSERT INTO products VALUES (3, 'Gadget X', 'electronics', 29.99, 10)");
+        $this->pdo->exec("INSERT INTO products VALUES (4, 'Gadget Y', 'electronics', 49.99, 5)");
+        $this->pdo->exec("INSERT INTO products VALUES (5, 'Gizmo', 'electronics', 19.99, 20)");
+        $this->pdo->exec("INSERT INTO products VALUES (6, 'Tool', 'hardware', 7.99, 100)");
+        $this->pdo->exec("INSERT INTO products VALUES (7, 'Sensor', 'electronics', 39.99, 15)");
+    }
     // --- Parameterized LIMIT/OFFSET ---
 
     public function testPreparedLimitOffset(): void

@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests UNION queries with mutations — verifying that UNION correctly
  * reflects shadow store changes (INSERT, UPDATE, DELETE) and works
  * with various UNION patterns.
- * @spec pending
+ * @spec SPEC-3.3d
  */
 class SqliteUnionMutationTest extends AbstractSqlitePdoTestCase
 {
@@ -30,6 +30,17 @@ class SqliteUnionMutationTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO um_employees (id, name, dept) VALUES (1, 'Alice', 'Eng')");
+        $this->pdo->exec("INSERT INTO um_employees (id, name, dept) VALUES (2, 'Bob', 'Sales')");
+        $this->pdo->exec("INSERT INTO um_employees (id, name, dept) VALUES (3, 'Carol', 'Eng')");
+        $this->pdo->exec("INSERT INTO um_contractors (id, name, dept) VALUES (1, 'Dave', 'Eng')");
+        $this->pdo->exec("INSERT INTO um_contractors (id, name, dept) VALUES (2, 'Eve', 'Ops')");
+    }
     public function testUnionReflectsInserts(): void
     {
         $stmt = $this->pdo->query("

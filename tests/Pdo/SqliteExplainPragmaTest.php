@@ -28,6 +28,13 @@ class SqliteExplainPragmaTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO ep_items VALUES (1, 'Widget')");
+    }
     /**
      * EXPLAIN QUERY PLAN on a SELECT.
      */

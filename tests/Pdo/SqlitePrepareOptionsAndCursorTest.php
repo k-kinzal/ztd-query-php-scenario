@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests prepare() with options array, cursor behavior, and
  * various execution patterns commonly used by PHP frameworks.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqlitePrepareOptionsAndCursorTest extends AbstractSqlitePdoTestCase
 {
@@ -29,7 +29,6 @@ class SqlitePrepareOptionsAndCursorTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE poc_items (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2), category VARCHAR(20))');
         $this->pdo->exec("INSERT INTO poc_items VALUES (1, 'Widget', 9.99, 'tools')");
         $this->pdo->exec("INSERT INTO poc_items VALUES (2, 'Gadget', 24.99, 'electronics')");
         $this->pdo->exec("INSERT INTO poc_items VALUES (3, 'Sprocket', 4.50, 'tools')");

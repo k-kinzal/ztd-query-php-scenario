@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests ZTD behavior with composite (multi-column) primary keys on SQLite.
  * UPDATE and DELETE depend on PK reflection, so composite PKs are a critical pattern.
- * @spec pending
+ * @spec SPEC-3.6
  */
 class SqliteCompositePrimaryKeyTest extends AbstractSqlitePdoTestCase
 {

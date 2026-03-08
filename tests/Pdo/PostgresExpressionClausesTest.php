@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * - GROUP BY with expressions
  * - HAVING with multiple conditions
  * - LIKE / ILIKE with ESCAPE clause
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresExpressionClausesTest extends AbstractPostgresPdoTestCase
 {

@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests advanced ORDER BY patterns and interleaved prepared statements on PostgreSQL.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class PostgresAdvancedOrderAndInsertPatternsTest extends AbstractPostgresPdoTestCase
 {

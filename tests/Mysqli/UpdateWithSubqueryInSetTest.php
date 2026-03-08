@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests UPDATE with subquery in SET clause via MySQLi.
  *
  * Cross-platform parity with MysqlUpdateWithSubqueryInSetTest (PDO).
- * @spec pending
+ * @spec SPEC-4.2
  */
 class UpdateWithSubqueryInSetTest extends AbstractMysqliTestCase
 {

@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statement re-execution patterns on MySQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class MysqlPreparedStatementReExecTest extends AbstractMysqlPdoTestCase
 {

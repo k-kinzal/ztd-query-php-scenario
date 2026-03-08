@@ -6,6 +6,7 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /** @spec SPEC-2.4 */
 class SqliteSessionIsolationTest extends AbstractSqlitePdoTestCase

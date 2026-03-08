@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests ZTD behavior with composite (multi-column) primary keys on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.6
  */
 class PostgresCompositePrimaryKeyTest extends AbstractPostgresPdoTestCase
 {

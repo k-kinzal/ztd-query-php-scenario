@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests JOIN + aggregate queries after shadow mutations via MySQLi.
  *
  * Cross-platform parity with SqliteJoinAggregateAfterMutationTest (PDO).
- * @spec pending
+ * @spec SPEC-3.3
  */
 class JoinAggregateAfterMutationTest extends AbstractMysqliTestCase
 {

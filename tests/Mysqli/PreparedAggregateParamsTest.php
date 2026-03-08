@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests prepared statements with parameters in HAVING, GROUP BY, and ORDER BY on MySQLi.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PreparedAggregateParamsTest extends AbstractMysqliTestCase
 {

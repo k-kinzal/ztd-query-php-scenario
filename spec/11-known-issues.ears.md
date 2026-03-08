@@ -235,3 +235,71 @@ Full-text search queries (MATCH...AGAINST on MySQL, tsvector/tsquery on PostgreS
 **Tests:** `Pdo/PostgresStoredFunctionTest`
 
 On PostgreSQL, prepared statements with user-defined functions in WHERE clauses may return incorrect (empty) results, despite the same query working correctly via `query()`. The `$1` placeholder parameter combined with a UDF call in the WHERE condition does not filter correctly through the CTE-rewritten query.
+
+## SPEC-11.UPDATE-FROM UPDATE ... FROM syntax not supported (SQLite)
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.56](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteUpdateFromJoinTest`
+
+`UPDATE t1 SET col = t2.col FROM t2 WHERE t1.id = t2.fk` (UPDATE FROM join syntax, SQLite 3.33+) throws syntax error through ZTD on SQLite. The CTE rewriter's SQL parser does not recognize the FROM clause in UPDATE statements and produces invalid SQL. This also applies to UPDATE FROM with derived tables and prepared UPDATE FROM.
+
+**PostgreSQL:** UPDATE FROM now works correctly through ZTD (see [SPEC-10.2.56](10-platform-notes.ears.md)).
+
+The shadow store is not corrupted by the failure. Workaround: use `WHERE id IN (SELECT ...)` subqueries instead of UPDATE FROM joins.
+
+## SPEC-11.PG-LATERAL LATERAL subqueries return empty (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-10.2.27](10-platform-notes.ears.md)
+**Tests:** `Pdo/PostgresLateralSubqueryTest`
+
+PostgreSQL `LATERAL` subqueries return empty results through ZTD. The CTE rewriter does not rewrite table references inside LATERAL clauses — the inner correlated subquery reads from the physical table (empty), so the outer query gets no rows. This affects all LATERAL patterns: `FROM table, LATERAL (SELECT ...)`, `LEFT JOIN LATERAL ... ON true`, and LATERAL with LIMIT (top-N per group).
+
+Workarounds:
+- Use correlated subqueries in the SELECT list: `SELECT (SELECT SUM(x) FROM t WHERE t.fk = u.id) FROM u`.
+- Use regular JOINs with GROUP BY subqueries: `JOIN (SELECT fk, SUM(x) FROM t WHERE 1=1 GROUP BY fk) sub ON sub.fk = u.id`.
+- For top-N per group, use window functions: `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...) = 1`.
+
+## SPEC-11.BARE-SUBQUERY-REWRITE Bare subquery table references not rewritten (SQLite)
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-3.3](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteScalarSubqueryInSelectTest`, `Pdo/SqlitePivotReportTest`
+
+On SQLite, the CTE rewriter does not rewrite table references inside subqueries that contain a bare `SELECT ... FROM table` without a WHERE or GROUP BY clause. This affects:
+
+1. **Scalar subqueries in SELECT list**: `SELECT col, (SELECT SUM(x) FROM t) AS total FROM t` — the inner subquery reads from the physical table (empty), causing the entire outer query to return empty results.
+2. **User CTEs without WHERE/GROUP BY**: `WITH cte AS (SELECT * FROM t) SELECT * FROM cte` — the CTE reads from the physical table, returning 0 rows.
+3. **User CTE + CROSS JOIN**: Even with `WHERE 1=1` in the user CTE, combining a user CTE via CROSS JOIN with an outer query that also references a shadow table returns empty.
+
+**MySQL:** Scalar subqueries in SELECT now work correctly on both MySQLi and MySQL-PDO. The CTE rewriter rewrites table references inside scalar subqueries in the SELECT expression list on MySQL.
+
+Adding `WHERE 1=1` to the bare subquery forces the rewriter to recognize and rewrite the table reference, except in the CTE + CROSS JOIN case.
+
+Workarounds:
+- For scalar subqueries in SELECT: add `WHERE 1=1` to the inner subquery, or use CROSS JOIN with a derived table `(SELECT SUM(x) AS total FROM t) t`.
+- For user CTEs: add `WHERE 1=1` to the CTE definition, or use GROUP BY.
+- For percentage/ratio calculations: use CROSS JOIN with derived table instead of scalar subquery.
+
+## SPEC-11.UPDATE-AGGREGATE-SUBQUERY UPDATE with aggregate subquery in WHERE
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteBulkConditionalUpgradeTest`
+
+`UPDATE table SET col = value WHERE id IN (SELECT col FROM other_table GROUP BY col HAVING SUM(amount) >= N)` causes "incomplete input" on SQLite. The CTE rewriter truncates the SQL when processing UPDATE/DELETE statements whose WHERE clause contains a subquery with GROUP BY and HAVING aggregate expressions. The shadow store is not corrupted by the failure. This also affects DELETE statements: `DELETE FROM table WHERE id NOT IN (SELECT MIN(id) FROM table GROUP BY col)` fails with the same "incomplete input" error.
+
+Workaround: query eligible IDs first via SELECT, then UPDATE by explicit ID list.
+
+```sql
+-- Fails on SQLite:
+UPDATE customers SET tier = 'gold'
+WHERE id IN (SELECT customer_id FROM orders GROUP BY customer_id HAVING SUM(amount) >= 1000);
+
+-- Workaround (all platforms):
+-- Step 1: SELECT eligible IDs
+SELECT customer_id FROM orders WHERE status = 'completed' GROUP BY customer_id HAVING SUM(amount) >= 1000;
+-- Step 2: UPDATE by explicit list
+UPDATE customers SET tier = 'gold' WHERE id IN (1, 3, 7);
+```

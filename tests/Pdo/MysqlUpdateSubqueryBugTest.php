@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests UPDATE with IN (subquery containing GROUP BY HAVING) on MySQL.
  * This tests whether the CTE rewriter issue found on SQLite also affects MySQL.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class MysqlUpdateSubqueryBugTest extends AbstractMysqlPdoTestCase
 {

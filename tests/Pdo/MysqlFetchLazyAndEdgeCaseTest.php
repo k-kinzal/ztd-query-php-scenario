@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests FETCH_LAZY mode, exec() with SELECT, and other edge cases on MySQL.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlFetchLazyAndEdgeCaseTest extends AbstractMysqlPdoTestCase
 {

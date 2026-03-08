@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests LIKE, BETWEEN, and IS NULL with prepared statement parameters on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresPreparedPatternMatchTest extends AbstractPostgresPdoTestCase
 {

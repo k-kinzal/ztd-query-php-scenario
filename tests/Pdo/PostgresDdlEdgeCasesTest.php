@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests DDL edge cases on PostgreSQL:
  * CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, TRUNCATE isolation.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class PostgresDdlEdgeCasesTest extends AbstractPostgresPdoTestCase
 {

@@ -11,7 +11,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * Tests PostgreSQL-specific type edge cases with ZTD shadow store.
  *
  * @see https://github.com/k-kinzal/ztd-query-php/issues/6
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresTypeEdgeCaseTest extends AbstractPostgresPdoTestCase
 {

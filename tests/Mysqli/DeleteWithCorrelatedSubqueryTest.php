@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests DELETE with correlated subqueries in WHERE clause on MySQLi.
- * @spec pending
+ * @spec SPEC-4.3
  */
 class DeleteWithCorrelatedSubqueryTest extends AbstractMysqliTestCase
 {

@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests a data migration workflow on MySQL PDO: INSERT...SELECT with transformations,
  * subqueries in SELECT/WHERE, and complex aggregation patterns.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class MysqlDataMigrationWorkflowTest extends AbstractMysqlPdoTestCase
 {

@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Tests FILTER clause, EXCLUDE, GROUPS frame, nth_value,
  * and other advanced window function syntax.
- * @spec pending
+ * @spec SPEC-10.2.23
  */
 class SqliteWindowGroupingEdgeCaseTest extends AbstractSqlitePdoTestCase
 {
@@ -27,6 +27,17 @@ class SqliteWindowGroupingEdgeCaseTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO wge_scores VALUES (1, 'Alice', 95, 'A')");
+        $this->pdo->exec("INSERT INTO wge_scores VALUES (2, 'Bob', 85, 'A')");
+        $this->pdo->exec("INSERT INTO wge_scores VALUES (3, 'Charlie', 90, 'B')");
+        $this->pdo->exec("INSERT INTO wge_scores VALUES (4, 'Diana', 75, 'B')");
+        $this->pdo->exec("INSERT INTO wge_scores VALUES (5, 'Eve', 88, 'A')");
+    }
     /**
      * FILTER clause on aggregate functions (SQLite 3.30+).
      */

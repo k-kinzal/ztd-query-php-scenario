@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests multi-table UPDATE/DELETE with prepared statement parameters on PostgreSQL PDO.
  * PostgreSQL uses different syntax: UPDATE...FROM and DELETE...USING.
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class PostgresPreparedMultiTableTest extends AbstractPostgresPdoTestCase
 {

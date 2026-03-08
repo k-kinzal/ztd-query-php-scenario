@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests WHERE clause operators on PostgreSQL PDO: LIKE, NOT LIKE, BETWEEN, NOT BETWEEN,
  * EXISTS, NOT EXISTS, comparison operators, and SIMILAR TO — all after mutations.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresWhereClauseOperatorsTest extends AbstractPostgresPdoTestCase
 {

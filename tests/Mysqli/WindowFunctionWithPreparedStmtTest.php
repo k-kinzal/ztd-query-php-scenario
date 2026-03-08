@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests window functions with prepared statements via MySQLi.
  *
  * Cross-platform parity with MysqlWindowFunctionWithPreparedStmtTest (PDO).
- * @spec pending
+ * @spec SPEC-10.2.23
  */
 class WindowFunctionWithPreparedStmtTest extends AbstractMysqliTestCase
 {

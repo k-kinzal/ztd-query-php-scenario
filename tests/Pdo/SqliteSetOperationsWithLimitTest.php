@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Set operations with LIMIT/OFFSET are common pagination patterns
  * in real-world applications. Tests whether the CTE rewriter handles
  * these combinations correctly.
- * @spec pending
+ * @spec SPEC-3.3d
  */
 class SqliteSetOperationsWithLimitTest extends AbstractSqlitePdoTestCase
 {
@@ -31,6 +31,18 @@ class SqliteSetOperationsWithLimitTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_set_a VALUES (1, 'Alice', 90)");
+        $this->pdo->exec("INSERT INTO sl_set_a VALUES (2, 'Bob', 80)");
+        $this->pdo->exec("INSERT INTO sl_set_a VALUES (3, 'Charlie', 70)");
+        $this->pdo->exec("INSERT INTO sl_set_b VALUES (4, 'Bob', 80)");
+        $this->pdo->exec("INSERT INTO sl_set_b VALUES (5, 'Diana', 60)");
+        $this->pdo->exec("INSERT INTO sl_set_b VALUES (6, 'Eve', 50)");
+    }
     /**
      * UNION ALL with LIMIT.
      */

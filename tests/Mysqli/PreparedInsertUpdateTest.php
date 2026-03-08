@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Confirms MySQLi adapter correctly handles prepared INSERT + subsequent UPDATE.
  * (PDO adapter has issue #23 — MySQLi is NOT affected.)
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PreparedInsertUpdateTest extends AbstractMysqliTestCase
 {

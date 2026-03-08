@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * On SQLite, computed columns become NULL in INSERT...SELECT.
  * Direct column references transfer correctly.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteInsertSelectComputedColumnsTest extends AbstractSqlitePdoTestCase
 {
@@ -30,6 +30,15 @@ class SqliteInsertSelectComputedColumnsTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO iscc_src VALUES (1, 'Widget', 10.00)");
+        $this->pdo->exec("INSERT INTO iscc_src VALUES (2, 'Gadget', 20.00)");
+        $this->pdo->exec("INSERT INTO iscc_src VALUES (3, 'Gizmo', 30.00)");
+    }
     /**
      * INSERT...SELECT with direct column references works.
      */

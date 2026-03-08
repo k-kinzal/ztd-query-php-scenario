@@ -19,7 +19,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * PostgreSQL requires standard single-quoted strings. These tests verify
  * that ZTD handles strings with embedded quotes correctly, and that
  * dollar-quoted function bodies don't break statement splitting.
- * @spec pending
+ * @spec SPEC-10.2.30
  */
 class PostgresDollarQuotedStringTest extends AbstractPostgresPdoTestCase
 {

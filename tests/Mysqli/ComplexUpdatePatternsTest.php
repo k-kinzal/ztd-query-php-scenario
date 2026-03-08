@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests complex UPDATE patterns on MySQLi: CASE in SET, arithmetic expressions,
  * multiple sequential mutations, UPDATE-DELETE-count chain.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class ComplexUpdatePatternsTest extends AbstractMysqliTestCase
 {

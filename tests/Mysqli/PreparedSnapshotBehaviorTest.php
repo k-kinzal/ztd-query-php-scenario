@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests prepared statement CTE snapshot behavior via MySQLi.
  *
  * Cross-platform parity with SqlitePreparedSnapshotBehaviorTest.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PreparedSnapshotBehaviorTest extends AbstractMysqliTestCase
 {

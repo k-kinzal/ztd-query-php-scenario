@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * - DELETE WHERE id IN (SELECT ... GROUP BY ... HAVING COUNT(...) > N)
  * - DELETE WHERE (SELECT COUNT(*) FROM ...) = 0
  * - DELETE WHERE col > (SELECT AVG(col) FROM ...)
- * @spec pending
+ * @spec SPEC-4.3
  */
 class SqliteDeleteWithAggregateSubqueryTest extends AbstractSqlitePdoTestCase
 {
@@ -31,6 +31,20 @@ class SqliteDeleteWithAggregateSubqueryTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO das_customers VALUES (1, 'Alice', 'active')");
+        $this->pdo->exec("INSERT INTO das_customers VALUES (2, 'Bob', 'active')");
+        $this->pdo->exec("INSERT INTO das_customers VALUES (3, 'Charlie', 'inactive')");
+        $this->pdo->exec("INSERT INTO das_orders VALUES (1, 1, 100.00)");
+        $this->pdo->exec("INSERT INTO das_orders VALUES (2, 1, 200.00)");
+        $this->pdo->exec("INSERT INTO das_orders VALUES (3, 1, 50.00)");
+        $this->pdo->exec("INSERT INTO das_orders VALUES (4, 2, 75.00)");
+        $this->pdo->exec("INSERT INTO das_orders VALUES (5, 3, 10.00)");
+    }
     /**
      * DELETE orders above average amount.
      */

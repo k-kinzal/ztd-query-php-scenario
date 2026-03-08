@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests user-written CTE queries and INSERT ... SELECT on MySQL via PDO.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MysqlUserCteTest extends AbstractMysqlPdoTestCase
 {

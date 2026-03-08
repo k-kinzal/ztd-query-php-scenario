@@ -26,10 +26,7 @@ class SqliteExecReturnValueTest extends AbstractSqlitePdoTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->pdo->exec('CREATE TABLE rv_test (id INT PRIMARY KEY, name VARCHAR(50), score INT, active INT)');
-
-        }
+    }
 
     public function testExecInsertReturnsSingleRowCount(): void
     {

@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * PostgreSQL natively supports all set operations (unlike MySQL which
  * may have issues with EXCEPT/INTERSECT). Tests whether the CTE
  * rewriter handles these combinations correctly.
- * @spec pending
+ * @spec SPEC-3.3d
  */
 class PostgresSetOperationsWithLimitTest extends AbstractPostgresPdoTestCase
 {

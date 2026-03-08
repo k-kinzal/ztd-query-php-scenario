@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests common REST API / controller-layer query patterns on PostgreSQL.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class PostgresRestApiPatternTest extends AbstractPostgresPdoTestCase
 {

@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests DDL operations mid-session on MySQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class MysqlDdlMidSessionTest extends AbstractMysqlPdoTestCase
 {

@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests common statement reuse patterns (ORM-style) with ZTD on PostgreSQL.
  * Focuses on patterns like prepare-once/execute-many, batch reads, and mixed workflows.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class PostgresStatementReusePatternTest extends AbstractPostgresPdoTestCase
 {

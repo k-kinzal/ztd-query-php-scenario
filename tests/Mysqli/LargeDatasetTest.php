@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests shadow store with a large dataset (100+ rows) via MySQLi.
  *
  * Cross-platform parity with SqliteLargeDatasetTest and MysqlLargeDatasetTest (PDO).
- * @spec pending
+ * @spec SPEC-3.1
  */
 class LargeDatasetTest extends AbstractMysqliTestCase
 {

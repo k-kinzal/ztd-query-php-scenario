@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * ZTD adds its own CTE for shadow data. User-defined CTEs may be
  * overwritten during query rewriting. Documents the behavior on MySQL.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MysqlMultipleCteQueryTest extends AbstractMysqlPdoTestCase
 {

@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests string edge cases, wide table handling, and value boundary patterns on MySQL.
- * @spec pending
+ * @spec SPEC-4.11
  */
 class MysqlStringAndWidenessEdgeCaseTest extends AbstractMysqlPdoTestCase
 {

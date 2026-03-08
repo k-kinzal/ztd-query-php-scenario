@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests complex UPDATE patterns on MySQL PDO: CASE in SET, arithmetic expressions,
  * multiple sequential mutations, prepared UPDATE with CASE.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class MysqlComplexUpdatePatternsTest extends AbstractMysqlPdoTestCase
 {

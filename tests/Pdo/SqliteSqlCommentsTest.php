@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Verifies that single-line (--), block (/* ... * /), and inline comments
  * are correctly handled by the parser and don't break CTE rewriting.
- * @spec pending
+ * @spec SPEC-10.2.25
  */
 class SqliteSqlCommentsTest extends AbstractSqlitePdoTestCase
 {
@@ -27,6 +27,15 @@ class SqliteSqlCommentsTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO cmt_items VALUES (1, 'Widget', 9.99)");
+        $this->pdo->exec("INSERT INTO cmt_items VALUES (2, 'Gadget', 19.99)");
+        $this->pdo->exec("INSERT INTO cmt_items VALUES (3, 'Doohickey', 29.99)");
+    }
     /**
      * Single-line comment at end of SELECT.
      */

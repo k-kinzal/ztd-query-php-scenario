@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * MySQL supports: INSERT INTO table SET col1 = val1, col2 = val2
  * The InsertTransformer handles this via buildInsertSetSelect().
- * @spec pending
+ * @spec SPEC-4.1
  */
 class MysqlInsertSetSyntaxTest extends AbstractMysqlPdoTestCase
 {

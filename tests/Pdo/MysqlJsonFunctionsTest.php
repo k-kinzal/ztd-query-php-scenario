@@ -13,7 +13,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * MySQL 5.7+ supports JSON column type and JSON functions.
  * Tests verify JSON extraction, modification, and querying work
  * correctly through CTE-rewritten shadow queries.
- * @spec pending
+ * @spec SPEC-3.5
  */
 class MysqlJsonFunctionsTest extends AbstractMysqlPdoTestCase
 {

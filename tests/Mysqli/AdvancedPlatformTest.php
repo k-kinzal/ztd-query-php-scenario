@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests MySQL-specific advanced features: GROUP_CONCAT, IF/IFNULL, CASE UPDATE, subqueries via MySQLi.
  *
  * Cross-platform parity with MysqlAdvancedPlatformTest (PDO).
- * @spec pending
+ * @spec SPEC-3.3
  */
 class AdvancedPlatformTest extends AbstractMysqliTestCase
 {

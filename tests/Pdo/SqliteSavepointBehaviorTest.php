@@ -23,6 +23,13 @@ class SqliteSavepointBehaviorTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sp_test VALUES (1, 'Alice')");
+    }
     /**
      * SAVEPOINT should be supported.
      */

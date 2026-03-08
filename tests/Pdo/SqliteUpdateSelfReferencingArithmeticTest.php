@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * This pattern is common in counter updates, balance adjustments,
  * and scoring systems.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class SqliteUpdateSelfReferencingArithmeticTest extends AbstractSqlitePdoTestCase
 {
@@ -28,6 +28,15 @@ class SqliteUpdateSelfReferencingArithmeticTest extends AbstractSqlitePdoTestCas
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_selfref_test VALUES (1, 'Alice', 10, 100.00)");
+        $this->pdo->exec("INSERT INTO sl_selfref_test VALUES (2, 'Bob', 20, 200.00)");
+        $this->pdo->exec("INSERT INTO sl_selfref_test VALUES (3, 'Charlie', 30, 300.00)");
+    }
     /**
      * SET col = col + N on a single row.
      */

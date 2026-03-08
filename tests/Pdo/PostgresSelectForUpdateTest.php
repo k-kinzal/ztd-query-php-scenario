@@ -15,7 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests SELECT...FOR UPDATE locking on PostgreSQL PDO.
  *
  * PostgreSQL supports additional locking modes: FOR NO KEY UPDATE, FOR KEY SHARE.
- * @spec pending
+ * @spec SPEC-10.2.11
  */
 class PostgresSelectForUpdateTest extends TestCase
 {

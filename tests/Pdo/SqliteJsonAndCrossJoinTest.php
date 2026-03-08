@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests JSON data handling and CROSS JOIN patterns on SQLite.
  * JSON is common in modern PHP apps; CROSS JOIN is an important untested SQL pattern.
- * @spec pending
+ * @spec SPEC-3.5
  */
 class SqliteJsonAndCrossJoinTest extends AbstractSqlitePdoTestCase
 {

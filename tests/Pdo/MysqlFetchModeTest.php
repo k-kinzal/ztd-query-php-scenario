@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests various PDO fetch modes work correctly with ZTD shadow store on MySQL.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlFetchModeTest extends AbstractMysqlPdoTestCase
 {

@@ -15,7 +15,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *   OFFSET y ROWS FETCH FIRST x ROWS ONLY (SQL:2012 standard)
  *
  * The CTE rewriter should preserve these clauses correctly.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresOffsetFetchTest extends AbstractPostgresPdoTestCase
 {

@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests DDL edge cases on SQLite:
  * CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS.
  * Note: SQLite does not support TRUNCATE TABLE syntax.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class SqliteDdlEdgeCasesTest extends AbstractSqlitePdoTestCase
 {

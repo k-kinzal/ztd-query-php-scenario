@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests that the shadow store correctly handles various SQL data types,
  * including dates, timestamps, decimals, booleans, and large integers.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqliteDataTypeTest extends AbstractSqlitePdoTestCase
 {

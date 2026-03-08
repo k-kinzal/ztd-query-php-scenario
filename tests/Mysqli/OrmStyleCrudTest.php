@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests ORM-style CRUD patterns with ZTD shadow store on MySQLi.
  * Typical workflow patterns that ORMs and application code use.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class OrmStyleCrudTest extends AbstractMysqliTestCase
 {

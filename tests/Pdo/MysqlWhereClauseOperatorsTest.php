@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests WHERE clause operators on MySQL PDO: LIKE, NOT LIKE, BETWEEN, NOT BETWEEN,
  * EXISTS, NOT EXISTS, comparison operators — all after mutations.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlWhereClauseOperatorsTest extends AbstractMysqlPdoTestCase
 {

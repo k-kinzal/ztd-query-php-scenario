@@ -29,7 +29,6 @@ class SqliteErrorBoundaryTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE err_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO err_test VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO err_test VALUES (2, 'Bob', 85)");
 

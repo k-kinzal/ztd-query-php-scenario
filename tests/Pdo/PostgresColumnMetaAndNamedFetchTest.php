@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests getColumnMeta() and FETCH_NAMED mode on PostgreSQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresColumnMetaAndNamedFetchTest extends AbstractPostgresPdoTestCase
 {

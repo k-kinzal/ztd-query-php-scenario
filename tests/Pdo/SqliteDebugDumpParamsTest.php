@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests debugDumpParams() on ZtdPdoStatement across various prepared statement scenarios.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class SqliteDebugDumpParamsTest extends AbstractSqlitePdoTestCase
 {
@@ -28,7 +28,6 @@ class SqliteDebugDumpParamsTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE ddp_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO ddp_test VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO ddp_test VALUES (2, 'Bob', 85)");
 

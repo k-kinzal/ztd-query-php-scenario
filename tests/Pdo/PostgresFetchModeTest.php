@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests various PDO fetch modes work correctly with ZTD shadow store on PostgreSQL.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresFetchModeTest extends AbstractPostgresPdoTestCase
 {

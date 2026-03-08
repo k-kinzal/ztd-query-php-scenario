@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests COLLATE clause in queries via MySQLi.
  *
  * Cross-platform parity with MysqlCollateInQueryTest (PDO).
- * @spec pending
+ * @spec SPEC-3.1
  */
 class CollateInQueryTest extends AbstractMysqliTestCase
 {

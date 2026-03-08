@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests date/time functions and advanced window functions on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-10.2.18
  */
 class PostgresDateAndAdvancedWindowTest extends AbstractPostgresPdoTestCase
 {

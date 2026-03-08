@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests self-joins and correlated subqueries with ZTD shadow store on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class PostgresSelfJoinAndCorrelatedSubqueryTest extends AbstractPostgresPdoTestCase
 {

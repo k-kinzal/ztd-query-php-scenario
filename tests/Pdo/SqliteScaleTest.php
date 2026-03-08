@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests shadow store behavior at higher scale — 200+ rows with
  * interleaved INSERT/UPDATE/DELETE/SELECT operations.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteScaleTest extends AbstractSqlitePdoTestCase
 {

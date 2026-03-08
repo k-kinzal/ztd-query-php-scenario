@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Cross-platform parity with MysqlInsertDefaultValuesTest (PDO).
  * DEFAULT keyword in INSERT VALUES fails under ZTD because InsertTransformer
  * converts VALUES to SELECT expressions where DEFAULT is invalid.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class InsertDefaultValuesTest extends AbstractMysqliTestCase
 {

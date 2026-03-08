@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests data_seek() on ZtdMysqli result sets.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class DataSeekTest extends AbstractMysqliTestCase
 {

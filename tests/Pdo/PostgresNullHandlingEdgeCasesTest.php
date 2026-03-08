@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests NULL handling edge cases on PostgreSQL PDO: UPDATE SET NULL, IS NULL after mutation,
  * COALESCE chains, NULL in CASE, prepared statements with NULL, and NULLS FIRST/LAST ordering.
- * @spec pending
+ * @spec SPEC-3.7
  */
 class PostgresNullHandlingEdgeCasesTest extends AbstractPostgresPdoTestCase
 {

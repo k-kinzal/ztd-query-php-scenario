@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests that the shadow store correctly handles various SQL data types on MySQL via MySQLi,
  * including DATE, DATETIME, DECIMAL, BOOLEAN, and BIGINT.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class DataTypeTest extends AbstractMysqliTestCase
 {

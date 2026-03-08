@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Verifies scalar subqueries in SELECT list, EXISTS in WHERE,
  * subqueries in CASE WHEN, and nested subqueries all work
  * correctly through CTE rewriting.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteSubqueryInSelectListTest extends AbstractSqlitePdoTestCase
 {
@@ -31,6 +31,19 @@ class SqliteSubqueryInSelectListTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO ssl_dept VALUES (1, 'Engineering')");
+        $this->pdo->exec("INSERT INTO ssl_dept VALUES (2, 'Marketing')");
+        $this->pdo->exec("INSERT INTO ssl_dept VALUES (3, 'HR')");
+        $this->pdo->exec("INSERT INTO ssl_emp VALUES (1, 'Alice', 1, 120000)");
+        $this->pdo->exec("INSERT INTO ssl_emp VALUES (2, 'Bob', 1, 100000)");
+        $this->pdo->exec("INSERT INTO ssl_emp VALUES (3, 'Charlie', 2, 90000)");
+        $this->pdo->exec("INSERT INTO ssl_emp VALUES (4, 'Diana', 2, 95000)");
+    }
     /**
      * Scalar subquery in SELECT list.
      */

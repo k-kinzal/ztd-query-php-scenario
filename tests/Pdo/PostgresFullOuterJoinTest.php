@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests FULL OUTER JOIN on PostgreSQL — a join type not available on MySQL or SQLite.
  * Verifies that CTE rewriter correctly handles FULL OUTER JOIN with shadow tables.
- * @spec pending
+ * @spec SPEC-3.3d
  */
 class PostgresFullOuterJoinTest extends AbstractPostgresPdoTestCase
 {

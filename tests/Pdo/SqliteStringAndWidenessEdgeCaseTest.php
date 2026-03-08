@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests string edge cases, wide table handling, and value boundary patterns.
- * @spec pending
+ * @spec SPEC-4.11
  */
 class SqliteStringAndWidenessEdgeCaseTest extends AbstractSqlitePdoTestCase
 {

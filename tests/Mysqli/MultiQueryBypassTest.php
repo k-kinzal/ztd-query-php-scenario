@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests that multi_query() bypasses ZTD entirely and operates
  * directly on the physical database, even when ZTD is enabled.
- * @spec pending
+ * @spec SPEC-6.1
  */
 class MultiQueryBypassTest extends AbstractMysqliTestCase
 {

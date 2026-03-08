@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests shadow store behavior at higher scale on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlScaleTest extends AbstractMysqlPdoTestCase
 {

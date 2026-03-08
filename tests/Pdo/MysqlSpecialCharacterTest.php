@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests that the shadow store correctly handles special characters,
  * Unicode, and edge-case string values in CTE-rewritten queries on MySQL via PDO.
- * @spec pending
+ * @spec SPEC-4.11
  */
 class MysqlSpecialCharacterTest extends AbstractMysqlPdoTestCase
 {

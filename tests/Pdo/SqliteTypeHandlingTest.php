@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests type handling in the shadow store on SQLite PDO.
  * Verifies FLOAT, BOOLEAN, DATE, and long TEXT values through CTE rewriting.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqliteTypeHandlingTest extends AbstractSqlitePdoTestCase
 {
@@ -28,10 +28,7 @@ class SqliteTypeHandlingTest extends AbstractSqlitePdoTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->pdo->exec('CREATE TABLE type_test (id INT PRIMARY KEY, float_val REAL, bool_val INT, date_val TEXT, long_text TEXT)');
-
-        }
+    }
 
     public function testFloatPrecision(): void
     {

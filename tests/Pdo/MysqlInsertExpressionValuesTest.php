@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * The InsertTransformer converts VALUES to SELECT expressions for CTE.
  * This tests whether computed expressions survive the transformation.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class MysqlInsertExpressionValuesTest extends AbstractMysqlPdoTestCase
 {

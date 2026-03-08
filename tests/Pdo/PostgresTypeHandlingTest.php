@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests type handling in the shadow store on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresTypeHandlingTest extends AbstractPostgresPdoTestCase
 {

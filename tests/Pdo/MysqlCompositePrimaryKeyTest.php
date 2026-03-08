@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests ZTD behavior with composite (multi-column) primary keys on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.6
  */
 class MysqlCompositePrimaryKeyTest extends AbstractMysqlPdoTestCase
 {

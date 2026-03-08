@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * DELETE with EXISTS/IN subqueries via prepared statements ensures
  * parameter binding works correctly with the CTE rewriter.
- * @spec pending
+ * @spec SPEC-4.3
  */
 class SqlitePreparedDeleteWithSubqueryTest extends AbstractSqlitePdoTestCase
 {
@@ -30,6 +30,18 @@ class SqlitePreparedDeleteWithSubqueryTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_pdel_customers VALUES (1, 'Alice', 'gold')");
+        $this->pdo->exec("INSERT INTO sl_pdel_customers VALUES (2, 'Bob', 'silver')");
+        $this->pdo->exec("INSERT INTO sl_pdel_customers VALUES (3, 'Charlie', 'bronze')");
+        $this->pdo->exec("INSERT INTO sl_pdel_orders VALUES (1, 1, 100.00)");
+        $this->pdo->exec("INSERT INTO sl_pdel_orders VALUES (2, 1, 200.00)");
+        $this->pdo->exec("INSERT INTO sl_pdel_orders VALUES (3, 2, 50.00)");
+    }
     /**
      * Prepared DELETE with IN subquery and parameter.
      */

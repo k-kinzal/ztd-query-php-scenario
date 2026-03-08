@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests table aliasing patterns with CTE rewriting — aliases in FROM, JOIN,
  * self-aliased references, and subqueries with aliases.
- * @spec pending
+ * @spec SPEC-7.1
  */
 class SqliteAliasedTableTest extends AbstractSqlitePdoTestCase
 {
@@ -28,6 +28,19 @@ class SqliteAliasedTableTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO at_users (id, name, dept) VALUES (1, 'Alice', 'Eng')");
+        $this->pdo->exec("INSERT INTO at_users (id, name, dept) VALUES (2, 'Bob', 'Sales')");
+        $this->pdo->exec("INSERT INTO at_users (id, name, dept) VALUES (3, 'Carol', 'Eng')");
+        $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (1, 1, 'Build', 'done')");
+        $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (2, 1, 'Test', 'open')");
+        $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (3, 2, 'Sell', 'open')");
+        $this->pdo->exec("INSERT INTO at_tasks (id, user_id, title, status) VALUES (4, 3, 'Review', 'done')");
+    }
     public function testSimpleAlias(): void
     {
         $stmt = $this->pdo->query("SELECT u.name FROM at_users u WHERE u.dept = 'Eng' ORDER BY u.id");

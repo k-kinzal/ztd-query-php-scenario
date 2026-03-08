@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * Tests DELETE with correlated subqueries on MySQL PDO.
  *
  * Cross-platform parity with SqliteDeleteWithCorrelatedSubqueryTest.
- * @spec pending
+ * @spec SPEC-4.3
  */
 class MysqlDeleteWithCorrelatedSubqueryTest extends AbstractMysqlPdoTestCase
 {

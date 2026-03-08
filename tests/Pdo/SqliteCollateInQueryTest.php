@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests COLLATE clause in queries with shadow data on SQLite.
  *
  * SQLite supports BINARY, NOCASE, and RTRIM collations.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteCollateInQueryTest extends AbstractSqlitePdoTestCase
 {
@@ -26,6 +26,17 @@ class SqliteCollateInQueryTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_collate_test VALUES (1, 'Alice', 'abc')");
+        $this->pdo->exec("INSERT INTO sl_collate_test VALUES (2, 'alice', 'ABC')");
+        $this->pdo->exec("INSERT INTO sl_collate_test VALUES (3, 'Bob', 'def')");
+        $this->pdo->exec("INSERT INTO sl_collate_test VALUES (4, 'CHARLIE', 'GHI')");
+        $this->pdo->exec("INSERT INTO sl_collate_test VALUES (5, 'charlie', 'ghi')");
+    }
     /**
      * WHERE with COLLATE NOCASE for case-insensitive comparison.
      */

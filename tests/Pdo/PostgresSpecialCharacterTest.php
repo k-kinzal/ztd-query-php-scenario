@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * Note: PostgreSQL uses standard SQL escaping ('' for single quotes),
  * not backslash escaping by default.
- * @spec pending
+ * @spec SPEC-4.11
  */
 class PostgresSpecialCharacterTest extends AbstractPostgresPdoTestCase
 {

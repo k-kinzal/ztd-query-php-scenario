@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests prepared DELETE with subqueries via MySQLi.
  *
  * Cross-platform parity with SqlitePreparedDeleteWithSubqueryTest (PDO).
- * @spec pending
+ * @spec SPEC-4.3
  */
 class PreparedDeleteWithSubqueryTest extends AbstractMysqliTestCase
 {

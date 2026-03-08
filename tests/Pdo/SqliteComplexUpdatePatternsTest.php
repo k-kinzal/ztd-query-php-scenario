@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests complex UPDATE patterns: CASE in SET, arithmetic expressions,
  * string concatenation in SET, UPDATE with subquery in SET,
  * multiple sequential mutations, and prepared UPDATE with CASE.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class SqliteComplexUpdatePatternsTest extends AbstractSqlitePdoTestCase
 {
@@ -29,6 +29,20 @@ class SqliteComplexUpdatePatternsTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO employees VALUES (1, 'Alice', 'Engineering', 80000, 'B', 1)");
+        $this->pdo->exec("INSERT INTO employees VALUES (2, 'Bob', 'Engineering', 90000, 'A', 1)");
+        $this->pdo->exec("INSERT INTO employees VALUES (3, 'Charlie', 'Sales', 60000, 'C', 1)");
+        $this->pdo->exec("INSERT INTO employees VALUES (4, 'Diana', 'Sales', 70000, 'B', 0)");
+        $this->pdo->exec("INSERT INTO employees VALUES (5, 'Eve', 'Marketing', 55000, 'C', 1)");
+        $this->pdo->exec("INSERT INTO departments VALUES (1, 'Engineering', 500000, 75000)");
+        $this->pdo->exec("INSERT INTO departments VALUES (2, 'Sales', 300000, 55000)");
+        $this->pdo->exec("INSERT INTO departments VALUES (3, 'Marketing', 200000, 50000)");
+    }
     public function testUpdateWithCaseInSet(): void
     {
         $this->pdo->exec("

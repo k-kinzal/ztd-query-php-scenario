@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests a realistic analytics workflow: sales reporting, customer segmentation,
  * time-series analysis, and reporting queries using window functions, CTEs, and aggregations.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteAnalyticsWorkflowTest extends AbstractSqlitePdoTestCase
 {
@@ -29,6 +29,27 @@ class SqliteAnalyticsWorkflowTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO customers VALUES (1, 'Alice', 'premium', '2023-01-15')");
+        $this->pdo->exec("INSERT INTO customers VALUES (2, 'Bob', 'standard', '2023-03-20')");
+        $this->pdo->exec("INSERT INTO customers VALUES (3, 'Charlie', 'premium', '2023-06-01')");
+        $this->pdo->exec("INSERT INTO customers VALUES (4, 'Diana', 'standard', '2024-01-10')");
+        $this->pdo->exec("INSERT INTO orders VALUES (1, 1, '2024-01-05', 150.00, 'completed')");
+        $this->pdo->exec("INSERT INTO orders VALUES (2, 1, '2024-02-10', 200.00, 'completed')");
+        $this->pdo->exec("INSERT INTO orders VALUES (3, 2, '2024-01-15', 75.00, 'completed')");
+        $this->pdo->exec("INSERT INTO orders VALUES (4, 2, '2024-03-01', 120.00, 'cancelled')");
+        $this->pdo->exec("INSERT INTO orders VALUES (5, 3, '2024-02-20', 300.00, 'completed')");
+        $this->pdo->exec("INSERT INTO orders VALUES (6, 4, '2024-03-15', 50.00, 'completed')");
+        $this->pdo->exec("INSERT INTO order_items VALUES (1, 1, 'Widget', 2, 50.00)");
+        $this->pdo->exec("INSERT INTO order_items VALUES (2, 1, 'Gadget', 1, 50.00)");
+        $this->pdo->exec("INSERT INTO order_items VALUES (3, 2, 'Widget', 4, 50.00)");
+        $this->pdo->exec("INSERT INTO order_items VALUES (4, 3, 'Gizmo', 3, 25.00)");
+        $this->pdo->exec("INSERT INTO order_items VALUES (5, 5, 'Widget', 6, 50.00)");
+    }
     public function testRevenueBySegment(): void
     {
         $stmt = $this->pdo->query("

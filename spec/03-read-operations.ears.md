@@ -10,7 +10,7 @@ When ZTD is enabled and a SELECT query is executed, the system shall return resu
 
 When ZTD is enabled and the result set is empty, the system shall return an empty result set (not false or null).
 
-**Verified behavior:** Aggregates on empty sets return correct values (COUNT → 0, SUM/AVG/MIN/MAX → NULL). Zero-match UPDATE/DELETE returns 0 affected rows without error. Cursor-based (keyset) pagination (WHERE id > ? ORDER BY id LIMIT N) works correctly — page traversal, mid-dataset inserts/deletes, and descending cursor all return expected results. Offset-based pagination (LIMIT/OFFSET) works correctly across all platforms — page traversal, partial last page, empty result beyond data range, pagination after INSERT/DELETE all return expected results. MySQL PDO requires PARAM_INT binding for LIMIT/OFFSET prepared parameters (see [SPEC-10.2.17](10-platform-notes.ears.md)). DECIMAL precision is preserved through shadow store for financial calculations (SUM, arithmetic in UPDATE SET, comparison in WHERE). IS NULL / IS NOT NULL filtering on nullable columns (soft delete pattern) works correctly. Type roundtrip through shadow store preserves integers (including INT_MIN/INT_MAX), floats, decimals, strings (including empty strings and single quotes), NULLs, and booleans (MySQL/SQLite; PostgreSQL false has known issue [SPEC-11.PG-BOOLEAN-FALSE](11-known-issues.ears.md)). Prepared IN-list queries (WHERE id IN (?, ?, ?)) work correctly across all platforms for both positional and integer/string parameters.
+**Verified behavior:** Aggregates on empty sets return correct values (COUNT → 0, SUM/AVG/MIN/MAX → NULL). Zero-match UPDATE/DELETE returns 0 affected rows without error. Cursor-based (keyset) pagination (WHERE id > ? ORDER BY id LIMIT N) works correctly — page traversal, mid-dataset inserts/deletes, and descending cursor all return expected results. Offset-based pagination (LIMIT/OFFSET) works correctly across all platforms — page traversal, partial last page, empty result beyond data range, pagination after INSERT/DELETE all return expected results. MySQL PDO requires PARAM_INT binding for LIMIT/OFFSET prepared parameters (see [SPEC-10.2.17](10-platform-notes.ears.md)). DECIMAL precision is preserved through shadow store for financial calculations (SUM, arithmetic in UPDATE SET, comparison in WHERE). IS NULL / IS NOT NULL filtering on nullable columns (soft delete pattern) works correctly. Type roundtrip through shadow store preserves integers (including INT_MIN/INT_MAX), floats, decimals, strings (including empty strings and single quotes), NULLs, and booleans (MySQL/SQLite; PostgreSQL false has known issue [SPEC-11.PG-BOOLEAN-FALSE](11-known-issues.ears.md)). Prepared IN-list queries (WHERE id IN (?, ?, ?)) work correctly across all platforms for both positional and integer/string parameters. Dual-query pagination pattern (paginated data + total count in same session) works correctly — total count reflects INSERT/DELETE mutations, filtered counts work, keyset and offset pagination both work alongside COUNT queries (see [SPEC-10.2.52](10-platform-notes.ears.md)). Multi-column ORDER BY with expressions, CASE-based priority sorting, and NULL ordering all work correctly (see [SPEC-10.2.54](10-platform-notes.ears.md)).
 
 ## SPEC-3.2 Prepared SELECT
 **Status:** Verified
@@ -28,7 +28,7 @@ Query rewriting occurs at **prepare time**, not execute time. If ZTD mode is tog
 
 **Data snapshotting**: The CTE VALUES clause (shadow store data) is also captured at prepare time. A prepared SELECT will NOT see data inserted after it was prepared — even if the INSERT occurs before `execute()`. To see post-INSERT data, the SELECT must be prepared (or re-prepared) after the INSERT. Similarly, re-executing a prepared DELETE or UPDATE operates on the frozen CTE snapshot — previously deleted rows are still "visible" in the snapshot, so `rowCount()` / `ztdAffectedRows()` may report affected-row counts for rows that were already removed by a prior execution of the same statement.
 
-**Verified behavior:** Prepare-time rewriting persistence confirmed. Named parameter binding (`:param` syntax) works. Interleaved prepared statements maintain independent snapshots. ORM-style statement reuse (prepare-once/execute-many) works. Parameterized LIMIT/OFFSET works (MySQL requires `PARAM_INT`).
+**Verified behavior:** Prepare-time rewriting persistence confirmed. Named parameter binding (`:param` syntax) works. Interleaved prepared statements maintain independent snapshots. ORM-style statement reuse (prepare-once/execute-many) works. Parameterized LIMIT/OFFSET works (MySQL requires `PARAM_INT`). Dynamic WHERE clause building patterns (WHERE 1=1 AND optional filters, varying parameter counts across separate queries) work correctly — common PHP query builder idiom (see [SPEC-10.2.51](10-platform-notes.ears.md)).
 
 ## SPEC-3.3 Complex Queries
 **Status:** Verified
@@ -123,7 +123,8 @@ The shadow store is not corrupted by CTE DML failures — previously inserted da
 
 Derived tables (subqueries in the FROM clause) are NOT fully supported by the CTE rewriter. Table references inside derived subqueries are generally not rewritten:
 
-- **MySQL and PostgreSQL**: Derived tables always return empty results because inner table references read from the physical database. This applies both when the derived table is the sole FROM source and when it is JOINed with a regular table.
+- **MySQL**: Derived tables always return empty results because inner table references read from the physical database. This applies both when the derived table is the sole FROM source and when it is JOINed with a regular table.
+- **PostgreSQL**: Derived tables as sole FROM source work correctly — table references inside the subquery ARE rewritten. This includes `SELECT ... FROM (SELECT ... ROW_NUMBER() OVER (...) FROM table) sub WHERE ...` patterns (e.g., deduplication with ROW_NUMBER). JOINed derived tables also work.
 - **SQLite**: Derived tables as sole FROM source return empty. However, when a derived table is JOINed with a regular table, table references inside the derived subquery ARE rewritten and return shadow data correctly. Mutations in the shadow store are reflected through derived table JOINs on SQLite.
 
 ## SPEC-3.3b Views
@@ -158,6 +159,54 @@ Database views are NOT rewritten by the CTE rewriter. Querying a view through ZT
 On **MySQL** (both MySQLi and PDO adapters), `EXCEPT` and `INTERSECT` throw `UnsupportedSqlException` ("Multi-statement SQL statement"). The MySQL CTE rewriter incorrectly parses these as multi-statement SQL. UNION works correctly on all platforms.
 
 **Verified behavior:** UNION/EXCEPT/INTERSECT correctly reflect shadow store mutations (INSERT, UPDATE, DELETE). UNION with prepared statements and aggregation in UNION branches works.
+
+## SPEC-3.5 JSON / JSONB Functions
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/JsonFunctionsTest`, `Mysqli/JsonAndCrossJoinTest`, `Pdo/MysqlJsonFunctionsTest`, `Pdo/MysqlJsonAndCrossJoinTest`, `Pdo/PostgresJsonbFunctionsTest`, `Pdo/PostgresJsonbOperatorsTest`, `Pdo/SqliteJsonFunctionsTest`, `Pdo/SqliteJsonAndCrossJoinTest`
+
+When ZTD is enabled, JSON/JSONB functions and operators shall work correctly on CTE-rewritten shadow data. JSON values stored via INSERT are preserved in the shadow store and queryable through platform-specific JSON functions.
+
+Platform-specific support:
+
+- **MySQL (MySQLi and PDO)**: `JSON_EXTRACT()`, `JSON_UNQUOTE()`, `->>` arrow operator, `JSON_CONTAINS()`, `JSON_LENGTH()`, `JSON_SET()` in UPDATE. JSON column type (`JSON`) is supported. JSON functions work in SELECT, WHERE, and ORDER BY clauses.
+- **PostgreSQL**: JSONB operators (`->`, `->>`, `@>` containment, `#>` / `#>>` path extraction), `jsonb_extract_path_text()`, `jsonb_agg()`, `jsonb_object_agg()`, `jsonb_set()` in UPDATE, `||` merge operator. JSONB value comparison in WHERE and GROUP BY works. `COALESCE` with JSONB extraction works.
+- **SQLite**: `json_extract()`, `->` / `->>` operators (3.38.0+), `json_type()`, `json_array_length()`, `json_group_array()`, `json_set()` in UPDATE. JSON functions work in SELECT, WHERE, and ORDER BY clauses. Prepared statements with `json_extract()` in WHERE work.
+
+**Limitation (PostgreSQL prepared statements):** Prepared statements with JSONB operators (`->>`, `@>`) in WHERE clauses may return empty results through the CTE rewriter, similar to [SPEC-11.PG-PREPARED-FUNCTION](11-known-issues.ears.md). The `?` key-existence operator may conflict with prepared statement parameter placeholders.
+
+## SPEC-3.6 Composite Primary Keys
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/CompositePrimaryKeyTest`, `Pdo/MysqlCompositePrimaryKeyTest`, `Pdo/PostgresCompositePrimaryKeyTest`, `Pdo/SqliteCompositePrimaryKeyTest`, `Mysqli/CompositePkUpsertTest`, `Pdo/PostgresCompositePkUpsertTest`, `*CompositePkEdgeCasesTest`
+
+When ZTD is enabled, tables with composite (multi-column) primary keys shall support INSERT, UPDATE, DELETE, and SELECT correctly through the shadow store.
+
+- INSERT with composite PK values stores rows correctly.
+- UPDATE with full composite PK in WHERE updates only the matching row.
+- UPDATE with partial composite PK match updates all matching rows.
+- DELETE with composite PK in WHERE deletes only the matching row.
+- Three-column composite PKs work correctly.
+- Prepared statements with composite PK parameters work.
+- Aggregation queries (GROUP BY, SUM, COUNT) on composite PK tables work.
+
+**Verified behavior (extended):** UPDATE/DELETE with subquery WHERE on composite PK tables work (e.g., `WHERE order_id IN (SELECT ... FROM other_table WHERE ...)`). Cross-table JOINs between composite PK table and another table work. Aggregate across JOIN with composite PK table works. Prepared multi-execute with composite PK parameters works. DELETE then re-INSERT at same composite PK works. Correlated subqueries referencing composite PK tables work. Self-referencing arithmetic UPDATE on partial PK match works.
+
+## SPEC-3.7 NULL Handling
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/NullHandlingEdgeCasesTest`, `Pdo/MysqlNullHandlingEdgeCasesTest`, `Pdo/PostgresNullHandlingEdgeCasesTest`, `Pdo/SqliteNullHandlingEdgeCasesTest`, `*NullInAggregatesTest`
+
+When ZTD is enabled, NULL values shall be correctly handled through the shadow store:
+
+- UPDATE SET column = NULL correctly stores NULL in the shadow store.
+- IS NULL / IS NOT NULL filters correctly reflect mutations (UPDATE to NULL, UPDATE from NULL).
+- COALESCE chains with multiple nullable columns work correctly.
+- CASE expressions with IS NULL / IS NOT NULL conditions return correct results.
+- Prepared statement INSERT with NULL-bound parameters stores NULL correctly.
+- Platform-specific NULL functions (MySQL: IFNULL; PostgreSQL: COALESCE; SQLite: IFNULL, COALESCE) work with shadow data.
+
+**Verified behavior (aggregates):** COUNT(*) counts all rows including NULLs; COUNT(column) excludes NULLs. COUNT(DISTINCT column) excludes NULLs. SUM/AVG of all-NULL groups returns NULL. MIN/MAX of all-NULL sets returns NULL. HAVING with COUNT(column) correctly filters groups with no non-NULL values. HAVING SUM(...) IS NOT NULL works. COALESCE inside aggregate (SUM(COALESCE(col, 0))) works. GROUP_CONCAT / STRING_AGG omits NULLs (returns NULL for all-NULL groups). NULL in arithmetic produces NULL (e.g., NULL + 10 = NULL). NULL excluded from BETWEEN. NULL = NULL is never true (standard SQL). NULL in CASE with conditional aggregation works correctly.
 
 ## SPEC-3.4 Fetch Methods
 **Status:** Verified

@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests SQLite-specific features: typeof(), instr(), printf(), IIF(), hex/unhex, group_concat order.
- * @spec pending
+ * @spec SPEC-10.2.16
  */
 class SqliteSpecificFeaturesTest extends AbstractSqlitePdoTestCase
 {
@@ -24,6 +24,15 @@ class SqliteSpecificFeaturesTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO items (id, name, price, code) VALUES (1, 'Widget', 9.99, 'W001')");
+        $this->pdo->exec("INSERT INTO items (id, name, price, code) VALUES (2, 'Gadget', 29.99, 'G002')");
+        $this->pdo->exec("INSERT INTO items (id, name, price, code) VALUES (3, 'Gizmo', 19.99, 'GZ03')");
+    }
     public function testTypeof(): void
     {
         $stmt = $this->pdo->query("SELECT typeof(name) AS name_type, typeof(price) AS price_type, typeof(id) AS id_type FROM items WHERE id = 1");

@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests date/time functions and advanced window functions on MySQLi.
- * @spec pending
+ * @spec SPEC-10.2.18
  */
 class DateAndAdvancedWindowTest extends AbstractMysqliTestCase
 {

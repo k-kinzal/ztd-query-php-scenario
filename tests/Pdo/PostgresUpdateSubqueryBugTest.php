@@ -15,7 +15,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * SQLite produces "incomplete input", PostgreSQL produces "ambiguous column"
  * because the CTE rewriter generates a cross join between the tables.
  * MySQL handles this pattern correctly.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class PostgresUpdateSubqueryBugTest extends AbstractPostgresPdoTestCase
 {

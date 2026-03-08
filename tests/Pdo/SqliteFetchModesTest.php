@@ -27,6 +27,15 @@ class SqliteFetchModesTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_fm_test VALUES (1, 'Alice', 90)");
+        $this->pdo->exec("INSERT INTO sl_fm_test VALUES (2, 'Bob', 85)");
+        $this->pdo->exec("INSERT INTO sl_fm_test VALUES (3, 'Charlie', 95)");
+    }
     /**
      * FETCH_OBJ returns stdClass objects.
      */

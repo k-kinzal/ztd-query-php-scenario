@@ -34,7 +34,6 @@ class SqliteInsertIgnoreTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE ins_ign_s (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO ins_ign_s VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO ins_ign_s VALUES (2, 'Bob', 80)");
 

@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * PostgreSQL supports `INSERT INTO t DEFAULT VALUES` which inserts
  * a row with all columns set to their default values.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class PostgresInsertDefaultValuesExtendedTest extends AbstractPostgresPdoTestCase
 {

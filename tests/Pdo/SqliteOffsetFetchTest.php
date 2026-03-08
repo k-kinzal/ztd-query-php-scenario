@@ -14,7 +14,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *   LIMIT x OFFSET y (traditional)
  *   LIMIT x, y (MySQL-compatible, x is offset, y is limit)
  * SQLite 3.35+ does NOT support OFFSET...FETCH (SQL:2012) syntax.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteOffsetFetchTest extends AbstractSqlitePdoTestCase
 {
@@ -29,6 +29,15 @@ class SqliteOffsetFetchTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        for ($i = 1; $i <= 10; $i++) {
+            $this->pdo->exec("INSERT INTO of_test (id, name, score) VALUES ($i, 'User_$i', " . ($i * 10) . ")");
+        }
+    }
     /**
      * Traditional LIMIT/OFFSET.
      */

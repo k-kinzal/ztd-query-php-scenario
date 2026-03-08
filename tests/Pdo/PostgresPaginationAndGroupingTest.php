@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests parameterized LIMIT/OFFSET, expression-based GROUP BY,
  * and INSERT...SELECT with filtering on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresPaginationAndGroupingTest extends AbstractPostgresPdoTestCase
 {

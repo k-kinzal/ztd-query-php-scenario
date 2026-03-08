@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * This pattern combines INSERT...SELECT with conflict handling.
  * The PgSqlParser::hasOnConflict() and hasInsertSelect() are both checked
  * during INSERT resolution, but the combination may not be fully supported.
- * @spec pending
+ * @spec SPEC-4.2a
  */
 class PostgresInsertSelectOnConflictTest extends AbstractPostgresPdoTestCase
 {

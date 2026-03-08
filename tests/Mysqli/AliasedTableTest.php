@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests table aliasing patterns with CTE rewriting on MySQLi.
- * @spec pending
+ * @spec SPEC-7.1
  */
 class AliasedTableTest extends AbstractMysqliTestCase
 {

@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * MySQL supports REPLACE INTO ... SELECT to replace/insert rows from a SELECT.
  * The ReplaceTransformer handles this by building SELECT SQL from the
  * statement's select property, and ReplaceMutation handles the shadow store.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class ReplaceSelectTest extends AbstractMysqliTestCase
 {

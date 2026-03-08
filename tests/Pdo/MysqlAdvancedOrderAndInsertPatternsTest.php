@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests advanced ORDER BY patterns and interleaved prepared statements on MySQL.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class MysqlAdvancedOrderAndInsertPatternsTest extends AbstractMysqlPdoTestCase
 {

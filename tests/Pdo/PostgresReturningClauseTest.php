@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * PostgreSQL supports RETURNING on DML statements to return affected rows.
  * The CTE rewriter may or may not preserve this clause.
- * @spec pending
+ * @spec SPEC-10.2.29
  */
 class PostgresReturningClauseTest extends AbstractPostgresPdoTestCase
 {

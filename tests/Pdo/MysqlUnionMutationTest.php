@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * Tests UNION queries with mutations on MySQL PDO.
  * Note: EXCEPT and INTERSECT are NOT tested here as they throw
  * UnsupportedSqlException on MySQL (see spec 3.3d).
- * @spec pending
+ * @spec SPEC-3.3d
  */
 class MysqlUnionMutationTest extends AbstractMysqlPdoTestCase
 {

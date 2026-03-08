@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests the bind_result() + fetch() pattern which is the classic
  * alternative to get_result() for reading prepared statement results.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class BindResultFetchTest extends AbstractMysqliTestCase
 {

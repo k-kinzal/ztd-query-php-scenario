@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests common REST API / controller-layer query patterns.
  * These simulate typical CRUD operations in web frameworks like Laravel/Symfony.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteRestApiPatternTest extends AbstractSqlitePdoTestCase
 {
@@ -33,9 +33,6 @@ class SqliteRestApiPatternTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE api_products (id INT PRIMARY KEY, name VARCHAR(100), price DECIMAL(10,2), stock INT, active INT DEFAULT 1)');
-        $this->pdo->exec('CREATE TABLE api_categories (id INT PRIMARY KEY, name VARCHAR(50))');
-        $this->pdo->exec('CREATE TABLE api_product_categories (product_id INT, category_id INT, PRIMARY KEY (product_id, category_id))');
         // Seed categories
         $this->pdo->exec("INSERT INTO api_categories VALUES (1, 'Electronics')");
         $this->pdo->exec("INSERT INTO api_categories VALUES (2, 'Books')");

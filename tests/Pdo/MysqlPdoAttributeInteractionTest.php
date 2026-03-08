@@ -11,7 +11,7 @@ use Tests\Support\MySQLContainer;
 /**
  * Tests PDO attribute interactions with ZTD on MySQL.
  * EMULATE_PREPARES is particularly important on MySQL.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class MysqlPdoAttributeInteractionTest extends AbstractMysqlPdoTestCase
 {

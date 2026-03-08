@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Ensures shadow data survives enable/disable toggle cycles and that
  * physical operations during disabled periods don't leak into shadow.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class SqliteEnableDisableCycleDataTest extends AbstractSqlitePdoTestCase
 {

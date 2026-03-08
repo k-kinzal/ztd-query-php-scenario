@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * NATURAL JOIN implicitly joins on columns with the same name.
  * USING clause joins on specified common column(s).
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteNaturalJoinTest extends AbstractSqlitePdoTestCase
 {
@@ -31,6 +31,19 @@ class SqliteNaturalJoinTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO nj_users VALUES (1, 'Alice', 10)");
+        $this->pdo->exec("INSERT INTO nj_users VALUES (2, 'Bob', 20)");
+        $this->pdo->exec("INSERT INTO nj_users VALUES (3, 'Charlie', 10)");
+        $this->pdo->exec("INSERT INTO nj_depts VALUES (10, 'Engineering')");
+        $this->pdo->exec("INSERT INTO nj_depts VALUES (20, 'Marketing')");
+        $this->pdo->exec("INSERT INTO nj_roles VALUES (1, 'Admin')");
+        $this->pdo->exec("INSERT INTO nj_roles VALUES (2, 'User')");
+    }
     /**
      * NATURAL JOIN on common column (dept_id).
      */

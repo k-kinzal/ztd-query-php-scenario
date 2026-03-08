@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests advanced ORDER BY patterns and INSERT subquery patterns
  * commonly used by ORM query builders.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteAdvancedOrderAndInsertPatternsTest extends AbstractSqlitePdoTestCase
 {
@@ -32,7 +32,6 @@ class SqliteAdvancedOrderAndInsertPatternsTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE aoi_users (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20), score INT)');
         $this->pdo->exec("INSERT INTO aoi_users VALUES (1, 'Alice', 'admin', 90)");
         $this->pdo->exec("INSERT INTO aoi_users VALUES (2, 'Bob', 'user', 70)");
         $this->pdo->exec("INSERT INTO aoi_users VALUES (3, 'Charlie', 'moderator', 85)");
@@ -121,7 +120,6 @@ class SqliteAdvancedOrderAndInsertPatternsTest extends AbstractSqlitePdoTestCase
 
     public function testInsertWithSubqueryInValues(): void
     {
-        $this->pdo->exec('CREATE TABLE aoi_counters (id INT PRIMARY KEY, next_val INT)');
         $this->pdo->exec('INSERT INTO aoi_counters VALUES (1, 100)');
 
         // This pattern is common for generating IDs: INSERT with subquery in VALUES

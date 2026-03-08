@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * DISTINCT ON is a PostgreSQL extension that returns the first row
  * of each set of rows where the given expressions evaluate to equal.
  * Also tests FETCH FIRST N ROWS ONLY (SQL standard LIMIT).
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresDistinctOnTest extends AbstractPostgresPdoTestCase
 {

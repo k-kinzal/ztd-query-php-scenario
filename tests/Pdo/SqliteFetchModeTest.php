@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests various PDO fetch modes work correctly with ZTD shadow store on SQLite.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqliteFetchModeTest extends AbstractSqlitePdoTestCase
 {
@@ -24,6 +24,15 @@ class SqliteFetchModeTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO fetch_test (id, name, score) VALUES (1, 'Alice', 100)");
+        $this->pdo->exec("INSERT INTO fetch_test (id, name, score) VALUES (2, 'Bob', 85)");
+        $this->pdo->exec("INSERT INTO fetch_test (id, name, score) VALUES (3, 'Charlie', 70)");
+    }
     public function testQueryWithFetchModeArg(): void
     {
         $stmt = $this->pdo->query('SELECT * FROM fetch_test ORDER BY id', PDO::FETCH_ASSOC);

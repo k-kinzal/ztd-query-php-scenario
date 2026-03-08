@@ -14,7 +14,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * semi-structured data. Tests verify json_extract(), json_set(),
  * json_type(), json_each(), and json_group_array() work correctly
  * when reading from the CTE-rewritten shadow store.
- * @spec SPEC-10.2.16
+ * @spec SPEC-3.5
  */
 class SqliteJsonFunctionsTest extends AbstractSqlitePdoTestCase
 {

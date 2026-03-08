@@ -14,8 +14,11 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * on WITH clauses to control CTE optimization.
  *
  * Since ZTD rewrites user CTEs with its own shadow CTE, these hints
- * may conflict with the rewriter.
- * @spec pending
+ * are overwritten — the user CTE body reads from the physical table
+ * (empty) rather than shadow data. This is consistent with SPEC-11.PG-CTE.
+ *
+ * @spec SPEC-10.2.28
+ * @see SPEC-11.PG-CTE
  */
 class PostgresCteMaterializedTest extends AbstractPostgresPdoTestCase
 {
@@ -40,62 +43,40 @@ class PostgresCteMaterializedTest extends AbstractPostgresPdoTestCase
     }
 
     /**
-     * WITH ... AS MATERIALIZED — user CTE with MATERIALIZED hint.
-     * ZTD rewrites user CTEs with its own shadow CTE, so the user CTE name
-     * becomes an undefined reference. This results in either an error or
-     * an empty result set (the user CTE is silently lost).
+     * WITH ... AS MATERIALIZED — user CTE is overwritten by ZTD shadow CTE.
+     *
+     * The user CTE inner query reads from the physical table (empty on PostgreSQL),
+     * so the result is 0 rows. This is consistent with SPEC-11.PG-CTE.
      */
     public function testCteMaterializedHintOverwritten(): void
     {
-        try {
-            $stmt = $this->pdo->query(
-                'WITH active_users AS MATERIALIZED (
-                    SELECT name FROM pg_ctem_test WHERE active = 1
-                )
-                SELECT * FROM active_users ORDER BY name'
-            );
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->query(
+            'WITH active_users AS MATERIALIZED (
+                SELECT name FROM pg_ctem_test WHERE active = 1
+            )
+            SELECT * FROM active_users ORDER BY name'
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // ZTD replaces the WITH clause — the user CTE "active_users" is lost.
-            // The result is either empty (if ZTD treats it as unknown table)
-            // or correct (if ZTD somehow preserves it).
-            if (count($rows) === 0) {
-                // ZTD overwrote the user CTE — expected behavior
-                $this->assertCount(0, $rows);
-            } else {
-                // ZTD preserved the user CTE — would be nice but unexpected
-                $this->assertCount(2, $rows);
-            }
-        } catch (\Exception $e) {
-            // Also acceptable: ZTD throws because it can't parse MATERIALIZED hint
-            $this->assertTrue(true);
-        }
+        // ZTD replaces the WITH clause — the user CTE reads from physical table → 0 rows
+        $this->assertCount(0, $rows, 'User CTE with MATERIALIZED hint returns empty (SPEC-11.PG-CTE)');
     }
 
     /**
-     * WITH ... AS NOT MATERIALIZED — user CTE with NOT MATERIALIZED hint.
-     * Same behavior as MATERIALIZED: ZTD replaces the WITH clause.
+     * WITH ... AS NOT MATERIALIZED — same behavior: ZTD replaces the WITH clause.
      */
     public function testCteNotMaterializedHintOverwritten(): void
     {
-        try {
-            $stmt = $this->pdo->query(
-                'WITH inactive AS NOT MATERIALIZED (
-                    SELECT name FROM pg_ctem_test WHERE active = 0
-                )
-                SELECT * FROM inactive'
-            );
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->query(
+            'WITH inactive AS NOT MATERIALIZED (
+                SELECT name FROM pg_ctem_test WHERE active = 0
+            )
+            SELECT * FROM inactive'
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // ZTD replaces the WITH clause — user CTE "inactive" is lost
-            if (count($rows) === 0) {
-                $this->assertCount(0, $rows);
-            } else {
-                $this->assertCount(1, $rows);
-            }
-        } catch (\Exception $e) {
-            $this->assertTrue(true);
-        }
+        // ZTD replaces the WITH clause — user CTE reads from physical table → 0 rows
+        $this->assertCount(0, $rows, 'User CTE with NOT MATERIALIZED hint returns empty (SPEC-11.PG-CTE)');
     }
 
     /**

@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * Cross-platform parity with SqliteSetOperationsWithLimitTest
  * and PostgresSetOperationsWithLimitTest.
- * @spec pending
+ * @spec SPEC-3.3d
  */
 class MysqlSetOperationsWithLimitTest extends AbstractMysqlPdoTestCase
 {

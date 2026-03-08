@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests common REST API / controller-layer query patterns on MySQL.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class MysqlRestApiPatternTest extends AbstractMysqlPdoTestCase
 {

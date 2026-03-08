@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * MySQL uses INSERT ... ON DUPLICATE KEY UPDATE syntax.
  * Composite keys need correct matching across multiple columns.
- * @spec SPEC-4.2a
+ * @spec SPEC-3.6
  */
 class CompositePkUpsertTest extends AbstractMysqliTestCase
 {

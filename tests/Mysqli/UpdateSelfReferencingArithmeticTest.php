@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * Cross-platform parity with SqliteUpdateSelfReferencingArithmeticTest
  * and MysqlUpdateSelfReferencingArithmeticTest (PDO).
- * @spec pending
+ * @spec SPEC-4.2
  */
 class UpdateSelfReferencingArithmeticTest extends AbstractMysqliTestCase
 {

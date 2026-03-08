@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests parameterized LIMIT/OFFSET, expression-based GROUP BY,
  * and INSERT...SELECT with filtering on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlPaginationAndGroupingTest extends AbstractMysqlPdoTestCase
 {

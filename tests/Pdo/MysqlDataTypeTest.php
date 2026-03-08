@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests that the shadow store correctly handles various SQL data types on MySQL,
  * including DATE, DATETIME, DECIMAL, BOOLEAN, and BIGINT.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlDataTypeTest extends AbstractMysqlPdoTestCase
 {

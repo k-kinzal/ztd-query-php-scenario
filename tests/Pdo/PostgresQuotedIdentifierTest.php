@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests ZTD behavior with PostgreSQL double-quoted identifiers and SQL reserved
  * words as column/table names.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class PostgresQuotedIdentifierTest extends AbstractPostgresPdoTestCase
 {

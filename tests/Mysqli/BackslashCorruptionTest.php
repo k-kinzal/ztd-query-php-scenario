@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Cross-platform parity with MysqlBackslashCorruptionTest (PDO).
  *
  * @see spec 10.3
- * @spec pending
+ * @spec SPEC-4.11
  */
 class BackslashCorruptionTest extends AbstractMysqliTestCase
 {

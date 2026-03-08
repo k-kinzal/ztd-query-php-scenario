@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * GLOB is a SQLite-specific case-sensitive pattern matching operator
  * using * and ? wildcards (unlike LIKE which uses % and _).
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteGlobOperatorTest extends AbstractSqlitePdoTestCase
 {
@@ -27,6 +27,17 @@ class SqliteGlobOperatorTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO glob_files VALUES (1, '/usr/local/bin/python', 'exec')");
+        $this->pdo->exec("INSERT INTO glob_files VALUES (2, '/usr/local/lib/libfoo.so', 'lib')");
+        $this->pdo->exec("INSERT INTO glob_files VALUES (3, '/home/user/docs/README.md', 'doc')");
+        $this->pdo->exec("INSERT INTO glob_files VALUES (4, '/home/user/docs/notes.txt', 'doc')");
+        $this->pdo->exec("INSERT INTO glob_files VALUES (5, '/home/user/Photos/sunset.jpg', 'image')");
+    }
     /**
      * GLOB with * wildcard.
      */

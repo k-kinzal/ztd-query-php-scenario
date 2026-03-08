@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests conditional aggregation, FILTER clause, multi-column ORDER BY on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresConditionalAggregationTest extends AbstractPostgresPdoTestCase
 {

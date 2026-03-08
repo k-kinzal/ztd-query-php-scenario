@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests conditional aggregation, COUNT DISTINCT, and multi-column ORDER BY on MySQLi.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class ConditionalAggregationTest extends AbstractMysqliTestCase
 {

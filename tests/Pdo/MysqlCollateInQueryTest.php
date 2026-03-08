@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * COLLATE affects string comparison and ordering behavior.
  * Tests whether ZTD CTE rewriting preserves COLLATE semantics.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlCollateInQueryTest extends AbstractMysqlPdoTestCase
 {

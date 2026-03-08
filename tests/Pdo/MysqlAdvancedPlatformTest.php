@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests MySQL-specific advanced features with ZTD shadow store:
  * GROUP_CONCAT with ORDER BY, IF/IFNULL, date functions, multi-column IN.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MysqlAdvancedPlatformTest extends AbstractMysqlPdoTestCase
 {

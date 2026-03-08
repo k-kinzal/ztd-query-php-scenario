@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests cross-table shadow consistency on MySQL via MySQLi: operations spanning
  * multiple shadow tables, subquery interactions, and data flow.
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class MultiTableShadowTest extends AbstractMysqliTestCase
 {

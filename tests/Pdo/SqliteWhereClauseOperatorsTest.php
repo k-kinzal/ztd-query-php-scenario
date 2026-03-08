@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests WHERE clause operators: LIKE, NOT LIKE, BETWEEN, NOT BETWEEN,
  * EXISTS, NOT EXISTS, IN with subquery, comparison operators — all after mutations.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteWhereClauseOperatorsTest extends AbstractSqlitePdoTestCase
 {
@@ -28,6 +28,20 @@ class SqliteWhereClauseOperatorsTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO products VALUES (1, 'Widget Alpha', 'electronics', 29.99, 1)");
+        $this->pdo->exec("INSERT INTO products VALUES (2, 'Widget Beta', 'electronics', 49.99, 1)");
+        $this->pdo->exec("INSERT INTO products VALUES (3, 'Gadget Pro', 'accessories', 15.00, 0)");
+        $this->pdo->exec("INSERT INTO products VALUES (4, 'Super Tool', 'tools', 99.99, 1)");
+        $this->pdo->exec("INSERT INTO products VALUES (5, 'Mini Tool', 'tools', 9.99, 1)");
+        $this->pdo->exec("INSERT INTO orders VALUES (1, 1, 'Alice', 2)");
+        $this->pdo->exec("INSERT INTO orders VALUES (2, 2, 'Bob', 1)");
+        $this->pdo->exec("INSERT INTO orders VALUES (3, 4, 'Alice', 3)");
+    }
     public function testLikeWithPercentWildcard(): void
     {
         $stmt = $this->pdo->query("SELECT name FROM products WHERE name LIKE 'Widget%' ORDER BY name");

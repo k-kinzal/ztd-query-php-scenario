@@ -16,7 +16,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * in SELECT queries. INSERT/UPDATE/DELETE work because the mutation resolver
  * strips the schema prefix, but SELECT FROM public.tablename returns empty
  * because the CTE shadowing only matches unqualified table names.
- * @spec pending
+ * @spec SPEC-1.6
  */
 class PostgresSchemaQualifiedTest extends AbstractPostgresPdoTestCase
 {

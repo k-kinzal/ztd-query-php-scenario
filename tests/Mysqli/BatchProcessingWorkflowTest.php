@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests batch processing workflow on MySQLi.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class BatchProcessingWorkflowTest extends AbstractMysqliTestCase
 {

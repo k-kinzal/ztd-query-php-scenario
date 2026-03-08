@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepare() with options, cursor behavior, and framework-style patterns on MySQL.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlPrepareOptionsAndCursorTest extends AbstractMysqlPdoTestCase
 {

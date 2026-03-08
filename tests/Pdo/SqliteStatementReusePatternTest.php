@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests common statement reuse patterns (ORM-style) with ZTD on SQLite.
  * Focuses on patterns like prepare-once/execute-many, batch reads, and mixed workflows.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class SqliteStatementReusePatternTest extends AbstractSqlitePdoTestCase
 {
@@ -28,10 +28,7 @@ class SqliteStatementReusePatternTest extends AbstractSqlitePdoTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->pdo->exec('CREATE TABLE reuse (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(10), amount INT)');
-
-        }
+    }
 
     public function testBatchInsertViaPreparedStatement(): void
     {

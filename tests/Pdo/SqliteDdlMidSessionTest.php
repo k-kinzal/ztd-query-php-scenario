@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests DDL operations mid-session: DROP TABLE + CREATE TABLE, TRUNCATE,
  * and how they interact with existing shadow data and prepared statements.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class SqliteDdlMidSessionTest extends AbstractSqlitePdoTestCase
 {
@@ -34,10 +34,7 @@ class SqliteDdlMidSessionTest extends AbstractSqlitePdoTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->pdo->exec('CREATE TABLE ddl_sess (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
-
-        }
+    }
 
     public function testDropTableClearsShadowAndQueryFails(): void
     {

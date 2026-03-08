@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * ZTD adds its own CTE for shadow data. User-defined CTEs may be
  * overwritten during query rewriting. Documents the behavior on PostgreSQL.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class PostgresMultipleCteQueryTest extends AbstractPostgresPdoTestCase
 {

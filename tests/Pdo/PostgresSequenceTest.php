@@ -16,7 +16,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  *
  * Sequences (nextval, currval, setval) operate on physical database state
  * and may or may not interact correctly with the CTE shadow rewriter.
- * @spec pending
+ * @spec SPEC-10.2.29
  */
 class PostgresSequenceTest extends TestCase
 {

@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests JSON data handling and CROSS JOIN patterns on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.5
  */
 class PostgresJsonAndCrossJoinTest extends AbstractPostgresPdoTestCase
 {

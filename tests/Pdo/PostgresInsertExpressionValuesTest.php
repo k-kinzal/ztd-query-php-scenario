@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * The InsertTransformer converts VALUES to SELECT expressions for CTE.
  * PostgreSQL-specific functions (||, INITCAP, etc.) are tested.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class PostgresInsertExpressionValuesTest extends AbstractPostgresPdoTestCase
 {

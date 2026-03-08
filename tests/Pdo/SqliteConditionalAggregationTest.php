@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests conditional aggregation (COUNT/SUM with CASE), multi-column ORDER BY,
  * and complex WHERE with OR/AND grouping on SQLite.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteConditionalAggregationTest extends AbstractSqlitePdoTestCase
 {
@@ -25,6 +25,18 @@ class SqliteConditionalAggregationTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO orders VALUES (1, 'Alice', 'completed', 100, 'north')");
+        $this->pdo->exec("INSERT INTO orders VALUES (2, 'Bob', 'completed', 200, 'south')");
+        $this->pdo->exec("INSERT INTO orders VALUES (3, 'Alice', 'cancelled', 150, 'north')");
+        $this->pdo->exec("INSERT INTO orders VALUES (4, 'Charlie', 'completed', 300, 'north')");
+        $this->pdo->exec("INSERT INTO orders VALUES (5, 'Bob', 'pending', 250, 'south')");
+        $this->pdo->exec("INSERT INTO orders VALUES (6, 'Alice', 'completed', 175, 'east')");
+    }
     public function testCountWithCase(): void
     {
         $stmt = $this->pdo->query("

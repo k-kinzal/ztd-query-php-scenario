@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Correlated subqueries reference the outer query's row and must
  * correctly reflect shadow mutations (INSERT/UPDATE/DELETE).
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteCorrelatedSubqueryAfterMutationTest extends AbstractSqlitePdoTestCase
 {
@@ -30,6 +30,18 @@ class SqliteCorrelatedSubqueryAfterMutationTest extends AbstractSqlitePdoTestCas
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_corr_customers VALUES (1, 'Alice')");
+        $this->pdo->exec("INSERT INTO sl_corr_customers VALUES (2, 'Bob')");
+        $this->pdo->exec("INSERT INTO sl_corr_customers VALUES (3, 'Charlie')");
+        $this->pdo->exec("INSERT INTO sl_corr_orders VALUES (1, 1, 100.00)");
+        $this->pdo->exec("INSERT INTO sl_corr_orders VALUES (2, 1, 200.00)");
+        $this->pdo->exec("INSERT INTO sl_corr_orders VALUES (3, 2, 150.00)");
+    }
     /**
      * Scalar correlated subquery in SELECT list.
      */

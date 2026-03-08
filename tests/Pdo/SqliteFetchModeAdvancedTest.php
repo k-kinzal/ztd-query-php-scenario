@@ -29,7 +29,6 @@ class SqliteFetchModeAdvancedTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE orders (id INT PRIMARY KEY, customer VARCHAR(50), product VARCHAR(50), amount INT)');
         $this->pdo->exec("INSERT INTO orders VALUES (1, 'Alice', 'Widget', 100)");
         $this->pdo->exec("INSERT INTO orders VALUES (2, 'Alice', 'Gadget', 200)");
         $this->pdo->exec("INSERT INTO orders VALUES (3, 'Bob', 'Widget', 150)");

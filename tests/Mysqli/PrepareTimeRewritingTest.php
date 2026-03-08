@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests that query rewriting occurs at prepare time, not execute time (MySQLi).
- * @spec pending
+ * @spec SPEC-2.1
  */
 class PrepareTimeRewritingTest extends AbstractMysqliTestCase
 {

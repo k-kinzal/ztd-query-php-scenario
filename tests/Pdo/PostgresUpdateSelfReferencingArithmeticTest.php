@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests UPDATE with self-referencing arithmetic (SET col = col + N)
  * on PostgreSQL, verifying cross-platform parity with SQLite and MySQL.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class PostgresUpdateSelfReferencingArithmeticTest extends AbstractPostgresPdoTestCase
 {

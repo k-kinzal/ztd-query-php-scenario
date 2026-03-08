@@ -16,7 +16,7 @@ use Tests\Support\UserDto;
  *
  * When fetchMode is provided, it calls setFetchMode($fetchMode, ...$fetchModeArgs)
  * on the result statement. This tests the variadic args path.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlQueryFetchModeArgsTest extends AbstractMysqlPdoTestCase
 {

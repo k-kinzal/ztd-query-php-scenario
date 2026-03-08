@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * SQLite does not support these advanced GROUP BY extensions.
  * These queries should throw errors.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteGroupingSetsTest extends AbstractSqlitePdoTestCase
 {
@@ -27,6 +27,15 @@ class SqliteGroupingSetsTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO gs_test VALUES (1, 'East', 'Widget', 100)");
+        $this->pdo->exec("INSERT INTO gs_test VALUES (2, 'East', 'Gadget', 200)");
+        $this->pdo->exec("INSERT INTO gs_test VALUES (3, 'West', 'Widget', 150)");
+    }
     /**
      * GROUPING SETS not supported on SQLite — should throw.
      */

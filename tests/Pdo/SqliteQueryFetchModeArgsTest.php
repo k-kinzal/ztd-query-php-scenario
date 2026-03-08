@@ -13,7 +13,7 @@ use Tests\Support\UserDto;
  *
  * SQLite variant of the query-with-fetchMode tests.
  * Uses in-memory database, no container needed.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqliteQueryFetchModeArgsTest extends AbstractSqlitePdoTestCase
 {
@@ -28,6 +28,14 @@ class SqliteQueryFetchModeArgsTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sq_qfm_test (id, name, score) VALUES (1, 'Alice', 90)");
+        $this->pdo->exec("INSERT INTO sq_qfm_test (id, name, score) VALUES (2, 'Bob', 80)");
+    }
     /**
      * query() with FETCH_ASSOC.
      */

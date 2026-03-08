@@ -18,7 +18,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * causing the user-defined CTE names to become undefined references.
  * Queries that don't reference the CTE name in the outer query may
  * still succeed (the CTE is simply ignored).
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteMultipleCteQueryTest extends AbstractSqlitePdoTestCase
 {
@@ -33,6 +33,17 @@ class SqliteMultipleCteQueryTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_cte_orders VALUES (1, 'Alice', 'Widget', 100.00)");
+        $this->pdo->exec("INSERT INTO sl_cte_orders VALUES (2, 'Alice', 'Gadget', 200.00)");
+        $this->pdo->exec("INSERT INTO sl_cte_orders VALUES (3, 'Bob', 'Widget', 150.00)");
+        $this->pdo->exec("INSERT INTO sl_cte_orders VALUES (4, 'Bob', 'Gadget', 50.00)");
+        $this->pdo->exec("INSERT INTO sl_cte_orders VALUES (5, 'Charlie', 'Widget', 300.00)");
+    }
     /**
      * User CTE referencing the CTE name fails — ZTD overwrites the WITH clause.
      *

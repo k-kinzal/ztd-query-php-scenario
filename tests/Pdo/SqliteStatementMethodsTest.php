@@ -20,19 +20,13 @@ class SqliteStatementMethodsTest extends AbstractSqlitePdoTestCase
         return ['stmt_test'];
     }
 
-    private PDO $raw;
-
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->raw = new PDO('sqlite::memory:', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $this->raw->exec('CREATE TABLE stmt_test (id INTEGER PRIMARY KEY, name TEXT, amount REAL)');
+        $this->pdo->exec("INSERT INTO stmt_test (id, name, amount) VALUES (1, 'Alice', 100.50)");
         $this->pdo->exec("INSERT INTO stmt_test (id, name, amount) VALUES (2, 'Bob', 200.75)");
-
-        }
+    }
 
     public function testSetFetchModeOnStatement(): void
     {

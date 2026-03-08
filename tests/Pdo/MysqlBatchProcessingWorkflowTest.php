@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests batch processing workflow on MySQL PDO.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class MysqlBatchProcessingWorkflowTest extends AbstractMysqlPdoTestCase
 {

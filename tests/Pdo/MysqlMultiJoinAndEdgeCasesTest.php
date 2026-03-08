@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests multi-table JOINs (4+ tables), INSERT without column list,
  * SQL comments, and edge cases on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MysqlMultiJoinAndEdgeCasesTest extends AbstractMysqlPdoTestCase
 {

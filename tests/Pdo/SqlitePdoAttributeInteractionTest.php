@@ -6,11 +6,12 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests PDO attribute interactions with ZTD mode on SQLite.
  * Specifically: EMULATE_PREPARES, STRINGIFY_FETCHES, CASE attributes.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class SqlitePdoAttributeInteractionTest extends AbstractSqlitePdoTestCase
 {

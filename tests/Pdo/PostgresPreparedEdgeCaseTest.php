@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests prepared statement edge cases in ZTD mode on PostgreSQL via PDO:
  * parameter types, NULL binding, re-execution, named params.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresPreparedEdgeCaseTest extends AbstractPostgresPdoTestCase
 {

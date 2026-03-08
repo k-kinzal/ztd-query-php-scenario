@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests ZTD behavior with MySQL backtick-quoted identifiers and SQL reserved
  * words as column/table names.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class MysqlQuotedIdentifierTest extends AbstractMysqlPdoTestCase
 {

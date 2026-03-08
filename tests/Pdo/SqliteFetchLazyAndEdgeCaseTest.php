@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests FETCH_LAZY mode, exec() with SELECT, and other edge cases
  * commonly encountered by ORMs and frameworks.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqliteFetchLazyAndEdgeCaseTest extends AbstractSqlitePdoTestCase
 {
@@ -33,7 +33,6 @@ class SqliteFetchLazyAndEdgeCaseTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE fl_users (id INT PRIMARY KEY, name VARCHAR(50), role VARCHAR(20), score INT)');
         $this->pdo->exec("INSERT INTO fl_users VALUES (1, 'Alice', 'admin', 90)");
         $this->pdo->exec("INSERT INTO fl_users VALUES (2, 'Bob', 'user', 70)");
         $this->pdo->exec("INSERT INTO fl_users VALUES (3, 'Charlie', 'moderator', 85)");
@@ -157,7 +156,6 @@ class SqliteFetchLazyAndEdgeCaseTest extends AbstractSqlitePdoTestCase
 
     public function testParamBoolBinding(): void
     {
-        $this->pdo->exec('CREATE TABLE fl_flags (id INT PRIMARY KEY, active INT)');
         $this->pdo->exec('INSERT INTO fl_flags VALUES (1, 1)');
         $this->pdo->exec('INSERT INTO fl_flags VALUES (2, 0)');
 
@@ -172,7 +170,6 @@ class SqliteFetchLazyAndEdgeCaseTest extends AbstractSqlitePdoTestCase
 
     public function testSelectWithDuplicateColumnNames(): void
     {
-        $this->pdo->exec('CREATE TABLE fl_orders (id INT PRIMARY KEY, user_id INT, name VARCHAR(50))');
         $this->pdo->exec("INSERT INTO fl_orders VALUES (10, 1, 'Order A')");
 
         // JOIN producing duplicate 'name' columns

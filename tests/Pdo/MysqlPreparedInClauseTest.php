@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statements with IN and NOT IN clauses on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class MysqlPreparedInClauseTest extends AbstractMysqlPdoTestCase
 {

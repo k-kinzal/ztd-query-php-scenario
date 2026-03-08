@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests type handling in the shadow store on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlTypeHandlingTest extends AbstractMysqlPdoTestCase
 {

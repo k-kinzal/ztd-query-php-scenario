@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Covers edge cases like no-parameter prepared statements,
  * multiple concurrent prepared statements, parameter binding errors,
  * and prepared statement behavior with empty result sets.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqlitePreparedStatementEdgeCasesTest extends AbstractSqlitePdoTestCase
 {
@@ -28,6 +28,15 @@ class SqlitePreparedStatementEdgeCasesTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO pse_items VALUES (1, 'Widget', 'tools')");
+        $this->pdo->exec("INSERT INTO pse_items VALUES (2, 'Gadget', 'electronics')");
+        $this->pdo->exec("INSERT INTO pse_items VALUES (3, 'Doohickey', 'tools')");
+    }
     /**
      * Prepared statement with no parameters (literal SQL).
      */

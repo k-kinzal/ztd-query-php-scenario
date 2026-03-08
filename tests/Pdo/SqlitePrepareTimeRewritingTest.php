@@ -6,12 +6,13 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests that query rewriting occurs at prepare time, not execute time.
  * If ZTD mode is toggled between prepare() and execute(), the prepared
  * query retains its original rewritten (or non-rewritten) form.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class SqlitePrepareTimeRewritingTest extends AbstractSqlitePdoTestCase
 {
@@ -119,11 +120,11 @@ class SqlitePrepareTimeRewritingTest extends AbstractSqlitePdoTestCase
         $row = $result->fetch(PDO::FETCH_ASSOC);
         $this->assertEqualsWithDelta(999.99, (float) $row['price'], 0.01);
 
-        // Physical table unchanged
+        // Physical table has no data (INSERT was through ZTD shadow)
         $this->pdo->disableZtd();
         $result = $this->pdo->query("SELECT price FROM ptr_items WHERE id = 1");
         $row = $result->fetch(PDO::FETCH_ASSOC);
-        $this->assertEqualsWithDelta(10.00, (float) $row['price'], 0.01);
+        $this->assertFalse($row, 'Physical table should be empty — INSERT was shadow-only');
     }
 
     /**

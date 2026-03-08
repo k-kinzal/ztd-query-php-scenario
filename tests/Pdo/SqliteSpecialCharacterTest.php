@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests that the shadow store correctly handles special characters,
  * Unicode, and edge-case string values in CTE-rewritten queries.
- * @spec pending
+ * @spec SPEC-4.11
  */
 class SqliteSpecialCharacterTest extends AbstractSqlitePdoTestCase
 {

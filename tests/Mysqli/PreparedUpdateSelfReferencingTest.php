@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests prepared UPDATE with self-referencing arithmetic via MySQLi.
  *
  * Cross-platform parity with SqlitePreparedUpdateSelfReferencingTest (PDO).
- * @spec pending
+ * @spec SPEC-4.2
  */
 class PreparedUpdateSelfReferencingTest extends AbstractMysqliTestCase
 {

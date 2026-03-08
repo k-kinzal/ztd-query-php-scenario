@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests prepared statement edge cases in ZTD mode on MySQL via MySQLi:
  * NULL binding, re-execution, multiple conditions, prepared UPDATE/DELETE,
  * and statement reuse patterns.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PreparedEdgeCaseTest extends AbstractMysqliTestCase
 {

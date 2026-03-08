@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Confirms prepared INSERT + UPDATE bug on MySQLi (issue #23).
  *
  * Cross-platform parity with MysqlPreparedInsertUpdateBugTest (PDO).
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PreparedInsertUpdateBugTest extends AbstractMysqliTestCase
 {

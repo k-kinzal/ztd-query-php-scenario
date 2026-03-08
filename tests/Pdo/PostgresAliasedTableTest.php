@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests table aliasing patterns with CTE rewriting on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-7.1
  */
 class PostgresAliasedTableTest extends AbstractPostgresPdoTestCase
 {

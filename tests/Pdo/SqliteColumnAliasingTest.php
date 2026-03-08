@@ -6,11 +6,12 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests column aliasing patterns (AS in SELECT) and expression aliasing
  * through CTE rewriting.
- * @spec pending
+ * @spec SPEC-10.2.24
  */
 class SqliteColumnAliasingTest extends AbstractSqlitePdoTestCase
 {
@@ -29,6 +30,15 @@ class SqliteColumnAliasingTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO ca_items (id, name, price, qty, category) VALUES (1, 'Widget', 10.50, 100, 'A')");
+        $this->pdo->exec("INSERT INTO ca_items (id, name, price, qty, category) VALUES (2, 'Gadget', 25.00, 50, 'A')");
+        $this->pdo->exec("INSERT INTO ca_items (id, name, price, qty, category) VALUES (3, 'Doohickey', 5.75, 200, 'B')");
+    }
     public function testSimpleColumnAlias(): void
     {
         $stmt = $this->pdo->query("SELECT name AS item_name, price AS unit_price FROM ca_items WHERE id = 1");

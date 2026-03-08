@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests wide table (many columns) behavior with ZTD via MySQLi.
  *
  * Cross-platform parity with MysqlWideTableTest (PDO).
- * @spec pending
+ * @spec SPEC-3.1
  */
 class WideTableTest extends AbstractMysqliTestCase
 {

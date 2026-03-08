@@ -25,6 +25,15 @@ class SqliteDeleteWithoutWhereTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO dww_test VALUES (1, 'Alice')");
+        $this->pdo->exec("INSERT INTO dww_test VALUES (2, 'Bob')");
+        $this->pdo->exec("INSERT INTO dww_test VALUES (3, 'Charlie')");
+    }
     /**
      * DELETE without WHERE should delete all rows.
      *

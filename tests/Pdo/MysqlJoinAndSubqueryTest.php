@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests shared JOIN and subquery scenarios on MySQL via PDO.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MysqlJoinAndSubqueryTest extends AbstractMysqlPdoTestCase
 {

@@ -15,7 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests ZTD enable/disable cycle with data persistence on PostgreSQL PDO.
  *
  * Cross-platform parity with SqliteEnableDisableCycleDataTest.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class PostgresEnableDisableCycleDataTest extends TestCase
 {

@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests string edge cases, wide table handling, and value boundary patterns via MySQLi.
  *
  * Cross-platform parity with MysqlStringAndWidenessEdgeCaseTest (PDO).
- * @spec pending
+ * @spec SPEC-4.11
  */
 class StringAndWidenessEdgeCaseTest extends AbstractMysqliTestCase
 {

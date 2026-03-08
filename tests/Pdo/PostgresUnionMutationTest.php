@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests UNION/EXCEPT/INTERSECT queries with mutations on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.3d
  */
 class PostgresUnionMutationTest extends AbstractPostgresPdoTestCase
 {

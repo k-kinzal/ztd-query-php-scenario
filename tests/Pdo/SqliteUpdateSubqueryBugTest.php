@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Investigates UPDATE with IN (subquery containing GROUP BY HAVING) on SQLite.
  * This appears to cause "incomplete input" errors in the CTE rewriter.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class SqliteUpdateSubqueryBugTest extends AbstractSqlitePdoTestCase
 {
@@ -28,6 +28,17 @@ class SqliteUpdateSubqueryBugTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO users (id, name, tier) VALUES (1, 'Alice', 'standard')");
+        $this->pdo->exec("INSERT INTO users (id, name, tier) VALUES (2, 'Bob', 'standard')");
+        $this->pdo->exec("INSERT INTO orders (id, user_id, total, status) VALUES (1, 1, 500, 'completed')");
+        $this->pdo->exec("INSERT INTO orders (id, user_id, total, status) VALUES (2, 1, 300, 'completed')");
+        $this->pdo->exec("INSERT INTO orders (id, user_id, total, status) VALUES (3, 2, 100, 'completed')");
+    }
     public function testSimpleUpdateWithInSubquery(): void
     {
         // Simple IN subquery without GROUP BY — should work

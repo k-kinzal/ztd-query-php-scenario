@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests shadow store behavior with wide tables (many columns) on SQLite.
  * CTE rewriting must handle all columns correctly.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteWideTableTest extends AbstractSqlitePdoTestCase
 {

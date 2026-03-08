@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests complex UPDATE patterns on PostgreSQL PDO: CASE in SET, arithmetic expressions,
  * multiple sequential mutations, string concatenation, prepared UPDATE with CASE.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class PostgresComplexUpdatePatternsTest extends AbstractPostgresPdoTestCase
 {

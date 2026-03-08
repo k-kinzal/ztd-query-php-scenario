@@ -11,7 +11,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * Tests PDO prepared INSERT + UPDATE behavior on PostgreSQL.
  *
  * @see https://github.com/k-kinzal/ztd-query-php/issues/23
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresPreparedInsertUpdateBugTest extends AbstractPostgresPdoTestCase
 {

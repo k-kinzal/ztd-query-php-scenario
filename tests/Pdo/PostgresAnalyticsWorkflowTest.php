@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests a realistic analytics workflow on PostgreSQL with window functions, CTEs,
  * prepared statements with date params, and GENERATE_SERIES.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class PostgresAnalyticsWorkflowTest extends AbstractPostgresPdoTestCase
 {

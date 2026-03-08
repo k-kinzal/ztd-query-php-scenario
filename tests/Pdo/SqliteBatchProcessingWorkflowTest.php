@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests a realistic batch processing workflow that accumulates many shadow
  * operations — inserts, updates, deletes, and complex queries — to verify
  * the shadow store correctly tracks all changes in sequence.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteBatchProcessingWorkflowTest extends AbstractSqlitePdoTestCase
 {

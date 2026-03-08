@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests multi-table UPDATE/DELETE with prepared statement parameters on MySQLi.
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class PreparedMultiTableTest extends AbstractMysqliTestCase
 {

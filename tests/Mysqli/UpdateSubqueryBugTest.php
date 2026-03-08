@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests UPDATE with IN (subquery containing GROUP BY HAVING) on MySQLi.
  * Confirms that MySQL handles this pattern correctly (unlike SQLite and PostgreSQL).
- * @spec pending
+ * @spec SPEC-4.2
  */
 class UpdateSubqueryBugTest extends AbstractMysqliTestCase
 {

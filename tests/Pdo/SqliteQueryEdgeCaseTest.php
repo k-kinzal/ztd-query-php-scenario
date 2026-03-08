@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests edge cases in query behavior with the shadow store:
  * NULL handling, ORDER BY, LIMIT, self-referencing updates, etc.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteQueryEdgeCaseTest extends AbstractSqlitePdoTestCase
 {

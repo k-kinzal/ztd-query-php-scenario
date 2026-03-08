@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * The PgSqlParser recognizes TEMPORARY, TEMP, and UNLOGGED modifiers in CREATE TABLE.
  * In ZTD shadow mode, these modifiers don't affect behavior (all tables are in-memory),
  * but the parser must correctly extract table names despite these keywords.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class PostgresTemporaryAndUnloggedTableTest extends AbstractPostgresPdoTestCase
 {

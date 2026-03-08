@@ -17,7 +17,7 @@ use ZtdQuery\Config\ZtdConfig;
  *
  * SHOW statements are MySQL-specific utility statements that may not be
  * recognized by the CTE rewriter. Tests document what works vs what throws.
- * @spec pending
+ * @spec SPEC-6.1
  */
 class MysqlShowStatementsTest extends TestCase
 {

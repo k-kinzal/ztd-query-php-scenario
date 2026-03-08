@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * MySQL 8.0+ supports WITH ROLLUP but NOT GROUPING SETS or CUBE.
  * Cross-platform parity with MysqlGroupingSetsTest (PDO).
- * @spec pending
+ * @spec SPEC-3.1
  */
 class GroupingSetsTest extends AbstractMysqliTestCase
 {

@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * Self-referencing INSERT copies rows from a table back into itself.
  * MySQL requires explicit column lists for INSERT...SELECT (no SELECT *).
- * @spec pending
+ * @spec SPEC-4.1
  */
 class MysqlSelfReferencingInsertTest extends AbstractMysqlPdoTestCase
 {

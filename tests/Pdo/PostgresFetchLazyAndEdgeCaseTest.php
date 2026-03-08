@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests FETCH_LAZY mode, exec() with SELECT, and other edge cases on PostgreSQL.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresFetchLazyAndEdgeCaseTest extends AbstractPostgresPdoTestCase
 {

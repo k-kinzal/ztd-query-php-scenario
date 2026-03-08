@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * Tests prepared statement CTE snapshot behavior on MySQL PDO.
  *
  * Cross-platform parity with SqlitePreparedSnapshotBehaviorTest.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class MysqlPreparedSnapshotBehaviorTest extends AbstractMysqlPdoTestCase
 {

@@ -12,7 +12,14 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * LATERAL allows a subquery in FROM to reference columns from preceding
  * FROM items. This is a PostgreSQL-specific feature.
- * @spec pending
+ *
+ * Known Issue: LATERAL subqueries return empty results through ZTD because
+ * the CTE rewriter does not rewrite table references inside LATERAL clauses.
+ * The inner query reads from the physical table (empty), so the outer query
+ * gets no rows.
+ *
+ * @spec SPEC-10.2.27
+ * @see SPEC-11.PG-LATERAL
  */
 class PostgresLateralSubqueryTest extends AbstractPostgresPdoTestCase
 {
@@ -47,91 +54,117 @@ class PostgresLateralSubqueryTest extends AbstractPostgresPdoTestCase
     }
 
     /**
-     * LATERAL subquery with aggregation.
+     * LATERAL subquery with aggregation returns empty (Known Issue).
+     *
+     * The CTE rewriter does not rewrite table references inside LATERAL.
+     * The inner query reads from the physical table (empty), so no rows returned.
      */
-    public function testLateralWithAggregation(): void
+    public function testLateralWithAggregationReturnsEmpty(): void
     {
-        try {
-            $stmt = $this->pdo->query(
-                "SELECT c.name, o.total_amount
-                 FROM pg_lat_customers c,
-                 LATERAL (
-                     SELECT SUM(amount) AS total_amount
-                     FROM pg_lat_orders
-                     WHERE customer_id = c.id
-                 ) o
-                 ORDER BY c.name"
-            );
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->query(
+            "SELECT c.name, o.total_amount
+             FROM pg_lat_customers c,
+             LATERAL (
+                 SELECT SUM(amount) AS total_amount
+                 FROM pg_lat_orders
+                 WHERE customer_id = c.id
+             ) o
+             ORDER BY c.name"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $this->assertCount(2, $rows);
-            $this->assertSame('Alice', $rows[0]['name']);
-            $this->assertEquals(300.00, (float) $rows[0]['total_amount']);
-            $this->assertSame('Bob', $rows[1]['name']);
-            $this->assertEquals(50.00, (float) $rows[1]['total_amount']);
-        } catch (\Throwable $e) {
-            // LATERAL may not be supported through CTE rewriting
-            $this->markTestSkipped('LATERAL subquery not supported: ' . $e->getMessage());
-        }
+        // Known Issue: LATERAL inner query reads physical table → 0 rows
+        $this->assertCount(0, $rows, 'LATERAL subquery returns empty through ZTD (known issue)');
     }
 
     /**
-     * LATERAL JOIN with LIMIT (top-N per group pattern).
+     * LATERAL JOIN with LIMIT returns empty (Known Issue).
      */
-    public function testLateralWithLimit(): void
+    public function testLateralWithLimitReturnsEmpty(): void
     {
-        try {
-            $stmt = $this->pdo->query(
-                "SELECT c.name, o.amount
-                 FROM pg_lat_customers c,
-                 LATERAL (
-                     SELECT amount FROM pg_lat_orders
-                     WHERE customer_id = c.id
-                     ORDER BY amount DESC
-                     LIMIT 1
-                 ) o
-                 ORDER BY c.name"
-            );
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->query(
+            "SELECT c.name, o.amount
+             FROM pg_lat_customers c,
+             LATERAL (
+                 SELECT amount FROM pg_lat_orders
+                 WHERE customer_id = c.id
+                 ORDER BY amount DESC
+                 LIMIT 1
+             ) o
+             ORDER BY c.name"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Alice's top order: 200, Bob's top order: 50
-            $this->assertCount(2, $rows);
-            $this->assertSame('Alice', $rows[0]['name']);
-            $this->assertEquals(200.00, (float) $rows[0]['amount']);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('LATERAL subquery not supported: ' . $e->getMessage());
-        }
+        // Known Issue: LATERAL inner query reads physical table → 0 rows
+        $this->assertCount(0, $rows, 'LATERAL with LIMIT returns empty through ZTD (known issue)');
     }
 
     /**
-     * LATERAL with LEFT JOIN (preserves rows with no matches).
+     * LATERAL with LEFT JOIN returns empty (Known Issue).
      */
-    public function testLateralLeftJoin(): void
+    public function testLateralLeftJoinReturnsEmpty(): void
     {
-        // Add a customer with no orders
         $this->pdo->exec("INSERT INTO pg_lat_customers VALUES (3, 'Charlie')");
 
-        try {
-            $stmt = $this->pdo->query(
-                "SELECT c.name, o.order_count
-                 FROM pg_lat_customers c
-                 LEFT JOIN LATERAL (
-                     SELECT COUNT(*) AS order_count
-                     FROM pg_lat_orders
-                     WHERE customer_id = c.id
-                 ) o ON true
-                 ORDER BY c.name"
-            );
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->query(
+            "SELECT c.name, o.order_count
+             FROM pg_lat_customers c
+             LEFT JOIN LATERAL (
+                 SELECT COUNT(*) AS order_count
+                 FROM pg_lat_orders
+                 WHERE customer_id = c.id
+             ) o ON true
+             ORDER BY c.name"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $this->assertCount(3, $rows);
-            // Charlie should have 0 orders
-            $charlieRow = array_filter($rows, fn($r) => $r['name'] === 'Charlie');
-            $charlieRow = reset($charlieRow);
-            $this->assertEquals(0, (int) $charlieRow['order_count']);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('LATERAL LEFT JOIN not supported: ' . $e->getMessage());
-        }
+        // Known Issue: LATERAL inner query reads physical table → 0 rows
+        // LEFT JOIN LATERAL with COUNT should still return customer rows with 0 counts,
+        // but since the inner table reference is not rewritten, behavior is unpredictable
+        $this->assertCount(0, $rows, 'LATERAL LEFT JOIN returns empty through ZTD (known issue)');
+    }
+
+    /**
+     * Workaround: correlated subquery in SELECT list instead of LATERAL.
+     */
+    public function testWorkaroundCorrelatedSubqueryInSelect(): void
+    {
+        $stmt = $this->pdo->query(
+            "SELECT c.name,
+                    (SELECT SUM(amount) FROM pg_lat_orders WHERE customer_id = c.id) AS total_amount
+             FROM pg_lat_customers c
+             ORDER BY c.name"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertEquals(300.00, (float) $rows[0]['total_amount']);
+        $this->assertSame('Bob', $rows[1]['name']);
+        $this->assertEquals(50.00, (float) $rows[1]['total_amount']);
+    }
+
+    /**
+     * Workaround: regular JOIN with subquery instead of LATERAL.
+     */
+    public function testWorkaroundJoinWithSubquery(): void
+    {
+        $stmt = $this->pdo->query(
+            "SELECT c.name, o.total_amount
+             FROM pg_lat_customers c
+             JOIN (
+                 SELECT customer_id, SUM(amount) AS total_amount
+                 FROM pg_lat_orders
+                 WHERE 1=1
+                 GROUP BY customer_id
+             ) o ON o.customer_id = c.id
+             ORDER BY c.name"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertEquals(300.00, (float) $rows[0]['total_amount']);
     }
 
     /**

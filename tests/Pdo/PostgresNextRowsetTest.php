@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * Discovery: PostgreSQL PDO driver does NOT support nextRowset() — same as SQLite.
  * Throws PDOException "Driver does not support this function".
  * Only MySQL supports nextRowset() (returns false for CTE queries).
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresNextRowsetTest extends AbstractPostgresPdoTestCase
 {

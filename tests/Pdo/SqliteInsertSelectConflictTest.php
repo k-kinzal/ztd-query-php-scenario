@@ -17,7 +17,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * These combine INSERT...SELECT with conflict handling, similar to MySQL's
  * INSERT...SELECT...ON DUPLICATE KEY UPDATE.
- * @spec pending
+ * @spec SPEC-4.2a
  */
 class SqliteInsertSelectConflictTest extends AbstractSqlitePdoTestCase
 {
@@ -35,6 +35,15 @@ class SqliteInsertSelectConflictTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO isc_source (id, name, score) VALUES (1, 'Alice', 90)");
+        $this->pdo->exec("INSERT INTO isc_source (id, name, score) VALUES (2, 'Bob', 80)");
+        $this->pdo->exec("INSERT INTO isc_source (id, name, score) VALUES (3, 'Charlie', 70)");
+    }
     /**
      * Basic INSERT ... SELECT — all new rows.
      */

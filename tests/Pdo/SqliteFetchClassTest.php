@@ -33,7 +33,6 @@ class SqliteFetchClassTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE fc_class (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO fc_class VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO fc_class VALUES (2, 'Bob', 85)");
         $this->pdo->exec("INSERT INTO fc_class VALUES (3, 'Charlie', 70)");
@@ -114,7 +113,6 @@ class SqliteFetchClassTest extends AbstractSqlitePdoTestCase
 
     public function testFetchClassWithJoinedQuery(): void
     {
-        $this->pdo->exec('CREATE TABLE fc_dept (id INT PRIMARY KEY, dept VARCHAR(50))');
         $this->pdo->exec("INSERT INTO fc_dept VALUES (1, 'Engineering')");
         $this->pdo->exec("INSERT INTO fc_dept VALUES (2, 'Marketing')");
 

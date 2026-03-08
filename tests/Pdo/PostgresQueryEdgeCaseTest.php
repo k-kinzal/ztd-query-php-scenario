@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests edge cases in query behavior with the shadow store on PostgreSQL via PDO:
  * NULL handling, ORDER BY, LIMIT, self-referencing updates, etc.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresQueryEdgeCaseTest extends AbstractPostgresPdoTestCase
 {

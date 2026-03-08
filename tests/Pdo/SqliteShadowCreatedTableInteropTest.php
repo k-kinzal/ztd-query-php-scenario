@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * covers JOINs, INSERT...SELECT, subqueries, and aggregations across
  * both table types — a common real-world pattern where users create
  * temporary analysis tables alongside existing application tables.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class SqliteShadowCreatedTableInteropTest extends AbstractSqlitePdoTestCase
 {
@@ -47,8 +47,6 @@ class SqliteShadowCreatedTableInteropTest extends AbstractSqlitePdoTestCase
         $this->pdo->exec("INSERT INTO sci_users VALUES (1, 'Alice', 'active')");
         $this->pdo->exec("INSERT INTO sci_users VALUES (2, 'Bob', 'inactive')");
 
-        // Create a shadow table
-        $this->pdo->exec('CREATE TABLE sci_scores (user_id INTEGER PRIMARY KEY, score INTEGER)');
         $this->pdo->exec("INSERT INTO sci_scores VALUES (1, 95)");
         $this->pdo->exec("INSERT INTO sci_scores VALUES (2, 72)");
 
@@ -76,7 +74,6 @@ class SqliteShadowCreatedTableInteropTest extends AbstractSqlitePdoTestCase
         $this->pdo->exec("INSERT INTO sci_users VALUES (2, 'Bob', 'active')");
         $this->pdo->exec("INSERT INTO sci_users VALUES (3, 'Charlie', 'active')");
 
-        $this->pdo->exec('CREATE TABLE sci_orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL)');
         $this->pdo->exec("INSERT INTO sci_orders VALUES (1, 1, 100.00)");
         $this->pdo->exec("INSERT INTO sci_orders VALUES (2, 1, 50.00)");
         $this->pdo->exec("INSERT INTO sci_orders VALUES (3, 2, 75.00)");
@@ -107,8 +104,6 @@ class SqliteShadowCreatedTableInteropTest extends AbstractSqlitePdoTestCase
         $this->pdo->exec("INSERT INTO sci_users VALUES (1, 'Alice', 'active')");
         $this->pdo->exec("INSERT INTO sci_users VALUES (2, 'Bob', 'inactive')");
 
-        $this->pdo->exec('CREATE TABLE sci_active_users (id INTEGER PRIMARY KEY, name TEXT)');
-
         $affected = $this->pdo->exec("INSERT INTO sci_active_users (id, name) SELECT id, name FROM sci_users WHERE status = 'active'");
         $this->assertSame(1, $affected);
 
@@ -127,7 +122,6 @@ class SqliteShadowCreatedTableInteropTest extends AbstractSqlitePdoTestCase
         $this->pdo->exec("INSERT INTO sci_users VALUES (2, 'Bob', 'active')");
         $this->pdo->exec("INSERT INTO sci_users VALUES (3, 'Charlie', 'active')");
 
-        $this->pdo->exec('CREATE TABLE sci_blacklist (user_id INTEGER PRIMARY KEY)');
         $this->pdo->exec("INSERT INTO sci_blacklist VALUES (2)");
 
         // Users not in blacklist
@@ -150,7 +144,6 @@ class SqliteShadowCreatedTableInteropTest extends AbstractSqlitePdoTestCase
         $this->pdo->exec("INSERT INTO sci_users VALUES (1, 'Alice', 'active')");
         $this->pdo->exec("INSERT INTO sci_users VALUES (2, 'Bob', 'active')");
 
-        $this->pdo->exec('CREATE TABLE sci_purchases (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL)');
         $this->pdo->exec("INSERT INTO sci_purchases VALUES (1, 1, 100.00)");
         $this->pdo->exec("INSERT INTO sci_purchases VALUES (2, 1, 200.00)");
         $this->pdo->exec("INSERT INTO sci_purchases VALUES (3, 2, 50.00)");
@@ -178,7 +171,6 @@ class SqliteShadowCreatedTableInteropTest extends AbstractSqlitePdoTestCase
         $this->pdo->exec("INSERT INTO sci_users VALUES (1, 'Alice', 'active')");
         $this->pdo->exec("INSERT INTO sci_users VALUES (2, 'Bob', 'active')");
 
-        $this->pdo->exec('CREATE TABLE sci_deactivate (user_id INTEGER PRIMARY KEY)');
         $this->pdo->exec("INSERT INTO sci_deactivate VALUES (2)");
 
         $affected = $this->pdo->exec("UPDATE sci_users SET status = 'deactivated' WHERE id IN (SELECT user_id FROM sci_deactivate)");
@@ -203,7 +195,6 @@ class SqliteShadowCreatedTableInteropTest extends AbstractSqlitePdoTestCase
         $this->pdo->exec("INSERT INTO sci_users VALUES (2, 'Bob', 'active')");
         $this->pdo->exec("INSERT INTO sci_users VALUES (3, 'Charlie', 'active')");
 
-        $this->pdo->exec('CREATE TABLE sci_to_delete (user_id INTEGER PRIMARY KEY)');
         $this->pdo->exec("INSERT INTO sci_to_delete VALUES (1)");
         $this->pdo->exec("INSERT INTO sci_to_delete VALUES (3)");
 
@@ -221,7 +212,6 @@ class SqliteShadowCreatedTableInteropTest extends AbstractSqlitePdoTestCase
     {
         $this->pdo->exec("INSERT INTO sci_users VALUES (1, 'Alice', 'active')");
 
-        $this->pdo->exec('CREATE TABLE sci_temp (id INTEGER PRIMARY KEY, val TEXT)');
         $this->pdo->exec("INSERT INTO sci_temp VALUES (1, 'temp')");
 
         // Drop the shadow-created table

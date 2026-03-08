@@ -6,7 +6,7 @@ namespace Tests\Mysqli;
 
 use Tests\Support\AbstractMysqliTestCase;
 
-/** @spec pending */
+/** @spec SPEC-4.2a */
 class UpsertAndReplaceTest extends AbstractMysqliTestCase
 {
     protected function getTableDDL(): string|array

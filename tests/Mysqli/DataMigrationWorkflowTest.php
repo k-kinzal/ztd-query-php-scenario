@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests a data migration workflow on MySQLi: INSERT...SELECT with transformations,
  * subqueries in SELECT/WHERE, and complex aggregation patterns.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class DataMigrationWorkflowTest extends AbstractMysqliTestCase
 {

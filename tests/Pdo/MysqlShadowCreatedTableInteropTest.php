@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests interoperability between shadow-created tables and reflected tables (MySQL PDO).
- * @spec pending
+ * @spec SPEC-5.1
  */
 class MysqlShadowCreatedTableInteropTest extends AbstractMysqlPdoTestCase
 {

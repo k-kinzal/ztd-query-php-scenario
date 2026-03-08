@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * MySQL's EXCEPT/INTERSECT support is limited (MySQL 8.0.31+).
  * Focus on UNION ALL and UNION with LIMIT/ORDER BY.
- * @spec pending
+ * @spec SPEC-3.3d
  */
 class SetOperationsWithLimitTest extends AbstractMysqliTestCase
 {

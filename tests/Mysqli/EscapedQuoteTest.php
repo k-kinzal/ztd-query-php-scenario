@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * MySQL supports both '' and \' for escaping single quotes.
  * This test verifies the MySQL parser handles these correctly via MySQLi adapter.
- * @spec pending
+ * @spec SPEC-4.11
  */
 class EscapedQuoteTest extends AbstractMysqliTestCase
 {

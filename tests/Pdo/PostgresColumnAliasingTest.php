@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests column aliasing patterns on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-10.2.24
  */
 class PostgresColumnAliasingTest extends AbstractPostgresPdoTestCase
 {

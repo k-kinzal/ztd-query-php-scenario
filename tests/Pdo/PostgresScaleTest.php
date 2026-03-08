@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests shadow store behavior at higher scale on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresScaleTest extends AbstractPostgresPdoTestCase
 {

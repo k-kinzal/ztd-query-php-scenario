@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * Correlated subqueries reference the outer query's row and must
  * correctly reflect shadow mutations (INSERT/UPDATE/DELETE).
- * @spec pending
+ * @spec SPEC-3.3
  */
 class PostgresCorrelatedSubqueryAfterMutationTest extends AbstractPostgresPdoTestCase
 {

@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests column type edge cases on MySQLi: TIME, BOOLEAN, mixed-type arithmetic,
  * UPDATE with arithmetic expression.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class ColumnTypeEdgeCasesTest extends AbstractMysqliTestCase
 {

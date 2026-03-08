@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * PostgreSQL supports: TRUNCATE [TABLE] [ONLY] name [RESTART IDENTITY | CONTINUE IDENTITY] [CASCADE | RESTRICT]
  * The PgSqlParser::extractTruncateTable() extracts the table name and the
  * TruncateMutation simply clears all rows regardless of options.
- * @spec pending
+ * @spec SPEC-5.3
  */
 class PostgresTruncateOptionsTest extends AbstractPostgresPdoTestCase
 {

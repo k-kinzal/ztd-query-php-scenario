@@ -15,7 +15,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * ZTD rewrites SELECT queries by prepending WITH CTEs. Locking clauses
  * are preserved and accepted by MySQL. The locking is effectively a no-op
  * since CTE-derived rows are not physical table rows.
- * @spec pending
+ * @spec SPEC-10.2.11
  */
 class MysqlSelectLockingTest extends AbstractMysqlPdoTestCase
 {

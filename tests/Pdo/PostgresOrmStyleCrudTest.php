@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests ORM-style CRUD patterns with ZTD shadow store on PostgreSQL PDO.
  * Uses exec() for INSERT (workaround for issue #23).
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresOrmStyleCrudTest extends AbstractPostgresPdoTestCase
 {

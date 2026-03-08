@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests batch processing workflow on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class PostgresBatchProcessingWorkflowTest extends AbstractPostgresPdoTestCase
 {

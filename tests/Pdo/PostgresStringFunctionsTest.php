@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * Covers string_agg, regexp_replace, position, overlay, left/right,
  * and other PostgreSQL string functions.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresStringFunctionsTest extends AbstractPostgresPdoTestCase
 {

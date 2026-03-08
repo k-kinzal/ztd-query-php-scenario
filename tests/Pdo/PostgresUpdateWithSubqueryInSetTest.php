@@ -16,7 +16,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *   rewriter generates an invalid SELECT with aggregate + non-aggregate columns.
  *
  * This is a platform-specific limitation not seen on MySQL or SQLite.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class PostgresUpdateWithSubqueryInSetTest extends AbstractPostgresPdoTestCase
 {

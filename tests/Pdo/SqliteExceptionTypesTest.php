@@ -16,7 +16,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Using SQLite for fast in-memory testing since exception behavior
  * is consistent across platforms.
- * @spec pending
+ * @spec SPEC-8.2
  */
 class SqliteExceptionTypesTest extends AbstractSqlitePdoTestCase
 {

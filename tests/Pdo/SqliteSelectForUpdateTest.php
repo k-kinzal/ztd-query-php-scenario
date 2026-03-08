@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests SELECT...FOR UPDATE behavior on SQLite.
  *
  * SQLite does not support FOR UPDATE syntax — it should throw.
- * @spec pending
+ * @spec SPEC-10.2.11
  */
 class SqliteSelectForUpdateTest extends AbstractSqlitePdoTestCase
 {
@@ -25,6 +25,13 @@ class SqliteSelectForUpdateTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sfu_test VALUES (1, 'Alice')");
+    }
     /**
      * SELECT...FOR UPDATE throws on SQLite (not supported).
      */

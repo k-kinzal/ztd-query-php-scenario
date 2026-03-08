@@ -14,7 +14,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * The locking is a no-op since CTE-derived rows are not physical table rows,
  * meaning no actual row locks are acquired. This is important for user code
  * that uses FOR UPDATE — it won't error, but it won't actually lock anything.
- * @spec pending
+ * @spec SPEC-10.2.11
  */
 class SelectLockingTest extends AbstractMysqliTestCase
 {

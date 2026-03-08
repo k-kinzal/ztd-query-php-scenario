@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests insert_id behavior with ZTD shadow operations via MySQLi.
  *
  * Cross-platform parity with SqliteLastInsertIdTest (PDO).
- * @spec pending
+ * @spec SPEC-4.1
  */
 class LastInsertIdTest extends AbstractMysqliTestCase
 {

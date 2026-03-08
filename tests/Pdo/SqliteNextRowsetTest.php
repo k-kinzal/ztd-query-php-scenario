@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Discovery: nextRowset() delegates to the underlying PDO driver.
  * - SQLite: throws PDOException "Driver does not support this function"
  * - MySQL/PostgreSQL: returns false (no additional result sets from CTE queries)
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqliteNextRowsetTest extends AbstractSqlitePdoTestCase
 {
@@ -32,7 +32,6 @@ class SqliteNextRowsetTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE nr_test (id INT PRIMARY KEY, name VARCHAR(50))');
         $this->pdo->exec("INSERT INTO nr_test VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO nr_test VALUES (2, 'Bob')");
 

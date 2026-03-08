@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests conditional aggregation, multi-column ORDER BY, and COUNT DISTINCT on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlConditionalAggregationTest extends AbstractMysqlPdoTestCase
 {

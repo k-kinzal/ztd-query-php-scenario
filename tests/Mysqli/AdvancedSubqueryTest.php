@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests advanced subquery patterns on MySQLi to stress the CTE rewriter:
  * nested subqueries, subqueries in UPDATE SET, EXISTS, scalar subqueries.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class AdvancedSubqueryTest extends AbstractMysqliTestCase
 {

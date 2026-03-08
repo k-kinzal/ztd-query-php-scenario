@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests window functions with FRAME clauses (ROWS/RANGE BETWEEN) on MySQL PDO.
- * @spec pending
+ * @spec SPEC-10.2.23
  */
 class MysqlWindowFrameTest extends AbstractMysqlPdoTestCase
 {

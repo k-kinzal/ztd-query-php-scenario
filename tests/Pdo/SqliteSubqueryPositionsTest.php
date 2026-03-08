@@ -28,6 +28,20 @@ class SqliteSubqueryPositionsTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (1, 'Widget', 'A', 10.00)");
+        $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (2, 'Gadget', 'A', 25.00)");
+        $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (3, 'Doohickey', 'B', 5.00)");
+        $this->pdo->exec("INSERT INTO sp_products (id, name, category, price) VALUES (4, 'Thingamajig', 'B', 50.00)");
+        $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (1, 1, 3)");
+        $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (2, 2, 1)");
+        $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (3, 1, 2)");
+        $this->pdo->exec("INSERT INTO sp_orders (id, product_id, qty) VALUES (4, 3, 5)");
+    }
     public function testScalarSubqueryInSelectList(): void
     {
         $stmt = $this->pdo->query("

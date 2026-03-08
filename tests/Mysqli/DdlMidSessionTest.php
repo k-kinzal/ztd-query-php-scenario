@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests DDL operations mid-session via MySQLi.
  *
  * Cross-platform parity with MysqlDdlMidSessionTest (PDO).
- * @spec pending
+ * @spec SPEC-5.1
  */
 class DdlMidSessionTest extends AbstractMysqliTestCase
 {

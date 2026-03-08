@@ -11,7 +11,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * Tests cross-table shadow consistency on PostgreSQL via PDO: operations spanning
  * multiple shadow tables, subquery interactions, and data flow
  * between tables within a single ZTD session.
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class PostgresMultiTableShadowTest extends AbstractPostgresPdoTestCase
 {

@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests advanced subquery patterns on PostgreSQL PDO to stress the CTE rewriter:
  * nested subqueries, subqueries in UPDATE SET, EXISTS, scalar subqueries.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class PostgresAdvancedSubqueryTest extends AbstractPostgresPdoTestCase
 {

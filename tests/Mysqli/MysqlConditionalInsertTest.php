@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * Covers INSERT ... SELECT WHERE NOT EXISTS, INSERT ... SELECT with UNION,
  * and INSERT ... SELECT with subquery conditions.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class MysqlConditionalInsertTest extends AbstractMysqliTestCase
 {

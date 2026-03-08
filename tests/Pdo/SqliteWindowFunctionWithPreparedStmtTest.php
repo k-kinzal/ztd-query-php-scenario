@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Window functions combined with parameter binding are common
  * in dynamic analytics queries. Tests whether the CTE rewriter
  * handles window function queries via the prepare path.
- * @spec pending
+ * @spec SPEC-10.2.23
  */
 class SqliteWindowFunctionWithPreparedStmtTest extends AbstractSqlitePdoTestCase
 {
@@ -28,6 +28,17 @@ class SqliteWindowFunctionWithPreparedStmtTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_wfprep_test VALUES (1, 'Alice', 'Engineering', 90000)");
+        $this->pdo->exec("INSERT INTO sl_wfprep_test VALUES (2, 'Bob', 'Engineering', 85000)");
+        $this->pdo->exec("INSERT INTO sl_wfprep_test VALUES (3, 'Charlie', 'Sales', 70000)");
+        $this->pdo->exec("INSERT INTO sl_wfprep_test VALUES (4, 'Diana', 'Sales', 75000)");
+        $this->pdo->exec("INSERT INTO sl_wfprep_test VALUES (5, 'Eve', 'Engineering', 95000)");
+    }
     /**
      * ROW_NUMBER with WHERE parameter.
      */

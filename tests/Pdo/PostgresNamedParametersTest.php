@@ -15,7 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests PDO named parameter binding (:param) with ZTD on PostgreSQL.
  *
  * Cross-platform parity with SqliteNamedParametersTest.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresNamedParametersTest extends TestCase
 {

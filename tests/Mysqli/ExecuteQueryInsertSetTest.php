@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * MySQL's alternative INSERT syntax: INSERT INTO table SET col1 = val1, col2 = val2
  * The InsertTransformer::buildInsertSetSelect() handles this.
  * execute_query() internally uses prepare() + execute().
- * @spec pending
+ * @spec SPEC-4.1
  */
 class ExecuteQueryInsertSetTest extends AbstractMysqliTestCase
 {

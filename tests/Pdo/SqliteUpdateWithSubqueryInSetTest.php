@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Non-correlated scalar subqueries in SET work correctly.
  * Correlated subqueries (referencing the outer table being updated)
  * fail with a syntax error because the CTE rewriter generates invalid SQL.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class SqliteUpdateWithSubqueryInSetTest extends AbstractSqlitePdoTestCase
 {
@@ -30,6 +30,18 @@ class SqliteUpdateWithSubqueryInSetTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_updsub_categories VALUES (1, 'Electronics', 0)");
+        $this->pdo->exec("INSERT INTO sl_updsub_categories VALUES (2, 'Books', 0)");
+        $this->pdo->exec("INSERT INTO sl_updsub_products VALUES (1, 'Laptop', 1000.00, 1)");
+        $this->pdo->exec("INSERT INTO sl_updsub_products VALUES (2, 'Phone', 500.00, 1)");
+        $this->pdo->exec("INSERT INTO sl_updsub_products VALUES (3, 'Novel', 15.00, 2)");
+        $this->pdo->exec("INSERT INTO sl_updsub_products VALUES (4, 'Textbook', 85.00, 2)");
+    }
     /**
      * UPDATE SET col = (non-correlated scalar subquery) works.
      */

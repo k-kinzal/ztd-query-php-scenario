@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * Cross-platform parity with SqliteLargeDatasetTest.
  * Validates CTE-based shadow store doesn't degrade with larger datasets.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlLargeDatasetTest extends AbstractMysqlPdoTestCase
 {

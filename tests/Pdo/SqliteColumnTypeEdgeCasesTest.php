@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests column type edge cases: TIME, BLOB, BOOLEAN, mixed types in same query,
  * type coercion in CASE, arithmetic with mixed types.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqliteColumnTypeEdgeCasesTest extends AbstractSqlitePdoTestCase
 {

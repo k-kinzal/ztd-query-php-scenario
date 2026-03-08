@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests ZtdPdo::quote() with different PDO::PARAM_* types on SQLite.
  *
  * SQLite in-memory, no container needed.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class SqliteQuoteParamTypesTest extends AbstractSqlitePdoTestCase
 {

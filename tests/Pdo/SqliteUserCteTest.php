@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests user-written CTE queries and INSERT ... SELECT on SQLite.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteUserCteTest extends AbstractSqlitePdoTestCase
 {
@@ -27,6 +27,15 @@ class SqliteUserCteTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO products (id, name, category, price) VALUES (1, 'Widget A', 'gadgets', 10.00)");
+        $this->pdo->exec("INSERT INTO products (id, name, category, price) VALUES (2, 'Widget B', 'gadgets', 20.00)");
+        $this->pdo->exec("INSERT INTO products (id, name, category, price) VALUES (3, 'Gizmo X', 'tools', 30.00)");
+    }
     public function testUserCteSelectReadsShadowData(): void
     {
         // On SQLite, user-written CTEs correctly read from the shadow store

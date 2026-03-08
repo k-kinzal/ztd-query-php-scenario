@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests debugDumpParams() on ZtdPdoStatement with PostgreSQL PDO.
  * Confirms ZTD rewrites are visible in debug output.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class PostgresDebugDumpParamsTest extends AbstractPostgresPdoTestCase
 {

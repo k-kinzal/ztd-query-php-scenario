@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Ensures that named parameters in prepared statements work correctly
  * with the CTE rewriter, including bindValue, bindParam, and execute-time binding.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqliteNamedParametersTest extends AbstractSqlitePdoTestCase
 {
@@ -27,6 +27,15 @@ class SqliteNamedParametersTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_np_test VALUES (1, 'Alice', 90)");
+        $this->pdo->exec("INSERT INTO sl_np_test VALUES (2, 'Bob', 85)");
+        $this->pdo->exec("INSERT INTO sl_np_test VALUES (3, 'Charlie', 95)");
+    }
     /**
      * Named parameters via execute().
      */

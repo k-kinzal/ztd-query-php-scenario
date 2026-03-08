@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Ensures that prepared SELECT with parameterized LIMIT/OFFSET correctly
  * reflects shadow state changes across multiple pages.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqlitePreparedPaginationAfterMutationTest extends AbstractSqlitePdoTestCase
 {
@@ -27,6 +27,16 @@ class SqlitePreparedPaginationAfterMutationTest extends AbstractSqlitePdoTestCas
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        for ($i = 1; $i <= 10; $i++) {
+            $cat = ($i % 2 === 1) ? 'A' : 'B';
+            $this->pdo->exec("INSERT INTO sl_ppag_test VALUES ($i, 'Item$i', '$cat')");
+        }
+    }
     /**
      * Parameterized LIMIT and OFFSET.
      */

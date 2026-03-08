@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests getIterator()/foreach on ZtdPdoStatement and default fetch mode configuration on MySQL.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlIteratorAndDefaultFetchModeTest extends AbstractMysqlPdoTestCase
 {

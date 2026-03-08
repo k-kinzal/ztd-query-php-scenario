@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Note: Uses exec() for INSERT operations because rows inserted via
  * prepared statements cannot be subsequently updated/deleted (issue #23).
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqliteOrmStyleCrudTest extends AbstractSqlitePdoTestCase
 {
@@ -34,12 +34,7 @@ class SqliteOrmStyleCrudTest extends AbstractSqlitePdoTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->pdo->exec('CREATE TABLE users (id INT PRIMARY KEY, email VARCHAR(100), name VARCHAR(50), role VARCHAR(20), created_at TEXT)');
-        $this->pdo->exec('CREATE TABLE posts (id INT PRIMARY KEY, user_id INT, title VARCHAR(100), body TEXT, published INT, created_at TEXT)');
-        $this->pdo->exec('CREATE TABLE comments (id INT PRIMARY KEY, post_id INT, user_id INT, body TEXT, created_at TEXT)');
-
-        }
+    }
 
     public function testTypicalCrudWorkflow(): void
     {

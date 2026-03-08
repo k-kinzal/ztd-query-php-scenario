@@ -6,12 +6,13 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests ZTD behavior with quoted identifiers and SQL reserved words as
  * column/table names. Real-world schemas often use reserved words like
  * "order", "group", "select", "key", "value" as identifiers.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class SqliteQuotedIdentifierTest extends AbstractSqlitePdoTestCase
 {

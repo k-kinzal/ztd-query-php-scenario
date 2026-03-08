@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * CASCADE/RESTRICT are PostgreSQL-specific modifiers for DROP TABLE.
  * The ZTD parser just extracts the table name; CASCADE/RESTRICT don't
  * affect shadow store behavior since there are no physical FK constraints.
- * @spec pending
+ * @spec SPEC-5.2
  */
 class PostgresDropTableCascadeTest extends AbstractPostgresPdoTestCase
 {

@@ -14,7 +14,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * All seed data is inserted via ZTD mode (not physical) because once
  * schema reflection occurs, the CTE replaces physical table references.
  * Physical rows are NOT visible through ZTD SELECT.
- * @spec pending
+ * @spec SPEC-4.8
  */
 class SqliteSequentialMutationsTest extends AbstractSqlitePdoTestCase
 {
@@ -29,6 +29,15 @@ class SqliteSequentialMutationsTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO seq_test (id, name, status, score) VALUES (1, 'Alice', 'active', 90)");
+        $this->pdo->exec("INSERT INTO seq_test (id, name, status, score) VALUES (2, 'Bob', 'active', 80)");
+        $this->pdo->exec("INSERT INTO seq_test (id, name, status, score) VALUES (3, 'Charlie', 'active', 70)");
+    }
     /**
      * Insert then update the same row.
      */

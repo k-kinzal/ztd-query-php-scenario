@@ -31,6 +31,17 @@ class SqliteCteDmlTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO cte_dml_source (id, name, score) VALUES (1, 'Alice', 90)");
+        $this->pdo->exec("INSERT INTO cte_dml_source (id, name, score) VALUES (2, 'Bob', 80)");
+        $this->pdo->exec("INSERT INTO cte_dml_source (id, name, score) VALUES (3, 'Charlie', 70)");
+        $this->pdo->exec("INSERT INTO cte_dml_target (id, name, score) VALUES (1, 'Old_Alice', 50)");
+        $this->pdo->exec("INSERT INTO cte_dml_target (id, name, score) VALUES (2, 'Old_Bob', 40)");
+    }
     /**
      * WITH ... INSERT fails because user CTE is not visible after ZTD rewriting.
      *

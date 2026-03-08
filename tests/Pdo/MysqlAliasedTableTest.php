@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests table aliasing patterns with CTE rewriting on MySQL PDO.
- * @spec pending
+ * @spec SPEC-7.1
  */
 class MysqlAliasedTableTest extends AbstractMysqlPdoTestCase
 {

@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests INSERT INTO ... SELECT FROM the same table on MySQLi.
  *
  * Self-referencing INSERT copies rows from a table back into itself.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SelfReferencingInsertTest extends AbstractMysqliTestCase
 {

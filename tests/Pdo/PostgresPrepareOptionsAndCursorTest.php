@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests prepare() with options, cursor behavior, and framework-style patterns on PostgreSQL.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresPrepareOptionsAndCursorTest extends AbstractPostgresPdoTestCase
 {

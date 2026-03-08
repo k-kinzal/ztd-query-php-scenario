@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests getColumnMeta() and FETCH_NAMED mode with ZTD on SQLite PDO.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqliteColumnMetaAndNamedFetchTest extends AbstractSqlitePdoTestCase
 {
@@ -31,8 +31,6 @@ class SqliteColumnMetaAndNamedFetchTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE left_t (id INT PRIMARY KEY, name VARCHAR(50))');
-        $this->pdo->exec('CREATE TABLE right_t (id INT PRIMARY KEY, name VARCHAR(50), left_id INT)');
         $this->pdo->exec("INSERT INTO left_t VALUES (1, 'LeftAlice')");
         $this->pdo->exec("INSERT INTO left_t VALUES (2, 'LeftBob')");
         $this->pdo->exec("INSERT INTO right_t VALUES (1, 'RightX', 1)");

@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Prepared statements capture shadow store data at prepare() time.
  * Changes after prepare() are NOT visible to the prepared statement.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqlitePreparedSnapshotBehaviorTest extends AbstractSqlitePdoTestCase
 {
@@ -26,6 +26,14 @@ class SqlitePreparedSnapshotBehaviorTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO psb_test VALUES (1, 'Alice', 100)");
+        $this->pdo->exec("INSERT INTO psb_test VALUES (2, 'Bob', 80)");
+    }
     /**
      * INSERT after prepare() is NOT visible to the prepared SELECT.
      */

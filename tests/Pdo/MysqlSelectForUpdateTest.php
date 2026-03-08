@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * FOR UPDATE is preserved in CTE-rewritten SQL but is effectively a no-op
  * since the query reads from CTE data, not physical rows.
- * @spec pending
+ * @spec SPEC-10.2.11
  */
 class MysqlSelectForUpdateTest extends AbstractMysqlPdoTestCase
 {

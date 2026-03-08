@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests prepared statements with IN clause, NOT IN clause, and
  * CASE WHEN with parameters — common user patterns for dynamic filtering.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqlitePreparedInClauseTest extends AbstractSqlitePdoTestCase
 {
@@ -25,6 +25,17 @@ class SqlitePreparedInClauseTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (1, 'Widget', 'A', 10.0)");
+        $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (2, 'Gadget', 'B', 25.0)");
+        $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (3, 'Doohickey', 'A', 5.0)");
+        $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (4, 'Thingamajig', 'C', 50.0)");
+        $this->pdo->exec("INSERT INTO pic_items (id, name, category, price) VALUES (5, 'Whatchamacallit', 'B', 15.0)");
+    }
     public function testInClauseWithTwoParams(): void
     {
         $stmt = $this->pdo->prepare('SELECT name FROM pic_items WHERE id IN (?, ?) ORDER BY name');

@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests realistic user workflow scenarios on SQLite:
  * e-commerce order processing, user registration, inventory management.
  * These simulate how a real application would use ztd-query for testing.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class SqliteRealisticWorkflowTest extends AbstractSqlitePdoTestCase
 {

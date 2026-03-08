@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests MySQL-specific features: IF(), IFNULL, FIND_IN_SET, INSERT ON DUPLICATE KEY edge cases.
- * @spec pending
+ * @spec SPEC-10.2.15
  */
 class MysqlSpecificFeaturesTest extends AbstractMysqlPdoTestCase
 {

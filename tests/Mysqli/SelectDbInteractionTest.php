@@ -17,7 +17,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * - Tables in the new database may not be reflected in ZTD
  * - Shadow data from the original database persists
  * - Schema reflection uses the original database context
- * @spec pending
+ * @spec SPEC-2.1
  */
 class SelectDbInteractionTest extends AbstractMysqliTestCase
 {

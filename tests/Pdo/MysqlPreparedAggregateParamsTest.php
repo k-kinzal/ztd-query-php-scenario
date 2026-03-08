@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statements with parameters in HAVING, GROUP BY, and ORDER BY on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class MysqlPreparedAggregateParamsTest extends AbstractMysqlPdoTestCase
 {

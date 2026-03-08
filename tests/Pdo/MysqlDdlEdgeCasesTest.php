@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests DDL edge cases on MySQL via PDO adapter:
  * CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, TRUNCATE isolation.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class MysqlDdlEdgeCasesTest extends AbstractMysqlPdoTestCase
 {

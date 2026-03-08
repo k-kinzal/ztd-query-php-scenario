@@ -16,7 +16,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * which is a MySQL syntax error.
  *
  * INSERT with explicit values works normally.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class MysqlInsertDefaultValuesTest extends AbstractMysqlPdoTestCase
 {

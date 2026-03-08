@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests window functions with FRAME clauses (ROWS/RANGE BETWEEN) on MySQLi.
- * @spec pending
+ * @spec SPEC-10.2.23
  */
 class WindowFrameTest extends AbstractMysqliTestCase
 {

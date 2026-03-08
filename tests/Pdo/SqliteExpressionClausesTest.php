@@ -16,7 +16,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * These patterns are common in real-world reporting queries but were
  * previously untested with ZTD shadow store.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteExpressionClausesTest extends AbstractSqlitePdoTestCase
 {
@@ -31,6 +31,17 @@ class SqliteExpressionClausesTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO expr_test VALUES (1, 'Alice', 90, 10, 'A', 'hello%world')");
+        $this->pdo->exec("INSERT INTO expr_test VALUES (2, 'Bob', 80, 20, 'B', '100%_done')");
+        $this->pdo->exec("INSERT INTO expr_test VALUES (3, 'Charlie', 70, 30, 'A', 'test_data')");
+        $this->pdo->exec("INSERT INTO expr_test VALUES (4, 'Diana', 60, 40, 'B', 'normal text')");
+        $this->pdo->exec("INSERT INTO expr_test VALUES (5, 'Eve', 50, NULL, 'C', NULL)");
+    }
     // --- ORDER BY with expressions ---
 
     /**

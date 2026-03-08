@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * PostgreSQL uses ON CONFLICT DO UPDATE SET ... syntax for upserts.
  * Composite keys require specifying multiple columns in the conflict target.
- * @spec SPEC-4.2a
+ * @spec SPEC-3.6
  */
 class PostgresCompositePkUpsertTest extends AbstractPostgresPdoTestCase
 {

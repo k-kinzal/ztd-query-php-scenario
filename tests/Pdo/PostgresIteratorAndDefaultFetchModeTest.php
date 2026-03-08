@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests getIterator()/foreach on ZtdPdoStatement and default fetch mode configuration on PostgreSQL.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresIteratorAndDefaultFetchModeTest extends AbstractPostgresPdoTestCase
 {

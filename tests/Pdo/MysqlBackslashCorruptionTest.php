@@ -13,7 +13,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * This does NOT affect SQLite or PostgreSQL.
  *
  * @see spec 10.3
- * @spec pending
+ * @spec SPEC-4.11
  */
 class MysqlBackslashCorruptionTest extends AbstractMysqlPdoTestCase
 {

@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * Cross-platform parity with SqliteUpdateWithSubqueryInSetTest.
  * Non-correlated scalar subqueries work; correlated subqueries
  * may fail depending on the CTE rewriter.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class MysqlUpdateWithSubqueryInSetTest extends AbstractMysqlPdoTestCase
 {

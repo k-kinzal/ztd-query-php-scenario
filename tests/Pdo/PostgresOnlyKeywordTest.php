@@ -15,7 +15,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * In ZTD shadow mode, ONLY has no effect (no inheritance in shadow store),
  * but the parser should correctly extract table names when ONLY is present.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresOnlyKeywordTest extends AbstractPostgresPdoTestCase
 {

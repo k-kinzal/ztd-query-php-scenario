@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * These are locking clause extensions that control behavior when
  * a requested row is already locked by another transaction.
  * In ZTD mode, locking clauses are no-ops (CTE data can't be locked).
- * @spec pending
+ * @spec SPEC-10.2.11
  */
 class PostgresForUpdateSkipLockedTest extends AbstractPostgresPdoTestCase
 {

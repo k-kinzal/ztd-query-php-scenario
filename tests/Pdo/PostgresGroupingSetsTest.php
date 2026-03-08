@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * These are advanced aggregation features that produce multiple
  * levels of subtotals in a single query.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresGroupingSetsTest extends AbstractPostgresPdoTestCase
 {

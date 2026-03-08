@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests ZTD enable/disable cycle with data persistence via MySQLi.
  *
  * Cross-platform parity with SqliteEnableDisableCycleDataTest (PDO).
- * @spec pending
+ * @spec SPEC-2.1
  */
 class EnableDisableCycleDataTest extends AbstractMysqliTestCase
 {

@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests MySQL ENUM column type via MySQLi.
  *
  * Cross-platform parity with MysqlEnumTypeTest (PDO).
- * @spec pending
+ * @spec SPEC-10.2.19
  */
 class EnumTypeTest extends AbstractMysqliTestCase
 {

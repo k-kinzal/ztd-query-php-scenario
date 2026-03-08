@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests date/time functions and advanced window functions on MySQL PDO.
- * @spec pending
+ * @spec SPEC-10.2.18
  */
 class MysqlDateAndAdvancedWindowTest extends AbstractMysqlPdoTestCase
 {

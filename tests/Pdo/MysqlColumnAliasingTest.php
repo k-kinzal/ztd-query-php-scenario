@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests column aliasing patterns on MySQL PDO.
- * @spec pending
+ * @spec SPEC-10.2.24
  */
 class MysqlColumnAliasingTest extends AbstractMysqlPdoTestCase
 {

@@ -17,7 +17,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * - Old table name: shadow is dropped, queries fall through to physical DB
  * - New table name: NOT in shadow, queries fail (no physical table either)
  * - ZTD-inserted data is lost (shadow was the only place it existed)
- * @spec pending
+ * @spec SPEC-5.1
  */
 class SqliteAlterTableRenameTest extends AbstractSqlitePdoTestCase
 {

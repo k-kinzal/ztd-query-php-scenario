@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * UpdateMutation optionally validates NOT NULL and UNIQUE constraints
  * when constraint validation is enabled. This tests whether ZTD
  * correctly enforces these constraints during UPDATE operations.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class SqliteUpdateConstraintValidationTest extends AbstractSqlitePdoTestCase
 {
@@ -28,6 +28,15 @@ class SqliteUpdateConstraintValidationTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO upd_const_test (id, name, email, score) VALUES (1, 'Alice', 'alice@test.com', 90)");
+        $this->pdo->exec("INSERT INTO upd_const_test (id, name, email, score) VALUES (2, 'Bob', 'bob@test.com', 80)");
+        $this->pdo->exec("INSERT INTO upd_const_test (id, name, email, score) VALUES (3, 'Charlie', 'charlie@test.com', 70)");
+    }
     /**
      * UPDATE with valid values succeeds.
      */

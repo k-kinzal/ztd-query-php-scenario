@@ -17,7 +17,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * The PgSqlParser::extractOnConflictUpdateColumns() strips the WHERE clause
  * (line 253), so UpsertMutation does not enforce it. This means conditional
  * upserts may update rows that should be left unchanged.
- * @spec pending
+ * @spec SPEC-4.2a
  */
 class PostgresOnConflictWhereTest extends AbstractPostgresPdoTestCase
 {

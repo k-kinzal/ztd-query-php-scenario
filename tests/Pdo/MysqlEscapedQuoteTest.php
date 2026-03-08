@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * MySQL supports both '' and \' for escaping single quotes.
  * This test verifies the MySQL parser handles these correctly.
- * @spec pending
+ * @spec SPEC-4.11
  */
 class MysqlEscapedQuoteTest extends AbstractMysqlPdoTestCase
 {

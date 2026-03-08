@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * Tests GROUPING SETS, CUBE, and ROLLUP on MySQL 8+ via PDO.
  *
  * MySQL 8.0+ supports WITH ROLLUP but NOT GROUPING SETS or CUBE.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlGroupingSetsTest extends AbstractMysqlPdoTestCase
 {

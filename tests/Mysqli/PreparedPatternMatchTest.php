@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests LIKE, BETWEEN, and IS NULL with prepared statement parameters on MySQLi.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PreparedPatternMatchTest extends AbstractMysqliTestCase
 {

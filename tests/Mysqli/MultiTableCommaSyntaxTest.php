@@ -15,7 +15,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * The MySqlMutationResolver detects multi-table operations via
  * the projection's table count and creates MultiUpdateMutation.
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class MultiTableCommaSyntaxTest extends AbstractMysqliTestCase
 {

@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * PostgreSQL has specific date/time handling: EXTRACT returns 0 for shadow dates,
  * TO_CHAR works correctly, interval arithmetic may or may not work.
- * @spec pending
+ * @spec SPEC-10.2.18
  */
 class PostgresDateTimeFunctionsTest extends AbstractPostgresPdoTestCase
 {

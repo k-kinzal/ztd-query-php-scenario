@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests NULL handling edge cases: UPDATE SET NULL, IS NULL after mutation,
  * COALESCE chains, NULL in aggregations, NULL in CASE, and NULL comparisons.
- * @spec pending
+ * @spec SPEC-3.7
  */
 class SqliteNullHandlingEdgeCasesTest extends AbstractSqlitePdoTestCase
 {
@@ -25,6 +25,15 @@ class SqliteNullHandlingEdgeCasesTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO contacts VALUES (1, 'Alice', 'alice@test.com', '555-0001', 'VIP customer')");
+        $this->pdo->exec("INSERT INTO contacts VALUES (2, 'Bob', 'bob@test.com', NULL, NULL)");
+        $this->pdo->exec("INSERT INTO contacts VALUES (3, 'Charlie', NULL, '555-0003', 'New lead')");
+    }
     public function testUpdateSetToNull(): void
     {
         $this->pdo->exec("UPDATE contacts SET email = NULL WHERE id = 1");

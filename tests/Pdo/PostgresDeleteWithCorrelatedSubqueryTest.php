@@ -11,7 +11,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * Tests DELETE with correlated subqueries on PostgreSQL.
  *
  * Cross-platform parity with SqliteDeleteWithCorrelatedSubqueryTest.
- * @spec pending
+ * @spec SPEC-4.3
  */
 class PostgresDeleteWithCorrelatedSubqueryTest extends AbstractPostgresPdoTestCase
 {

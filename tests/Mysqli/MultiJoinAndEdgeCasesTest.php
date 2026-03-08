@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests multi-table JOINs (4+ tables), INSERT without column list,
  * SQL comments, and edge cases on MySQLi.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MultiJoinAndEdgeCasesTest extends AbstractMysqliTestCase
 {

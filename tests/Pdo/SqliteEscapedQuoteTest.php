@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * SQLite uses '' for escaping single quotes in string literals.
  * This test verifies that the SQLite parser handles this correctly,
  * unlike the PostgreSQL parser which has a bug (issue #25).
- * @spec pending
+ * @spec SPEC-4.11
  */
 class SqliteEscapedQuoteTest extends AbstractSqlitePdoTestCase
 {

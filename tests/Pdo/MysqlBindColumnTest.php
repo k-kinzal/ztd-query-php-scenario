@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests bindColumn() and FETCH_BOUND mode on MySQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class MysqlBindColumnTest extends AbstractMysqlPdoTestCase
 {

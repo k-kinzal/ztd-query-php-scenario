@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests fetchAll with FETCH_FUNC callback mode and other advanced fetch patterns on SQLite ZTD.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqliteFetchCallbackTest extends AbstractSqlitePdoTestCase
 {
@@ -32,7 +32,6 @@ class SqliteFetchCallbackTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE cb_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO cb_test VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO cb_test VALUES (2, 'Bob', 85)");
         $this->pdo->exec("INSERT INTO cb_test VALUES (3, 'Charlie', 70)");
@@ -77,7 +76,6 @@ class SqliteFetchCallbackTest extends AbstractSqlitePdoTestCase
 
     public function testFetchColumnWithGroupByAggregation(): void
     {
-        $this->pdo->exec('CREATE TABLE grp_test (id INT PRIMARY KEY, category VARCHAR(10), amount INT)');
         $this->pdo->exec("INSERT INTO grp_test VALUES (1, 'A', 100)");
         $this->pdo->exec("INSERT INTO grp_test VALUES (2, 'A', 200)");
         $this->pdo->exec("INSERT INTO grp_test VALUES (3, 'B', 150)");
@@ -91,7 +89,6 @@ class SqliteFetchCallbackTest extends AbstractSqlitePdoTestCase
 
     public function testFetchGroupWithCallback(): void
     {
-        $this->pdo->exec('CREATE TABLE gc_test (id INT PRIMARY KEY, category VARCHAR(10), name VARCHAR(50))');
         $this->pdo->exec("INSERT INTO gc_test VALUES (1, 'A', 'Alice')");
         $this->pdo->exec("INSERT INTO gc_test VALUES (2, 'A', 'Bob')");
         $this->pdo->exec("INSERT INTO gc_test VALUES (3, 'B', 'Charlie')");

@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * MySQL supports: DELETE FROM t WHERE ... ORDER BY ... LIMIT n
  * This allows deleting only the first N rows matching a condition,
  * sorted by the specified order.
- * @spec pending
+ * @spec SPEC-4.3
  */
 class DeleteWithOrderByLimitTest extends AbstractMysqliTestCase
 {

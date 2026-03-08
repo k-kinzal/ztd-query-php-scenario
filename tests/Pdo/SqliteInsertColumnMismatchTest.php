@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Verifies error handling when column counts don't match, and that
  * the shadow store remains consistent after errors.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteInsertColumnMismatchTest extends AbstractSqlitePdoTestCase
 {

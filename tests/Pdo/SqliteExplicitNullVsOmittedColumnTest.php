@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Default column values are NOT applied in ZTD shadow store.
  * Both explicit NULL and omitted columns result in NULL.
- * @spec pending
+ * @spec SPEC-4.1, SPEC-3.7
  */
 class SqliteExplicitNullVsOmittedColumnTest extends AbstractSqlitePdoTestCase
 {

@@ -6,12 +6,13 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests cross-table shadow consistency on SQLite: operations spanning
  * multiple shadow tables, subquery interactions, and data flow
  * between tables within a single ZTD session.
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class SqliteMultiTableShadowTest extends AbstractSqlitePdoTestCase
 {
@@ -32,6 +33,20 @@ class SqliteMultiTableShadowTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (1, 'Engineering', 500000)");
+        $this->pdo->exec("INSERT INTO departments (id, name, budget) VALUES (2, 'Marketing', 200000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (1, 'Alice', 1, 90000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (2, 'Bob', 2, 60000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (3, 'Charlie', 1, 110000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, dept_id, salary) VALUES (4, 'Diana', 2, 75000)");
+        $this->pdo->exec("INSERT INTO projects (id, name, dept_id, lead_id) VALUES (1, 'Project Alpha', 1, 1)");
+        $this->pdo->exec("INSERT INTO projects (id, name, dept_id, lead_id) VALUES (2, 'Project Beta', 2, 2)");
+    }
     public function testJoinAcrossThreeShadowTables(): void
     {
         $stmt = $this->pdo->query("

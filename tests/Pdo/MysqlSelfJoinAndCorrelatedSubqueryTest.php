@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests self-joins and correlated subqueries with ZTD shadow store on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MysqlSelfJoinAndCorrelatedSubqueryTest extends AbstractMysqlPdoTestCase
 {

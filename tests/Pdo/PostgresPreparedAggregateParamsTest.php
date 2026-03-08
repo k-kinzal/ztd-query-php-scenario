@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests prepared statements with parameters in HAVING, GROUP BY, and ORDER BY on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresPreparedAggregateParamsTest extends AbstractPostgresPdoTestCase
 {

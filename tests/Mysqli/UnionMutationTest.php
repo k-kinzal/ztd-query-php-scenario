@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests UNION queries with mutations on MySQLi.
- * @spec pending
+ * @spec SPEC-3.3d
  */
 class UnionMutationTest extends AbstractMysqliTestCase
 {

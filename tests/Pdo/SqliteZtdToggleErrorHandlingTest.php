@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * - Errors when ZTD is enabled vs disabled
  * - State consistency after toggle + error
  * - Prepared statements created with ZTD on/off and executed across toggles
- * @spec pending
+ * @spec SPEC-2.1
  */
 class SqliteZtdToggleErrorHandlingTest extends AbstractSqlitePdoTestCase
 {

@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * tables in a single statement. The PgSqlParser::extractTruncateTable()
  * regex only captures the first table name, so multi-table TRUNCATE
  * may only truncate the first table in shadow.
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class PostgresMultiTableTruncateTest extends AbstractPostgresPdoTestCase
 {

@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * When users write INSERT ... VALUES (1+1, UPPER('test'), ...), the
  * InsertTransformer converts VALUES to SELECT expressions for CTE shadowing.
  * This tests whether computed expressions in VALUES are correctly handled.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteInsertExpressionValuesTest extends AbstractSqlitePdoTestCase
 {

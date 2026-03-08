@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * execute_query() internally uses prepare() + execute(), but prior tests
  * only covered SELECT and INSERT. This file verifies UPDATE and DELETE
  * also work correctly through the execute_query() path.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class ExecuteQueryWriteOpsTest extends AbstractMysqliTestCase
 {

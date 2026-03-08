@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * - GROUP BY with CASE expression
  * - HAVING with multiple conditions
  * - LIKE with ESCAPE clause
- * @spec pending
+ * @spec SPEC-3.1
  */
 class ExpressionClausesTest extends AbstractMysqliTestCase
 {

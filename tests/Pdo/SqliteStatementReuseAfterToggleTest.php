@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Queries are rewritten at prepare() time. Toggling ZTD mode after prepare()
  * does not change the prepared query's rewriting.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class SqliteStatementReuseAfterToggleTest extends AbstractSqlitePdoTestCase
 {
@@ -26,6 +26,14 @@ class SqliteStatementReuseAfterToggleTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO srat_test VALUES (1, 'Alice')");
+        $this->pdo->exec("INSERT INTO srat_test VALUES (2, 'Bob')");
+    }
     /**
      * Prepared in ZTD mode, executed after disabling ZTD.
      * Query retains CTE rewriting from prepare time.

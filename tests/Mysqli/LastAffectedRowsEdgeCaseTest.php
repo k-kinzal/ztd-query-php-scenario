@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * ZtdMysqli tracks affected rows via ztdAffectedRowCount, accessible through
  * lastAffectedRows(). This tests edge cases: sequential operations, zero-match,
  * multi-row UPDATE/DELETE, and interaction with prepare vs query paths.
- * @spec pending
+ * @spec SPEC-4.4
  */
 class LastAffectedRowsEdgeCaseTest extends AbstractMysqliTestCase
 {

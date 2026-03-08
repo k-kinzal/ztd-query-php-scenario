@@ -1,0 +1,212 @@
+# Cross-version test matrix: PHP × Database
+#
+# Usage:
+#   docker compose up --build                          # all PHP versions, SQLite only
+#   docker compose --profile mysql up --build          # include MySQL tests
+#   docker compose --profile postgres up --build       # include PostgreSQL tests
+#   docker compose --profile all up --build            # all databases
+#   docker compose run php81-sqlite                    # single combination
+#
+# Override test filter:
+#   docker compose run php81-sqlite --filter SqliteBasicCrudTest
+
+x-sqlite-base: &sqlite-base
+  build:
+    context: .
+    dockerfile: Dockerfile
+  command: ["--filter", "Tests\\Pdo\\Sqlite", "--testsuite", "Scenario"]
+  volumes:
+    - ./build/matrix:/app/build/matrix
+
+x-mysql-base: &mysql-base
+  build:
+    context: .
+    dockerfile: Dockerfile
+  command: ["--filter", "Tests\\Pdo\\Mysql|Tests\\Mysqli\\", "--testsuite", "Scenario"]
+  volumes:
+    - ./build/matrix:/app/build/matrix
+  depends_on:
+    mysql:
+      condition: service_healthy
+
+x-postgres-base: &postgres-base
+  build:
+    context: .
+    dockerfile: Dockerfile
+  command: ["--filter", "Tests\\Pdo\\Postgres", "--testsuite", "Scenario"]
+  volumes:
+    - ./build/matrix:/app/build/matrix
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  # ── MySQL service ──
+  mysql:
+    image: ${MYSQL_IMAGE:-mysql:8.0}
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ztd_test
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    profiles: ["mysql", "all"]
+
+  # ── PostgreSQL service ──
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:16}
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ztd_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    profiles: ["postgres", "all"]
+
+  # ── PHP 8.1 ──
+  php81-sqlite:
+    <<: *sqlite-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.1"
+
+  php81-mysql:
+    <<: *mysql-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.1"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: ztd_test
+    profiles: ["mysql", "all"]
+
+  php81-postgres:
+    <<: *postgres-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.1"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: ztd_test
+    profiles: ["postgres", "all"]
+
+  # ── PHP 8.2 ──
+  php82-sqlite:
+    <<: *sqlite-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.2"
+
+  php82-mysql:
+    <<: *mysql-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.2"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: ztd_test
+    profiles: ["mysql", "all"]
+
+  php82-postgres:
+    <<: *postgres-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.2"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: ztd_test
+    profiles: ["postgres", "all"]
+
+  # ── PHP 8.3 ──
+  php83-sqlite:
+    <<: *sqlite-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.3"
+
+  php83-mysql:
+    <<: *mysql-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.3"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: ztd_test
+    profiles: ["mysql", "all"]
+
+  php83-postgres:
+    <<: *postgres-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.3"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: ztd_test
+    profiles: ["postgres", "all"]
+
+  # ── PHP 8.4 ──
+  php84-sqlite:
+    <<: *sqlite-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.4"
+
+  php84-mysql:
+    <<: *mysql-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.4"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: ztd_test
+    profiles: ["mysql", "all"]
+
+  php84-postgres:
+    <<: *postgres-base
+    build:
+      context: .
+      args:
+        PHP_VERSION: "8.4"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DATABASE: ztd_test
+    profiles: ["postgres", "all"]

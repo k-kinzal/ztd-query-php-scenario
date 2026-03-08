@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests three-table and four-table JOIN operations through ZTD shadow store.
  *
  * Verifies that CTE rewriter handles multiple shadow tables in complex JOIN topologies.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class ThreeTableJoinTest extends AbstractMysqliTestCase
 {

@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests prepared statement parameter binding edge cases on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresParamBindingEdgeCasesTest extends AbstractPostgresPdoTestCase
 {

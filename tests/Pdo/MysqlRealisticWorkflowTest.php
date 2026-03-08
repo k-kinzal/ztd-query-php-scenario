@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests realistic user workflow scenarios on MySQL PDO:
  * e-commerce order processing, user registration, inventory management.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class MysqlRealisticWorkflowTest extends AbstractMysqlPdoTestCase
 {

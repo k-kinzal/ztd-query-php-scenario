@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests that query rewriting occurs at prepare time, not execute time (MySQL PDO).
- * @spec pending
+ * @spec SPEC-2.1
  */
 class MysqlPrepareTimeRewritingTest extends AbstractMysqlPdoTestCase
 {

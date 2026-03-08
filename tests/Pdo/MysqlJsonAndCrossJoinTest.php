@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests JSON data handling and CROSS JOIN patterns on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.5
  */
 class MysqlJsonAndCrossJoinTest extends AbstractMysqlPdoTestCase
 {

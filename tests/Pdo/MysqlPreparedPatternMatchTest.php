@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests LIKE, BETWEEN, and IS NULL with prepared statement parameters on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class MysqlPreparedPatternMatchTest extends AbstractMysqlPdoTestCase
 {

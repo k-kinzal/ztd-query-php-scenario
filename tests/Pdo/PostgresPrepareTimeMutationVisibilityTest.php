@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests how CTE snapshotting at prepare time affects visibility of mutations
  * that occur between prepare() and execute() on PostgreSQL.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class PostgresPrepareTimeMutationVisibilityTest extends AbstractPostgresPdoTestCase
 {

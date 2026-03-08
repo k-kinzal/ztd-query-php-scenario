@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests MySQL-specific features: IF(), IFNULL, FIND_IN_SET, ON DUPLICATE KEY edge cases via MySQLi.
  *
  * Cross-platform parity with MysqlSpecificFeaturesTest (PDO).
- * @spec pending
+ * @spec SPEC-10.2.15
  */
 class SpecificFeaturesTest extends AbstractMysqliTestCase
 {

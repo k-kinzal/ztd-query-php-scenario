@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests DDL edge cases on MySQL via MySQLi adapter:
  * CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, TRUNCATE isolation.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class DdlEdgeCasesTest extends AbstractMysqliTestCase
 {

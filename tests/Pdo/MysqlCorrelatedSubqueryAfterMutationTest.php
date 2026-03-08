@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * Cross-platform parity with SqliteCorrelatedSubqueryAfterMutationTest
  * and PostgresCorrelatedSubqueryAfterMutationTest.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MysqlCorrelatedSubqueryAfterMutationTest extends AbstractMysqlPdoTestCase
 {

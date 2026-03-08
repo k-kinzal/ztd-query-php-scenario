@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests column type edge cases on PostgreSQL PDO: TIME, BYTEA, BOOLEAN,
  * mixed-type arithmetic, CASE with mixed return types.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresColumnTypeEdgeCasesTest extends AbstractPostgresPdoTestCase
 {

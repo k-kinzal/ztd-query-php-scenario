@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests WHERE clause operators on MySQLi: LIKE, BETWEEN, EXISTS, NOT EXISTS,
  * comparison operators — all after mutations.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class WhereClauseOperatorsTest extends AbstractMysqliTestCase
 {

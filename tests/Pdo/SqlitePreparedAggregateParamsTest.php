@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * KNOWN ISSUE (SQLite only): HAVING clause with prepared statement parameters
  * returns empty results. See https://github.com/k-kinzal/ztd-query-php/issues/22
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqlitePreparedAggregateParamsTest extends AbstractSqlitePdoTestCase
 {
@@ -27,6 +27,18 @@ class SqlitePreparedAggregateParamsTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (1, 'Alice', 'Widget', 50.0, 'completed')");
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (2, 'Alice', 'Gadget', 30.0, 'completed')");
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (3, 'Bob', 'Widget', 120.0, 'completed')");
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (4, 'Bob', 'Doohickey', 15.0, 'pending')");
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (5, 'Charlie', 'Gadget', 30.0, 'completed')");
+        $this->pdo->exec("INSERT INTO pap_orders (id, customer, product, amount, status) VALUES (6, 'Charlie', 'Widget', 50.0, 'pending')");
+    }
     public function testGroupByWithWhereParam(): void
     {
         $stmt = $this->pdo->prepare('SELECT customer, SUM(amount) AS total FROM pap_orders WHERE status = ? GROUP BY customer ORDER BY total DESC');

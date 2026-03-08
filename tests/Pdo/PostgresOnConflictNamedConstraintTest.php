@@ -15,7 +15,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * 2. ON CONFLICT ON CONSTRAINT constraint_name DO UPDATE ... — by constraint name
  *
  * This tests whether the CTE rewriter correctly handles both forms.
- * @spec pending
+ * @spec SPEC-4.2a
  */
 class PostgresOnConflictNamedConstraintTest extends AbstractPostgresPdoTestCase
 {

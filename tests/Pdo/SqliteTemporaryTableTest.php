@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * The SqliteParser recognizes TEMPORARY in CREATE TABLE statements.
  * In ZTD shadow mode, temporary tables behave the same as regular shadow tables.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class SqliteTemporaryTableTest extends AbstractSqlitePdoTestCase
 {

@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests fetchColumn(), closeCursor(), and FETCH_CLASS on PostgreSQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresFetchColumnAndCursorTest extends AbstractPostgresPdoTestCase
 {

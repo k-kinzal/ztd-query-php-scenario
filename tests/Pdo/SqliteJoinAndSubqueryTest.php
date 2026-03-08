@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests shared JOIN and subquery scenarios on SQLite via PDO.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteJoinAndSubqueryTest extends AbstractSqlitePdoTestCase
 {

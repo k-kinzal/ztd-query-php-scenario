@@ -14,7 +14,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * Tests verify that JSONB operators (->, ->>, @>, ?, #>) and functions
  * (jsonb_extract_path, jsonb_agg, jsonb_object_keys) work correctly
  * when reading from the CTE-rewritten shadow store.
- * @spec SPEC-10.2.14
+ * @spec SPEC-3.5
  */
 class PostgresJsonbOperatorsTest extends AbstractPostgresPdoTestCase
 {

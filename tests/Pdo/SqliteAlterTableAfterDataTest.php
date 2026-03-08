@@ -30,10 +30,7 @@ class SqliteAlterTableAfterDataTest extends AbstractSqlitePdoTestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->pdo->exec('CREATE TABLE evolve (id INT PRIMARY KEY, name VARCHAR(50))');
-
-        }
+    }
 
     /**
      * SELECT referencing the new column should work after ALTER TABLE ADD COLUMN.

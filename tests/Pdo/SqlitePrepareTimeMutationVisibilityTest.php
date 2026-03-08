@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests how CTE snapshotting at prepare time affects visibility of mutations
  * that occur between prepare() and execute(), and between multiple execute() calls.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class SqlitePrepareTimeMutationVisibilityTest extends AbstractSqlitePdoTestCase
 {
@@ -32,8 +32,6 @@ class SqlitePrepareTimeMutationVisibilityTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE vis_users (id INT PRIMARY KEY, name VARCHAR(50))');
-        $this->pdo->exec('CREATE TABLE vis_orders (id INT PRIMARY KEY, user_id INT, amount INT)');
         $this->pdo->exec("INSERT INTO vis_users VALUES (1, 'Alice')");
         $this->pdo->exec("INSERT INTO vis_users VALUES (2, 'Bob')");
         $this->pdo->exec("INSERT INTO vis_orders VALUES (1, 1, 100)");

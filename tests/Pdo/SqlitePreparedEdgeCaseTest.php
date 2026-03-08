@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests prepared statement edge cases in ZTD mode on SQLite:
  * parameter types, NULL binding, re-execution patterns,
  * and mixed parameter modes.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqlitePreparedEdgeCaseTest extends AbstractSqlitePdoTestCase
 {

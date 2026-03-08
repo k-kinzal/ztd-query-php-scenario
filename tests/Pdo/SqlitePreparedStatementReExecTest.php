@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests prepared statement re-execution patterns on SQLite PDO.
  * Focuses on cursor management, parameter rebinding, and data isolation
  * between executions.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqlitePreparedStatementReExecTest extends AbstractSqlitePdoTestCase
 {
@@ -30,7 +30,6 @@ class SqlitePreparedStatementReExecTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE items (id INT PRIMARY KEY, name VARCHAR(50), category VARCHAR(20), price INT)');
         $this->pdo->exec("INSERT INTO items VALUES (1, 'Widget', 'A', 100)");
         $this->pdo->exec("INSERT INTO items VALUES (2, 'Gadget', 'B', 200)");
         $this->pdo->exec("INSERT INTO items VALUES (3, 'Gizmo', 'A', 150)");

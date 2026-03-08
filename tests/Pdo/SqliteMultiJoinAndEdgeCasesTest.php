@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests multi-table JOINs (4+ tables), INSERT without column list,
  * HAVING without GROUP BY, != operator, and SQL comments on SQLite.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteMultiJoinAndEdgeCasesTest extends AbstractSqlitePdoTestCase
 {

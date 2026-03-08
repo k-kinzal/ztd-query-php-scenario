@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests NULL handling edge cases on MySQL PDO: UPDATE SET NULL, IS NULL after mutation,
  * COALESCE chains, NULL in CASE, and prepared statements with NULL.
- * @spec pending
+ * @spec SPEC-3.7
  */
 class MysqlNullHandlingEdgeCasesTest extends AbstractMysqlPdoTestCase
 {

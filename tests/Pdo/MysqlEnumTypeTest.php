@@ -13,7 +13,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * MySQL ENUM columns restrict values to a predefined set.
  * Tests whether the shadow store correctly handles ENUM values
  * through CTE rewriting.
- * @spec pending
+ * @spec SPEC-10.2.19
  */
 class MysqlEnumTypeTest extends AbstractMysqlPdoTestCase
 {

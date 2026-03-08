@@ -10,7 +10,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 /**
  * Tests a data migration workflow: create archive tables, migrate data with transformations,
  * verify data integrity with complex queries. Exercises many SQL patterns together.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteDataMigrationWorkflowTest extends AbstractSqlitePdoTestCase
 {

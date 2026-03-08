@@ -8,7 +8,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests LIKE pattern matching with special characters and ESCAPE clause on SQLite.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteLikeEscapeTest extends AbstractSqlitePdoTestCase
 {
@@ -23,6 +23,17 @@ class SqliteLikeEscapeTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO le_test VALUES (1, 'hello world')");
+        $this->pdo->exec("INSERT INTO le_test VALUES (2, 'hello_world')");
+        $this->pdo->exec("INSERT INTO le_test VALUES (3, '100% complete')");
+        $this->pdo->exec("INSERT INTO le_test VALUES (4, '50% done')");
+        $this->pdo->exec("INSERT INTO le_test VALUES (5, 'no match')");
+    }
     /**
      * Basic LIKE with % wildcard.
      */

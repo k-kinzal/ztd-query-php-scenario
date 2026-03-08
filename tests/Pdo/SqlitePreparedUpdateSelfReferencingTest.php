@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * SET col = col + ? via prepared statements ensures parameter binding
  * works correctly with self-referencing expressions.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class SqlitePreparedUpdateSelfReferencingTest extends AbstractSqlitePdoTestCase
 {
@@ -27,6 +27,15 @@ class SqlitePreparedUpdateSelfReferencingTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_pupd_test VALUES (1, 'Alice', 10, 100.00)");
+        $this->pdo->exec("INSERT INTO sl_pupd_test VALUES (2, 'Bob', 20, 200.00)");
+        $this->pdo->exec("INSERT INTO sl_pupd_test VALUES (3, 'Charlie', 30, 300.00)");
+    }
     /**
      * Prepared SET col = col + ? with parameter.
      */

@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests fetchColumn(), closeCursor(), and FETCH_CLASS on SQLite PDO.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class SqliteFetchColumnAndCursorTest extends AbstractSqlitePdoTestCase
 {
@@ -28,7 +28,6 @@ class SqliteFetchColumnAndCursorTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE fc_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO fc_test VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO fc_test VALUES (2, 'Bob', 85)");
         $this->pdo->exec("INSERT INTO fc_test VALUES (3, 'Charlie', 70)");

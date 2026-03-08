@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * MySQL supports: UPDATE t SET ... WHERE ... ORDER BY ... LIMIT n
  * This allows updating only the first N rows matching a condition,
  * sorted by the specified order.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class UpdateWithOrderByLimitTest extends AbstractMysqliTestCase
 {

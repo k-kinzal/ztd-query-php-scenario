@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Validates that multi-table JOINs with GROUP BY and aggregate functions
  * correctly reflect INSERT, UPDATE, and DELETE mutations in shadow state.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteJoinAggregateAfterMutationTest extends AbstractSqlitePdoTestCase
 {
@@ -30,6 +30,18 @@ class SqliteJoinAggregateAfterMutationTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_jag_customers VALUES (1, 'Alice')");
+        $this->pdo->exec("INSERT INTO sl_jag_customers VALUES (2, 'Bob')");
+        $this->pdo->exec("INSERT INTO sl_jag_customers VALUES (3, 'Charlie')");
+        $this->pdo->exec('INSERT INTO sl_jag_orders VALUES (1, 1, 100.00)');
+        $this->pdo->exec('INSERT INTO sl_jag_orders VALUES (2, 1, 200.00)');
+        $this->pdo->exec('INSERT INTO sl_jag_orders VALUES (3, 2, 50.00)');
+    }
     /**
      * LEFT JOIN with COUNT after INSERT.
      */

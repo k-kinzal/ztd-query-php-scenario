@@ -6,6 +6,7 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests advanced SQL query patterns in ZTD mode on SQLite:
@@ -32,6 +33,17 @@ class SqliteAdvancedQueryPatternsTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (1, 'Alice', 'Engineering', 90000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (2, 'Bob', 'Sales', 60000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (3, 'Charlie', 'Engineering', 110000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (4, 'Diana', 'Marketing', 75000)");
+        $this->pdo->exec("INSERT INTO employees (id, name, department, salary) VALUES (5, 'Eve', 'Sales', 55000)");
+    }
     public function testCaseExpression(): void
     {
         $stmt = $this->pdo->query("

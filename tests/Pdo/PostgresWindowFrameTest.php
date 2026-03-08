@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests window functions with FRAME clauses (ROWS/RANGE BETWEEN) on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-10.2.23
  */
 class PostgresWindowFrameTest extends AbstractPostgresPdoTestCase
 {

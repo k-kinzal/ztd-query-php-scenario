@@ -19,7 +19,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *   6. DROP TABLE
  *
  * All of these should work within a single ZTD session.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class SqliteDdlThenDmlWorkflowTest extends AbstractSqlitePdoTestCase
 {

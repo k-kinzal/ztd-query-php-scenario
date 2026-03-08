@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests fetchAll with FETCH_FUNC callback mode and other advanced fetch patterns on MySQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlFetchCallbackTest extends AbstractMysqlPdoTestCase
 {

@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests that the shadow store correctly handles various SQL data types on PostgreSQL,
  * including DATE, TIMESTAMP, NUMERIC, BOOLEAN, and BIGINT.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class PostgresDataTypeTest extends AbstractPostgresPdoTestCase
 {

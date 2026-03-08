@@ -14,7 +14,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * CTE rewriter cannot find it in the physical database.
  *
  * Also tests chained DDL → DML operations.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class SqliteCtasEmptyResultTest extends AbstractSqlitePdoTestCase
 {
@@ -35,6 +35,15 @@ class SqliteCtasEmptyResultTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO ctas_source VALUES (1, 'Alice', 95)");
+        $this->pdo->exec("INSERT INTO ctas_source VALUES (2, 'Bob', 85)");
+        $this->pdo->exec("INSERT INTO ctas_source VALUES (3, 'Charlie', 75)");
+    }
     /**
      * CTAS creates the table but querying it fails on SQLite
      * because the physical table doesn't exist.

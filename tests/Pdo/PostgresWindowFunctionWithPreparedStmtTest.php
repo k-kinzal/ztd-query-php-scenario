@@ -11,7 +11,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * Tests window functions with prepared statements on PostgreSQL.
  *
  * Cross-platform parity with SqliteWindowFunctionWithPreparedStmtTest.
- * @spec pending
+ * @spec SPEC-10.2.23
  */
 class PostgresWindowFunctionWithPreparedStmtTest extends AbstractPostgresPdoTestCase
 {

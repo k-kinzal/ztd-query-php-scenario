@@ -6,10 +6,11 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests date/time functions and advanced window functions on SQLite.
- * @spec pending
+ * @spec SPEC-10.2.18
  */
 class SqliteDateAndAdvancedWindowTest extends AbstractSqlitePdoTestCase
 {

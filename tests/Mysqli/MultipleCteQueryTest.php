@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * ZTD adds its own CTE for shadow data. Documents whether user CTEs
  * are overwritten by ZTD's CTE on MySQLi.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MultipleCteQueryTest extends AbstractMysqliTestCase
 {

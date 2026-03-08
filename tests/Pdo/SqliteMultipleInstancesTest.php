@@ -6,13 +6,14 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdo;
 
 /**
  * Tests multiple ZtdPdo instances with independent shadow stores on SQLite.
  *
  * Each ZtdPdo instance should maintain its own independent shadow store,
  * so mutations in one instance should not be visible to another.
- * @spec pending
+ * @spec SPEC-2.4
  */
 class SqliteMultipleInstancesTest extends AbstractSqlitePdoTestCase
 {

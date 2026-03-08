@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests HAVING without GROUP BY and ON CONFLICT edge cases on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-4.2a
  */
 class PostgresHavingAndOnConflictTest extends AbstractPostgresPdoTestCase
 {

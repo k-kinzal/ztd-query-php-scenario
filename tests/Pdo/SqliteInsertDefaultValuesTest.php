@@ -17,7 +17,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * "INSERT ... DEFAULT VALUES" fails under ZTD because InsertTransformer
  * requires explicit values to project into the CTE.
  * This is already documented; this test verifies and extends coverage.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteInsertDefaultValuesTest extends AbstractSqlitePdoTestCase
 {

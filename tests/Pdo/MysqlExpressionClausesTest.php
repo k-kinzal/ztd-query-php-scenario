@@ -13,7 +13,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * - GROUP BY with expressions
  * - HAVING with multiple conditions
  * - LIKE with ESCAPE clause
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlExpressionClausesTest extends AbstractMysqlPdoTestCase
 {

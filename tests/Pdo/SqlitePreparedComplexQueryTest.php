@@ -28,6 +28,20 @@ class SqlitePreparedComplexQueryTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO users (id, name, role) VALUES (1, 'Alice', 'admin')");
+        $this->pdo->exec("INSERT INTO users (id, name, role) VALUES (2, 'Bob', 'user')");
+        $this->pdo->exec("INSERT INTO users (id, name, role) VALUES (3, 'Charlie', 'user')");
+        $this->pdo->exec("INSERT INTO tasks (id, user_id, title, priority, done) VALUES (1, 1, 'Deploy', 1, 0)");
+        $this->pdo->exec("INSERT INTO tasks (id, user_id, title, priority, done) VALUES (2, 1, 'Review', 2, 1)");
+        $this->pdo->exec("INSERT INTO tasks (id, user_id, title, priority, done) VALUES (3, 2, 'Test', 1, 0)");
+        $this->pdo->exec("INSERT INTO tasks (id, user_id, title, priority, done) VALUES (4, 2, 'Write docs', 3, 0)");
+        $this->pdo->exec("INSERT INTO tasks (id, user_id, title, priority, done) VALUES (5, 3, 'Fix bug', 1, 1)");
+    }
     public function testPreparedJoinWithParam(): void
     {
         $stmt = $this->pdo->prepare("

@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests common REST API / controller-layer query patterns via MySQLi.
  *
  * Cross-platform parity with MysqlRestApiPatternTest (PDO).
- * @spec pending
+ * @spec SPEC-4.1
  */
 class RestApiPatternTest extends AbstractMysqliTestCase
 {

@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests type handling in the shadow store on MySQLi.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class TypeHandlingTest extends AbstractMysqliTestCase
 {

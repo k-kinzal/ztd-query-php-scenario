@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests fetchColumn(), closeCursor(), and FETCH_CLASS on MySQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlFetchColumnAndCursorTest extends AbstractMysqlPdoTestCase
 {

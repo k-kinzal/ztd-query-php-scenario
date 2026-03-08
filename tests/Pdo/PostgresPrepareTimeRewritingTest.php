@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests that query rewriting occurs at prepare time, not execute time (PostgreSQL PDO).
- * @spec pending
+ * @spec SPEC-2.1
  */
 class PostgresPrepareTimeRewritingTest extends AbstractPostgresPdoTestCase
 {

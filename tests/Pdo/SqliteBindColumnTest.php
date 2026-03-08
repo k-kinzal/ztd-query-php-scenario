@@ -9,7 +9,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests bindColumn() and FETCH_BOUND mode on SQLite ZTD.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class SqliteBindColumnTest extends AbstractSqlitePdoTestCase
 {
@@ -28,7 +28,6 @@ class SqliteBindColumnTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE bc_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO bc_test VALUES (1, 'Alice', 100)");
         $this->pdo->exec("INSERT INTO bc_test VALUES (2, 'Bob', 85)");
         $this->pdo->exec("INSERT INTO bc_test VALUES (3, 'Charlie', 70)");

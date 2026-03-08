@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * MySQL supports: UPDATE t1 JOIN t2 ON ... JOIN t3 ON ... SET t1.col = ...
  * The CTE rewriter may have edge cases with 3+ table updates.
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class MultiTableUpdateThreeTablesTest extends AbstractMysqliTestCase
 {

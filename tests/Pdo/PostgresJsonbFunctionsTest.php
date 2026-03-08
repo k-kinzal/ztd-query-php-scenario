@@ -13,7 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * Covers jsonb_agg(), jsonb_object_agg(), jsonb_each_text(),
  * jsonb_array_elements_text(), and jsonb_set() — functions commonly used
  * in real-world PostgreSQL applications for JSON data manipulation.
- * @spec SPEC-10.2.14
+ * @spec SPEC-3.5
  */
 class PostgresJsonbFunctionsTest extends AbstractPostgresPdoTestCase
 {

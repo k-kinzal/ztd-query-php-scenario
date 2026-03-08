@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests a realistic analytics workflow on MySQLi with window functions,
  * prepared date params, and reporting queries.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class AnalyticsWorkflowTest extends AbstractMysqliTestCase
 {

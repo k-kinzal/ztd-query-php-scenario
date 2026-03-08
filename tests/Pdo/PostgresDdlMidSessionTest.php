@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests DDL operations mid-session on PostgreSQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class PostgresDdlMidSessionTest extends AbstractPostgresPdoTestCase
 {

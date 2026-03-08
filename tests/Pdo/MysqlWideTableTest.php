@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests wide table (many columns) behavior with ZTD on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlWideTableTest extends AbstractMysqlPdoTestCase
 {

@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests shadow store behavior at higher scale on MySQLi.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class ScaleTest extends AbstractMysqliTestCase
 {

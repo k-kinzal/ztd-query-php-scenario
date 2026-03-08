@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * The CTE rewriter should detect and reject multi-statement SQL
  * to prevent SQL injection and ensure correct CTE rewriting.
- * @spec pending
+ * @spec SPEC-6.1
  */
 class MysqlMultiStatementDetectionTest extends AbstractMysqlPdoTestCase
 {

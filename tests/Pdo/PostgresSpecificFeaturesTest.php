@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests PostgreSQL-specific features: ILIKE, RETURNING, type casting, GENERATE_SERIES.
- * @spec pending
+ * @spec SPEC-10.2.14
  */
 class PostgresSpecificFeaturesTest extends AbstractPostgresPdoTestCase
 {

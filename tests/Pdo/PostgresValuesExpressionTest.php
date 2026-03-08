@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * PostgreSQL supports VALUES as a standalone query (not just in INSERT)
  * and CTE hints like MATERIALIZED/NOT MATERIALIZED.
- * @spec pending
+ * @spec SPEC-10.2.29
  */
 class PostgresValuesExpressionTest extends AbstractPostgresPdoTestCase
 {

@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * DELETE ... WHERE EXISTS (SELECT ... WHERE outer.col = inner.col)
  * is a common pattern for removing orphaned or conditionally matched rows.
- * @spec pending
+ * @spec SPEC-4.3
  */
 class SqliteDeleteWithCorrelatedSubqueryTest extends AbstractSqlitePdoTestCase
 {
@@ -30,6 +30,19 @@ class SqliteDeleteWithCorrelatedSubqueryTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO sl_del_customers VALUES (1, 'Alice', 1)");
+        $this->pdo->exec("INSERT INTO sl_del_customers VALUES (2, 'Bob', 0)");
+        $this->pdo->exec("INSERT INTO sl_del_customers VALUES (3, 'Charlie', 1)");
+        $this->pdo->exec("INSERT INTO sl_del_customers VALUES (4, 'Diana', 0)");
+        $this->pdo->exec("INSERT INTO sl_del_orders VALUES (1, 1, 100.00)");
+        $this->pdo->exec("INSERT INTO sl_del_orders VALUES (2, 1, 200.00)");
+        $this->pdo->exec("INSERT INTO sl_del_orders VALUES (3, 3, 150.00)");
+    }
     /**
      * DELETE with EXISTS correlated subquery.
      */

@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests a realistic analytics workflow on MySQL with window functions, CTEs,
  * prepared statements with date params, and reporting queries.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MysqlAnalyticsWorkflowTest extends AbstractMysqlPdoTestCase
 {

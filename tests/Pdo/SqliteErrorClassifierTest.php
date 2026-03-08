@@ -6,13 +6,14 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
+use ZtdQuery\Adapter\Pdo\ZtdPdoException;
 
 /**
  * Tests ZTD error handling and exception types on SQLite.
  *
  * The shadow store does NOT enforce PK/UNIQUE/NOT NULL constraints.
  * This test verifies which operations DO throw and which silently succeed.
- * @spec pending
+ * @spec SPEC-8.2
  */
 class SqliteErrorClassifierTest extends AbstractSqlitePdoTestCase
 {
@@ -42,6 +43,13 @@ class SqliteErrorClassifierTest extends AbstractSqlitePdoTestCase
     }
 
 
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO ecl_test VALUES (1, 'Alice', 'alice@test.com')");
+    }
     /**
      * Duplicate PRIMARY KEY is NOT enforced — shadow allows it.
      */

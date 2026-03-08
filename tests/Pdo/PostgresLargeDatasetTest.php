@@ -11,7 +11,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * Tests shadow store behavior with a large dataset (100+ rows) on PostgreSQL.
  *
  * Cross-platform parity with SqliteLargeDatasetTest.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresLargeDatasetTest extends AbstractPostgresPdoTestCase
 {

@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests debugDumpParams() on ZtdPdoStatement with MySQL PDO.
  * Confirms ZTD rewrites are visible in debug output.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class MysqlDebugDumpParamsTest extends AbstractMysqlPdoTestCase
 {

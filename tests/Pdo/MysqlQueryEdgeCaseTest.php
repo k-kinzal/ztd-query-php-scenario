@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests edge cases in query behavior with the shadow store on MySQL via PDO:
  * NULL handling, ORDER BY, LIMIT, self-referencing updates, etc.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class MysqlQueryEdgeCaseTest extends AbstractMysqlPdoTestCase
 {

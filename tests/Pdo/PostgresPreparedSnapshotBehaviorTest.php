@@ -15,7 +15,7 @@ use ZtdQuery\Adapter\Pdo\ZtdPdo;
  * Tests prepared statement CTE snapshot behavior on PostgreSQL PDO.
  *
  * Cross-platform parity with SqlitePreparedSnapshotBehaviorTest.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresPreparedSnapshotBehaviorTest extends TestCase
 {

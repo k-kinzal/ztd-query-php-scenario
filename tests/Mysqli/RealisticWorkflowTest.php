@@ -10,7 +10,7 @@ use mysqli;
 /**
  * Tests realistic user workflow scenarios on MySQL via MySQLi:
  * e-commerce order processing, user registration, inventory management.
- * @spec pending
+ * @spec SPEC-2.1
  */
 class RealisticWorkflowTest extends AbstractMysqliTestCase
 {

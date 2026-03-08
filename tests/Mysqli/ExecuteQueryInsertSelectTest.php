@@ -13,7 +13,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * support INSERT...SELECT (both cross-table and self-referencing).
  * This covers patterns not tested by ExecuteQueryWriteOpsTest or
  * ExecuteQueryInsertSetTest.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class ExecuteQueryInsertSelectTest extends AbstractMysqliTestCase
 {

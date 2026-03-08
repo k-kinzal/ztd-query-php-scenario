@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests PostgreSQL-specific advanced features with ZTD shadow store:
  * DISTINCT ON, LATERAL JOIN, array functions, advanced casting.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class PostgresAdvancedPlatformTest extends AbstractPostgresPdoTestCase
 {

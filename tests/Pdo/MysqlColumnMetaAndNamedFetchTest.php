@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests getColumnMeta() and FETCH_NAMED mode on MySQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlColumnMetaAndNamedFetchTest extends AbstractMysqlPdoTestCase
 {

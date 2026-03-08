@@ -15,7 +15,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * - Shadow INSERT → disable ZTD → verify physical table empty
  * - Multiple toggle cycles with different data in each state
  * - ZTD disabled physical INSERT, then ZTD enabled shadow INSERT on same table
- * @spec pending
+ * @spec SPEC-2.1
  */
 class SqliteZtdToggleDataInteractionTest extends AbstractSqlitePdoTestCase
 {

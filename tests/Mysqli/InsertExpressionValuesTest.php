@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests INSERT with SQL expressions in VALUES clause via MySQLi.
  *
  * Cross-platform parity with MysqlInsertExpressionValuesTest (PDO).
- * @spec pending
+ * @spec SPEC-4.1
  */
 class InsertExpressionValuesTest extends AbstractMysqliTestCase
 {

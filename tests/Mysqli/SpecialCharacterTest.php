@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests that the shadow store correctly handles special characters,
  * Unicode, and edge-case string values via MySQLi adapter.
- * @spec pending
+ * @spec SPEC-4.11
  */
 class SpecialCharacterTest extends AbstractMysqliTestCase
 {

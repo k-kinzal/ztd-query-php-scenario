@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests parameterized LIMIT/OFFSET, expression-based GROUP BY,
  * and INSERT...SELECT with filtering on MySQLi.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PaginationAndGroupingTest extends AbstractMysqliTestCase
 {

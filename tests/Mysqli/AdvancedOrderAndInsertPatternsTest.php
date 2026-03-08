@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests advanced ORDER BY patterns and interleaved prepared statements via MySQLi.
  *
  * Cross-platform parity with MysqlAdvancedOrderAndInsertPatternsTest (PDO).
- * @spec pending
+ * @spec SPEC-4.1
  */
 class AdvancedOrderAndInsertPatternsTest extends AbstractMysqliTestCase
 {

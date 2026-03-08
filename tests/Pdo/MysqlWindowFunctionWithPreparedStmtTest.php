@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * Tests window functions with prepared statements on MySQL.
  *
  * Cross-platform parity with SqliteWindowFunctionWithPreparedStmtTest.
- * @spec pending
+ * @spec SPEC-10.2.23
  */
 class MysqlWindowFunctionWithPreparedStmtTest extends AbstractMysqlPdoTestCase
 {

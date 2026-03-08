@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * MySQL supports REPLACE INTO ... SELECT to replace/insert rows from a SELECT.
  * The ReplaceTransformer handles this via $statement->select->build().
- * @spec pending
+ * @spec SPEC-4.1
  */
 class MysqlReplaceSelectTest extends AbstractMysqlPdoTestCase
 {

@@ -10,7 +10,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 /**
  * Tests sequential mutations on the same table on PostgreSQL PDO to verify
  * shadow store correctly accumulates changes across multiple operations.
- * @spec pending
+ * @spec SPEC-4.8
  */
 class PostgresSequentialMutationsTest extends AbstractPostgresPdoTestCase
 {

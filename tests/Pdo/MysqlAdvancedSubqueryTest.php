@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests advanced subquery patterns on MySQL PDO to stress the CTE rewriter:
  * nested subqueries, subqueries in UPDATE SET, CASE in WHERE, scalar subqueries.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class MysqlAdvancedSubqueryTest extends AbstractMysqlPdoTestCase
 {

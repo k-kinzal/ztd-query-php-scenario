@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests multi-table UPDATE/DELETE with prepared statement parameters on MySQL PDO.
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class MysqlPreparedMultiTableTest extends AbstractMysqlPdoTestCase
 {

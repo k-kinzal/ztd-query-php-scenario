@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests self-joins and correlated subqueries with ZTD shadow store on MySQLi.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SelfJoinAndCorrelatedSubqueryTest extends AbstractMysqliTestCase
 {

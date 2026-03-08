@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests prepared statements with IN and NOT IN clauses on PostgreSQL PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresPreparedInClauseTest extends AbstractPostgresPdoTestCase
 {

@@ -11,7 +11,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * MySQL supports TEMPORARY tables. In ZTD shadow mode, the TEMPORARY modifier
  * should be handled by the parser, and the shadow table should behave normally.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class TemporaryTableTest extends AbstractMysqliTestCase
 {

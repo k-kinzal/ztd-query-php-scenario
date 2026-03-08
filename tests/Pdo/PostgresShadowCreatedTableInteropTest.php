@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests interoperability between shadow-created tables and reflected tables (PostgreSQL PDO).
- * @spec pending
+ * @spec SPEC-5.1
  */
 class PostgresShadowCreatedTableInteropTest extends AbstractPostgresPdoTestCase
 {

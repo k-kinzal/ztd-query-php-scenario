@@ -16,7 +16,7 @@ use Tests\Support\AbstractMysqliTestCase;
  *
  * The InsertTransformer handles this via buildInsertSetSelect() which converts
  * SET operations into a SELECT expression.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class InsertSetSyntaxTest extends AbstractMysqliTestCase
 {

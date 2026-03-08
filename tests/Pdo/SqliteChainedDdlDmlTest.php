@@ -12,7 +12,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  *
  * Verifies that complex sequences of CREATE, DROP, INSERT, UPDATE, DELETE,
  * and SELECT maintain shadow store consistency.
- * @spec pending
+ * @spec SPEC-5.1
  */
 class SqliteChainedDdlDmlTest extends AbstractSqlitePdoTestCase
 {

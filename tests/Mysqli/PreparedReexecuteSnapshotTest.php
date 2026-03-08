@@ -14,7 +14,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * made after prepare().
  *
  * This is the MySQLi equivalent of SqlitePreparedReexecuteSnapshotTest.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PreparedReexecuteSnapshotTest extends AbstractMysqliTestCase
 {

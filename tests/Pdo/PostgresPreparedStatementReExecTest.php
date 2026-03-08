@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests prepared statement re-execution patterns on PostgreSQL ZTD PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class PostgresPreparedStatementReExecTest extends AbstractPostgresPdoTestCase
 {

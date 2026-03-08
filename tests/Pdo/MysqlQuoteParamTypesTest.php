@@ -13,7 +13,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * ZtdPdo::quote() delegates to the inner PDO connection.
  * This verifies that quote() works correctly with ZTD enabled
  * for various parameter types.
- * @spec pending
+ * @spec SPEC-4.9
  */
 class MysqlQuoteParamTypesTest extends AbstractMysqlPdoTestCase
 {

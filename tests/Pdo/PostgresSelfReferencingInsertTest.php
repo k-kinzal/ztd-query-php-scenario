@@ -11,7 +11,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * Tests INSERT INTO ... SELECT FROM the same table on PostgreSQL.
  *
  * Self-referencing INSERT copies rows from a table back into itself.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class PostgresSelfReferencingInsertTest extends AbstractPostgresPdoTestCase
 {

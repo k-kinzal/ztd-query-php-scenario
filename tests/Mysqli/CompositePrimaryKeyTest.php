@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests ZTD behavior with composite (multi-column) primary keys on MySQLi.
- * @spec pending
+ * @spec SPEC-3.6
  */
 class CompositePrimaryKeyTest extends AbstractMysqliTestCase
 {

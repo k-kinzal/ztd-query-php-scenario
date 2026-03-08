@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * MySQL's AlterTableMutation validates column existence and throws
  * ColumnAlreadyExistsException / ColumnNotFoundException, unlike SQLite
  * which silently ignores these conditions.
- * @spec pending
+ * @spec SPEC-8.2
  */
 class ExceptionTypesTest extends AbstractMysqliTestCase
 {

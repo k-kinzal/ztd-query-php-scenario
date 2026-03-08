@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests NULL handling edge cases on MySQLi: UPDATE SET NULL, IS NULL after mutation,
  * COALESCE chains, NULL in CASE, and prepared statements with NULL.
- * @spec pending
+ * @spec SPEC-3.7
  */
 class NullHandlingEdgeCasesTest extends AbstractMysqliTestCase
 {

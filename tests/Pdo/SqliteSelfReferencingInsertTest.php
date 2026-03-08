@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Self-referencing INSERT copies rows from a table back into itself.
  * This tests whether the InsertTransformer correctly handles
  * the case where source and destination table are the same.
- * @spec pending
+ * @spec SPEC-4.1
  */
 class SqliteSelfReferencingInsertTest extends AbstractSqlitePdoTestCase
 {

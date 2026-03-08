@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 /**
  * Tests UPDATE with self-referencing arithmetic (SET col = col + N)
  * on MySQL, verifying cross-platform parity with SQLite.
- * @spec pending
+ * @spec SPEC-4.2
  */
 class MysqlUpdateSelfReferencingArithmeticTest extends AbstractMysqlPdoTestCase
 {

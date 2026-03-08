@@ -11,7 +11,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Tests self-joins and correlated subqueries with ZTD shadow store on SQLite.
  * These patterns require the CTE rewriter to handle multiple references to
  * the same table correctly.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class SqliteSelfJoinAndCorrelatedSubqueryTest extends AbstractSqlitePdoTestCase
 {
@@ -30,7 +30,6 @@ class SqliteSelfJoinAndCorrelatedSubqueryTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE employees (id INT PRIMARY KEY, name VARCHAR(50), manager_id INT, salary INT, dept VARCHAR(20))');
         $this->pdo->exec("INSERT INTO employees VALUES (1, 'CEO', NULL, 200, 'exec')");
         $this->pdo->exec("INSERT INTO employees VALUES (2, 'VP', 1, 150, 'exec')");
         $this->pdo->exec("INSERT INTO employees VALUES (3, 'Alice', 2, 100, 'eng')");

@@ -13,7 +13,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * Verifies that the CTE-based shadow store handles hundreds of rows
  * correctly — including INSERT, SELECT with aggregation, UPDATE,
  * DELETE, and complex queries on non-trivial data volumes.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class SqliteLargeDatasetTest extends AbstractSqlitePdoTestCase
 {

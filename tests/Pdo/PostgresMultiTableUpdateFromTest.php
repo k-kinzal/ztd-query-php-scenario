@@ -11,7 +11,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * PostgreSQL uses: UPDATE t1 SET col = t2.col FROM t2 WHERE t1.id = t2.id
  * This is different from MySQL's UPDATE ... JOIN syntax.
- * @spec pending
+ * @spec SPEC-4.2c
  */
 class PostgresMultiTableUpdateFromTest extends AbstractPostgresPdoTestCase
 {

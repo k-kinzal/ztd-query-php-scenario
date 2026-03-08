@@ -12,7 +12,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  *
  * nextRowset() delegates to the underlying driver. Since ZTD rewrites queries
  * to single-result CTE queries, nextRowset() returns false.
- * @spec pending
+ * @spec SPEC-3.4
  */
 class MysqlNextRowsetTest extends AbstractMysqlPdoTestCase
 {

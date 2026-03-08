@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests user-written CTE (WITH) queries and INSERT ... SELECT in ZTD mode.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class UserCteTest extends AbstractMysqliTestCase
 {

@@ -9,7 +9,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
  * Tests user-written CTE queries and INSERT ... SELECT on PostgreSQL.
- * @spec pending
+ * @spec SPEC-3.3
  */
 class PostgresUserCteTest extends AbstractPostgresPdoTestCase
 {

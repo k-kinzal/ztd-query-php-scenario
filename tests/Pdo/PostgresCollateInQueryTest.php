@@ -12,7 +12,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  *
  * PostgreSQL uses different collation names than MySQL.
  * Tests whether COLLATE works correctly in CTE-rewritten shadow queries.
- * @spec pending
+ * @spec SPEC-3.1
  */
 class PostgresCollateInQueryTest extends AbstractPostgresPdoTestCase
 {

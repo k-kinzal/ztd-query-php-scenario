@@ -34,7 +34,6 @@ class SqliteConflictResolutionTest extends AbstractSqlitePdoTestCase
     {
         parent::setUp();
 
-        $this->pdo->exec('CREATE TABLE cr_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)');
         $this->pdo->exec("INSERT INTO cr_test VALUES (1, 'Alice', 90)");
         $this->pdo->exec("INSERT INTO cr_test VALUES (2, 'Bob', 80)");
 

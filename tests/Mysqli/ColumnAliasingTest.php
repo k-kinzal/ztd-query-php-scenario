@@ -8,7 +8,7 @@ use Tests\Support\AbstractMysqliTestCase;
 
 /**
  * Tests column aliasing patterns on MySQLi.
- * @spec pending
+ * @spec SPEC-10.2.24
  */
 class ColumnAliasingTest extends AbstractMysqliTestCase
 {

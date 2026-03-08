@@ -10,7 +10,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * Tests prepared statement parameter binding edge cases on MySQLi,
  * matching PDO parity tests: positional params, by-reference rebinding,
  * CTE data snapshotting, and re-execution with different params.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class ParamBindingEdgeCasesTest extends AbstractMysqliTestCase
 {

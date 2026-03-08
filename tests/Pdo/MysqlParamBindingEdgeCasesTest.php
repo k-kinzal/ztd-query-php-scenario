@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
  * Tests prepared statement parameter binding edge cases on MySQL PDO.
- * @spec pending
+ * @spec SPEC-3.2
  */
 class MysqlParamBindingEdgeCasesTest extends AbstractMysqlPdoTestCase
 {

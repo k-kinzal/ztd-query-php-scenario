@@ -301,9 +301,11 @@ Shadow data remains visible after `commit()` or `rollBack()` because it is store
 
 `escape_string()` (mysqli) is an alias for `real_escape_string()` and is delegated to the underlying connection.
 
-The following methods are delegated directly to the underlying connection without ZTD interception: `multi_query()`, `more_results()`, `next_result()`, `autocommit()`, `set_charset()`, `character_set_name()`, `get_charset()`, `select_db()`, `ping()`, `stat()`, `get_server_info()`, `get_connection_stats()`.
+The following methods are delegated directly to the underlying connection without ZTD interception: `multi_query()`, `more_results()`, `next_result()`, `autocommit()`, `set_charset()`, `character_set_name()`, `get_charset()`, `select_db()`, `ping()`, `stat()`, `get_server_info()`, `get_connection_stats()`, `stmt_init()`, `store_result()`, `use_result()`.
 
 `multi_query()` bypasses ZTD entirely — queries executed via `multi_query()` operate directly on the physical database.
+
+`stmt_init()` returns a raw `mysqli_stmt` (NOT a `ZtdMysqliStatement`), meaning queries prepared via `stmt_init()` bypass ZTD entirely — writes go to the physical database and reads come from the physical database. Users should use `ZtdMysqli::prepare()` instead.
 
 For PDO, the following methods are delegated: `setAttribute()`, `getAttribute()`, `errorCode()`, `errorInfo()`.
 
@@ -765,3 +767,11 @@ The following behaviors differ across platforms and may indicate areas for impro
 - **TRUNCATE TABLE + re-insert workflow (MySQL)**: On MySQL, `TRUNCATE TABLE t` followed by new INSERTs works correctly in ZTD shadow mode. The `TruncateMutation` clears the shadow store, and subsequent inserts populate it cleanly. Multiple truncate-reinsert cycles work correctly, including re-using the same primary key values.
 
 - **DELETE FROM table without WHERE is a no-op on shadow store**: On all platforms (SQLite, MySQL, PostgreSQL), `DELETE FROM table` without a WHERE clause does **not** delete rows from the shadow store. The CTE rewriter appears to require a WHERE clause to identify deletable rows. The statement returns 0 affected rows and the shadow data remains intact. Workaround: use `DELETE FROM table WHERE 1=1` which correctly matches and deletes all shadow rows. This workaround is equivalent in SQL semantics and works on all platforms.
+
+- **stmt_init() bypasses ZTD (MySQLi)**: `ZtdMysqli::stmt_init()` returns a raw `mysqli_stmt` (NOT a `ZtdMysqliStatement`), meaning all queries prepared via `stmt_init()` bypass ZTD entirely and operate directly on the physical database. INSERT via `stmt_init()` writes to the physical DB, and the data is invisible through ZTD-enabled SELECT. SELECT via `stmt_init()` reads from the physical DB, not the shadow store. Users should always use `ZtdMysqli::prepare()` instead of `stmt_init()` when ZTD behavior is desired. Verified on MySQLi.
+
+- **INSERT with SQL expressions in VALUES**: SQL expressions in VALUES clauses (arithmetic `40 + 50`, functions `UPPER('alice')`, `COALESCE(NULL, 'Fallback')`, `CASE WHEN`, concatenation `||` / `CONCAT()`, `ABS()`, `LENGTH()`, negative numbers, `GREATEST()`, `IF()`) are correctly handled by the InsertTransformer. The expressions are evaluated during the CTE SELECT and the computed values are stored in the shadow store. Verified on all 3 PDO platforms.
+
+- **Self-referencing INSERT (INSERT INTO t SELECT FROM t)**: `INSERT INTO t ... SELECT ... FROM t` (where source and target are the same table) works correctly — the SELECT snapshot is taken before the INSERT starts, preventing infinite loops. On MySQL, both direct column references and computed expressions (e.g., `id + 100`) transfer correctly. On SQLite and PostgreSQL, computed expressions in SELECT become NULL (known limitation, see 4.1a), but direct column references transfer correctly. Self-referencing INSERT correctly reflects post-mutation state (UPDATE/DELETE before the INSERT). Verified on all 4 adapters.
+
+- **lastAffectedRows() accuracy edge cases (MySQLi)**: `lastAffectedRows()` returns correct counts for all operation types: single INSERT (1), multi-row INSERT (N), single UPDATE (1), multi-row UPDATE (N), zero-match UPDATE (0), DELETE (N), zero-match DELETE (0). Sequential operations return independent counts — each operation resets the counter. Prepared statements expose counts via `ztdAffectedRows()`. Verified on MySQLi.

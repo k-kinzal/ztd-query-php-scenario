@@ -781,7 +781,9 @@ Related: Issue #11 (UPDATE self-referencing with GROUP BY HAVING).
 **Related specs:** [SPEC-4.2](04-write-operations.ears.md)
 **Tests:** `Pdo/PostgresUpdateCaseInSetTest`
 
-UPDATE statements with CASE expressions in the SET clause work correctly via `exec()`, but when using `prepare()` + `execute()` with `$N` parameters inside the CASE WHEN conditions, the UPDATE is silently a no-op — no rows are modified and no error is thrown. Non-prepared CASE in SET works on all platforms.
+UPDATE statements with CASE expressions in the SET clause work correctly via `exec()` for simple CASE WHEN conditions, but when using `prepare()` + `execute()` with `$N` parameters inside the CASE WHEN conditions, the UPDATE is silently a no-op — no rows are modified and no error is thrown. Non-prepared simple CASE in SET works on all platforms.
+
+However, when the CASE expression contains correlated subqueries (EXISTS or scalar), even exec() fails on PostgreSQL — the UPDATE is a no-op (CASE WHEN EXISTS) or produces a grouping error (CASE with scalar correlated subquery). MySQL handles all CASE+subquery variants correctly via both exec() and prepare(). SQLite fails with "near FROM: syntax error" (same as Issue #51).
 
 Related: Issue #47 (TRIM/SUBSTRING FROM in SET), Issue #51 (correlated subquery in SET).
 

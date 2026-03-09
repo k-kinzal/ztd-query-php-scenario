@@ -2012,3 +2012,17 @@ DELETE with JOIN and prepared parameters works correctly on MySQL PDO. Tested: J
 **Tests:** `Pdo/SqliteMultipleCteSelectTest`, `Pdo/MysqlMultipleCteSelectTest`
 
 Single user-written CTEs, CTEs with shadow data, CTEs with prepared params, chained CTEs (referencing other CTEs), and multiple CTEs with scalar subqueries all work correctly on both MySQL and SQLite. However, multiple CTEs with CROSS JOIN returns 0 rows on SQLite (extends Issue #52). MySQL handles all CTE patterns correctly.
+
+## SPEC-10.2.245 UPDATE CASE with correlated subquery in SET
+**Status:** Partial (extends Issues #51, #61)
+**Platforms:** MySQL-PDO (pass), SQLite-PDO (fails — syntax error), PostgreSQL-PDO (fails — no-op or grouping error)
+**Tests:** `Pdo/SqliteUpdateCaseSubqueryTest`, `Pdo/MysqlUpdateCaseSubqueryTest`, `Pdo/PostgresUpdateCaseSubqueryTest`
+
+UPDATE SET with CASE WHEN EXISTS(correlated subquery) and CASE WHEN (scalar correlated subquery > threshold) works correctly on MySQL (both exec and prepared). SQLite fails with "near FROM: syntax error" (extends Issue #51). PostgreSQL fails: CASE WHEN EXISTS is a no-op even via exec() (extends Issue #61 beyond prepared-only), CASE with scalar correlated subquery produces "must appear in GROUP BY" error.
+
+## SPEC-10.2.246 INSERT...SELECT...ON DUPLICATE KEY UPDATE with prepared params
+**Status:** Verified
+**Platforms:** MySQL-PDO (pass)
+**Tests:** `Pdo/MysqlInsertSelectOnDuplicateTest`
+
+INSERT...SELECT...ON DUPLICATE KEY UPDATE works correctly on MySQL PDO, including with prepared params in the WHERE clause. Both conflict (update) and no-conflict (insert) paths produce correct results.

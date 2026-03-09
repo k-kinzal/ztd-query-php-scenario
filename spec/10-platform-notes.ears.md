@@ -1837,3 +1837,38 @@ MySQL-style aliased UPDATE (`UPDATE t p SET p.col = ...`) and aliased DELETE (`D
 **Tests:** `Mysqli/MultiTableDmlPatternsTest`, `Pdo/MysqlMultiTableDmlPatternsTest`, `Pdo/PostgresMultiTableDmlPatternsTest`, `Pdo/SqliteMultiTableDmlPatternsTest`
 
 MySQL multi-table UPDATE JOIN (`UPDATE t1 JOIN t2 ON ... SET t1.col = ...`) works correctly on MySQLi and MySQL-PDO. PostgreSQL UPDATE FROM (`UPDATE t1 SET col = ... FROM t2 WHERE ...`) works correctly. SQLite UPDATE with IN subquery works correctly. DELETE with IN subquery from other table works on all platforms. DELETE with EXISTS correlated subquery works on all platforms. INSERT...SELECT from JOIN fails on all platforms (Issue #49) — MySQL produces "Unknown column" error, PostgreSQL/SQLite insert 0 rows.
+
+## SPEC-10.2.220 Window function queries on shadow data
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/WindowFunctionQueryTest`, `Pdo/MysqlWindowFunctionQueryTest`, `Pdo/PostgresWindowFunctionQueryTest`, `Pdo/SqliteWindowFunctionQueryTest`
+
+Window function queries (ROW_NUMBER, RANK, DENSE_RANK, SUM OVER, LAG, LEAD, NTILE) work correctly on all platforms through the CTE shadow store. Verified: PARTITION BY, ORDER BY within OVER, ties in RANK/DENSE_RANK, SUM OVER PARTITION, LAG/LEAD with NULLs, NTILE distribution. Window functions correctly reflect INSERT, UPDATE, and DELETE mutations. Prepared statements with WHERE parameters combined with window functions work correctly on all platforms (using ? placeholders; $N style affected by Issue #85 on PostgreSQL).
+
+## SPEC-10.2.221 INSERT...SELECT with UNION/UNION ALL on shadow data
+**Status:** Partially Verified (see [SPEC-11.MYSQL-INSERT-SELECT-UNION](11-known-issues.ears.md))
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/InsertFromUnionTest`, `Pdo/MysqlInsertFromUnionTest`, `Pdo/PostgresInsertFromUnionTest`, `Pdo/SqliteInsertFromUnionTest`
+
+INSERT...SELECT with UNION ALL and UNION (distinct) from multiple source tables works correctly on SQLite and PostgreSQL. On MySQL (both MySQLi and MySQL-PDO), the CTE rewriter rejects these as "Multi-statement SQL" ([Issue #103](11-known-issues.ears.md)). PostgreSQL additionally handles INSERT from INTERSECT and EXCEPT correctly. Prepared statements with parameters in UNION branches work on SQLite and PostgreSQL. Aggregation after INSERT from UNION works correctly on all platforms that support the INSERT.
+
+## SPEC-10.2.222 Set operations (UNION/INTERSECT/EXCEPT) on shadow data
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/SqliteSetOperationsQueryTest`, `Pdo/PostgresInsertFromUnionTest`
+
+UNION and UNION ALL work correctly on all platforms for SELECT queries. INTERSECT and EXCEPT work as single-column queries on SQLite, but multi-column INTERSECT/EXCEPT return empty on SQLite (Issue #50). PostgreSQL handles all set operations correctly. MySQL rejects EXCEPT/INTERSECT as multi-statement (Issue #14). Set operations correctly reflect mutations on all platforms where they are supported. Prepared UNION with parameters works on SQLite and PostgreSQL.
+
+## SPEC-10.2.223 Prepared BETWEEN and CASE-in-HAVING on shadow data
+**Status:** Partially Verified
+**Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/SqlitePreparedBetweenAndCaseHavingTest`
+
+Prepared SELECT/UPDATE/DELETE with BETWEEN work correctly on SQLite. Prepared BETWEEN with date ranges, NOT BETWEEN, and combined BETWEEN+AND conditions work. CASE in HAVING without parameters works correctly. CASE in HAVING with prepared parameters returns empty on SQLite (related to Issue #22 — HAVING with prepared params). Non-prepared CASE in HAVING, prepared BETWEEN for DML, and BETWEEN after mutations all work correctly.
+
+## SPEC-10.2.224 GROUP_CONCAT and multi-step DML lifecycle on shadow data
+**Status:** Verified
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteGroupConcatAndMultiDmlLifecycleTest`
+
+GROUP_CONCAT with custom separator, GROUP_CONCAT after INSERT/DELETE, GROUP_CONCAT DISTINCT, and multi-step DML lifecycles (INSERT→UPDATE→SELECT, multiple UPDATEs on same row, INSERT→UPDATE→DELETE cycle, bulk UPDATE→partial DELETE, batch INSERT→aggregate) all work correctly on SQLite. GROUP_CONCAT with ORDER BY subquery returns empty (known derived table issue). The shadow store correctly maintains state across arbitrary sequences of mutations on the same rows.

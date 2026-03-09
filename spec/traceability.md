@@ -486,6 +486,14 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-6.1 | `Pdo/SqliteMultiStatementExecTest` | — | — | — | K | Multi-statement throws ZTD Write Protection (NEW Issue #78) |
 | SPEC-3.2 | `Pdo/SqliteInterleavedPreparedStatementsTest` | — | — | — | P | Interleaved prepare works for reads; prepared INSERT/UPDATE invisible (KI #23) |
 | SPEC-4.1 | `Pdo/SqliteInsertDefaultValuesTest` | — | — | — | K | INSERT DEFAULT VALUES fails; partial-col DEFAULT → NULL (KI #21/#31) |
+| SPEC-3.3 | `*WindowFunctionQueryTest` | V | V | V | V | Window functions (ROW_NUMBER, RANK, DENSE_RANK, SUM OVER, LAG, LEAD, NTILE) work on all platforms |
+| SPEC-4.1 | `Pdo/SqliteInsertFromUnionTest` | — | — | — | V | INSERT...SELECT UNION/UNION ALL works on SQLite |
+| SPEC-4.1 | `Pdo/MysqlInsertFromUnionTest` | — | K | — | — | INSERT...SELECT UNION rejected as multi-statement on MySQL (Issue #103) |
+| SPEC-4.1 | `Mysqli/InsertFromUnionTest` | K | — | — | — | INSERT...SELECT UNION rejected as multi-statement on MySQL (Issue #103) |
+| SPEC-4.1 | `Pdo/PostgresInsertFromUnionTest` | — | — | V | — | INSERT...SELECT UNION/INTERSECT/EXCEPT works on PostgreSQL |
+| SPEC-3.3 | `Pdo/SqliteSetOperationsQueryTest` | — | — | — | P | UNION/UNION ALL pass; multi-column INTERSECT/EXCEPT empty (KI #50) |
+| SPEC-3.3 | `Pdo/SqlitePreparedBetweenAndCaseHavingTest` | — | — | — | P | BETWEEN works; CASE in HAVING with params empty (KI #22) |
+| SPEC-3.3 | `Pdo/SqliteGroupConcatAndMultiDmlLifecycleTest` | — | — | — | V | GROUP_CONCAT, multi-DML lifecycle, sequential mutations (all pass) |
 
 ## Legend
 

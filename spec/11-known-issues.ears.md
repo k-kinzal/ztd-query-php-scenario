@@ -1251,3 +1251,16 @@ Non-derived-table patterns with JOINs work correctly on all platforms: top-level
 **Tests:** `Mysqli/MultiTableDmlPatternsTest`, `Pdo/MysqlMultiTableDmlPatternsTest`, `Pdo/PostgresMultiTableDmlPatternsTest`, `Pdo/SqliteMultiTableDmlPatternsTest`
 
 `INSERT INTO t SELECT ... FROM t1 JOIN t2 ON ... WHERE t2.col = value` fails across all platforms. On MySQL, the InsertTransformer cannot resolve column references from JOINed table aliases (`Unknown column 'w.active' in 'where clause'`). On PostgreSQL and SQLite, 0 rows are inserted. This confirms and extends SPEC-11.INSERT-SELECT-JOIN [Issue #49] with a different JOIN pattern (inventory + warehouse lookup).
+
+## SPEC-11.MYSQL-INSERT-SELECT-UNION `[Issue #103]` MySQL: INSERT...SELECT with UNION/UNION ALL rejected as multi-statement
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Mysqli/InsertFromUnionTest`, `Pdo/MysqlInsertFromUnionTest`
+
+`INSERT INTO t SELECT ... FROM t1 UNION ALL SELECT ... FROM t2` is rejected with "ZTD Write Protection: Multi-statement SQL statement." on MySQL (both MySQLi and MySQL-PDO). The CTE rewriter's statement boundary detection confuses the UNION keyword within the INSERT...SELECT as a statement separator. All variants are affected: UNION ALL, UNION (distinct), and prepared statements.
+
+- **SQLite**: Works correctly — all rows inserted, shadow store updated
+- **PostgreSQL**: Works correctly — all rows inserted, shadow store updated
+- Related to Issue #14 (EXCEPT/INTERSECT as multi-statement) — same parser limitation
+- Workaround: perform separate `INSERT...SELECT` statements for each source table

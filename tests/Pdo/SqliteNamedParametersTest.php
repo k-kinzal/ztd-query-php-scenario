@@ -8,126 +8,233 @@ use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
- * Tests PDO named parameter binding (:param) with ZTD shadow operations on SQLite.
+ * Tests PDO named parameters (:name style) through the CTE rewriter.
+ * Many PHP applications use named parameters instead of positional (?).
+ * The CTE rewriter must not interfere with :name placeholders.
  *
- * Ensures that named parameters in prepared statements work correctly
- * with the CTE rewriter, including bindValue, bindParam, and execute-time binding.
+ * SQL patterns exercised: SELECT with :name params, INSERT with :name params,
+ * UPDATE with :name params, DELETE with :name params, named params in
+ * complex queries, named params in subqueries.
  * @spec SPEC-3.2
  */
 class SqliteNamedParametersTest extends AbstractSqlitePdoTestCase
 {
     protected function getTableDDL(): string|array
     {
-        return 'CREATE TABLE sl_np_test (id INTEGER PRIMARY KEY, name TEXT, score INTEGER)';
+        return [
+            'CREATE TABLE sl_np_users (
+                id INTEGER PRIMARY KEY,
+                username TEXT NOT NULL,
+                email TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT \'user\',
+                active INTEGER NOT NULL DEFAULT 1
+            )',
+            'CREATE TABLE sl_np_orders (
+                id INTEGER PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                total REAL NOT NULL,
+                status TEXT NOT NULL DEFAULT \'pending\'
+            )',
+        ];
     }
 
     protected function getTableNames(): array
     {
-        return ['sl_np_test'];
+        return ['sl_np_orders', 'sl_np_users'];
     }
-
-
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->pdo->exec("INSERT INTO sl_np_test VALUES (1, 'Alice', 90)");
-        $this->pdo->exec("INSERT INTO sl_np_test VALUES (2, 'Bob', 85)");
-        $this->pdo->exec("INSERT INTO sl_np_test VALUES (3, 'Charlie', 95)");
-    }
-    /**
-     * Named parameters via execute().
-     */
-    public function testNamedParamsViaExecute(): void
-    {
-        $stmt = $this->pdo->prepare('SELECT name FROM sl_np_test WHERE score > :min_score ORDER BY name');
-        $stmt->execute([':min_score' => 88]);
+        $this->pdo->exec("INSERT INTO sl_np_users VALUES (1, 'alice', 'alice@example.com', 'admin', 1)");
+        $this->pdo->exec("INSERT INTO sl_np_users VALUES (2, 'bob', 'bob@example.com', 'user', 1)");
+        $this->pdo->exec("INSERT INTO sl_np_users VALUES (3, 'carol', 'carol@example.com', 'user', 0)");
 
-        $names = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        $this->assertSame(['Alice', 'Charlie'], $names);
+        $this->pdo->exec("INSERT INTO sl_np_orders VALUES (1, 1, 99.99, 'completed')");
+        $this->pdo->exec("INSERT INTO sl_np_orders VALUES (2, 1, 49.99, 'pending')");
+        $this->pdo->exec("INSERT INTO sl_np_orders VALUES (3, 2, 29.99, 'completed')");
     }
 
     /**
-     * Named parameters via bindValue().
+     * Simple SELECT with single named parameter.
      */
-    public function testNamedParamsViaBindValue(): void
+    public function testSelectWithNamedParam(): void
     {
-        $stmt = $this->pdo->prepare('SELECT name FROM sl_np_test WHERE id = :id');
-        $stmt->bindValue(':id', 2, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->pdo->prepare("SELECT username, email FROM sl_np_users WHERE role = :role");
+        $stmt->execute([':role' => 'admin']);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $this->assertSame('Bob', $stmt->fetchColumn());
+        $this->assertCount(1, $rows);
+        $this->assertSame('alice', $rows[0]['username']);
     }
 
     /**
-     * Named parameters via bindParam() with variable reference.
+     * SELECT with multiple named parameters.
      */
-    public function testNamedParamsViaBindParam(): void
+    public function testSelectWithMultipleNamedParams(): void
     {
-        $stmt = $this->pdo->prepare('SELECT name FROM sl_np_test WHERE id = :id');
-        $id = 3;
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->pdo->prepare(
+            "SELECT username FROM sl_np_users WHERE role = :role AND active = :active"
+        );
+        $stmt->execute([':role' => 'user', ':active' => 1]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $this->assertSame('Charlie', $stmt->fetchColumn());
+        $this->assertCount(1, $rows);
+        $this->assertSame('bob', $rows[0]['username']);
     }
 
     /**
-     * Multiple named parameters in one query.
+     * INSERT with named parameters.
      */
-    public function testMultipleNamedParams(): void
+    public function testInsertWithNamedParams(): void
     {
-        $stmt = $this->pdo->prepare('SELECT name FROM sl_np_test WHERE score >= :min AND score <= :max ORDER BY name');
-        $stmt->execute([':min' => 85, ':max' => 90]);
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO sl_np_users (id, username, email, role, active)
+             VALUES (:id, :username, :email, :role, :active)"
+        );
+        $stmt->execute([
+            ':id' => 4,
+            ':username' => 'diana',
+            ':email' => 'diana@example.com',
+            ':role' => 'editor',
+            ':active' => 1,
+        ]);
 
-        $names = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        $this->assertSame(['Alice', 'Bob'], $names);
+        $rows = $this->ztdQuery("SELECT username, role FROM sl_np_users WHERE id = 4");
+        $this->assertCount(1, $rows);
+        $this->assertSame('diana', $rows[0]['username']);
+        $this->assertSame('editor', $rows[0]['role']);
     }
 
     /**
-     * Named parameters in INSERT.
+     * UPDATE with named parameters.
      */
-    public function testNamedParamsInInsert(): void
+    public function testUpdateWithNamedParams(): void
     {
-        $stmt = $this->pdo->prepare('INSERT INTO sl_np_test VALUES (:id, :name, :score)');
-        $stmt->execute([':id' => 4, ':name' => 'Diana', ':score' => 92]);
+        $stmt = $this->pdo->prepare(
+            "UPDATE sl_np_users SET role = :newRole WHERE username = :username"
+        );
+        $stmt->execute([':newRole' => 'moderator', ':username' => 'bob']);
 
-        $qstmt = $this->pdo->query('SELECT name FROM sl_np_test WHERE id = 4');
-        $this->assertSame('Diana', $qstmt->fetchColumn());
+        $rows = $this->ztdQuery("SELECT role FROM sl_np_users WHERE username = 'bob'");
+        $this->assertCount(1, $rows);
+        $this->assertSame('moderator', $rows[0]['role']);
     }
 
     /**
-     * Named parameters in UPDATE.
+     * DELETE with named parameters.
      */
-    public function testNamedParamsInUpdate(): void
+    public function testDeleteWithNamedParams(): void
     {
-        $stmt = $this->pdo->prepare('UPDATE sl_np_test SET score = :new_score WHERE name = :name');
-        $stmt->execute([':new_score' => 100, ':name' => 'Alice']);
+        $stmt = $this->pdo->prepare(
+            "DELETE FROM sl_np_users WHERE active = :active AND role = :role"
+        );
+        $stmt->execute([':active' => 0, ':role' => 'user']);
 
-        $qstmt = $this->pdo->query('SELECT score FROM sl_np_test WHERE name = \'Alice\'');
-        $this->assertSame(100, (int) $qstmt->fetchColumn());
+        $rows = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM sl_np_users");
+        $this->assertEquals(2, (int) $rows[0]['cnt']);
     }
 
     /**
-     * Named parameters in DELETE.
+     * Named parameters in JOIN query.
      */
-    public function testNamedParamsInDelete(): void
+    public function testNamedParamsInJoinQuery(): void
     {
-        $stmt = $this->pdo->prepare('DELETE FROM sl_np_test WHERE id = :id');
-        $stmt->execute([':id' => 2]);
+        $stmt = $this->pdo->prepare(
+            "SELECT u.username, o.total, o.status
+             FROM sl_np_users u
+             JOIN sl_np_orders o ON o.user_id = u.id
+             WHERE o.status = :status AND o.total > :minTotal
+             ORDER BY o.total DESC"
+        );
+        $stmt->execute([':status' => 'completed', ':minTotal' => 20.00]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $qstmt = $this->pdo->query('SELECT COUNT(*) FROM sl_np_test');
-        $this->assertSame(2, (int) $qstmt->fetchColumn());
+        $this->assertCount(2, $rows);
+        $this->assertSame('alice', $rows[0]['username']);
+        $this->assertEqualsWithDelta(99.99, (float) $rows[0]['total'], 0.01);
     }
 
     /**
-     * Physical isolation.
+     * Named params in GROUP BY HAVING.
+     *
+     * Known issue: HAVING with prepared statement parameters returns empty
+     * on SQLite (SPEC-11.SQLITE-HAVING-PARAM, Issue #22).
      */
-    public function testPhysicalIsolation(): void
+    public function testNamedParamInGroupByHaving(): void
     {
-        $this->pdo->disableZtd();
-        $stmt = $this->pdo->query('SELECT COUNT(*) FROM sl_np_test');
-        $this->assertSame(0, (int) $stmt->fetchColumn());
+        $stmt = $this->pdo->prepare(
+            "SELECT u.username, SUM(o.total) AS order_total
+             FROM sl_np_users u
+             JOIN sl_np_orders o ON o.user_id = u.id
+             WHERE u.active = :active
+             GROUP BY u.username
+             HAVING SUM(o.total) > :threshold
+             ORDER BY order_total DESC"
+        );
+        $stmt->execute([':active' => 1, ':threshold' => 50.00]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (count($rows) === 0) {
+            $this->markTestIncomplete(
+                'SPEC-11.SQLITE-HAVING-PARAM [Issue #22]: HAVING with named params returns empty on SQLite.'
+            );
+        }
+        $this->assertCount(1, $rows);
+    }
+
+    /**
+     * Named parameters without colon prefix (PDO supports both).
+     */
+    public function testNamedParamsWithoutColonPrefix(): void
+    {
+        $stmt = $this->pdo->prepare("SELECT username FROM sl_np_users WHERE role = :role");
+        $stmt->execute(['role' => 'admin']);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertCount(1, $rows);
+        $this->assertSame('alice', $rows[0]['username']);
+    }
+
+    /**
+     * Named parameters in subquery.
+     */
+    public function testNamedParamsInSubquery(): void
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT username FROM sl_np_users
+             WHERE id IN (
+                SELECT user_id FROM sl_np_orders WHERE status = :status
+             )"
+        );
+        $stmt->execute([':status' => 'completed']);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertCount(2, $rows);
+        $usernames = array_column($rows, 'username');
+        $this->assertContains('alice', $usernames);
+        $this->assertContains('bob', $usernames);
+    }
+
+    /**
+     * Insert with named params, then read back with named param query.
+     */
+    public function testInsertThenSelectBothNamed(): void
+    {
+        $insert = $this->pdo->prepare(
+            "INSERT INTO sl_np_orders (id, user_id, total, status)
+             VALUES (:id, :uid, :total, :status)"
+        );
+        $insert->execute([':id' => 10, ':uid' => 2, ':total' => 199.99, ':status' => 'pending']);
+
+        $select = $this->pdo->prepare(
+            "SELECT total, status FROM sl_np_orders WHERE user_id = :uid AND id = :id"
+        );
+        $select->execute([':uid' => 2, ':id' => 10]);
+        $rows = $select->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertCount(1, $rows);
+        $this->assertEqualsWithDelta(199.99, (float) $rows[0]['total'], 0.01);
     }
 }

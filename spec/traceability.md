@@ -456,6 +456,8 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-11.ALTER-ADD-COL-STALE-SCHEMA | `Pdo/SqliteAlterAddColumnDmlTest`, `Pdo/MysqlAlterAddColumnDmlTest` | — | P | — | K | K |
 | SPEC-11.PDO-REPLACE-PREPARED | `Pdo/MysqlReplaceIntoPreparedTest`, `Pdo/SqliteInsertOrReplaceTest` | — | K | — | K | K |
 | SPEC-11.PG-GENERATE-SERIES | `Pdo/PostgresGenerateSeriesTest` | — | — | K | — | K |
+| SPEC-11.LAST-INSERT-ID | `Pdo/SqliteLastInsertIdShadowTest` | — | — | — | K | K |
+| SPEC-11.MULTI-STATEMENT | `Pdo/SqliteMultiStatementExecTest` | — | — | — | K | K |
 
 ## New Scenario Tests (2026-03-10)
 
@@ -473,6 +475,17 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-4.4 | `Pdo/MysqlReplaceIntoPreparedTest` | — | K | — | — | REPLACE prepared creates duplicate PK (KI #55) |
 | SPEC-4.4 | `Pdo/SqliteInsertOrReplaceTest` | — | — | — | K | INSERT OR REPLACE prepared: duplicate PK (KI #55) |
 | SPEC-4.1 | `Pdo/SqliteInsertSubqueryInValuesTest` | — | — | — | V | INSERT with scalar subquery in VALUES (all pass) |
+| SPEC-3.3 | `Pdo/SqliteNaturalJoinTest` | — | — | — | V | NATURAL JOIN, NATURAL LEFT JOIN, shadow data, aggregate (all pass) |
+| SPEC-4.1a | `Pdo/SqliteSelfReferencingInsertSelectTest` | — | — | — | P | Self-ref INSERT...SELECT: row count OK, computed columns NULL (KI #20) |
+| SPEC-3.2 | `Pdo/SqliteNamedParametersTest` | — | — | — | P | Named :params work for SELECT/INSERT/UPDATE/DELETE/JOIN; HAVING fails (KI #22) |
+| SPEC-3.3 | `Pdo/SqliteExistsExpressionTest` | — | — | — | V | EXISTS scalar, CASE EXISTS, NOT EXISTS, shadow-aware (all pass) |
+| SPEC-3.3 | `Pdo/SqliteGroupByExpressionTest` | — | — | — | V | GROUP BY CASE/SUBSTR/arithmetic/COALESCE, HAVING (all pass) |
+| SPEC-3.3 | `Pdo/SqliteAliasCollisionTest` | — | — | — | V | Subquery alias=table name, self-join, correlated same-table (all pass) |
+| SPEC-3.3 | `Pdo/SqliteMultipleScalarSubqueryTest` | — | — | — | V | 2-3 scalar subqueries in SELECT, mixed correlated/non-correlated (all pass) |
+| SPEC-4.7 | `Pdo/SqliteLastInsertIdShadowTest` | — | — | — | K | lastInsertId() always returns '0' in shadow mode (NEW Issue #77) |
+| SPEC-6.1 | `Pdo/SqliteMultiStatementExecTest` | — | — | — | K | Multi-statement throws ZTD Write Protection (NEW Issue #78) |
+| SPEC-3.2 | `Pdo/SqliteInterleavedPreparedStatementsTest` | — | — | — | P | Interleaved prepare works for reads; prepared INSERT/UPDATE invisible (KI #23) |
+| SPEC-4.1 | `Pdo/SqliteInsertDefaultValuesTest` | — | — | — | K | INSERT DEFAULT VALUES fails; partial-col DEFAULT → NULL (KI #21/#31) |
 
 ## Legend
 

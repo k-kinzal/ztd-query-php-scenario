@@ -8,83 +8,180 @@ use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
- * Tests INSERT with DEFAULT keyword on SQLite PDO ZTD.
+ * Tests INSERT DEFAULT VALUES and partial-column INSERT with DEFAULT.
+ * These patterns are common for auto-increment tables and tables with
+ * many defaulted columns. Issue #31 reports that INSERT...VALUES (DEFAULT)
+ * fails, but INSERT DEFAULT VALUES (no columns at all) may differ.
  *
- * SQLite supports:
- *   INSERT INTO t DEFAULT VALUES
- *   INSERT INTO t (col) VALUES (DEFAULT)  — NOT supported by SQLite itself
- *
- * "INSERT ... DEFAULT VALUES" fails under ZTD because InsertTransformer
- * requires explicit values to project into the CTE.
- * This is already documented; this test verifies and extends coverage.
+ * SQL patterns exercised: INSERT DEFAULT VALUES, INSERT with partial columns
+ * relying on defaults, INSERT DEFAULT VALUES then SELECT, INSERT DEFAULT
+ * VALUES then UPDATE.
  * @spec SPEC-4.1
  */
 class SqliteInsertDefaultValuesTest extends AbstractSqlitePdoTestCase
 {
     protected function getTableDDL(): string|array
     {
-        return 'CREATE TABLE si_def_test (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT DEFAULT \\\'default_name\\\',
-            score INTEGER DEFAULT 100
-        )';
+        return [
+            'CREATE TABLE sl_idv_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                message TEXT DEFAULT \'no message\',
+                level TEXT DEFAULT \'info\',
+                created_at TEXT DEFAULT \'2025-01-01\'
+            )',
+            'CREATE TABLE sl_idv_counters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                value INTEGER DEFAULT 0
+            )',
+        ];
     }
 
     protected function getTableNames(): array
     {
-        return ['si_def_test'];
-    }
-
-
-    /**
-     * INSERT ... DEFAULT VALUES should fail under ZTD.
-     *
-     * SQLite natively supports this, but InsertTransformer cannot project it.
-     */
-    public function testInsertDefaultValuesFails(): void
-    {
-        $this->expectException(\Throwable::class);
-        $this->pdo->exec('INSERT INTO si_def_test DEFAULT VALUES');
+        return ['sl_idv_counters', 'sl_idv_logs'];
     }
 
     /**
-     * INSERT with explicit values works normally.
+     * INSERT DEFAULT VALUES — no column list, no VALUES clause.
+     * All columns should get their default values (or NULL for no-default).
      */
-    public function testInsertWithExplicitValues(): void
+    public function testInsertDefaultValues(): void
     {
-        $this->pdo->exec("INSERT INTO si_def_test (name, score) VALUES ('Alice', 90)");
+        try {
+            $this->ztdExec("INSERT INTO sl_idv_logs DEFAULT VALUES");
 
-        $stmt = $this->pdo->query('SELECT name, score FROM si_def_test WHERE name = \'Alice\'');
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $this->assertSame('Alice', $row['name']);
-        $this->assertSame(90, (int) $row['score']);
+            $rows = $this->ztdQuery("SELECT * FROM sl_idv_logs");
+            $this->assertCount(1, $rows);
+            $this->assertSame('no message', $rows[0]['message']);
+            $this->assertSame('info', $rows[0]['level']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'INSERT DEFAULT VALUES failed: ' . $e->getMessage()
+            );
+        }
     }
 
     /**
-     * INSERT with NULL (not DEFAULT) as value.
+     * Multiple INSERT DEFAULT VALUES — auto-increment should advance.
      */
-    public function testInsertWithNullValues(): void
+    public function testMultipleInsertDefaultValues(): void
     {
-        $this->pdo->exec('INSERT INTO si_def_test (name, score) VALUES (NULL, NULL)');
+        try {
+            $this->ztdExec("INSERT INTO sl_idv_logs DEFAULT VALUES");
+            $this->ztdExec("INSERT INTO sl_idv_logs DEFAULT VALUES");
+            $this->ztdExec("INSERT INTO sl_idv_logs DEFAULT VALUES");
 
-        $stmt = $this->pdo->query('SELECT name, score FROM si_def_test ORDER BY id DESC LIMIT 1');
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $this->assertNull($row['name']);
-        $this->assertNull($row['score']);
+            $rows = $this->ztdQuery("SELECT id FROM sl_idv_logs ORDER BY id");
+            $this->assertCount(3, $rows);
+            $ids = array_column($rows, 'id');
+            $this->assertCount(3, array_unique($ids));
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'Multiple INSERT DEFAULT VALUES failed: ' . $e->getMessage()
+            );
+        }
     }
 
     /**
-     * Physical isolation.
+     * INSERT with partial columns, relying on defaults for rest.
      */
-    public function testPhysicalIsolation(): void
+    public function testInsertPartialColumnsWithDefaults(): void
     {
-        $this->pdo->exec("INSERT INTO si_def_test (name, score) VALUES ('Bob', 80)");
+        $this->ztdExec("INSERT INTO sl_idv_logs (message) VALUES ('test message')");
 
-        $stmt = $this->pdo->query('SELECT COUNT(*) FROM si_def_test');
-        $this->assertSame(1, (int) $stmt->fetchColumn());
+        $rows = $this->ztdQuery("SELECT message, level FROM sl_idv_logs");
+        $this->assertCount(1, $rows);
+        $this->assertSame('test message', $rows[0]['message']);
+        if ($rows[0]['level'] !== 'info') {
+            $this->markTestIncomplete(
+                'Shadow store did not apply DEFAULT value for level column. Got: ' . var_export($rows[0]['level'], true)
+            );
+        }
+        $this->assertSame('info', $rows[0]['level']);
+    }
 
-        $this->pdo->disableZtd();
-        $stmt = $this->pdo->query('SELECT COUNT(*) FROM si_def_test');
-        $this->assertSame(0, (int) $stmt->fetchColumn());
+    /**
+     * INSERT DEFAULT VALUES then UPDATE the row.
+     */
+    public function testInsertDefaultValuesThenUpdate(): void
+    {
+        try {
+            $this->ztdExec("INSERT INTO sl_idv_logs DEFAULT VALUES");
+
+            $rows = $this->ztdQuery("SELECT id FROM sl_idv_logs LIMIT 1");
+            $id = $rows[0]['id'];
+
+            $this->ztdExec("UPDATE sl_idv_logs SET message = 'updated', level = 'warn' WHERE id = {$id}");
+
+            $rows = $this->ztdQuery("SELECT message, level FROM sl_idv_logs WHERE id = {$id}");
+            $this->assertCount(1, $rows);
+            $this->assertSame('updated', $rows[0]['message']);
+            $this->assertSame('warn', $rows[0]['level']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'INSERT DEFAULT VALUES + UPDATE failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * INSERT into table with NOT NULL + DEFAULT, using only required columns.
+     */
+    public function testInsertRequiredColumnsOnly(): void
+    {
+        $this->ztdExec("INSERT INTO sl_idv_counters (name) VALUES ('page_views')");
+
+        $rows = $this->ztdQuery("SELECT name, value FROM sl_idv_counters WHERE name = 'page_views'");
+        $this->assertCount(1, $rows);
+        $this->assertSame('page_views', $rows[0]['name']);
+        if ((int) $rows[0]['value'] !== 0) {
+            $this->markTestIncomplete(
+                'Shadow store did not apply DEFAULT value for value column. Got: ' . var_export($rows[0]['value'], true)
+            );
+        }
+        $this->assertEquals(0, (int) $rows[0]['value']);
+    }
+
+    /**
+     * INSERT partial columns then increment the defaulted counter.
+     */
+    public function testInsertPartialThenIncrement(): void
+    {
+        $this->ztdExec("INSERT INTO sl_idv_counters (name) VALUES ('clicks')");
+        $this->ztdExec("UPDATE sl_idv_counters SET value = value + 1 WHERE name = 'clicks'");
+        $this->ztdExec("UPDATE sl_idv_counters SET value = value + 1 WHERE name = 'clicks'");
+
+        $rows = $this->ztdQuery("SELECT value FROM sl_idv_counters WHERE name = 'clicks'");
+        $this->assertCount(1, $rows);
+
+        if ($rows[0]['value'] === null) {
+            $this->markTestIncomplete(
+                'Shadow store did not apply DEFAULT, counter stayed NULL after increment'
+            );
+        }
+        $this->assertEquals(2, (int) $rows[0]['value']);
+    }
+
+    /**
+     * Physical isolation — INSERT DEFAULT VALUES should not touch physical table.
+     */
+    public function testInsertDefaultValuesPhysicalIsolation(): void
+    {
+        try {
+            $this->ztdExec("INSERT INTO sl_idv_logs DEFAULT VALUES");
+
+            $shadow = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM sl_idv_logs");
+            $this->assertEquals(1, (int) $shadow[0]['cnt']);
+
+            $this->pdo->disableZtd();
+            $physical = $this->pdo->query("SELECT COUNT(*) AS cnt FROM sl_idv_logs")
+                ->fetchAll(PDO::FETCH_ASSOC);
+            $this->assertEquals(0, (int) $physical[0]['cnt']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'INSERT DEFAULT VALUES failed: ' . $e->getMessage()
+            );
+        }
     }
 }

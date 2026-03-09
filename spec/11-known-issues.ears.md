@@ -889,3 +889,21 @@ ORDER BY tac_items.name
 ```
 
 Workaround: use aliases that do not match any table name in the schema.
+
+## SPEC-11.LAST-INSERT-ID `[Issue #77]` PDO::lastInsertId() returns '0' after shadow INSERT
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (likely all PDO platforms)
+**Related specs:** [SPEC-4.7](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteLastInsertIdShadowTest`
+
+`PDO::lastInsertId()` always returns `'0'` after INSERT operations in ZTD mode. Shadow INSERTs don't execute on the physical database, so the underlying PDO's `last_insert_rowid()` is never updated. This breaks ORM workflows (Laravel, Doctrine) that rely on `lastInsertId()` to retrieve auto-generated primary keys.
+
+Affects: exec INSERT, prepared INSERT, explicit PK INSERT. The shadow store tracks the inserted row internally but does not propagate the ID to `lastInsertId()`.
+
+## SPEC-11.MULTI-STATEMENT `[Issue #78]` Multi-statement SQL throws undocumented error
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (likely all platforms)
+**Related specs:** [SPEC-6.1](06-unsupported-sql.ears.md)
+**Tests:** `Pdo/SqliteMultiStatementExecTest`
+
+Executing multiple SQL statements separated by semicolons in a single `exec()` call throws `ZTD Write Protection: Multi-statement SQL statement`. While this may be intentional, the limitation is undocumented and the error message does not suggest a workaround. Native `PDO::exec()` supports multi-statement execution on SQLite.

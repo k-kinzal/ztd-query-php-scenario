@@ -1633,4 +1633,18 @@ Correlated scalar subqueries in SELECT lists work correctly through CTE shadow d
 **Platforms:** PostgreSQL-PDO (fully working), SQLite-PDO (partial), MySQL-PDO/MySQLi (rejected)
 **Tests:** `Pdo/PostgresSetOperationTest`, `Pdo/SqliteSetOperationTest`, `Pdo/MysqlSetOperationTest`, `Mysqli/SetOperationTest`
 
-INTERSECT and EXCEPT work correctly on PostgreSQL through CTE shadow data, including INTERSECT ALL, multi-column INTERSECT, EXCEPT with ORDER BY/LIMIT, combined UNION+EXCEPT+INTERSECT with correct precedence, mutation sensitivity, and prepared statements. On SQLite, single-column INTERSECT/EXCEPT work but multi-column INTERSECT returns empty results. On MySQL (PDO and MySQLi), INTERSECT and EXCEPT are rejected as "Multi-statement SQL" by the CTE rewriter; UNION works correctly. Workarounds for MySQL: use IN/NOT IN subqueries instead.
+INTERSECT and EXCEPT work correctly on PostgreSQL through CTE shadow data, including INTERSECT ALL, multi-column INTERSECT, EXCEPT with ORDER BY/LIMIT, combined UNION+EXCEPT+INTERSECT with correct precedence, mutation sensitivity, and prepared statements. On SQLite, single-column INTERSECT/EXCEPT work but multi-column INTERSECT and EXCEPT both return empty results (see [SPEC-11.SQLITE-MULTI-COL-SET-OP](11-known-issues.ears.md)). On MySQL (PDO and MySQLi), INTERSECT and EXCEPT are rejected as "Multi-statement SQL" by the CTE rewriter; UNION works correctly. Workarounds for MySQL: use IN/NOT IN subqueries instead.
+
+## SPEC-10.2.191 UPDATE with subqueries in SET and WHERE clauses
+**Status:** Partial (see [SPEC-11.UPDATE-SET-CORRELATED-SUBQUERY](11-known-issues.ears.md))
+**Platforms:** SQLite-PDO, PostgreSQL-PDO
+**Tests:** `Pdo/SqliteUpdateSubqueryTest`, `Pdo/PostgresUpdateSubqueryTest`
+
+UPDATE with subqueries in WHERE clause (e.g., `WHERE category_id IN (SELECT ...)`) works correctly on both platforms. UPDATE with correlated subqueries in the SET clause (e.g., `SET price = price * (1 - (SELECT discount_pct FROM categories WHERE ...))`) fails — the CTE rewriter produces syntax errors on SQLite and column resolution errors on PostgreSQL. Self-referencing scalar subqueries in SET also fail. Zero-row updates with empty subquery WHERE work correctly.
+
+## SPEC-10.2.192 INSERT...SELECT with UNION source
+**Status:** Verified
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteInsertSelectUnionTest`
+
+INSERT...SELECT where the SELECT source is a UNION or UNION ALL query works correctly through the CTE shadow store on SQLite. Both UNION ALL (preserving duplicates) and UNION (deduplicating) produce correct row counts and values.

@@ -626,13 +626,21 @@ SELECT name FROM docs WHERE jsonb_exists_any(meta, array['reviewed', 'priority']
 SELECT name FROM docs WHERE jsonb_exists_all(meta, array['author', 'reviewed']);
 ```
 
-## SPEC-11.SQLITE-MULTI-COL-INTERSECT `[Issue #50]` Multi-column INTERSECT returns empty results on SQLite
+## SPEC-11.SQLITE-MULTI-COL-SET-OP `[Issue #50]` Multi-column INTERSECT/EXCEPT returns empty results on SQLite
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
 **Related specs:** [SPEC-3.3d](03-read-operations.ears.md)
-**Tests:** `Pdo/SqliteSetOperationTest::testIntersectMultiColumnReturnsEmptyOnSqlite`
+**Tests:** `Pdo/SqliteSetOperationTest::testIntersectMultiColumnReturnsEmptyOnSqlite`, `Pdo/SqliteMultiColumnExceptTest`
 
-Single-column INTERSECT works correctly on SQLite through the CTE shadow store, but multi-column INTERSECT returns 0 rows instead of the expected results. For example, `SELECT department, skill FROM employees INTERSECT SELECT department, skill FROM contractors` returns empty when it should return 3 matching (department, skill) pairs. PostgreSQL handles multi-column INTERSECT correctly.
+Single-column INTERSECT and EXCEPT work correctly on SQLite through the CTE shadow store, but multi-column variants return 0 rows instead of the expected results. For example, `SELECT department, skill FROM employees INTERSECT SELECT department, skill FROM contractors` returns empty when it should return 3 matching (department, skill) pairs. Both INTERSECT and EXCEPT are affected when the projection includes multiple non-PK columns. PostgreSQL handles these correctly.
+
+## SPEC-11.UPDATE-SET-CORRELATED-SUBQUERY `[Issue #51]` UPDATE with correlated subquery in SET clause produces errors
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteUpdateSubqueryTest`, `Pdo/PostgresUpdateSubqueryTest`
+
+UPDATE statements with correlated subqueries in the SET clause fail through the CTE rewriter. On SQLite, the rewriter produces `near "FROM": syntax error`. On PostgreSQL, it produces `column "price" does not exist` due to incorrect aliasing. Self-referencing scalar subqueries in SET (e.g., `SET price = (SELECT MAX(price) FROM same_table WHERE ...)`) also fail with different errors per platform. UPDATE with subqueries in WHERE clause works correctly.
 
 ## SPEC-11.INSERT-SELECT-JOIN `[Issue #49]` INSERT...SELECT with multi-table JOIN produces incorrect results
 **Status:** Known Issue

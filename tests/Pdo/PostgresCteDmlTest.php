@@ -13,6 +13,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * does not support these patterns. The CTE rewriter produces invalid SQL
  * because it does not properly handle user CTEs combined with DML statements.
  * @spec SPEC-3.3e
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/28
  */
 class PostgresCteDmlTest extends AbstractPostgresPdoTestCase
 {

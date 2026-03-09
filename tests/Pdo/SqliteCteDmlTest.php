@@ -14,6 +14,7 @@ use Tests\Support\AbstractSqlitePdoTestCase;
  * shadow CTE, which prevents user CTE names from being visible in
  * the DML statement, causing "no such table" errors.
  * @spec SPEC-3.3e
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/28
  */
 class SqliteCteDmlTest extends AbstractSqlitePdoTestCase
 {

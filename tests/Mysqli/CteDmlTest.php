@@ -13,6 +13,7 @@ use Tests\Support\AbstractMysqliTestCase;
  * does not support these patterns. The mutation resolver cannot produce
  * a shadow mutation for CTE-based DML.
  * @spec SPEC-3.3e
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/28
  */
 class CteDmlTest extends AbstractMysqliTestCase
 {

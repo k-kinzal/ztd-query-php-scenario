@@ -44,6 +44,10 @@ class PostgresRecursiveCteAndRightJoinTest extends AbstractPostgresPdoTestCase
         $this->assertSame(1, (int) $rows[0]['n']);
     }
 
+    /**
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/12
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/4
+     */
     public function testRecursiveCteWithShadowTable(): void
     {
         $this->pdo->exec("INSERT INTO pg_rc_categories (id, name, parent_id) VALUES (1, 'Root', NULL)");

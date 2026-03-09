@@ -108,6 +108,9 @@ class MysqlAdvancedSubqueryTest extends AbstractMysqlPdoTestCase
         $this->assertSame('Sales', $rows[0]['name']);
     }
 
+    /**
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/11
+     */
     public function testUpdateWithSelfReferencingSubqueryAvg(): void
     {
         // UPDATE with self-referencing IN (subquery GROUP BY HAVING AVG)

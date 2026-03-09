@@ -14,6 +14,7 @@ use Tests\Support\AbstractMysqlPdoTestCase;
  * a shadow mutation for CTE-based DML, throwing RuntimeException
  * "Missing shadow mutation for write simulation".
  * @spec SPEC-3.3e
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/28
  */
 class MysqlCteDmlTest extends AbstractMysqlPdoTestCase
 {

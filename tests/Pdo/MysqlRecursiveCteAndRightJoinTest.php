@@ -48,6 +48,8 @@ class MysqlRecursiveCteAndRightJoinTest extends AbstractMysqlPdoTestCase
      * WITH RECURSIVE + shadow table fails on MySQL.
      * The CTE rewriter prepends its own WITH clause before the RECURSIVE keyword,
      * producing invalid SQL like: WITH ztd_shadow AS (...), RECURSIVE cat_tree AS (...)
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/12
      */
     public function testRecursiveCteWithShadowTableFails(): void
     {

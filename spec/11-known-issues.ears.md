@@ -36,7 +36,7 @@ On SQLite, `INSERT ... ON CONFLICT DO NOTHING` inserts both rows (shadow store d
 
 On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` because the InsertTransformer counts `SELECT *` as 1 column. Workaround: use explicit column lists. SQLite and PostgreSQL work correctly.
 
-## SPEC-11.PG-CTE `[By-Design]` User-written CTEs (PostgreSQL)
+## SPEC-11.PG-CTE `[Issue #4]` User-written CTEs (PostgreSQL)
 **Status:** Known Issue (By-Design)
 **Platforms:** PostgreSQL-PDO
 **Related specs:** [SPEC-3.3](03-read-operations.ears.md)
@@ -499,3 +499,49 @@ SELECT id FROM products WHERE category = 'electronics';
 -- Step 2: UPDATE by explicit list
 UPDATE products SET status = 'featured' WHERE id IN (1, 2);
 ```
+
+## SPEC-11.EXCEPTION-WRAPPING `[Issue #2]` RuntimeException instead of DatabaseException
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Related specs:** [SPEC-7.1](07-unknown-schema.ears.md)
+**Tests:** `Pdo/MysqlExceptionWrappingTest`, `Pdo/PostgresExceptionWrappingTest`, `Pdo/SqliteExceptionWrappingTest`, `Mysqli/ExceptionWrappingTest`
+
+When UPDATE or DELETE targets a table whose schema was not reflected at adapter construction time, `ShadowStore` throws a raw `RuntimeException` instead of `DatabaseException`. The adapter-specific exception wrapping (`ZtdMysqli::query()` catches `DatabaseException`, `ZtdPdo::exec()` catches `DatabaseException`) does not catch `RuntimeException`, so it propagates unwrapped to user code. Users cannot rely on catching the adapter-specific exception type.
+
+## SPEC-11.SELF-REF-UPDATE-HAVING `[Issue #11]` Self-referencing UPDATE with GROUP BY HAVING
+**Status:** Known Issue
+**Platforms:** MySQL-PDO, MySQLi (incorrect results); SQLite-PDO (syntax error); PostgreSQL-PDO (ambiguous column)
+**Tests:** `Pdo/MysqlAdvancedSubqueryTest`
+
+`UPDATE table SET col = val WHERE col IN (SELECT col FROM same_table GROUP BY col HAVING AGG(col) > N)` incorrectly updates ALL rows on MySQL instead of only the rows matching the HAVING condition. The CTE rewriter mishandles the self-referencing subquery with GROUP BY HAVING. On SQLite, the same query fails with "incomplete input". On PostgreSQL, it fails with "column reference is ambiguous".
+
+## SPEC-11.RECURSIVE-CTE-SHADOW `[Issue #12]` WITH RECURSIVE + shadow table
+**Status:** Known Issue
+**Platforms:** MySQL-PDO, MySQLi (syntax error); SQLite-PDO (empty results); PostgreSQL-PDO (empty results)
+**Tests:** `Pdo/MysqlRecursiveCteAndRightJoinTest`, `Pdo/PostgresRecursiveCteAndRightJoinTest`, `Pdo/SqliteRecursiveCteAndRightJoinTest`
+
+The CTE rewriter prepends its own `WITH` clause before the user's `WITH RECURSIVE`, producing invalid SQL on MySQL (`WITH ztd_shadow AS (...), RECURSIVE cat_tree AS (...)`). On SQLite and PostgreSQL, the query executes but table references inside the recursive CTE are not rewritten, causing the recursive part to read from the physical table (empty) and return 0 rows.
+
+## SPEC-11.CTE-DML `[Issue #28]` CTE-based DML not supported
+**Status:** Known Issue (Feature Gap)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlCteDmlTest`, `Pdo/PostgresCteDmlTest`, `Pdo/SqliteCteDmlTest`, `Mysqli/CteDmlTest`
+
+CTE-based DML statements (`WITH ... INSERT`, `WITH ... UPDATE`, `WITH ... DELETE`) are not supported on any platform. On MySQL, the mutation resolver receives a `WithStatement` instead of an `InsertStatement`/`UpdateStatement`/`DeleteStatement`. On SQLite, CTE name collisions occur. On PostgreSQL, invalid SQL is produced. Workaround: rewrite as standard DML with subqueries.
+
+## SPEC-11.PG-CONFLICT-WHERE `[Issue #30]` ON CONFLICT DO UPDATE WHERE clause ignored
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-4.2a](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresOnConflictWhereTest`
+
+PostgreSQL conditional upserts with `ON CONFLICT DO UPDATE ... WHERE condition` have the WHERE clause stripped by `PgSqlParser::extractOnConflictUpdateColumns()`. The `UpsertMutation` always updates conflicting rows regardless of the WHERE condition. This produces incorrect results — rows are updated when they should be left unchanged because the WHERE condition was not met.
+
+## SPEC-11.PG-CTAS-TEXT `[Issue #37]` CTAS column types default to TEXT (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-5.1c](05-ddl-operations.ears.md)
+**Tests:** `Pdo/PostgresCtasTest`
+
+When `CREATE TABLE AS SELECT` creates a shadow table on PostgreSQL, all column types default to TEXT (via `ColumnType::unknown()`). Subsequent queries with integer comparisons fail with "operator does not exist: text = integer". The fix would be to infer column types from the source table schema. Workaround: use explicit `CAST` or string comparisons in WHERE clauses.

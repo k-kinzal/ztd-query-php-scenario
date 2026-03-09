@@ -56,6 +56,8 @@ class SqliteRecursiveCteAndRightJoinTest extends AbstractSqlitePdoTestCase
      * Although non-recursive user CTEs (WITH) work correctly with ZTD on SQLite,
      * WITH RECURSIVE does NOT — table references inside the recursive CTE
      * are not rewritten, causing the query to read from the physical table (empty).
+     *
+     * @see https://github.com/k-kinzal/ztd-query-php/issues/12
      */
     public function testRecursiveCteWithShadowTableReturnsEmpty(): void
     {

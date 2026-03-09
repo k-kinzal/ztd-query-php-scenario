@@ -18,6 +18,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * (line 253), so UpsertMutation does not enforce it. This means conditional
  * upserts may update rows that should be left unchanged.
  * @spec SPEC-4.2a
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/30
  */
 class PostgresOnConflictWhereTest extends AbstractPostgresPdoTestCase
 {

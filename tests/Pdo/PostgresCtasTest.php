@@ -15,6 +15,7 @@ use Tests\Support\AbstractPostgresPdoTestCase;
  * - CTAS with empty result set (WHERE 1=0) throws "Cannot determine columns"
  *   because column inference requires at least one row.
  * @spec SPEC-5.1c
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/37
  */
 class PostgresCtasTest extends AbstractPostgresPdoTestCase
 {

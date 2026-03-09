@@ -234,6 +234,11 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.105 | `*SocialFeedTest` | V | V | V | V | V |
 | SPEC-10.2.106 | `*AccessLogSessionTest` | V | V | V | V | V |
 | SPEC-10.2.107 | `*FeatureFlagTest` | V | V | V | V | V |
+| SPEC-10.2.108 | `*ReviewRatingTest` | V | V | V | V | V |
+| SPEC-10.2.109 | `*ReferralTrackingTest` | V | V | V | V | V |
+| SPEC-10.2.110 | `*ContentModerationTest` | V | V | V | V | V |
+| SPEC-10.2.111 | `*InventoryHoldTest` | V | V | V | V | V |
+| SPEC-10.2.112 | `*DashboardKpiTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -318,6 +323,11 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-3.3 | `*SocialFeedTest` | V | V | V | V | 4-table schema, IN subquery feed, mutual friends, reactions |
 | SPEC-10.2.23 | `*AccessLogSessionTest` | V | V | V | V | LAG/ROW_NUMBER sessionization, funnel, daily active users |
 | SPEC-3.3 | `*FeatureFlagTest` | V | V | V | V | A/B test analysis, CROSS JOIN eligibility, conditional rollout |
+| SPEC-3.3 | `*ReviewRatingTest` | V | V | V | V | AVG/COUNT star ratings, LEFT JOIN helpful votes, CASE distribution |
+| SPEC-3.3 | `*ReferralTrackingTest` | V | V | V | V | Self-JOIN referral chains, multi-level revenue attribution, HAVING |
+| SPEC-3.3 | `*ContentModerationTest` | V | V | V | V | Flag accumulation, HAVING escalation threshold, 3-table LEFT JOIN |
+| SPEC-4.2 | `*InventoryHoldTest` | V | V | V | V | Hold/reservation workflow, date-based expiry, stock calculation |
+| SPEC-3.3 | `*DashboardKpiTest` | V | V | V | V | Multi-entity aggregation, revenue/segment, monthly trends, top pages |
 
 ## 11. Known Issues (Selected)
 

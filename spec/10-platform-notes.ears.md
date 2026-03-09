@@ -963,3 +963,48 @@ Verified patterns: page visit frequency (COUNT GROUP BY page), time between visi
 A feature flag system with A/B test experiment tracking works correctly through ZTD shadow store on all platforms. The scenario exercises conditional aggregation for conversion rate calculation, ROUND with division for percentage metrics, CROSS JOIN for feature eligibility matrix, CASE expressions for multi-condition flag evaluation, and segment-based result grouping.
 
 Verified patterns: list enabled features (WHERE enabled + ORDER BY), A/B test conversion rate (SUM/COUNT/AVG per variant), results by user segment (JOIN segments + GROUP BY segment/variant), toggle feature (UPDATE enabled/rollout_pct), add experiment results (INSERT + verify updated aggregates), feature eligibility matrix (CROSS JOIN features × users with CASE evaluation), physical isolation.
+
+## SPEC-10.2.108 Product review/rating system
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ReviewRatingTest`, `Pdo/MysqlReviewRatingTest`, `Pdo/PostgresReviewRatingTest`, `Pdo/SqliteReviewRatingTest`
+
+A product review system with star ratings and helpful-vote counting works correctly through ZTD shadow store on all platforms. The scenario exercises AVG/COUNT aggregation per product, prepared-statement filtering by rating range (BETWEEN), LEFT JOIN with COALESCE for helpful-vote summation, and CASE WHEN conditional counts for star-level distribution histograms.
+
+Verified patterns: average rating per product (AVG + COUNT GROUP BY product), filter reviews by rating range (prepared BETWEEN), most helpful reviews (LEFT JOIN votes + SUM helpful + ORDER BY helpfulness DESC), star distribution histogram (SUM CASE WHEN per rating level), add review and verify AVG updates, vote on review and verify helpful count, physical isolation.
+
+## SPEC-10.2.109 Referral/affiliate tracking
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ReferralTrackingTest`, `Pdo/MysqlReferralTrackingTest`, `Pdo/PostgresReferralTrackingTest`, `Pdo/SqliteReferralTrackingTest`
+
+A referral tracking system with a self-referencing user table and multi-level attribution works correctly through ZTD shadow store on all platforms. The scenario exercises self-JOINs for direct referral counting, 2-level self-JOINs for referral chain traversal, triple JOINs (referrer → referred → purchases) for revenue attribution, HAVING filters on aggregated referral value, and LEFT JOIN IS NULL for leaf-node detection.
+
+Verified patterns: direct referral count (self-JOIN + LEFT JOIN GROUP BY), referral chain depth two (2-level self-JOIN), referral revenue attribution (triple JOIN + SUM), top referrers by purchase value (HAVING SUM threshold), add new referral and verify chain, users with no referrals (LEFT JOIN WHERE IS NULL), physical isolation.
+
+## SPEC-10.2.110 Content moderation queue
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ContentModerationTest`, `Pdo/MysqlContentModerationTest`, `Pdo/PostgresContentModerationTest`, `Pdo/SqliteContentModerationTest`
+
+A content moderation system with flag accumulation, escalation threshold, and decision recording works correctly through ZTD shadow store on all platforms. The scenario exercises LEFT JOIN with GROUP BY for flag counting per post, HAVING COUNT for escalation threshold detection, 3-table LEFT JOIN with IS NULL for unreviewed flagged posts, GROUP BY for flag reason distribution, and multi-step moderation workflows (record decision + update post status, dismiss flags after decision).
+
+Verified patterns: flag count per post (LEFT JOIN + COUNT GROUP BY), posts exceeding threshold (HAVING COUNT >= N), unreviewed flagged posts (3-table JOIN + LEFT JOIN IS NULL), flag reason distribution (GROUP BY reason), record moderation decision (INSERT decision + UPDATE status), dismiss flags after decision (DELETE + verify counts), physical isolation.
+
+## SPEC-10.2.111 Inventory hold/reservation with expiry
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/InventoryHoldTest`, `Pdo/MysqlInventoryHoldTest`, `Pdo/PostgresInventoryHoldTest`, `Pdo/SqliteInventoryHoldTest`
+
+An inventory reservation system with time-windowed holds and hold-to-purchase conversion works correctly through ZTD shadow store on all platforms. The scenario exercises LEFT JOIN with conditional CASE/SUM for available-stock calculation (stock minus active held quantity), date-based filtering for active vs expired holds, multi-step workflows (confirm hold + create purchase), and bulk status updates for expired-hold cleanup.
+
+Verified patterns: available stock (LEFT JOIN + SUM CASE active held), active holds per product (COUNT + SUM with status/date filter), expired holds (prepared statement with date comparison), confirm hold (UPDATE status + INSERT purchase), cleanup expired holds (UPDATE WHERE expired), hold-to-purchase full workflow (INSERT hold → confirm → INSERT purchase → verify stock), physical isolation.
+
+## SPEC-10.2.112 Dashboard KPI compilation
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/DashboardKpiTest`, `Pdo/MysqlDashboardKpiTest`, `Pdo/PostgresDashboardKpiTest`, `Pdo/SqliteDashboardKpiTest`
+
+A dashboard KPI compilation with multiple independent aggregations across 4 entity tables works correctly through ZTD shadow store on all platforms. The scenario exercises SUM/COUNT/AVG for revenue summaries, cross-entity JOINs with GROUP BY for revenue-by-segment breakdowns, priority-grouped ticket counts, per-customer health scores via multiple LEFT JOINs, SUBSTR-based date grouping for monthly order trends, and COUNT with ORDER BY/LIMIT for top-pages analysis.
+
+Verified patterns: revenue summary (SUM + COUNT + AVG on completed orders), revenue by segment (JOIN customers + orders GROUP BY segment), open tickets by priority (COUNT WHERE status GROUP BY priority), customer health score (LEFT JOIN orders + tickets with COUNT/SUM per customer), monthly order trend (SUBSTR date grouping + COUNT/SUM), top pages by views (COUNT GROUP BY page ORDER BY DESC LIMIT), physical isolation.

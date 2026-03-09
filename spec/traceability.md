@@ -2,7 +2,7 @@
 
 Maps SPEC-IDs to test classes and verified versions.
 
-**Last updated:** 2026-03-09
+**Last updated:** 2026-03-10
 **Verified environment:** PHP 8.1–8.5, MySQL 8.0, PostgreSQL 14/16/17, SQLite 3.x, ztd-query-pdo-adapter v0.1.1, ztd-query-mysqli-adapter v0.1.1
 
 ## How to read this matrix
@@ -453,6 +453,26 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-11.UNION-ALL-DERIVED | `Pdo/SqliteInventorySnapshotTest` | — | — | — | K | K |
 | SPEC-11.PG-SELF-REF-UPDATE | `Pdo/PostgresDeleteReinsertCycleTest`, `Pdo/PostgresNestedFunctionExprTest` | — | — | K | — | K |
 | SPEC-11.INSERT-SELECT-CASE | `Pdo/SqlitePayrollDeductionTest` | — | — | — | K | K |
+| SPEC-11.ALTER-ADD-COL-STALE-SCHEMA | `Pdo/SqliteAlterAddColumnDmlTest`, `Pdo/MysqlAlterAddColumnDmlTest` | — | P | — | K | K |
+| SPEC-11.PDO-REPLACE-PREPARED | `Pdo/MysqlReplaceIntoPreparedTest`, `Pdo/SqliteInsertOrReplaceTest` | — | K | — | K | K |
+| SPEC-11.PG-GENERATE-SERIES | `Pdo/PostgresGenerateSeriesTest` | — | — | K | — | K |
+
+## New Scenario Tests (2026-03-10)
+
+| Primary SPEC | Test Classes | Mi | MP | PG | SL | Notes |
+|-------------|-------------|----|----|----|----|-------|
+| SPEC-3.1 | `Pdo/PostgresIlikeAndSimilarToTest` | — | — | V | — | ILIKE, NOT ILIKE, SIMILAR TO, CASE+ILIKE (all pass) |
+| SPEC-3.5 | `Pdo/PostgresAggregateFilterTest` | — | — | V | — | Aggregate FILTER clause (all pass) |
+| SPEC-3.1 | `Pdo/PostgresGenerateSeriesTest` | — | — | K | — | generate_series+LEFT JOIN (KI: empty), standalone (works) |
+| SPEC-4.2 | `Pdo/PostgresUpdateFromTest` | — | — | V | — | UPDATE FROM basic/expression/shadow (pass), multi-table (skip) |
+| SPEC-4.3 | `Pdo/PostgresDeleteUsingTest` | — | — | V | — | DELETE USING basic/condition/shadow (all pass) |
+| SPEC-4.3 | `Pdo/MysqlDeleteUpdateWithOrderLimitTest`, `Mysqli/MysqliDeleteUpdateWithOrderLimitTest` | V | V | — | — | DELETE/UPDATE ORDER BY LIMIT (all pass) |
+| SPEC-4.3 | `Pdo/MysqlMultiTableDeleteJoinTest` | — | V | — | — | Single-table+JOIN (pass), multi-table (KI #26), LEFT JOIN (pass) |
+| SPEC-5.2 | `Pdo/SqliteAlterAddColumnDmlTest` | — | — | — | K | ADD COLUMN→DML fails on SELECT (KI #54) |
+| SPEC-5.2 | `Pdo/MysqlAlterAddColumnDmlTest` | — | V | — | — | ADD COLUMN→DML works except DEFAULT on existing rows |
+| SPEC-4.4 | `Pdo/MysqlReplaceIntoPreparedTest` | — | K | — | — | REPLACE prepared creates duplicate PK (KI #55) |
+| SPEC-4.4 | `Pdo/SqliteInsertOrReplaceTest` | — | — | — | K | INSERT OR REPLACE prepared: duplicate PK (KI #55) |
+| SPEC-4.1 | `Pdo/SqliteInsertSubqueryInValuesTest` | — | — | — | V | INSERT with scalar subquery in VALUES (all pass) |
 
 ## Legend
 

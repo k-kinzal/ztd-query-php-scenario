@@ -681,3 +681,42 @@ GROUP BY c.id, c.name, c.region;
 -- Workaround on MySQL: INSERT...SELECT from a single table (no JOINs)
 -- No known workaround for correct aggregate values on PostgreSQL/SQLite
 ```
+
+## SPEC-11.ALTER-ADD-COL-STALE-SCHEMA `[Issue #54]` ALTER TABLE ADD COLUMN: schema cache not invalidated
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), MySQL-PDO (partial)
+**Related specs:** [SPEC-5.2](05-ddl-operations.ears.md)
+**Tests:** `Pdo/SqliteAlterAddColumnDmlTest`, `Pdo/MysqlAlterAddColumnDmlTest`
+
+After `ALTER TABLE ADD COLUMN`, the CTE rewriter's schema cache is not invalidated. INSERT and UPDATE referencing the new column succeed (shadow store accepts the data), but SELECT queries that reference the new column fail with "no such column" because the CTE is generated from the stale schema. **Data written to the new column is silently lost** — it enters the shadow store but can never be read back through ZTD.
+
+On MySQL-PDO, INSERT/UPDATE/SELECT with the new column all work, but pre-existing shadow rows do not receive the DEFAULT value for the new column (they get 0/NULL instead).
+
+Queries using only original columns continue to work correctly after ADD COLUMN on all platforms.
+
+## SPEC-11.PDO-REPLACE-PREPARED `[Issue #55]` REPLACE/INSERT OR REPLACE via PDO prepared statement creates duplicate PK rows
+**Status:** Known Issue
+**Platforms:** MySQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.4](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlReplaceIntoPreparedTest`, `Pdo/SqliteInsertOrReplaceTest`
+
+REPLACE INTO (MySQL) and INSERT OR REPLACE (SQLite) via PDO prepared statements do not delete the existing row in the shadow store. A new row is inserted alongside the original, creating **duplicate primary keys**. The `exec()` path handles REPLACE correctly.
+
+| Method | Behavior |
+|--------|----------|
+| `exec("REPLACE INTO ...")` | Correct: deletes old, inserts new |
+| `prepare("REPLACE INTO ...")->execute()` | **Bug**: inserts without deleting, duplicate PKs |
+
+Related: Issue #42 (MySQLi execute_query REPLACE), Issue #17 (PDO prepared upsert).
+
+## SPEC-11.PG-GENERATE-SERIES `[Issue #56]` PostgreSQL generate_series() LEFT JOIN with shadow table returns empty
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresGenerateSeriesTest`
+
+When `generate_series()` with column alias (e.g., `AS d(day)`) is LEFT JOINed with a shadow-stored table, the CTE rewriter does not rewrite the table reference in the JOIN. The physical table (empty) is read, so all amounts are 0/NULL. NOT EXISTS subqueries against shadow tables in generate_series context also fail (return all rows instead of filtering).
+
+Integer `generate_series()` in a derived table (`(SELECT generate_series(1,5) AS n) AS gs`) LEFT JOINed with shadow table **does work** — only the `AS alias(col)` form is affected.
+
+Related: Issue #13 (derived tables not rewritten), SPEC-11.PG-LATERAL (LATERAL inner references not rewritten).

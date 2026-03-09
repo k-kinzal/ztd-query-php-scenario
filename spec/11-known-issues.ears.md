@@ -1305,15 +1305,19 @@ UPDATE summary SET
     item_count = (SELECT COUNT(*) FROM products WHERE category = summary.category);
 ```
 
-## SPEC-11.MYSQL-UPSERT-SUBQUERY-SET `[Issue #105]` MySQL: ON DUPLICATE KEY UPDATE with subquery in SET evaluates to 0
+## SPEC-11.UPSERT-SUBQUERY-SET `[Issue #105]` UPSERT with subquery in SET evaluates incorrectly (all platforms)
 **Status:** Known Issue
-**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
 **Related specs:** [SPEC-4.2a](04-write-operations.ears.md)
-**Tests:** `Pdo/MysqlUpsertSubqueryInSetTest`, `Mysqli/UpsertSubqueryInSetTest`
+**Tests:** `Pdo/MysqlUpsertSubqueryInSetTest`, `Mysqli/UpsertSubqueryInSetTest`, `Pdo/PostgresUpsertSubqueryInSetTest`, `Pdo/SqliteUpsertSubqueryInSetTest`
 
-`INSERT INTO t VALUES (...) ON DUPLICATE KEY UPDATE col = (SELECT val FROM other WHERE ...)` does not evaluate the subquery — the column receives value 0. The prepared statement variant fails with "Invalid parameter number: number of bound variables does not match number of tokens", indicating the CTE rewriter alters the parameter token count when processing subqueries in the ON DUPLICATE KEY UPDATE clause.
+INSERT with upsert clause (ON DUPLICATE KEY UPDATE on MySQL, ON CONFLICT DO UPDATE on PostgreSQL/SQLite) containing a subquery in the SET expression fails on all platforms:
 
-ON DUPLICATE KEY UPDATE with simple expressions (VALUES(col), col + 1, literals) works correctly. Only subqueries in the SET expression are affected.
+- **MySQL/SQLite exec()**: subquery evaluates to 0 instead of actual result
+- **PostgreSQL exec()**: CTE rewriter CASTs the subquery text as a literal string value, producing "invalid input syntax for type numeric"
+- **All prepared**: parameter count/index mismatch — MySQL: "number of bound variables does not match number of tokens", PostgreSQL: "supplies N parameters, requires N-1", SQLite: "column index out of range"
+
+UPSERT with simple expressions (VALUES/EXCLUDED, col + 1, literals) works correctly. Only subqueries in the SET expression are affected. New row inserts (no conflict path) work correctly.
 
 ## SPEC-11.PG-UPDATE-FROM-PREPARED `[Issue #106]` PostgreSQL: UPDATE...FROM with $N prepared params does not apply
 **Status:** Known Issue

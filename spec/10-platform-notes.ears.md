@@ -1971,12 +1971,12 @@ INSERT...SELECT with GROUP BY and aggregate functions (COUNT, SUM) stores NULL a
 
 INSERT OR REPLACE with function calls (UPPER, LOWER), string concatenation (||), and arithmetic expressions (1+1) in the VALUES clause works correctly on SQLite through ZTD. Both replacement (conflict) and insert (no conflict) paths produce correct computed values. No duplicate PKs created after multiple replaces.
 
-## SPEC-10.2.239 ON DUPLICATE KEY UPDATE with subquery in SET
+## SPEC-10.2.239 UPSERT with subquery in SET expression
 **Status:** Known Issue (Issue #105)
-**Platforms:** MySQLi (fails), MySQL-PDO (fails)
-**Tests:** `Pdo/MysqlUpsertSubqueryInSetTest`, `Mysqli/UpsertSubqueryInSetTest`
+**Platforms:** MySQLi (fails), MySQL-PDO (fails), PostgreSQL-PDO (fails), SQLite-PDO (fails)
+**Tests:** `Pdo/MysqlUpsertSubqueryInSetTest`, `Mysqli/UpsertSubqueryInSetTest`, `Pdo/PostgresUpsertSubqueryInSetTest`, `Pdo/SqliteUpsertSubqueryInSetTest`
 
-INSERT...ON DUPLICATE KEY UPDATE with a subquery in the SET expression evaluates to 0 instead of the subquery result. The prepared variant breaks parameter count. New row inserts (no conflict) work correctly. ON DUPLICATE KEY UPDATE with simple expressions works.
+INSERT with upsert (ON DUPLICATE KEY UPDATE / ON CONFLICT DO UPDATE) containing a subquery in the SET expression fails on all platforms. MySQL/SQLite: subquery evaluates to 0. PostgreSQL: CAST of subquery text as literal string. All platforms: prepared variant breaks parameter count/index. New row inserts (no conflict) and simple SET expressions work correctly.
 
 ## SPEC-10.2.240 PostgreSQL UPDATE...FROM with prepared $N params
 **Status:** Known Issue (Issue #106)

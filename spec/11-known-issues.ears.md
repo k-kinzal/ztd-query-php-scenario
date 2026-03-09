@@ -982,3 +982,19 @@ The most basic SELECT pattern — `SELECT name FROM t WHERE id = $1` — returns
 This broadens the scope of known $N param issues (#62 FILTER, #63 JOIN USING, #68 INSERT) to all SELECT contexts. The root cause is likely in the CTE rewriter's parameter handling during query transformation.
 
 Workaround: Use `?` placeholders instead of `$N` on PostgreSQL.
+
+## SPEC-11.KEYWORD-TABLE-NAME `[Issue #86]` Table names "select" and "values" break CTE rewriter
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), likely MySQL-PDO, PostgreSQL-PDO
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteKeywordTableNameProbeTest`, `Pdo/SqliteReservedWordTableCrudTest`
+
+Tables whose names are SQL statement keywords `SELECT` or `VALUES` (quoted with double-quotes) cause all DML operations to fail through the CTE rewriter. Other reserved words (`order`, `group`, `user`, `insert`, `update`, `delete`, `from`, `where`, `table`, `index`, `create`) work correctly when quoted.
+
+**`"select"` table:** `INSERT INTO "select" (id, val) VALUES (1, 'test')` fails with `unrecognized token`. The SQL parser strips the quoted table name and misinterprets the remaining SQL.
+
+**`"values"` table:** `INSERT INTO "values" (id, val) VALUES (1, 'test')` fails with `Insert statement has no values to project`. The parser confuses the quoted table name `"values"` with the VALUES keyword in INSERT syntax.
+
+Both keywords that fail are used in INSERT statement parsing (`SELECT` for INSERT...SELECT, `VALUES` for INSERT...VALUES). Other DML keywords as table names work because they are parsed at the statement-type level, not within INSERT clause parsing.
+
+Workaround: Rename tables to avoid `select` and `values` as table names, or disable ZTD for queries referencing these tables.

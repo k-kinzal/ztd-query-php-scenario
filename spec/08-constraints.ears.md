@@ -10,7 +10,7 @@ The shadow store does NOT enforce database constraints:
 - **PRIMARY KEY**: Duplicate primary key values are accepted.
 - **UNIQUE**: Duplicate values in unique columns are accepted.
 - **NOT NULL**: NULL values are accepted even for NOT NULL columns.
-- **FOREIGN KEY**: References to non-existent parent rows are accepted.
+- **FOREIGN KEY**: References to non-existent parent rows are accepted. ON DELETE CASCADE and ON UPDATE CASCADE do NOT propagate to child tables — deleting a parent row leaves orphaned child rows in the shadow store.
 - **DEFAULT**: Column default values are NOT applied. When INSERT omits columns with DEFAULT values, the shadow store inserts NULL (not the default).
 - **CHECK**: CHECK constraints are NOT triggered (ZTD rewrites to CTE-based operations).
 - **GENERATED COLUMNS**: Generated column values are typically NULL in shadow queries.

@@ -406,6 +406,9 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.152 | `*LibraryLendingTest` | V | V | V | V | 3-table JOIN, date CASE overdue, date diff late fees, LEFT JOIN availability, member stats |
 | SPEC-10.2.153 | `*SkillMatrixTest` | V | V | V | V | HAVING COUNT = scalar subquery, LEFT JOIN COALESCE gap, SUM CASE cross-tab, MIN HAVING |
 | SPEC-10.2.154 | `*ParkingGarageTest` | V | V | V | V | COUNT occupancy, ROUND capacity %, COALESCE SUM revenue, double LEFT JOIN IS NULL |
+| SPEC-10.2.155 | `*LeaveBalanceTest` | V | V | V | V | 3-table JOIN SUM, LEFT JOIN COALESCE balance, self-join overlap, SUM CASE dept cross-tab, UPDATE+verify |
+| SPEC-10.2.156 | `*UsageMeteringTest` | V | V | V | V | SUBSTR month GROUP BY, ROUND CAST utilization %, HAVING quota threshold, LEFT JOIN COALESCE overage |
+| SPEC-10.2.157 | `*DocumentWorkflowTest` | V | V | V | V | LEFT JOIN CASE quorum, SUM CASE reviewer workload, correlated MAX subquery, UPDATE status transition |
 
 ## 11. Known Issues (Selected)
 

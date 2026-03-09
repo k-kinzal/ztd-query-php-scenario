@@ -1388,3 +1388,30 @@ Verified patterns: 3-table JOIN + COUNT + ROUND AVG + MIN (skill summary), HAVIN
 A parking garage management system with levels (capacity), passes (monthly/annual), and entry/exit records works correctly through ZTD shadow store. The scenario exercises COUNT with GROUP BY for current occupancy per level, LEFT JOIN with ROUND percentage for capacity utilization, GROUP BY SUBSTR for daily entry statistics with COALESCE SUM, LEFT JOIN entries to passes with COUNT for pass holder activity, LEFT JOIN with SUM and COALESCE for revenue by level, LEFT JOIN with IS NULL for identifying non-pass vehicles still parked, and prepared statement with JOIN for vehicle history lookup.
 
 Verified patterns: COUNT + GROUP BY + IS NULL filter (occupancy), LEFT JOIN + ROUND percentage (utilization), GROUP BY SUBSTR + COUNT + COALESCE SUM (daily stats), LEFT JOIN + COUNT (pass holder activity), LEFT JOIN + COALESCE SUM (revenue by level), double LEFT JOIN + IS NULL (non-pass vehicles), prepared JOIN (vehicle history), physical isolation.
+
+## SPEC-10.2.155 Employee leave balance
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/LeaveBalanceTest`, `Pdo/MysqlLeaveBalanceTest`, `Pdo/PostgresLeaveBalanceTest`, `Pdo/SqliteLeaveBalanceTest`
+
+An employee leave management system with employees, leave types (annual/sick/personal with quotas), and leave requests (with status workflow) works correctly through ZTD shadow store. The scenario exercises 3-table JOIN with SUM GROUP BY for approved leave totals, LEFT JOIN with COALESCE(SUM, 0) for remaining balance calculation per leave type, self-join overlap detection for conflicting date ranges, SUM CASE cross-tab for department-level status breakdown (approved/pending/rejected days), UPDATE status transition followed by aggregate verification, and prepared statement with date range BETWEEN filtering.
+
+Verified patterns: 3-table JOIN + SUM GROUP BY (approved totals), LEFT JOIN + COALESCE SUM (remaining balance), self-join date overlap detection, SUM CASE cross-tab (department overview), UPDATE + aggregate verify (approve and recheck), prepared BETWEEN (date range search), physical isolation.
+
+## SPEC-10.2.156 Tenant usage metering
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/UsageMeteringTest`, `Pdo/MysqlUsageMeteringTest`, `Pdo/PostgresUsageMeteringTest`, `Pdo/SqliteUsageMeteringTest`
+
+A SaaS tenant usage metering system with tenants (plan + quota), usage records (per endpoint per day), and overage charges works correctly through ZTD shadow store. The scenario exercises GROUP BY with SUBSTR date truncation for monthly aggregation, GROUP BY with SUM + COUNT for endpoint breakdown, ROUND with CAST division for quota utilization percentage, CASE for over/under status, HAVING with cross-table threshold for over-quota detection, LEFT JOIN with COALESCE for overage charge lookup, and prepared statement with 3 parameters (tenant + date range).
+
+Verified patterns: GROUP BY SUBSTR month + SUM (monthly summary), GROUP BY endpoint + SUM + COUNT (breakdown), ROUND CAST division percentage (utilization), CASE over/under (status label), HAVING SUM > quota (threshold), LEFT JOIN + COALESCE (overage charges), prepared 3-param (tenant + date range), physical isolation.
+
+## SPEC-10.2.157 Document workflow pipeline
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/DocumentWorkflowTest`, `Pdo/MysqlDocumentWorkflowTest`, `Pdo/PostgresDocumentWorkflowTest`, `Pdo/SqliteDocumentWorkflowTest`
+
+A document publishing workflow with documents (draft/review/approved/published status), reviewers (with expertise), and reviews (approve/reject/comment decisions) works correctly through ZTD shadow store. The scenario exercises GROUP BY status for document summary, LEFT JOIN with conditional filter and CASE for quorum check (>= 2 approvals), LEFT JOIN with SUM CASE for reviewer workload cross-tab (approve/reject/comment counts), WHERE + LEFT JOIN + HAVING for under-quorum documents in review, UPDATE status transition with subsequent verification, correlated MAX subquery in WHERE for latest review per document, and prepared statement for reviewer document lookup.
+
+Verified patterns: GROUP BY COUNT (status summary), LEFT JOIN + CASE quorum (approval check), LEFT JOIN + SUM CASE cross-tab (reviewer workload), HAVING < threshold (awaiting review), UPDATE + verify (publish transition), correlated MAX subquery in WHERE (latest review), prepared JOIN (reviewer lookup), physical isolation.

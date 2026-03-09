@@ -1012,3 +1012,41 @@ Fresh `query()` calls correctly reflect mutations. Only re-executed prepared SEL
 Root cause: The CTE-rewritten SQL is baked into the inner PDO prepared statement at first `execute()` time. On subsequent `execute()` calls, the shadow store CTE data is not regenerated.
 
 Workaround: Use `query()` instead of re-executing a prepared SELECT, or prepare a new statement for each execution after DML mutations.
+
+## SPEC-11.PG-DOLLAR-QUOTING `[Issue #88]` Dollar-quoted strings break CTE rewriter (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresDollarQuotingTest`, `Pdo/PostgresStringLiteralTableNameTest`
+
+PostgreSQL dollar-quoted string constants (`$$...$$` and `$tag$...$tag$`) are not recognized by the CTE rewriter. The rewriter strips the `$$` delimiters and attempts to rewrite table name references found inside the string literal, producing invalid SQL.
+
+Affected patterns:
+- `UPDATE t SET col = $$text containing t reference$$` — syntax error
+- `INSERT INTO t VALUES ($$text$$)` — syntax error
+- `SELECT ... WHERE col = $$value$$` — syntax error on some patterns
+- `$tag$...$tag$` tagged dollar-quoting — same issue
+- `$$$$` empty dollar-quoted string — syntax error
+
+Root cause: The `stripStringLiterals` method in the CTE rewriter does not handle PostgreSQL dollar-quoting syntax. It only strips single-quoted strings, so dollar-quoted content is parsed as SQL tokens.
+
+Workaround: Use standard single-quoted strings with doubled single-quote escaping (`''`) instead of dollar-quoting.
+
+## SPEC-11.PG-ESCAPE-STRING `[Issue #89]` E-string escape syntax breaks CTE rewriter (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresEscapeStringTest`, `Pdo/PostgresStringLiteralTableNameTest`
+
+PostgreSQL escape string syntax (`E'...'`) is not recognized by the CTE rewriter. The `E` prefix is treated as a separate identifier token, causing the rewriter to produce SQL like `WHERE E id = 1` instead of correctly handling the escape string as a string literal.
+
+Affected patterns:
+- `UPDATE t SET col = E'text\nwith\tescapes' WHERE id = 1` — `E` becomes stray token
+- `INSERT INTO t VALUES (E'escaped\\string')` — may produce syntax error
+- Any DML using E-string syntax in SET or VALUES clauses
+
+The issue only affects DML statements (INSERT, UPDATE, DELETE) that go through CTE rewriting. SELECT queries with E-strings in WHERE clauses appear to work because the E-string is on the comparison side rather than being rewritten.
+
+Root cause: The CTE rewriter's string literal stripping does not account for the `E` prefix on PostgreSQL escape strings.
+
+Workaround: Use standard single-quoted strings with PostgreSQL's default `standard_conforming_strings = on` setting, or use prepared statement parameters instead of E-string literals.

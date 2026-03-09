@@ -403,6 +403,9 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.149 | `*ContentModerationQueueTest` | V | V | V | V | CASE IN GROUP BY alias, NOT EXISTS, COUNT GROUP BY reason, prepared JOIN |
 | SPEC-10.2.150 | `*ClassroomQuizScoringTest` | V | V | V | V | 4-table JOIN CASE answer match, HAVING dynamic threshold, derived table AVG |
 | SPEC-10.2.151 | `*OnboardingChecklistTest` | V | V | V | V | Scalar subquery %, NOT EXISTS outstanding, CASE status labels, INSERT+verify |
+| SPEC-10.2.152 | `*LibraryLendingTest` | V | V | V | V | 3-table JOIN, date CASE overdue, date diff late fees, LEFT JOIN availability, member stats |
+| SPEC-10.2.153 | `*SkillMatrixTest` | V | V | V | V | HAVING COUNT = scalar subquery, LEFT JOIN COALESCE gap, SUM CASE cross-tab, MIN HAVING |
+| SPEC-10.2.154 | `*ParkingGarageTest` | V | V | V | V | COUNT occupancy, ROUND capacity %, COALESCE SUM revenue, double LEFT JOIN IS NULL |
 
 ## 11. Known Issues (Selected)
 

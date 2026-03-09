@@ -1361,3 +1361,30 @@ Verified patterns: 4-table JOIN + CASE answer match + SUM/COUNT ROUND (score %),
 An employee onboarding checklist system with departments, employees, checklist items, and completions works correctly through ZTD shadow store. The scenario exercises LEFT JOIN with COUNT and scalar subquery for completion percentage per employee, NOT EXISTS for outstanding items, derived table JOIN with AVG ROUND for department-level progress summary, CASE with scalar subquery divisor for status labels (complete/in_progress/behind), INSERT followed by SELECT verification for multi-step workflow, LEFT JOIN with COUNT DISTINCT and COUNT GROUP BY category for cross-employee category completion, and prepared statement with scalar subquery for department-filtered lookup.
 
 Verified patterns: LEFT JOIN COUNT + scalar subquery ROUND (completion %), NOT EXISTS (outstanding items), derived table JOIN + AVG ROUND (department progress), CASE + scalar subquery (status labels), INSERT + SELECT verification (multi-step), LEFT JOIN COUNT DISTINCT + GROUP BY category (category breakdown), prepared statement (department filter), physical isolation. SQLite requires `WHERE 1=1` workaround in bare scalar subqueries (SPEC-11.BARE-SUBQUERY-REWRITE).
+
+## SPEC-10.2.152 Library book lending
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/LibraryLendingTest`, `Pdo/MysqlLibraryLendingTest`, `Pdo/PostgresLibraryLendingTest`, `Pdo/SqliteLibraryLendingTest`
+
+A library book lending system with books, members, and loan records works correctly through ZTD shadow store. The scenario exercises 3-table JOIN for currently borrowed books (WHERE return_date IS NULL), CASE WHEN with date comparison for overdue detection, platform-specific date arithmetic for late fee calculation (JULIANDAY on SQLite, DATEDIFF on MySQL, date subtraction on PostgreSQL), LEFT JOIN with CASE for book availability status, LEFT JOIN with COUNT and SUM CASE for member borrowing statistics (total loans, distinct books, currently out), GROUP BY category with HAVING COUNT for category popularity filtering, and prepared statement with JOIN for member loan lookup.
+
+Verified patterns: 3-table JOIN + IS NULL filter (currently borrowed), CASE WHEN date comparison (overdue detection), platform-specific date diff + ROUND arithmetic (late fees), LEFT JOIN + CASE (availability), LEFT JOIN + COUNT + COUNT DISTINCT + SUM CASE (member stats), GROUP BY + HAVING COUNT (category popularity), prepared JOIN (member loans), physical isolation.
+
+## SPEC-10.2.153 Employee skill matrix
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SkillMatrixTest`, `Pdo/MysqlSkillMatrixTest`, `Pdo/PostgresSkillMatrixTest`, `Pdo/SqliteSkillMatrixTest`
+
+An employee skill matrix system with employees, skills, employee_skills (junction with level), and project requirements works correctly through ZTD shadow store. The scenario exercises 3-table JOIN with GROUP BY for skill summary per employee (COUNT, ROUND AVG, MIN), HAVING COUNT = (SELECT COUNT) for fully-qualified project matching (employees meeting all requirements), LEFT JOIN with COALESCE for skill gap analysis (missing or underqualified skills), SUM CASE cross-tab for skill level distribution (beginner/intermediate/expert), MIN with HAVING for minimum competency threshold, and prepared statement with JOIN and ORDER BY for employee skill lookup.
+
+Verified patterns: 3-table JOIN + COUNT + ROUND AVG + MIN (skill summary), HAVING COUNT = scalar subquery (fully-qualified matching), LEFT JOIN + COALESCE + compound WHERE (skill gap), SUM CASE cross-tab (level distribution), MIN + HAVING (minimum competency), prepared JOIN + ORDER BY (skill lookup), physical isolation.
+
+## SPEC-10.2.154 Parking garage
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ParkingGarageTest`, `Pdo/MysqlParkingGarageTest`, `Pdo/PostgresParkingGarageTest`, `Pdo/SqliteParkingGarageTest`
+
+A parking garage management system with levels (capacity), passes (monthly/annual), and entry/exit records works correctly through ZTD shadow store. The scenario exercises COUNT with GROUP BY for current occupancy per level, LEFT JOIN with ROUND percentage for capacity utilization, GROUP BY SUBSTR for daily entry statistics with COALESCE SUM, LEFT JOIN entries to passes with COUNT for pass holder activity, LEFT JOIN with SUM and COALESCE for revenue by level, LEFT JOIN with IS NULL for identifying non-pass vehicles still parked, and prepared statement with JOIN for vehicle history lookup.
+
+Verified patterns: COUNT + GROUP BY + IS NULL filter (occupancy), LEFT JOIN + ROUND percentage (utilization), GROUP BY SUBSTR + COUNT + COALESCE SUM (daily stats), LEFT JOIN + COUNT (pass holder activity), LEFT JOIN + COALESCE SUM (revenue by level), double LEFT JOIN + IS NULL (non-pass vehicles), prepared JOIN (vehicle history), physical isolation.

@@ -1606,3 +1606,10 @@ Self-joins where the same table is joined to itself up to 4 times with different
 **Tests:** `Pdo/MysqlDeleteWithSubqueryJoinTest`, `Pdo/PostgresDeleteWithSubqueryJoinTest`, `Pdo/SqliteDeleteWithSubqueryJoinTest`
 
 DELETE statements with WHERE clauses containing subqueries that JOIN other tables work correctly through CTE shadow data. Verified: DELETE WHERE IN (subquery filtering related table), DELETE WHERE NOT EXISTS (orphan detection), DELETE WHERE NOT IN (unordered items), DELETE with compound condition (discontinued AND NOT EXISTS), DELETE with multi-table subquery (subquery JOINs 2 tables), DELETE followed by JOIN verification of remaining data consistency, and prepared DELETE with subquery parameter. The CTE rewriter correctly handles the DELETE target table and subquery source tables simultaneously.
+
+## SPEC-10.2.187 INSERT...SELECT with multi-table JOIN and aggregates
+**Status:** Known Issue (see [SPEC-11.INSERT-SELECT-JOIN](11-known-issues.ears.md))
+**Platforms:** MySQLi (error), MySQL-PDO (error), PostgreSQL-PDO (NULL columns), SQLite-PDO (NULL columns)
+**Tests:** `Pdo/MysqlInsertSelectJoinAggregateTest`, `Pdo/PostgresInsertSelectJoinAggregateTest`, `Pdo/SqliteInsertSelectJoinAggregateTest`
+
+INSERT...SELECT with multi-table JOINs and aggregate functions (COUNT, SUM) fails or produces incorrect results. On MySQL, the InsertTransformer throws "Unknown column 'alias.col' in 'field list'" because it cannot resolve column references from JOINed table aliases. On PostgreSQL and SQLite, rows are inserted but non-PK columns from JOINed tables and aggregate expressions become NULL — extending SPEC-11.INSERT-SELECT-COMPUTED to multi-table JOIN sources. Some source columns (e.g. `c.region`) may preserve values while others (e.g. `c.name`) do not. INSERT...SELECT from a single table (no JOINs) works on MySQL as a workaround.

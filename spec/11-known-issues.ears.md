@@ -625,3 +625,27 @@ SELECT name FROM docs WHERE jsonb_exists(meta, 'reviewed');
 SELECT name FROM docs WHERE jsonb_exists_any(meta, array['reviewed', 'priority']);
 SELECT name FROM docs WHERE jsonb_exists_all(meta, array['author', 'reviewed']);
 ```
+
+## SPEC-11.INSERT-SELECT-JOIN INSERT...SELECT with multi-table JOIN produces incorrect results
+**Status:** Known Issue (not yet reported)
+**Platforms:** MySQL-PDO (error), MySQL-MySQLi (error), PostgreSQL-PDO (NULL columns), SQLite-PDO (NULL columns)
+**Related specs:** [SPEC-4.1a](04-write-operations.ears.md), SPEC-11.INSERT-SELECT-COMPUTED
+**Tests:** `Pdo/MysqlInsertSelectJoinAggregateTest`, `Pdo/PostgresInsertSelectJoinAggregateTest`, `Pdo/SqliteInsertSelectJoinAggregateTest`
+
+INSERT...SELECT with multi-table JOINs and aggregates fails or produces incorrect results across all platforms. The InsertTransformer cannot properly resolve column references from JOINed table aliases.
+
+**MySQL:** Throws `PDOException` with "Unknown column 'o.id' in 'field list'" — the InsertTransformer cannot resolve column references from JOINed table aliases at all. This is distinct from SPEC-11.MYSQL-INSERT-SELECT-STAR (which is about SELECT * column count mismatch).
+
+**PostgreSQL / SQLite:** Rows are inserted but non-PK columns from JOINed tables and aggregate functions (COUNT, SUM) become NULL. Some source columns (e.g. `c.region`) may preserve values while others (e.g. `c.name`) become NULL. This extends SPEC-11.INSERT-SELECT-COMPUTED to multi-table JOIN sources.
+
+```sql
+-- Fails on MySQL (Unknown column 'o.id'):
+INSERT INTO summary (id, customer_id, customer_name, total_orders, total_amount, region)
+SELECT c.id, c.id, c.name, COUNT(o.id), SUM(o.amount), c.region
+FROM customers c
+JOIN orders o ON o.customer_id = c.id
+GROUP BY c.id, c.name, c.region;
+
+-- Workaround on MySQL: INSERT...SELECT from a single table (no JOINs)
+-- No known workaround for correct aggregate values on PostgreSQL/SQLite
+```

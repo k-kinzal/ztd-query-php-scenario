@@ -755,3 +755,43 @@ Related: Issue #9 (UPDATE with IN subquery GROUP BY HAVING), Issue #22 (HAVING w
 When DELETE references the same table in both the target and the IN subquery with GROUP BY HAVING, the CTE rewriter incorrectly deletes all rows instead of only those matching the HAVING filter. This is the DELETE equivalent of Issue #11 (UPDATE variant).
 
 Related: Issue #11 (UPDATE self-referencing with GROUP BY HAVING).
+
+## SPEC-11.PG-ROW-VALUE-DML `[Issue #60]` Row value constructor in UPDATE/DELETE WHERE produces syntax error
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed); MySQL-PDO, MySQLi, SQLite-PDO (works correctly)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresRowValueInSubqueryTest`
+
+`UPDATE table SET col = val WHERE (col1, col2, col3) IN (SELECT ...)` and `DELETE FROM table WHERE (col1, col2) IN (SELECT ...)` produce a syntax error on PostgreSQL through the CTE rewriter. SELECT with the same row value pattern works correctly. MySQL (both PDO and MySQLi) and SQLite handle row value constructors in UPDATE/DELETE WHERE correctly.
+
+## SPEC-11.PG-CASE-SET-PREPARED `[Issue #61]` UPDATE SET CASE with prepared $N params is silently a no-op
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed); MySQL-PDO, MySQLi, SQLite-PDO (works correctly)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresUpdateCaseInSetTest`
+
+UPDATE statements with CASE expressions in the SET clause work correctly via `exec()`, but when using `prepare()` + `execute()` with `$N` parameters inside the CASE WHEN conditions, the UPDATE is silently a no-op — no rows are modified and no error is thrown. Non-prepared CASE in SET works on all platforms.
+
+Related: Issue #47 (TRIM/SUBSTRING FROM in SET), Issue #51 (correlated subquery in SET).
+
+## SPEC-11.PG-FILTER-PREPARED `[Issue #62]` Aggregate FILTER (WHERE col = $N) returns wrong results
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresAggregateFilterClauseTest`
+
+Aggregate FILTER clauses work correctly via `query()`, but when `prepare()` is used with `$N` parameters inside the FILTER condition — `SUM(revenue) FILTER (WHERE event_type = $1)` — the filtered aggregate returns 0/NULL. The parameter inside FILTER is either not bound or bound to the wrong position.
+
+Related: Issue #22 (HAVING with prepared params), Issue #45 (UDF in WHERE with prepared params).
+
+## SPEC-11.PG-USING-PREPARED `[Issue #63]` JOIN USING with $N WHERE parameter returns empty
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed); MySQL-PDO, MySQLi, SQLite-PDO (works correctly)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresJoinUsingSyntaxTest`
+
+SELECT with `JOIN ... USING (col)` works correctly via `query()`, but when combined with `prepare()` and `$N` parameters in the WHERE clause, the query returns empty results. The same query with `JOIN ... ON t1.col = t2.col` syntax and prepared params works correctly. The USING keyword likely confuses parameter position tracking in the CTE rewriter.
+
+Workaround: Use `JOIN ... ON t1.col = t2.col` instead of `USING (col)`.
+
+Related: Issue #22 (HAVING with prepared params), Issue #62 (FILTER with prepared params).

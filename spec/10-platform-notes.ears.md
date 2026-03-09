@@ -1956,3 +1956,17 @@ UPDATE with multiple non-correlated subqueries without WHERE in SET (`SET col1 =
 **Tests:** `Pdo/MysqlUpdateJoinPatternTest`, `Mysqli/MultiSubqueryUpdateSetTest`
 
 MySQL UPDATE JOIN with a derived table (subquery in JOIN position) fails with "Identifier name is too long" — the CTE rewriter treats the subquery as a table identifier. UPDATE JOIN with direct tables works correctly. Workaround: use correlated subqueries in SET instead.
+
+## SPEC-10.2.237 INSERT...SELECT with GROUP BY and prepared params
+**Status:** Partial (extends Issue #20, #22)
+**Platforms:** MySQL-PDO (pass), SQLite-PDO (fails — NULLs), PostgreSQL-PDO (fails — NULLs)
+**Tests:** `Pdo/SqliteInsertSelectGroupByWithParamsTest`, `Pdo/MysqlInsertSelectGroupByWithParamsTest`, `Pdo/PostgresInsertSelectGroupByWithParamsTest`
+
+INSERT...SELECT with GROUP BY and aggregate functions (COUNT, SUM) stores NULL aggregates on SQLite and PostgreSQL (extends Issue #20). Both exec() and prepared statement paths produce NULLs. Additionally, INSERT...SELECT with GROUP BY HAVING and prepared params returns 0 rows on SQLite (extends Issue #22). MySQL handles all variants correctly, including prepared params. INSERT OR REPLACE with computed expressions (UPPER, concatenation, arithmetic) in VALUES works correctly on SQLite.
+
+## SPEC-10.2.238 INSERT OR REPLACE with computed expressions in VALUES
+**Status:** Verified
+**Platforms:** SQLite-PDO (pass)
+**Tests:** `Pdo/SqliteInsertOrReplaceComputedTest`
+
+INSERT OR REPLACE with function calls (UPPER, LOWER), string concatenation (||), and arithmetic expressions (1+1) in the VALUES clause works correctly on SQLite through ZTD. Both replacement (conflict) and insert (no conflict) paths produce correct computed values. No duplicate PKs created after multiple replaces.

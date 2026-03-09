@@ -109,9 +109,9 @@ PDO prepared REPLACE INTO and INSERT ... ON CONFLICT DO UPDATE do NOT update exi
 ## SPEC-11.SQLITE-HAVING-PARAMS `[Issue #22]` HAVING with prepared params (SQLite, PostgreSQL)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed for complex multi-table queries)
-**Tests:** `Pdo/SqlitePreparedAggregateParamsTest`, `Pdo/SqliteSubscriptionRenewalTest`, `Pdo/SqliteStudentGradeReportTest`, `Pdo/PostgresSubscriptionRenewalTest`, `Pdo/PostgresStudentGradeReportTest`
+**Tests:** `Pdo/SqlitePreparedAggregateParamsTest`, `Pdo/SqliteSubscriptionRenewalTest`, `Pdo/SqliteStudentGradeReportTest`, `Pdo/PostgresSubscriptionRenewalTest`, `Pdo/PostgresStudentGradeReportTest`, `Pdo/SqliteInsertSelectGroupByWithParamsTest`
 
-On SQLite, HAVING with bound parameters returns empty results. HAVING with literal values works. MySQL works correctly. PostgreSQL also returns empty for complex multi-table HAVING with `$N` params (e.g., `HAVING SUM(amount) >= $2` with JOINs), extending this issue beyond SQLite-only.
+On SQLite, HAVING with bound parameters returns empty results. HAVING with literal values works. MySQL works correctly. PostgreSQL also returns empty for complex multi-table HAVING with `$N` params (e.g., `HAVING SUM(amount) >= $2` with JOINs), extending this issue beyond SQLite-only. Also affects INSERT...SELECT with GROUP BY HAVING and prepared params — returns 0 rows on SQLite.
 
 ## SPEC-11.MYSQL-BACKSLASH `[Issue #5]` Backslash corruption in MySQL shadow store
 **Status:** Known Issue
@@ -203,9 +203,9 @@ SELECT immediately after CTAS fails with "no such table". After INSERT, original
 **Status:** Known Issue
 **Platforms:** SQLite-PDO, PostgreSQL-PDO
 **Related specs:** [SPEC-4.1a](04-write-operations.ears.md)
-**Tests:** `Pdo/SqliteInsertSelectComputedColumnsTest`, `Pdo/SqliteInsertSelectAggregateTest`
+**Tests:** `Pdo/SqliteInsertSelectComputedColumnsTest`, `Pdo/SqliteInsertSelectAggregateTest`, `Pdo/SqliteInsertSelectGroupByWithParamsTest`, `Pdo/PostgresInsertSelectGroupByWithParamsTest`
 
-Computed columns and aggregated values become NULL when using INSERT...SELECT on SQLite and PostgreSQL. MySQL works correctly.
+Computed columns and aggregated values become NULL when using INSERT...SELECT on SQLite and PostgreSQL. MySQL works correctly. This extends to GROUP BY with aggregate functions (COUNT, SUM) — both exec() and prepared statement paths produce NULL aggregates on SQLite and PostgreSQL.
 
 ## SPEC-11.MYSQL-COMMA-UPDATE `[Issue #44]` MySQL comma-syntax multi-table UPDATE
 **Status:** Known Issue

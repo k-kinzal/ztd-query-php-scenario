@@ -1,0 +1,211 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Pdo;
+
+use PDO;
+use Tests\Support\AbstractPostgresPdoTestCase;
+
+/**
+ * Tests a product catalog workflow through ZTD shadow store (PostgreSQL PDO).
+ * Covers self-JOIN for category hierarchy, faceted counts with GROUP BY,
+ * price range filtering, low stock alerts, and physical isolation.
+ * @spec SPEC-10.2.78
+ */
+class PostgresProductCatalogTest extends AbstractPostgresPdoTestCase
+{
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE pg_pc_categories (
+                id INTEGER PRIMARY KEY,
+                name VARCHAR(100),
+                parent_id INTEGER
+            )',
+            'CREATE TABLE pg_pc_products (
+                id INTEGER PRIMARY KEY,
+                name VARCHAR(200),
+                category_id INTEGER,
+                price NUMERIC(10,2),
+                stock_qty INTEGER,
+                status VARCHAR(20)
+            )',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_pc_products', 'pg_pc_categories'];
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO pg_pc_categories VALUES (1, 'Electronics', NULL)");
+        $this->pdo->exec("INSERT INTO pg_pc_categories VALUES (2, 'Phones', 1)");
+        $this->pdo->exec("INSERT INTO pg_pc_categories VALUES (3, 'Laptops', 1)");
+        $this->pdo->exec("INSERT INTO pg_pc_categories VALUES (4, 'Clothing', NULL)");
+        $this->pdo->exec("INSERT INTO pg_pc_categories VALUES (5, 'Shoes', 4)");
+
+        $this->pdo->exec("INSERT INTO pg_pc_products VALUES (1, 'iPhone 15', 2, 999.99, 50, 'active')");
+        $this->pdo->exec("INSERT INTO pg_pc_products VALUES (2, 'Galaxy S24', 2, 849.99, 3, 'active')");
+        $this->pdo->exec("INSERT INTO pg_pc_products VALUES (3, 'MacBook Pro', 3, 2499.99, 20, 'active')");
+        $this->pdo->exec("INSERT INTO pg_pc_products VALUES (4, 'ThinkPad X1', 3, 1599.99, 2, 'active')");
+        $this->pdo->exec("INSERT INTO pg_pc_products VALUES (5, 'Running Shoes', 5, 129.99, 100, 'active')");
+        $this->pdo->exec("INSERT INTO pg_pc_products VALUES (6, 'Boots', 5, 199.99, 0, 'discontinued')");
+    }
+
+    /**
+     * Self-JOIN to get parent categories with their children count.
+     */
+    public function testCategoryTreeSelfJoin(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT c1.id, c1.name AS parent_name, COUNT(c2.id) AS children_count
+             FROM pg_pc_categories c1
+             LEFT JOIN pg_pc_categories c2 ON c1.id = c2.parent_id
+             WHERE c1.parent_id IS NULL
+             GROUP BY c1.id, c1.name
+             ORDER BY c1.name"
+        );
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Clothing', $rows[0]['parent_name']);
+        $this->assertEquals(1, (int) $rows[0]['children_count']);
+        $this->assertSame('Electronics', $rows[1]['parent_name']);
+        $this->assertEquals(2, (int) $rows[1]['children_count']);
+    }
+
+    /**
+     * Products in a specific category using prepared JOIN.
+     */
+    public function testProductsInCategory(): void
+    {
+        $rows = $this->ztdPrepareAndExecute(
+            "SELECT p.name, p.price, c.name AS category_name
+             FROM pg_pc_products p
+             JOIN pg_pc_categories c ON c.id = p.category_id
+             WHERE p.category_id = ?
+             ORDER BY p.name",
+            [2]
+        );
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Galaxy S24', $rows[0]['name']);
+        $this->assertSame('Phones', $rows[0]['category_name']);
+        $this->assertSame('iPhone 15', $rows[1]['name']);
+    }
+
+    /**
+     * Faceted counts: how many products per category via LEFT JOIN.
+     */
+    public function testFacetedCountsByCategory(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT c.name AS category_name, COUNT(p.id) AS product_count
+             FROM pg_pc_categories c
+             LEFT JOIN pg_pc_products p ON p.category_id = c.id
+             GROUP BY c.id, c.name
+             ORDER BY c.name"
+        );
+
+        $this->assertCount(5, $rows);
+        $this->assertSame('Clothing', $rows[0]['category_name']);
+        $this->assertEquals(0, (int) $rows[0]['product_count']);
+        $this->assertSame('Electronics', $rows[1]['category_name']);
+        $this->assertEquals(0, (int) $rows[1]['product_count']);
+        $this->assertSame('Laptops', $rows[2]['category_name']);
+        $this->assertEquals(2, (int) $rows[2]['product_count']);
+        $this->assertSame('Phones', $rows[3]['category_name']);
+        $this->assertEquals(2, (int) $rows[3]['product_count']);
+        $this->assertSame('Shoes', $rows[4]['category_name']);
+        $this->assertEquals(2, (int) $rows[4]['product_count']);
+    }
+
+    /**
+     * Price range filter with prepared BETWEEN and ORDER BY.
+     */
+    public function testPriceRangeFilter(): void
+    {
+        $rows = $this->ztdPrepareAndExecute(
+            "SELECT p.name, p.price
+             FROM pg_pc_products p
+             WHERE p.price BETWEEN ? AND ?
+             ORDER BY p.price",
+            [100.00, 1000.00]
+        );
+
+        $this->assertCount(4, $rows);
+        $this->assertSame('Running Shoes', $rows[0]['name']);
+        $this->assertEqualsWithDelta(129.99, (float) $rows[0]['price'], 0.01);
+        $this->assertSame('Boots', $rows[1]['name']);
+        $this->assertEqualsWithDelta(199.99, (float) $rows[1]['price'], 0.01);
+        $this->assertSame('Galaxy S24', $rows[2]['name']);
+        $this->assertEqualsWithDelta(849.99, (float) $rows[2]['price'], 0.01);
+        $this->assertSame('iPhone 15', $rows[3]['name']);
+        $this->assertEqualsWithDelta(999.99, (float) $rows[3]['price'], 0.01);
+    }
+
+    /**
+     * Low stock alert: products below a threshold, JOINed with category for context.
+     */
+    public function testLowStockAlert(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT p.name, p.stock_qty, c.name AS category_name
+             FROM pg_pc_products p
+             JOIN pg_pc_categories c ON c.id = p.category_id
+             WHERE p.stock_qty < 5 AND p.status = 'active'
+             ORDER BY p.stock_qty"
+        );
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('ThinkPad X1', $rows[0]['name']);
+        $this->assertEquals(2, (int) $rows[0]['stock_qty']);
+        $this->assertSame('Laptops', $rows[0]['category_name']);
+        $this->assertSame('Galaxy S24', $rows[1]['name']);
+        $this->assertEquals(3, (int) $rows[1]['stock_qty']);
+    }
+
+    /**
+     * Update a category name and verify products JOIN still shows the new name.
+     */
+    public function testUpdateCategoryAndVerify(): void
+    {
+        $affected = $this->pdo->exec("UPDATE pg_pc_categories SET name = 'Smartphones' WHERE id = 2");
+        $this->assertSame(1, $affected);
+
+        $rows = $this->ztdQuery(
+            "SELECT p.name, c.name AS category_name
+             FROM pg_pc_products p
+             JOIN pg_pc_categories c ON c.id = p.category_id
+             WHERE p.category_id = 2
+             ORDER BY p.name"
+        );
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Smartphones', $rows[0]['category_name']);
+        $this->assertSame('Smartphones', $rows[1]['category_name']);
+    }
+
+    /**
+     * Physical isolation: shadow mutations don't reach physical tables.
+     */
+    public function testPhysicalIsolation(): void
+    {
+        $this->pdo->exec("INSERT INTO pg_pc_products VALUES (7, 'New Product', 2, 599.99, 10, 'active')");
+        $this->pdo->exec("UPDATE pg_pc_categories SET name = 'Mobile Phones' WHERE id = 2");
+
+        $rows = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM pg_pc_products");
+        $this->assertSame(7, (int) $rows[0]['cnt']);
+
+        $rows = $this->ztdQuery("SELECT name FROM pg_pc_categories WHERE id = 2");
+        $this->assertSame('Mobile Phones', $rows[0]['name']);
+
+        $this->pdo->disableZtd();
+        $rows = $this->pdo->query("SELECT COUNT(*) AS cnt FROM pg_pc_products")->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertSame(0, (int) $rows[0]['cnt']);
+    }
+}

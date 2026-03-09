@@ -202,6 +202,18 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.73 | `*OrderFulfillmentTest` | V | V | V | V | V |
 | SPEC-10.2.74 | `*SalesReportTest` | V | V | V | V | V |
 | SPEC-10.2.75 | `*RetryQueueTest` | V | V | V | V | V |
+| SPEC-10.2.76 | `*EmployeeSchedulingTest` | V | V | V | V | V |
+| SPEC-10.2.77 | `*GiftCardRedemptionTest` | V | V | V | V | V |
+| SPEC-10.2.78 | `*ProductCatalogTest` | V | V | V | V | V |
+| SPEC-10.2.79 | `*EmailCampaignTest` | V | V | V | V | V |
+| SPEC-10.2.80 | `*TimeTrackingTest` | V | V | V | V | V |
+| SPEC-10.2.81 | `*WarrantyClaimTest` | V | V | V | V | V |
+| SPEC-10.2.82 | `*ClassEnrollmentTest` | V | V | V | V | V |
+| SPEC-10.2.83 | `*PropertyListingTest` | V | V | V | V | V |
+| SPEC-10.2.84 | `*DocumentTaggingTest` | V | V | V | V | V |
+| SPEC-10.2.85 | `*AuctionBiddingTest` | V | V | V | V | V |
+| SPEC-10.2.86 | `*RecipeIngredientTest` | V | V | V | V | V |
+| SPEC-10.2.87 | `*ProjectMilestoneTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -261,6 +273,18 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-4.1 | `*OrderFulfillmentTest` | V | V | V | V | Partial/complete fulfillment, conditional COUNT, multi-table JOIN |
 | SPEC-3.3 | `*SalesReportTest` | V | V | V | V | CASE pivot by quarter, HAVING threshold, net sales with returns |
 | SPEC-4.2 | `*RetryQueueTest` | V | V | V | V | Priority queue, retry state machine, job metrics, LEFT JOIN logs |
+| SPEC-3.2 | `*EmployeeSchedulingTest` | V | V | V | V | Date BETWEEN prepared, overlap detection, shift swap |
+| SPEC-3.2 | `*GiftCardRedemptionTest` | V | V | V | V | Prepare-once/execute-many, self-referencing UPDATE arithmetic |
+| SPEC-3.3 | `*ProductCatalogTest` | V | V | V | V | Self-JOIN hierarchy, faceted COUNT, prepared BETWEEN |
+| SPEC-3.3 | `*EmailCampaignTest` | V | V | V | V | Batch INSERT, CASE COUNT percentages, campaign comparison |
+| SPEC-3.3 | `*TimeTrackingTest` | V | V | V | V | 3-table SUM, HAVING over-budget, billable hours |
+| SPEC-4.2 | `*WarrantyClaimTest` | V | V | V | V | State machine, date arithmetic, cross-table validation |
+| SPEC-3.3 | `*ClassEnrollmentTest` | V | V | V | V | COUNT capacity, EXISTS prerequisite, waitlist promotion |
+| SPEC-3.2 | `*PropertyListingTest` | V | V | V | V | Multi-filter prepared, BETWEEN, LIMIT/OFFSET pagination |
+| SPEC-3.3 | `*DocumentTaggingTest` | V | V | V | V | Many-to-many junction, HAVING COUNT intersection, anti-join |
+| SPEC-3.3 | `*AuctionBiddingTest` | V | V | V | V | MAX subquery, bid history, COUNT DISTINCT HAVING |
+| SPEC-3.3 | `*RecipeIngredientTest` | V | V | V | V | Arithmetic scaling, SUM aggregation, LEFT JOIN substitutions |
+| SPEC-3.3 | `*ProjectMilestoneTest` | V | V | V | V | Completion percentage, overdue detection, HAVING risk |
 
 ## 11. Known Issues (Selected)
 

@@ -1,0 +1,222 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Pdo;
+
+use PDO;
+use Tests\Support\AbstractPostgresPdoTestCase;
+
+/**
+ * Tests an email campaign workflow through ZTD shadow store (PostgreSQL PDO).
+ * Covers batch status updates, percentage calculations via CASE,
+ * delivery metrics, campaign comparison, and physical isolation.
+ * @spec SPEC-10.2.79
+ */
+class PostgresEmailCampaignTest extends AbstractPostgresPdoTestCase
+{
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE pg_ec_campaigns (
+                id INTEGER PRIMARY KEY,
+                name VARCHAR(100),
+                subject VARCHAR(200),
+                status VARCHAR(20),
+                sent_at TIMESTAMP
+            )',
+            'CREATE TABLE pg_ec_recipients (
+                id INTEGER PRIMARY KEY,
+                campaign_id INTEGER,
+                email VARCHAR(200),
+                delivery_status VARCHAR(20),
+                opened_at TIMESTAMP
+            )',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['pg_ec_recipients', 'pg_ec_campaigns'];
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO pg_ec_campaigns VALUES (1, 'Spring Sale', 'Big Spring Deals!', 'sent', '2026-03-01 09:00:00')");
+        $this->pdo->exec("INSERT INTO pg_ec_campaigns VALUES (2, 'Summer Preview', 'Summer is Coming', 'draft', NULL)");
+
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (1, 1, 'alice@example.com', 'delivered', '2026-03-01 10:00:00')");
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (2, 1, 'bob@example.com', 'delivered', '2026-03-01 11:30:00')");
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (3, 1, 'charlie@example.com', 'delivered', NULL)");
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (4, 1, 'diana@example.com', 'bounced', NULL)");
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (5, 1, 'eve@example.com', 'pending', NULL)");
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (6, 1, 'frank@example.com', 'delivered', '2026-03-02 08:00:00')");
+    }
+
+    /**
+     * Campaign overview: count recipients and delivered count via CASE.
+     */
+    public function testCampaignOverview(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT c.name,
+                    COUNT(r.id) AS total_recipients,
+                    SUM(CASE WHEN r.delivery_status = 'delivered' THEN 1 ELSE 0 END) AS delivered_count
+             FROM pg_ec_campaigns c
+             LEFT JOIN pg_ec_recipients r ON r.campaign_id = c.id
+             GROUP BY c.id, c.name
+             ORDER BY c.id"
+        );
+
+        $this->assertCount(2, $rows);
+
+        $this->assertSame('Spring Sale', $rows[0]['name']);
+        $this->assertEquals(6, (int) $rows[0]['total_recipients']);
+        $this->assertEquals(4, (int) $rows[0]['delivered_count']);
+
+        $this->assertSame('Summer Preview', $rows[1]['name']);
+        $this->assertEquals(0, (int) $rows[1]['total_recipients']);
+    }
+
+    /**
+     * Send a campaign: update status and batch insert recipients.
+     */
+    public function testSendCampaign(): void
+    {
+        $affected = $this->pdo->exec("UPDATE pg_ec_campaigns SET status = 'sent', sent_at = '2026-03-09 10:00:00' WHERE id = 2");
+        $this->assertSame(1, $affected);
+
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (7, 2, 'grace@example.com', 'pending', NULL)");
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (8, 2, 'hank@example.com', 'pending', NULL)");
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (9, 2, 'ivy@example.com', 'pending', NULL)");
+
+        $rows = $this->ztdQuery("SELECT status, sent_at FROM pg_ec_campaigns WHERE id = 2");
+        $this->assertSame('sent', $rows[0]['status']);
+        $this->assertNotNull($rows[0]['sent_at']);
+
+        $rows = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM pg_ec_recipients WHERE campaign_id = 2");
+        $this->assertEquals(3, (int) $rows[0]['cnt']);
+    }
+
+    /**
+     * Track delivery: update multiple recipients' delivery status using IN clause.
+     */
+    public function testTrackDelivery(): void
+    {
+        $affected = $this->pdo->exec("UPDATE pg_ec_recipients SET delivery_status = 'delivered' WHERE id IN (5)");
+        $this->assertSame(1, $affected);
+
+        $rows = $this->ztdQuery(
+            "SELECT id, delivery_status FROM pg_ec_recipients WHERE id = 5"
+        );
+        $this->assertSame('delivered', $rows[0]['delivery_status']);
+
+        $rows = $this->ztdQuery(
+            "SELECT COUNT(*) AS cnt FROM pg_ec_recipients
+             WHERE campaign_id = 1 AND delivery_status = 'delivered'"
+        );
+        $this->assertEquals(5, (int) $rows[0]['cnt']);
+    }
+
+    /**
+     * Open rate calculation using CASE to count opened vs total, grouped by campaign.
+     */
+    public function testOpenRateCalculation(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT c.name,
+                    COUNT(r.id) AS total,
+                    SUM(CASE WHEN r.opened_at IS NOT NULL THEN 1 ELSE 0 END) AS opened_count
+             FROM pg_ec_campaigns c
+             JOIN pg_ec_recipients r ON r.campaign_id = c.id
+             GROUP BY c.id, c.name
+             ORDER BY c.id"
+        );
+
+        $this->assertCount(1, $rows);
+        $this->assertSame('Spring Sale', $rows[0]['name']);
+        $this->assertEquals(6, (int) $rows[0]['total']);
+        $this->assertEquals(3, (int) $rows[0]['opened_count']);
+    }
+
+    /**
+     * Bounce handling: mark as bounced and verify count changes.
+     */
+    public function testBounceHandling(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT COUNT(*) AS cnt FROM pg_ec_recipients
+             WHERE campaign_id = 1 AND delivery_status = 'bounced'"
+        );
+        $this->assertEquals(1, (int) $rows[0]['cnt']);
+
+        $affected = $this->pdo->exec("UPDATE pg_ec_recipients SET delivery_status = 'bounced' WHERE id = 3");
+        $this->assertSame(1, $affected);
+
+        $rows = $this->ztdQuery(
+            "SELECT COUNT(*) AS cnt FROM pg_ec_recipients
+             WHERE campaign_id = 1 AND delivery_status = 'bounced'"
+        );
+        $this->assertEquals(2, (int) $rows[0]['cnt']);
+
+        $rows = $this->ztdQuery(
+            "SELECT COUNT(*) AS cnt FROM pg_ec_recipients
+             WHERE campaign_id = 1 AND delivery_status = 'delivered'"
+        );
+        $this->assertEquals(3, (int) $rows[0]['cnt']);
+    }
+
+    /**
+     * Campaign comparison: two campaigns side by side with LEFT JOIN metrics.
+     */
+    public function testCampaignComparison(): void
+    {
+        $this->pdo->exec("UPDATE pg_ec_campaigns SET status = 'sent', sent_at = '2026-03-09 10:00:00' WHERE id = 2");
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (7, 2, 'grace@example.com', 'delivered', '2026-03-09 11:00:00')");
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (8, 2, 'hank@example.com', 'delivered', NULL)");
+
+        $rows = $this->ztdQuery(
+            "SELECT c.name, c.status,
+                    COUNT(r.id) AS total_recipients,
+                    SUM(CASE WHEN r.delivery_status = 'delivered' THEN 1 ELSE 0 END) AS delivered,
+                    SUM(CASE WHEN r.opened_at IS NOT NULL THEN 1 ELSE 0 END) AS opened
+             FROM pg_ec_campaigns c
+             LEFT JOIN pg_ec_recipients r ON r.campaign_id = c.id
+             GROUP BY c.id, c.name, c.status
+             ORDER BY c.id"
+        );
+
+        $this->assertCount(2, $rows);
+
+        $this->assertSame('Spring Sale', $rows[0]['name']);
+        $this->assertEquals(6, (int) $rows[0]['total_recipients']);
+        $this->assertEquals(4, (int) $rows[0]['delivered']);
+        $this->assertEquals(3, (int) $rows[0]['opened']);
+
+        $this->assertSame('Summer Preview', $rows[1]['name']);
+        $this->assertEquals(2, (int) $rows[1]['total_recipients']);
+        $this->assertEquals(2, (int) $rows[1]['delivered']);
+        $this->assertEquals(1, (int) $rows[1]['opened']);
+    }
+
+    /**
+     * Physical isolation: shadow mutations don't reach physical tables.
+     */
+    public function testPhysicalIsolation(): void
+    {
+        $this->pdo->exec("INSERT INTO pg_ec_recipients VALUES (7, 1, 'new@example.com', 'pending', NULL)");
+        $this->pdo->exec("UPDATE pg_ec_campaigns SET status = 'archived' WHERE id = 1");
+
+        $rows = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM pg_ec_recipients");
+        $this->assertSame(7, (int) $rows[0]['cnt']);
+
+        $rows = $this->ztdQuery("SELECT status FROM pg_ec_campaigns WHERE id = 1");
+        $this->assertSame('archived', $rows[0]['status']);
+
+        $this->pdo->disableZtd();
+        $rows = $this->pdo->query("SELECT COUNT(*) AS cnt FROM pg_ec_recipients")->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertSame(0, (int) $rows[0]['cnt']);
+    }
+}

@@ -669,3 +669,111 @@ Verified patterns: sales by region (LEFT JOIN + GROUP BY with CASE-filtered SUM)
 A job processing queue with priority ordering, retry logic, completion logging, and metrics reporting works correctly through ZTD shadow store on all platforms. The scenario exercises state machine transitions (pending → processing → completed/failed), retry count management with self-referencing arithmetic, priority-based queue ordering, and multi-table JOIN for job history.
 
 Verified patterns: pending jobs by priority (ORDER BY priority ASC, created_at ASC), start processing (UPDATE status with affected-row guard + INSERT log), complete job (UPDATE status + INSERT completion log with JOIN verification), fail and retry (UPDATE retry_count + 1, reset status to pending), max retries exceeded (mark as permanently failed), job metrics (GROUP BY status with COUNT/MAX aggregates), job history prepared statement (LEFT JOIN with GROUP BY for log count per job by type), physical isolation.
+
+## SPEC-10.2.76 Employee shift scheduling with overlap detection
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/EmployeeSchedulingTest`, `Pdo/MysqlEmployeeSchedulingTest`, `Pdo/PostgresEmployeeSchedulingTest`, `Pdo/SqliteEmployeeSchedulingTest`
+
+An employee scheduling system with shift assignments, overlap detection, shift swapping, and department coverage reporting works correctly through ZTD shadow store on all platforms. The scenario exercises prepared statements with date range BETWEEN for lookup, multi-condition WHERE for overlap detection, UPDATE of two rows for shift swapping, and GROUP BY with HAVING for coverage checks.
+
+Verified patterns: list shifts by date range (prepared BETWEEN with JOIN), assign shift (INSERT + JOIN verification), schedule conflict detection (WHERE employee_id = ? AND shift_date = ? AND start_time < ? AND end_time > ?), swap shifts between employees (UPDATE two rows, verify both changed), department coverage report (COUNT GROUP BY department HAVING >= 1), cancel and reassign (DELETE + INSERT, verify count unchanged), physical isolation.
+
+## SPEC-10.2.77 Gift card balance tracking with prepare-once/execute-many
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/GiftCardRedemptionTest`, `Pdo/MysqlGiftCardRedemptionTest`, `Pdo/PostgresGiftCardRedemptionTest`, `Pdo/SqliteGiftCardRedemptionTest`
+
+A gift card system with balance tracking, redemption, reload, and expiry management works correctly through ZTD shadow store on all platforms. The scenario exercises prepared statement reuse (prepare once, execute for multiple cards), self-referencing arithmetic in UPDATE (balance = balance - amount), and CASE-based aggregation for balance ranges.
+
+Verified patterns: balance check with prepared reuse (SELECT WHERE code = ? executed for multiple codes), card redemption (UPDATE balance = balance - amount WHERE balance >= amount + INSERT transaction), card reload (UPDATE balance = balance + amount + INSERT transaction), transaction history (JOIN + ORDER BY DESC with prepared param), expire unused cards (UPDATE WHERE current_balance = initial_balance AND status = 'active'), balance summary (SUM GROUP BY status with CASE ranges), physical isolation.
+
+## SPEC-10.2.78 Product catalog with category hierarchy
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ProductCatalogTest`, `Pdo/MysqlProductCatalogTest`, `Pdo/PostgresProductCatalogTest`, `Pdo/SqliteProductCatalogTest`
+
+A product catalog with hierarchical categories, faceted counts, price filtering, and stock alerts works correctly through ZTD shadow store on all platforms. The scenario exercises self-JOIN for parent-child hierarchy, LEFT JOIN with GROUP BY for faceted counts, prepared BETWEEN for price range filtering, and multi-condition WHERE for low stock alerts.
+
+Verified patterns: category tree self-join (LEFT JOIN categories c2 ON c1.id = c2.parent_id, COUNT children), products in category (prepared JOIN with category_id param), faceted counts (LEFT JOIN + GROUP BY for product count per category), price range filter (prepared BETWEEN with ORDER BY), low stock alert (WHERE stock_qty < threshold with JOIN for category context), update category name (verify JOIN reflects new name), physical isolation.
+
+## SPEC-10.2.79 Email campaign delivery tracking
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/EmailCampaignTest`, `Pdo/MysqlEmailCampaignTest`, `Pdo/PostgresEmailCampaignTest`, `Pdo/SqliteEmailCampaignTest`
+
+An email campaign system with delivery tracking, open rate calculations, bounce handling, and campaign comparison works correctly through ZTD shadow store on all platforms. The scenario exercises batch INSERT for recipients, CASE-based conditional COUNT for delivery metrics, percentage calculations via COUNT ratios, and LEFT JOIN for campaign comparison.
+
+Verified patterns: campaign overview (COUNT with CASE for delivered/bounced/pending), send campaign (UPDATE status + batch INSERT recipients), track delivery (UPDATE delivery_status for multiple recipients), open rate calculation (COUNT(opened_at) / COUNT(*) via CASE GROUP BY campaign), bounce handling (UPDATE to bounced, verify metric changes), campaign comparison (LEFT JOIN with aggregate metrics side by side), physical isolation.
+
+## SPEC-10.2.80 Time tracking with billable hours aggregation
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/TimeTrackingTest`, `Pdo/MysqlTimeTrackingTest`, `Pdo/PostgresTimeTrackingTest`, `Pdo/SqliteTimeTrackingTest`
+
+A time tracking system with billable hours, client invoicing, budget tracking, and employee reporting works correctly through ZTD shadow store on all platforms. The scenario exercises SUM with GROUP BY across 3-table JOINs, HAVING for over-budget detection, prepared BETWEEN for date-range employee reports, and UPDATE for billable flag changes.
+
+Verified patterns: billable hours by project (SUM WHERE billable=1 GROUP BY project with JOIN), client invoice summary (3-table JOIN clients+projects+time_entries, SUM(hours * rate_per_hour) GROUP BY client), over-budget detection (SUM(hours) HAVING > budget_hours via JOIN), employee weekly hours (prepared BETWEEN + GROUP BY employee), add time entry (INSERT + verify SUM changes), mark non-billable (UPDATE billable=0, verify SUM decreases), physical isolation.
+
+## SPEC-10.2.81 Warranty claim state machine
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/WarrantyClaimTest`, `Pdo/MysqlWarrantyClaimTest`, `Pdo/PostgresWarrantyClaimTest`, `Pdo/SqliteWarrantyClaimTest`
+
+A warranty claim system with product registration, validity checking, claim filing, and multi-step status transitions works correctly through ZTD shadow store on all platforms. The scenario exercises cross-table validation (JOIN purchase+product for warranty period check), platform-specific date arithmetic, and conditional UPDATE with status guards.
+
+Verified patterns: file warranty claim (INSERT + 3-table JOIN verification), warranty validity check (date arithmetic: MySQL DATE_ADD, PostgreSQL interval, SQLite date() function), approve claim with guard (UPDATE WHERE status='filed', affected=1), reject claim (UPDATE status + set resolved_date), claim status report (COUNT CASE GROUP BY product), resolve claim (full lifecycle: filed → resolved with date), physical isolation.
+
+## SPEC-10.2.82 Class enrollment with capacity and prerequisites
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ClassEnrollmentTest`, `Pdo/MysqlClassEnrollmentTest`, `Pdo/PostgresClassEnrollmentTest`, `Pdo/SqliteClassEnrollmentTest`
+
+A class enrollment system with capacity limits, prerequisite validation, waitlist management, and promotion works correctly through ZTD shadow store on all platforms. The scenario exercises COUNT for capacity checking, EXISTS subquery for prerequisite validation, ORDER BY with LIMIT subquery for waitlist promotion, and multi-condition WHERE for roster queries.
+
+Verified patterns: enroll student (INSERT + JOIN verification), capacity check (COUNT WHERE status='enrolled' vs max_capacity), prerequisite validation (EXISTS subquery checking completed enrollment in prerequisite course), waitlist on full (INSERT with status='waitlisted'), promote from waitlist (UPDATE first waitlisted by enrolled_at ORDER BY), course roster (JOIN WHERE status='enrolled' ORDER BY name), physical isolation.
+
+## SPEC-10.2.83 Property listing with faceted search
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/PropertyListingTest`, `Pdo/MysqlPropertyListingTest`, `Pdo/PostgresPropertyListingTest`, `Pdo/SqlitePropertyListingTest`
+
+A property listing system with city-based search, price range filtering, multi-condition queries, pagination, and aggregate statistics works correctly through ZTD shadow store on all platforms. The scenario exercises prepared statements with multiple filter parameters, BETWEEN for price ranges, LIMIT/OFFSET for pagination, and GROUP BY with COUNT for listing statistics.
+
+Verified patterns: search by city (prepared WHERE city = ?), price range filter (prepared BETWEEN with ORDER BY price), multi-filter search (WHERE city = ? AND bedrooms >= ? AND price <= ?), paginated results (LIMIT/OFFSET, verify page sizes), listing counts by city (COUNT GROUP BY city ORDER BY count DESC), update listing price (UPDATE + verify via SELECT), physical isolation.
+
+## SPEC-10.2.84 Document tagging with many-to-many search
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/DocumentTaggingTest`, `Pdo/MysqlDocumentTaggingTest`, `Pdo/PostgresDocumentTaggingTest`, `Pdo/SqliteDocumentTaggingTest`
+
+A document tagging system with many-to-many relationships, tag cloud aggregation, intersection search, and untagged document detection works correctly through ZTD shadow store on all platforms. The scenario exercises 3-table JOINs through junction tables, HAVING COUNT(DISTINCT) for "all tags" matching, LEFT JOIN with IS NULL for anti-join, and GROUP BY with ORDER BY for tag cloud.
+
+Verified patterns: tag document (INSERT junction + JOIN verification), documents by tag (3-table JOIN with prepared tag name), tag cloud aggregation (COUNT GROUP BY tag ORDER BY count DESC), documents with all tags (HAVING COUNT(DISTINCT tag_id) = N for intersection), remove tag (DELETE junction + verify count), untagged documents (LEFT JOIN WHERE IS NULL), physical isolation.
+
+## SPEC-10.2.85 Auction bidding with highest bid tracking
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/AuctionBiddingTest`, `Pdo/MysqlAuctionBiddingTest`, `Pdo/PostgresAuctionBiddingTest`, `Pdo/SqliteAuctionBiddingTest`
+
+An auction bidding system with bid placement, highest bid tracking, auction closure, and bidder statistics works correctly through ZTD shadow store on all platforms. The scenario exercises MAX subquery for current highest bid, INSERT with UPDATE for price tracking, JOIN with ORDER BY DESC for bid history, and COUNT(DISTINCT) with HAVING for active bidder stats.
+
+Verified patterns: place bid (INSERT bid + UPDATE current_price), highest bid (prepared SELECT MAX(bid_amount) WHERE auction_id = ?), bid history (JOIN ORDER BY bid_amount DESC with prepared param), auction summary (COUNT + MAX + MIN per auction via JOIN), close auction (UPDATE status, verify winner via MAX JOIN), active bidder stats (COUNT(DISTINCT bidder_name) GROUP BY auction HAVING > 1), physical isolation.
+
+## SPEC-10.2.86 Recipe ingredient scaling and aggregation
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/RecipeIngredientTest`, `Pdo/MysqlRecipeIngredientTest`, `Pdo/PostgresRecipeIngredientTest`, `Pdo/SqliteRecipeIngredientTest`
+
+A recipe system with ingredient management, quantity scaling, shopping list aggregation, and substitution lookup works correctly through ZTD shadow store on all platforms. The scenario exercises arithmetic expressions in SELECT (quantity * factor), SUM GROUP BY for shopping list aggregation across multiple recipes, and LEFT JOIN for optional substitution lookup.
+
+Verified patterns: recipe ingredients (prepared JOIN with recipe_id), scaled quantities (SELECT quantity * 2 for double servings), shopping list aggregation (SUM(quantity) GROUP BY item across multiple recipes), available substitutions (LEFT JOIN substitutions, show items with/without alternatives), add ingredient (INSERT + verify count), ingredient count per recipe (COUNT GROUP BY recipe with LEFT JOIN), physical isolation.
+
+## SPEC-10.2.87 Project milestone tracking with completion metrics
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ProjectMilestoneTest`, `Pdo/MysqlProjectMilestoneTest`, `Pdo/PostgresProjectMilestoneTest`, `Pdo/SqliteProjectMilestoneTest`
+
+A project milestone tracking system with completion percentages, overdue detection, deadline monitoring, and risk assessment works correctly through ZTD shadow store on all platforms. The scenario exercises conditional COUNT for completion percentage calculation, date comparison for overdue detection, prepared BETWEEN for deadline range queries, and HAVING with CASE for risk assessment.
+
+Verified patterns: project overview (JOIN + COUNT total and completed milestones), completion percentage (COUNT CASE completed * 100 / COUNT(*) GROUP BY project), overdue milestones (WHERE due_date < current AND status != completed with JOIN), complete milestone (UPDATE status + set completed_date, verify percentage changes), upcoming deadlines (prepared BETWEEN date range ORDER BY due_date), project at risk (HAVING COUNT CASE overdue > 0), physical isolation.

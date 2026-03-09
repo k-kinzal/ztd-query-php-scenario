@@ -327,3 +327,25 @@ WHERE username = ?
 Workarounds:
 - Use correlated subqueries instead of derived tables: `SELECT p.username, p.score, (SELECT COUNT(DISTINCT p2.score) FROM players p2 WHERE p2.score > p.score) + 1 AS player_rank FROM players p WHERE p.username = ?`.
 - Use `query()` with escaped parameters instead of `prepare()`.
+
+## SPEC-11.CORRELATED-UPDATE-SET Correlated scalar subquery in UPDATE SET clause
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO, SQLite-PDO (confirmed); MySQLi, MySQL-PDO (works correctly)
+**Related specs:** [SPEC-10.2.88](10-platform-notes.ears.md)
+**Tests:** `Pdo/PostgresCorrelatedUpdateTest`, `Pdo/SqliteCorrelatedUpdateTest`
+
+`UPDATE t1 SET col = (SELECT AGG(col) FROM t2 WHERE t2.fk = t1.id)` fails on PostgreSQL (CTE rewriter grouping error) and SQLite (CTE rewriter syntax error). MySQL handles this correctly via both MySQLi and PDO. Correlated subqueries in SELECT and in WHERE (UPDATE WHERE IN (subquery), DELETE WHERE NOT EXISTS) work on all platforms.
+
+Workaround: query the computed values first via SELECT, then UPDATE each row with explicit values.
+
+```sql
+-- Fails on PostgreSQL/SQLite:
+UPDATE departments SET avg_salary = (SELECT AVG(salary) FROM employees WHERE department_id = departments.id);
+
+-- Workaround (all platforms):
+-- Step 1: Query aggregates
+SELECT department_id, AVG(salary) AS avg_sal FROM employees GROUP BY department_id;
+-- Step 2: Update with explicit values
+UPDATE departments SET avg_salary = 87500.00 WHERE id = 1;
+UPDATE departments SET avg_salary = 57500.00 WHERE id = 2;
+```

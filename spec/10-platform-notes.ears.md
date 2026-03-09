@@ -777,3 +777,75 @@ Verified patterns: recipe ingredients (prepared JOIN with recipe_id), scaled qua
 A project milestone tracking system with completion percentages, overdue detection, deadline monitoring, and risk assessment works correctly through ZTD shadow store on all platforms. The scenario exercises conditional COUNT for completion percentage calculation, date comparison for overdue detection, prepared BETWEEN for deadline range queries, and HAVING with CASE for risk assessment.
 
 Verified patterns: project overview (JOIN + COUNT total and completed milestones), completion percentage (COUNT CASE completed * 100 / COUNT(*) GROUP BY project), overdue milestones (WHERE due_date < current AND status != completed with JOIN), complete milestone (UPDATE status + set completed_date, verify percentage changes), upcoming deadlines (prepared BETWEEN date range ORDER BY due_date), project at risk (HAVING COUNT CASE overdue > 0), physical isolation.
+
+## SPEC-10.2.88 Correlated UPDATE with scalar subquery
+**Status:** Partially Verified
+**Platforms:** MySQLi (V), MySQL-PDO (V), PostgreSQL-PDO (K), SQLite-PDO (K)
+**Tests:** `Mysqli/CorrelatedUpdateTest`, `Pdo/MysqlCorrelatedUpdateTest`, `Pdo/PostgresCorrelatedUpdateTest`, `Pdo/SqliteCorrelatedUpdateTest`
+
+Correlated subqueries in SELECT work on all platforms. However, correlated UPDATE with scalar subquery in SET clause (`UPDATE t1 SET col = (SELECT AGG(col) FROM t2 WHERE t2.fk = t1.id)`) works on MySQL but fails on PostgreSQL (CTE rewriter grouping error) and SQLite (CTE rewriter syntax error). Workaround: query the computed values first, then update each row with explicit values.
+
+Verified patterns (all platforms): correlated subquery in SELECT, DELETE with NOT EXISTS correlated subquery, UPDATE WHERE IN (subquery), correlated COUNT in SELECT. Known issue (PostgreSQL, SQLite): UPDATE SET col = (correlated scalar subquery), chained correlated updates.
+
+## SPEC-10.2.89 NULL handling and COALESCE chains
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/NullCoalescingTest`, `Pdo/MysqlNullCoalescingTest`, `Pdo/PostgresNullCoalescingTest`, `Pdo/SqliteNullCoalescingTest`
+
+NULL handling through ZTD shadow store works correctly on all platforms. The scenario exercises COALESCE with multiple fallback values, IS NULL / IS NOT NULL comparisons, LEFT JOIN with NULL columns, COUNT(*) vs COUNT(column) difference with NULLs, UPDATE SET to NULL, and CASE WHEN for conditional NULL replacement.
+
+Verified patterns: COALESCE chain (3-value fallback), NULL-safe comparison (IS NULL count), LEFT JOIN with NULL keys (right side no match), NULL in aggregation (COUNT(*) vs COUNT(col), AVG ignoring NULL), UPDATE to NULL (SET col = NULL, verify IS NULL), conditional NULL replacement (CASE WHEN equivalent of NULLIF), physical isolation.
+
+## SPEC-10.2.90 Multi-step ETL with INSERT SELECT
+**Status:** Partially Verified
+**Platforms:** MySQLi (V), MySQL-PDO (V), PostgreSQL-PDO (P), SQLite-PDO (P)
+**Tests:** `Mysqli/MultiStepEtlTest`, `Pdo/MysqlMultiStepEtlTest`, `Pdo/PostgresMultiStepEtlTest`, `Pdo/SqliteMultiStepEtlTest`
+
+Multi-step ETL workflows using INSERT SELECT with GROUP BY aggregation work correctly on all platforms. Incremental loads, DELETE + recalculate, and cross-table consistency verification all work. However, correlated UPDATE for recalculation (`UPDATE summary SET total = (SELECT SUM(amount) FROM raw WHERE raw.region = summary.region)`) fails on PostgreSQL and SQLite (same limitation as SPEC-10.2.88). Workaround: query aggregates first, then update with explicit values.
+
+Verified patterns: INSERT SELECT with GROUP BY (aggregate into summary table), verify summary data correctness, incremental load (additional INSERTs + new summary rows), delete and recalculate (DELETE raw + update summary), cross-table consistency (SUM raw = SUM summary). Known issue (PostgreSQL, SQLite): correlated UPDATE for recalculation.
+
+## SPEC-10.2.91 Large IN lists and batch operations
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/LargeInListTest`, `Pdo/MysqlLargeInListTest`, `Pdo/PostgresLargeInListTest`, `Pdo/SqliteLargeInListTest`
+
+SELECT, UPDATE, and DELETE with large IN lists (20+ items) work correctly through ZTD shadow store on all platforms. NOT IN exclusion and string-valued IN lists also work. Prepared statements with multiple parameters of different types function correctly.
+
+Verified patterns: SELECT with 20-item IN list, UPDATE with IN list (8 items, verify affected count), DELETE with IN list (5 items, verify remaining count), NOT IN exclusion, IN list with string values (category names), prepared statement with 3 mixed-type parameters, physical isolation.
+
+## SPEC-10.2.92 UNION and UNION ALL queries
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/UnionQueryTest`, `Pdo/MysqlUnionQueryTest`, `Pdo/PostgresUnionQueryTest`, `Pdo/SqliteUnionQueryTest`
+
+UNION ALL and UNION (distinct) queries combining results from multiple shadow tables work correctly through ZTD on all platforms. UNION with WHERE filters, ORDER BY, and LIMIT all function correctly. Shadow mutations (INSERT, DELETE) are properly reflected in subsequent UNION queries.
+
+Verified patterns: UNION ALL combining two tables (verify full row count), UNION distinct (deduplication of identical rows), UNION ALL with WHERE filter on each side, UNION ALL with ORDER BY and LIMIT, INSERT then verify UNION includes new row, DELETE then verify UNION excludes deleted row, physical isolation.
+
+## SPEC-10.2.93 String manipulation functions through ZTD
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/StringManipulationTest`, `Pdo/MysqlStringManipulationTest`, `Pdo/PostgresStringManipulationTest`, `Pdo/SqliteStringManipulationTest`
+
+String functions work correctly through ZTD CTE rewriter on all platforms. Concatenation uses platform-appropriate syntax (CONCAT() for MySQL/PostgreSQL, || for SQLite). UPPER(), LOWER(), LENGTH(), TRIM(), SUBSTR(), and REPLACE() all produce correct results on shadow-stored data.
+
+Verified patterns: string concatenation (platform-specific: CONCAT or ||), UPPER/LOWER case conversion with prepared statement, LENGTH function with ORDER BY, TRIM leading/trailing spaces from shadow-inserted data, SUBSTR extraction, REPLACE character substitution, physical isolation.
+
+## SPEC-10.2.94 Sequential INSERT batch with mixed DML visibility
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/BatchInsertPatternTest`, `Pdo/MysqlBatchInsertPatternTest`, `Pdo/PostgresBatchInsertPatternTest`, `Pdo/SqliteBatchInsertPatternTest`
+
+Sequential INSERT operations followed by SELECT, UPDATE, DELETE, and aggregation all work correctly through ZTD shadow store on all platforms. The scenario tests starting from an empty table (no seed data in setUp), verifying that shadow-only data is immediately queryable, filterable, and mutable.
+
+Verified patterns: sequential INSERTs (10 rows, verify COUNT), INSERT then filter (WHERE level = 'ERROR'), INSERT then aggregate (COUNT GROUP BY level), INSERT + UPDATE + read (verify both original and updated visible), INSERT + DELETE + read (verify remaining count), mixed DML sequence (INSERT 5, UPDATE 2, DELETE 1, INSERT 3 more — verify final state), physical isolation.
+
+## SPEC-10.2.95 ZTD enable/disable toggle mid-session
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ZtdTogglePatternTest`, `Pdo/MysqlZtdTogglePatternTest`, `Pdo/PostgresZtdTogglePatternTest`, `Pdo/SqliteZtdTogglePatternTest`
+
+ZTD enable/disable toggle behavior is consistent across all platforms. Shadow inserts are visible when ZTD is enabled, invisible in physical queries when ZTD is disabled, and persist across disable/re-enable cycles. Physical data inserted with ZTD disabled is visible in physical queries but not through ZTD (since ZTD replaces the physical table view with the shadow store). Shadow updates survive toggle cycles.
+
+Verified patterns: shadow insert visible in ZTD (not in physical table), physical data not visible through ZTD (shadow store replaces physical view), disable ZTD sees physical only (3 physical rows, not shadow), re-enable restores shadow data, physical insert visibility (visible physically, not through ZTD), shadow update survives toggle (UPDATE persists after disable+re-enable), physical isolation.

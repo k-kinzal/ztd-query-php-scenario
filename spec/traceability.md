@@ -214,6 +214,14 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.85 | `*AuctionBiddingTest` | V | V | V | V | V |
 | SPEC-10.2.86 | `*RecipeIngredientTest` | V | V | V | V | V |
 | SPEC-10.2.87 | `*ProjectMilestoneTest` | V | V | V | V | V |
+| SPEC-10.2.88 | `*CorrelatedUpdateTest` | V | V | K | K | P |
+| SPEC-10.2.89 | `*NullCoalescingTest` | V | V | V | V | V |
+| SPEC-10.2.90 | `*MultiStepEtlTest` | V | V | P | P | P |
+| SPEC-10.2.91 | `*LargeInListTest` | V | V | V | V | V |
+| SPEC-10.2.92 | `*UnionQueryTest` | V | V | V | V | V |
+| SPEC-10.2.93 | `*StringManipulationTest` | V | V | V | V | V |
+| SPEC-10.2.94 | `*BatchInsertPatternTest` | V | V | V | V | V |
+| SPEC-10.2.95 | `*ZtdTogglePatternTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -285,6 +293,14 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-3.3 | `*AuctionBiddingTest` | V | V | V | V | MAX subquery, bid history, COUNT DISTINCT HAVING |
 | SPEC-3.3 | `*RecipeIngredientTest` | V | V | V | V | Arithmetic scaling, SUM aggregation, LEFT JOIN substitutions |
 | SPEC-3.3 | `*ProjectMilestoneTest` | V | V | V | V | Completion percentage, overdue detection, HAVING risk |
+| SPEC-4.2 | `*CorrelatedUpdateTest` | V | V | K | K | Correlated UPDATE SET (works MySQL, fails PG/SQLite) |
+| SPEC-3.7 | `*NullCoalescingTest` | V | V | V | V | COALESCE chains, IS NULL, COUNT(*) vs COUNT(col) |
+| SPEC-4.1a | `*MultiStepEtlTest` | V | V | P | P | INSERT SELECT GROUP BY, correlated recalc fails PG/SL |
+| SPEC-3.1 | `*LargeInListTest` | V | V | V | V | 20+ item IN list, NOT IN, string IN, multi-param prepared |
+| SPEC-3.3d | `*UnionQueryTest` | V | V | V | V | UNION ALL, UNION distinct, with WHERE/ORDER/LIMIT |
+| SPEC-3.3 | `*StringManipulationTest` | V | V | V | V | CONCAT, UPPER, LENGTH, TRIM, SUBSTR, REPLACE |
+| SPEC-4.1 | `*BatchInsertPatternTest` | V | V | V | V | Empty-start sequential INSERT, mixed DML visibility |
+| SPEC-2.1 | `*ZtdTogglePatternTest` | V | V | V | V | Enable/disable toggle, shadow persistence, physical isolation |
 
 ## 11. Known Issues (Selected)
 

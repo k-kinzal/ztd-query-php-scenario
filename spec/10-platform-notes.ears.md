@@ -557,3 +557,115 @@ Verified patterns: response count per question (LEFT JOIN GROUP BY COUNT), respo
 A notification inbox workflow using users, notifications, and notification preferences works correctly through ZTD shadow store on all platforms. The scenario exercises batch UPDATE operations, unread count calculations, priority-based filtering, and multi-table JOIN with preference checks.
 
 Verified patterns: unread count per user (LEFT JOIN with conditional COUNT), unread-by-priority breakdown (GROUP BY with conditional aggregation), mark single notification as read (UPDATE with guard), batch mark-all-as-read for user (UPDATE WHERE user_id AND is_read = 0), prepared statement notification lookup with priority filter, delete old read notifications (DELETE with date and status condition), user preference summary (JOIN with conditional aggregation on enabled/disabled), 3-table JOIN (notifications + users + preferences for push-enabled users with unread notifications), physical isolation.
+
+## SPEC-10.2.64 Approval workflow with quorum
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ApprovalWorkflowTest`, `Pdo/MysqlApprovalWorkflowTest`, `Pdo/PostgresApprovalWorkflowTest`, `Pdo/SqliteApprovalWorkflowTest`
+
+A multi-step document approval workflow using documents, approvers, and approval rules works correctly through ZTD shadow store on all platforms. The scenario exercises quorum-based decision making, status transitions with guards, and multi-table JOIN verification.
+
+Verified patterns: pending documents list (SELECT with LEFT JOIN approver COUNT), submit for approval (UPDATE draft→pending, INSERT approver assignments), approver decision recording (UPDATE approver decision, COUNT remaining pending), quorum check (3-table JOIN verifying approved_count >= min_approvals), document approval after quorum (UPDATE document status, 3-table JOIN verification), rejection override with require_unanimous flag (single rejection causes document rejection), physical isolation.
+
+## SPEC-10.2.65 Leaderboard and ranking system
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/LeaderboardRankingTest`, `Pdo/MysqlLeaderboardRankingTest`, `Pdo/PostgresLeaderboardRankingTest`, `Pdo/SqliteLeaderboardRankingTest`
+
+A gaming leaderboard with score tracking, ranking with ties, and position updates works correctly through ZTD shadow store on all platforms. The scenario exercises DENSE_RANK() window functions, score updates with history tracking, and tied ranking verification.
+
+Verified patterns: leaderboard ranking via DENSE_RANK() OVER (ORDER BY score DESC), score update with history INSERT, top-N players via LIMIT with window function, player rank lookup via correlated subquery (COUNT DISTINCT higher scores), score history timeline (JOIN with ORDER BY date DESC), tied ranking verification (same score = same rank, consecutive next rank via DENSE_RANK), physical isolation.
+
+**Note:** Prepared statements with derived tables containing window functions return empty results on MySQL (MySQLi, MySQL-PDO) and SQLite-PDO. PostgreSQL-PDO works correctly. Workaround: use correlated subqueries or `query()` instead.
+
+## SPEC-10.2.66 Configuration cascade with priority overrides
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ConfigurationCascadeTest`, `Pdo/MysqlConfigurationCascadeTest`, `Pdo/PostgresConfigurationCascadeTest`, `Pdo/SqliteConfigurationCascadeTest`
+
+A hierarchical key-value configuration system with defaults, environment-specific overrides, and priority-based resolution works correctly through ZTD shadow store on all platforms. The scenario exercises LEFT JOIN with COALESCE for fallback resolution, correlated subqueries for highest-priority lookup, and dynamic override management.
+
+Verified patterns: default config lookup (basic key-value retrieval), override resolution (LEFT JOIN + COALESCE picks override when present), environment-specific config (prepared statement with environment filter), priority-based override (correlated subquery ORDER BY priority DESC LIMIT 1), add override (INSERT and verify via JOIN+COALESCE), remove override restores default (DELETE and verify via LEFT JOIN), effective config report (all keys with resolved values using COALESCE + correlated subquery).
+
+## SPEC-10.2.67 Audit trail with change history
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/AuditTrailTest`, `Pdo/MysqlAuditTrailTest`, `Pdo/PostgresAuditTrailTest`, `Pdo/SqliteAuditTrailTest`
+
+An audit trail system with change logging, point-in-time state reconstruction, and revert capabilities works correctly through ZTD shadow store on all platforms. The scenario exercises INSERT-per-change logging, correlated MAX subquery for latest state, and aggregation-based reporting.
+
+Verified patterns: log INSERT (product + audit record pair), log UPDATE with old/new values, change history for record (ORDER BY changed_at), latest state from audit log (correlated subquery with MAX(id)), count changes by action (GROUP BY action COUNT), revert to old value (read audit_log old_value, UPDATE product), physical isolation.
+
+## SPEC-10.2.68 Waitlist queue with priority ordering
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/WaitlistQueueTest`, `Pdo/MysqlWaitlistQueueTest`, `Pdo/PostgresWaitlistQueueTest`, `Pdo/SqliteWaitlistQueueTest`
+
+A waitlist queue system with priority ordering, promotion, capacity limits, and position calculations works correctly through ZTD shadow store on all platforms. The scenario exercises ROW_NUMBER() window functions with PARTITION BY, conditional UPDATE with capacity guards, and priority-based queue ordering.
+
+Verified patterns: waitlist position by priority (ROW_NUMBER() OVER PARTITION BY event ORDER BY priority, joined_at), join waitlist (INSERT and verify position), promote from waitlist (UPDATE status to promoted, increment enrolled_count, verify capacity), cancel and shift positions (UPDATE to cancelled, verify remaining positions renumber), capacity guard (COUNT enrolled vs capacity prevents over-enrollment), priority queue ordering (ORDER BY priority ASC, joined_at ASC across multiple levels), physical isolation.
+
+## SPEC-10.2.69 Coupon and discount system
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/CouponDiscountTest`, `Pdo/MysqlCouponDiscountTest`, `Pdo/PostgresCouponDiscountTest`, `Pdo/SqliteCouponDiscountTest`
+
+A coupon code validation and discount system with usage tracking, expiry checking, and usage limits works correctly through ZTD shadow store on all platforms. The scenario exercises date-range filtering, LEFT JOIN with GROUP BY for usage counting, and conditional aggregation for discount reporting.
+
+Verified patterns: valid coupon lookup (prepared statement with code + is_active filter), usage limit check (LEFT JOIN with GROUP BY, compare COUNT vs max_uses), apply coupon (INSERT usage record, verify discount calculation), expired coupon exclusion (date-range condition), usage summary per coupon (COUNT + SUM aggregate GROUP BY), deactivate coupon (UPDATE is_active = 0, verify exclusion), physical isolation.
+
+## SPEC-10.2.70 Subscription billing cycle
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SubscriptionBillingTest`, `Pdo/MysqlSubscriptionBillingTest`, `Pdo/PostgresSubscriptionBillingTest`, `Pdo/SqliteSubscriptionBillingTest`
+
+A subscription billing workflow using subscriptions, billing records, and credits works correctly through ZTD shadow store on all platforms. The scenario exercises recurring billing record management, credit application, balance calculations via COALESCE with correlated subqueries, conditional aggregation for paid/unpaid tracking, and prepared statement date-range filtering.
+
+Verified patterns: active subscriptions with billing summary (LEFT JOIN + GROUP BY with CASE-based paid/unpaid aggregation), billing record generation (INSERT + SUM verification), balance with credits (correlated subqueries with COALESCE for unpaid billing minus credits), credit application (INSERT + SUM verification), mark billing paid (UPDATE with conditional aggregation verification), billing history prepared statement (3 parameters: subscription_id + date range), physical isolation.
+
+**Note:** Derived table approach (LEFT JOIN with subqueries in FROM) returns empty results on MySQL (MySQLi, MySQL-PDO). Workaround: use correlated subqueries in SELECT instead.
+
+## SPEC-10.2.71 Financial ledger with reversals
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/FinancialLedgerTest`, `Pdo/MysqlFinancialLedgerTest`, `Pdo/PostgresFinancialLedgerTest`, `Pdo/SqliteFinancialLedgerTest`
+
+A double-entry accounting ledger with debit/credit entries, balance calculations, reversal entries, and transaction summaries works correctly through ZTD shadow store on all platforms. The scenario exercises DECIMAL precision through the shadow store, SUM with CASE-based sign logic for debit/credit accounting, and paired entry validation.
+
+Verified patterns: account balances via SUM with CASE debit/credit sign multiplier (LEFT JOIN + GROUP BY), paired transaction entry recording (INSERT pairs + COUNT/SUM verification), double-entry integrity check (SUM of debits equals SUM of credits), reversal entries with balance recalculation (INSERT reversal pair, verify adjusted balances), account statement prepared statement (date range filter), transaction-level summary (GROUP BY transaction_ref with COUNT/SUM/MIN), physical isolation.
+
+## SPEC-10.2.72 Inventory allocation with reservations
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/InventoryAllocationTest`, `Pdo/MysqlInventoryAllocationTest`, `Pdo/PostgresInventoryAllocationTest`, `Pdo/SqliteInventoryAllocationTest`
+
+An inventory management system with stock tracking, reservation management, sale conversion, and warehouse reporting works correctly through ZTD shadow store on all platforms. The scenario exercises self-referencing arithmetic (available = total - reserved - sold), coordinated multi-table mutations, and multi-table JOIN with aggregate reporting.
+
+Verified patterns: available stock calculation (total_stock - reserved - sold expression), stock reservation (INSERT reservation + UPDATE reserved count), reservation-to-sale conversion (UPDATE reservation status + adjust reserved/sold counts, verify available unchanged), cancel reservation (UPDATE status + restore reserved count), warehouse stock report (LEFT JOIN with GROUP BY and SUM aggregates across warehouses), SKU lookup prepared statement (JOIN with computed available column), physical isolation.
+
+## SPEC-10.2.73 Order fulfillment workflow
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/OrderFulfillmentTest`, `Pdo/MysqlOrderFulfillmentTest`, `Pdo/PostgresOrderFulfillmentTest`, `Pdo/SqliteOrderFulfillmentTest`
+
+A multi-stage order processing system with line items and fulfillment tracking works correctly through ZTD shadow store on all platforms. The scenario exercises partial vs complete fulfillment detection, status transition guards, conditional aggregation for order summary reporting, and multi-table JOIN with computed order values.
+
+Verified patterns: order summary list (LEFT JOIN + GROUP BY with SUM(quantity * unit_price)), single item fulfillment (INSERT fulfillment + UPDATE item status with affected-row check), partial fulfillment detection (CASE-based conditional COUNT for shipped/pending items), complete fulfillment with order status transition (all items shipped → UPDATE order status), cross-order fulfillment report (conditional aggregation across orders), order lookup prepared statement (customer name filter with JOIN + GROUP BY), physical isolation.
+
+## SPEC-10.2.74 Sales reporting with pivot aggregation
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SalesReportTest`, `Pdo/MysqlSalesReportTest`, `Pdo/PostgresSalesReportTest`, `Pdo/SqliteSalesReportTest`
+
+A sales reporting system with regional breakdowns, product metrics, pivot-style quarterly reports, and net sales adjusted for returns works correctly through ZTD shadow store on all platforms. The scenario exercises CASE-based conditional SUM for pivot reports, GROUP BY with HAVING threshold filtering, and net quantity calculations with return adjustments.
+
+Verified patterns: sales by region (LEFT JOIN + GROUP BY with CASE-filtered SUM), sales by product (JOIN + GROUP BY with ORDER BY computed revenue DESC), pivot by quarter (CASE WHEN quarter = 'Q1' THEN ... conditional SUM columns), net sales with returns (CASE WHEN sale_type = 'return' THEN negative quantity adjustment), region filter with HAVING threshold (GROUP BY HAVING SUM > threshold), region sales prepared statement (region_id + sale_type parameters), physical isolation.
+
+## SPEC-10.2.75 Retry queue with job processing
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/RetryQueueTest`, `Pdo/MysqlRetryQueueTest`, `Pdo/PostgresRetryQueueTest`, `Pdo/SqliteRetryQueueTest`
+
+A job processing queue with priority ordering, retry logic, completion logging, and metrics reporting works correctly through ZTD shadow store on all platforms. The scenario exercises state machine transitions (pending → processing → completed/failed), retry count management with self-referencing arithmetic, priority-based queue ordering, and multi-table JOIN for job history.
+
+Verified patterns: pending jobs by priority (ORDER BY priority ASC, created_at ASC), start processing (UPDATE status with affected-row guard + INSERT log), complete job (UPDATE status + INSERT completion log with JOIN verification), fail and retry (UPDATE retry_count + 1, reset status to pending), max retries exceeded (mark as permanently failed), job metrics (GROUP BY status with COUNT/MAX aggregates), job history prepared statement (LEFT JOIN with GROUP BY for log count per job by type), physical isolation.

@@ -130,6 +130,19 @@ Maps SPEC-IDs to test classes and verified versions.
 
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
+| SPEC-10.2.1 | `*TruncateReinsertTest`, `Pdo/PostgresTruncateOptionsTest` | V | V | V | — | V |
+| SPEC-10.2.2 | `Mysqli/DelegatedMethodsTest` | V | — | — | — | V |
+| SPEC-10.2.3 | `*ConstraintBehaviorTest` | V | V | V | — | V |
+| SPEC-10.2.4 | `*UnsupportedSqlTest`, `*BehaviorRuleCombinationsTest` | V | V | V | V | V |
+| SPEC-10.2.5 | `*AlterTableTest`, `*AlterTableAdvancedTest` | V | V | V | V | V |
+| SPEC-10.2.6 | `Mysqli/TemporaryTableTest`, `Pdo/SqliteTemporaryTableTest`, `Pdo/PostgresTemporaryAndUnloggedTableTest` | V | — | V | V | V |
+| SPEC-10.2.7 | `Pdo/PostgresMultiTableOperationsTest` | — | — | V | — | V |
+| SPEC-10.2.8 | `Mysqli/ExecuteQueryWriteOpsTest` | V | — | — | — | V |
+| SPEC-10.2.9 | `Mysqli/ExecuteQueryWriteOpsTest` | K | — | — | — | K |
+| SPEC-10.2.10 | `Mysqli/InsertModifiersTest`, `Pdo/MysqlInsertModifiersTest` | V | V | — | — | V |
+| SPEC-10.2.11 | `*SelectForUpdateTest`, `*SelectLockingTest`, `Pdo/PostgresForUpdateSkipLockedTest` | V | V | V | V | V |
+| SPEC-10.2.12 | `Pdo/SqliteConflictResolutionTest` | — | — | — | V | V |
+| SPEC-10.2.13 | `*MultiColumnSortingTest`, `*NullHandlingEdgeCasesTest` | V | V | V | V | V |
 | SPEC-10.2.17 | `Pdo/MysqlOffsetPaginationTest` | — | V | — | — | V |
 | SPEC-10.2.18 | `*DateTimeFunctionsTest` | V | V | V | V | V |
 | SPEC-10.2.19 | `Pdo/PostgresEnumTypeTest` | — | — | V | — | V |
@@ -177,6 +190,18 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.61 | `*ShoppingCartCheckoutTest` | V | V | V | V | V |
 | SPEC-10.2.62 | `*SurveyResultsTest` | V | V | V | V | V |
 | SPEC-10.2.63 | `*NotificationInboxTest` | V | V | V | V | V |
+| SPEC-10.2.64 | `*ApprovalWorkflowTest` | V | V | V | V | V |
+| SPEC-10.2.65 | `*LeaderboardRankingTest` | V | V | V | V | V |
+| SPEC-10.2.66 | `*ConfigurationCascadeTest` | V | V | V | V | V |
+| SPEC-10.2.67 | `*AuditTrailTest` | V | V | V | V | V |
+| SPEC-10.2.68 | `*WaitlistQueueTest` | V | V | V | V | V |
+| SPEC-10.2.69 | `*CouponDiscountTest` | V | V | V | V | V |
+| SPEC-10.2.70 | `*SubscriptionBillingTest` | V | V | V | V | V |
+| SPEC-10.2.71 | `*FinancialLedgerTest` | V | V | V | V | V |
+| SPEC-10.2.72 | `*InventoryAllocationTest` | V | V | V | V | V |
+| SPEC-10.2.73 | `*OrderFulfillmentTest` | V | V | V | V | V |
+| SPEC-10.2.74 | `*SalesReportTest` | V | V | V | V | V |
+| SPEC-10.2.75 | `*RetryQueueTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -224,6 +249,18 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-4.1 | `*ShoppingCartCheckoutTest` | V | V | V | V | Multi-step checkout, cart aggregation, stock management |
 | SPEC-3.3 | `*SurveyResultsTest` | V | V | V | V | Response distribution, percentage calc, conditional aggregation |
 | SPEC-4.2 | `*NotificationInboxTest` | V | V | V | V | Batch UPDATE, unread counts, 3-table JOIN, priority filter |
+| SPEC-3.3 | `*ApprovalWorkflowTest` | V | V | V | V | Quorum check, 3-table JOIN, status transitions with guards |
+| SPEC-10.2.23 | `*LeaderboardRankingTest` | V | V | V | V | DENSE_RANK, tied ranking, score history timeline |
+| SPEC-3.3 | `*ConfigurationCascadeTest` | V | V | V | V | LEFT JOIN + COALESCE cascade, correlated subquery priority |
+| SPEC-3.3 | `*AuditTrailTest` | V | V | V | V | Change logging, correlated MAX for latest state, revert |
+| SPEC-10.2.23 | `*WaitlistQueueTest` | V | V | V | V | ROW_NUMBER PARTITION BY, capacity guard, priority queue |
+| SPEC-3.3 | `*CouponDiscountTest` | V | V | V | V | Date-range filter, LEFT JOIN usage count, discount calc |
+| SPEC-3.3 | `*SubscriptionBillingTest` | V | V | V | V | Correlated subquery balance, CASE paid/unpaid, date-range prepared |
+| SPEC-3.3 | `*FinancialLedgerTest` | V | V | V | V | DECIMAL precision, CASE debit/credit sign, double-entry integrity |
+| SPEC-4.1 | `*InventoryAllocationTest` | V | V | V | V | Self-referencing arithmetic, reservation/sale conversion, warehouse report |
+| SPEC-4.1 | `*OrderFulfillmentTest` | V | V | V | V | Partial/complete fulfillment, conditional COUNT, multi-table JOIN |
+| SPEC-3.3 | `*SalesReportTest` | V | V | V | V | CASE pivot by quarter, HAVING threshold, net sales with returns |
+| SPEC-4.2 | `*RetryQueueTest` | V | V | V | V | Priority queue, retry state machine, job metrics, LEFT JOIN logs |
 
 ## 11. Known Issues (Selected)
 
@@ -233,6 +270,7 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-11.PG-LATERAL | `Pdo/PostgresLateralSubqueryTest` | — | — | K | — | K |
 | SPEC-11.BARE-SUBQUERY-REWRITE | `Pdo/SqliteScalarSubqueryInSelectTest`, `Pdo/SqlitePivotReportTest`, `Pdo/SqliteScalarSubqueryWorkaroundTest` | — | — | — | K | K |
 | SPEC-11.UPDATE-AGGREGATE-SUBQUERY | `Pdo/SqliteBulkConditionalUpgradeTest`, `Pdo/SqliteDeduplicationEdgeCasesTest` | — | — | — | K | K |
+| SPEC-11.DERIVED-TABLE-PREPARED | `*LeaderboardRankingTest` | K | K | — | K | K |
 
 ## Legend
 

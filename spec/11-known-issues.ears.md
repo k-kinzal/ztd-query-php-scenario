@@ -304,3 +304,26 @@ SELECT customer_id FROM orders WHERE status = 'completed' GROUP BY customer_id H
 -- Step 2: UPDATE by explicit list
 UPDATE customers SET tier = 'gold' WHERE id IN (1, 3, 7);
 ```
+
+## SPEC-11.DERIVED-TABLE-PREPARED Prepared statements with derived tables return empty
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO, SQLite-PDO (confirmed); PostgreSQL-PDO (works correctly)
+**Related specs:** [SPEC-3.3](03-read-operations.ears.md), [SPEC-10.2.65](10-platform-notes.ears.md)
+**Tests:** `Mysqli/LeaderboardRankingTest`, `Pdo/MysqlLeaderboardRankingTest`, `Pdo/SqliteLeaderboardRankingTest`
+
+Prepared statements with derived tables (subquery in FROM) that contain window functions return empty results on MySQL (MySQLi, MySQL-PDO) and SQLite-PDO. The same query works correctly via `query()` on MySQL. PostgreSQL-PDO works correctly with both `prepare()` and `query()`.
+
+```sql
+-- Returns empty on MySQL and SQLite when used with prepare()+execute():
+SELECT username, score, player_rank
+FROM (
+    SELECT username, score,
+           DENSE_RANK() OVER (ORDER BY score DESC) AS player_rank
+    FROM players
+) ranked
+WHERE username = ?
+```
+
+Workarounds:
+- Use correlated subqueries instead of derived tables: `SELECT p.username, p.score, (SELECT COUNT(DISTINCT p2.score) FROM players p2 WHERE p2.score > p.score) + 1 AS player_rank FROM players p WHERE p.username = ?`.
+- Use `query()` with escaped parameters instead of `prepare()`.

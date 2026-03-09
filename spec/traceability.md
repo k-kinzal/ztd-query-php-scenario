@@ -245,6 +245,12 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.116 | `*UserActivityStreakTest` | V | V | V | V | V |
 | SPEC-10.2.117 | `*DataRetentionPolicyTest` | V | V | V | V | V |
 | SPEC-10.2.118 | `*TaxCalculationTest` | V | V | V | V | V |
+| SPEC-10.2.119 | `*SlidingWindowRateLimitTest` | V | V | V | V | V |
+| SPEC-10.2.120 | `*EventSourcingProjectionTest` | V | V | V | V | V |
+| SPEC-10.2.121 | `*ClosureTableHierarchyTest` | V | V | V | V | V |
+| SPEC-10.2.122 | `*TemporalVersionLookupTest` | V | V | V | V | V |
+| SPEC-10.2.123 | `*IncrementalSyncDeltaTest` | V | V | V | V | V |
+| SPEC-10.2.124 | `*CohortRetentionAnalysisTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -340,6 +346,12 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.23 | `*UserActivityStreakTest` | V | V | V | V | LAG window for previous-date, gap detection, activity date range |
 | SPEC-4.2 | `*DataRetentionPolicyTest` | V | V | V | V | PII anonymization, date-range DELETE, LEFT JOIN inactive detection |
 | SPEC-3.3 | `*TaxCalculationTest` | V | V | V | V | Multi-table JOIN tax rules, ROUND arithmetic, AVG by country |
+| SPEC-3.3 | `*SlidingWindowRateLimitTest` | V | V | V | V | Rolling time-window quota, BETWEEN datetime, COALESCE override |
+| SPEC-10.2.23 | `*EventSourcingProjectionTest` | V | V | V | V | Event log SUM CASE, snapshot+delta, SUM OVER running balance |
+| SPEC-3.3 | `*ClosureTableHierarchyTest` | V | V | V | V | 5-level closure table, ancestor/descendant, leaf detection |
+| SPEC-3.3 | `*TemporalVersionLookupTest` | V | V | V | V | Effective date ranges, point-in-time lookup, IS NULL current |
+| SPEC-4.1 | `*IncrementalSyncDeltaTest` | V | V | V | V | Watermark delta, LEFT JOIN new records, soft-delete detection |
+| SPEC-3.3 | `*CohortRetentionAnalysisTest` | V | V | V | V | Cohort sizing, retention by month, churn LEFT JOIN IS NULL |
 
 ## 11. Known Issues (Selected)
 

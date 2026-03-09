@@ -1062,3 +1062,57 @@ Verified patterns: baseline count (COUNT before retention), anonymize deleted us
 A multi-jurisdiction tax calculation system with category-based rates, per-item tax computation, and aggregate summaries works correctly through ZTD shadow store. The scenario exercises JOIN for matching items with applicable tax rules by jurisdiction and category, ROUND arithmetic for per-item tax computation, SUM GROUP BY for total tax by jurisdiction, WHERE with arithmetic expression for high-tax filtering, AVG GROUP BY for average rate by country, and COUNT + SUM GROUP BY for category revenue summaries.
 
 Verified patterns: per-item tax (JOIN rules + ROUND arithmetic), total tax by jurisdiction (SUM + GROUP BY jurisdiction), tax-exempt items (WHERE rate = 0), price with tax (computed column + ORDER BY), average rate by country (AVG GROUP BY country), high-tax items (WHERE computed > threshold), category revenue summary (COUNT + SUM GROUP BY category), physical isolation.
+
+## SPEC-10.2.119 Sliding window rate limiting
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SlidingWindowRateLimitTest`, `Pdo/MysqlSlidingWindowRateLimitTest`, `Pdo/PostgresSlidingWindowRateLimitTest`, `Pdo/SqliteSlidingWindowRateLimitTest`
+
+A rolling time-window rate limiting system with tiered quotas and per-endpoint overrides works correctly through ZTD shadow store. The scenario exercises COUNT with BETWEEN on datetime strings for request counting within a sliding window, JOIN with HAVING for comparing request counts against per-client quotas, GROUP BY client + endpoint for top-endpoint analysis, LEFT JOIN with COALESCE for applying per-endpoint rate limit overrides over default tier limits, GROUP BY tier with AVG/MAX/COUNT for usage summary by client tier, and CASE expressions for burst detection within sub-windows.
+
+Verified patterns: request count in window (COUNT + BETWEEN datetime), rate limit check (JOIN clients + GROUP BY + HAVING vs quota), top endpoints by client (GROUP BY client + endpoint + ORDER BY count), override applied (LEFT JOIN overrides + COALESCE for effective limit), tier usage summary (GROUP BY tier + AVG/MAX/COUNT), burst detection (CASE for sub-window counting), physical isolation.
+
+## SPEC-10.2.120 Event sourcing projection
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/EventSourcingProjectionTest`, `Pdo/MysqlEventSourcingProjectionTest`, `Pdo/PostgresEventSourcingProjectionTest`, `Pdo/SqliteEventSourcingProjectionTest`
+
+An event-sourcing projection system that derives current state from an append-only event log works correctly through ZTD shadow store. The scenario exercises SUM with CASE WHEN for computing balances from credit/debit events, GROUP BY aggregate_id + event_type for event count distribution, correlated subquery with MAX(version) for latest-event-per-account lookup, SUM OVER (PARTITION BY ... ORDER BY) window function for running balance calculation, JOIN snapshots with SUM of delta events for snapshot-plus-delta balance reconstruction, and WHERE BETWEEN on version range for event replay.
+
+Verified patterns: current balance from events (SUM + CASE credit/debit + GROUP BY), event count by type (GROUP BY aggregate + type + COUNT), latest event per account (JOIN with MAX version subquery), running balance with window (SUM CASE OVER PARTITION BY ORDER BY), snapshot plus delta (JOIN snapshot + SUM events after snapshot version), events between versions (WHERE version BETWEEN), physical isolation.
+
+## SPEC-10.2.121 Closure table hierarchy (5-level tree)
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ClosureTableHierarchyTest`, `Pdo/MysqlClosureTableHierarchyTest`, `Pdo/PostgresClosureTableHierarchyTest`, `Pdo/SqliteClosureTableHierarchyTest`
+
+A closure table pattern for deep hierarchy traversal (5 levels) with ancestor/descendant queries works correctly through ZTD shadow store. The scenario exercises JOIN with closure table for all-descendants query (depth > 0), reverse closure JOIN for all-ancestors query, depth = 1 filtering for direct children, depth <= N for subtree depth filtering, LEFT JOIN with IS NULL or NOT EXISTS for leaf node detection, GROUP BY ancestor with COUNT for subtree size aggregation, and INSERT of new closure entries for subtree insertion (move) with subsequent read verification.
+
+Verified patterns: all descendants (closure JOIN depth > 0), all ancestors (reverse closure JOIN depth > 0 ORDER BY depth), direct children (depth = 1), subtree depth filter (depth <= 2), leaf nodes (LEFT JOIN IS NULL or NOT EXISTS), subtree count (GROUP BY ancestor + COUNT), move subtree (INSERT closure entries + verify new ancestry), physical isolation.
+
+## SPEC-10.2.122 Temporal version lookup (effective date ranges)
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/TemporalVersionLookupTest`, `Pdo/MysqlTemporalVersionLookupTest`, `Pdo/PostgresTemporalVersionLookupTest`, `Pdo/SqliteTemporalVersionLookupTest`
+
+A temporal data pattern with effective date ranges for point-in-time lookups works correctly through ZTD shadow store. The scenario exercises JOIN with IS NULL for current-record lookup (effective_to IS NULL), WHERE with date range comparison and OR IS NULL for point-in-time query at arbitrary dates, ORDER BY effective_from for price history timeline, GROUP BY with COUNT for version count per product, self-join or correlated subquery for price increase percentage (comparing first vs current price), and multi-step DML (INSERT new price + UPDATE old current price's effective_to) for price version management.
+
+Verified patterns: current prices (JOIN + WHERE effective_to IS NULL), price at date (WHERE effective_from <= date AND effective_to >= date OR IS NULL), price history (WHERE product + ORDER BY date), price change count (GROUP BY product + COUNT), price increase percentage (self-join first vs current + ROUND arithmetic), update current price (INSERT new + UPDATE old effective_to), physical isolation.
+
+## SPEC-10.2.123 Incremental sync delta detection
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/IncrementalSyncDeltaTest`, `Pdo/MysqlIncrementalSyncDeltaTest`, `Pdo/PostgresIncrementalSyncDeltaTest`, `Pdo/SqliteIncrementalSyncDeltaTest`
+
+An incremental data synchronization system with watermark-based change detection works correctly through ZTD shadow store. The scenario exercises LEFT JOIN with IS NULL for detecting new (never-synced) records, JOIN with date comparison for detecting updated records since last sync, WHERE with soft-delete flag + date comparison for deleted record detection, subquery against watermark table for delta-since-watermark query, INSERT + GROUP BY for recording sync actions and counting by action type, and UPDATE on watermark table for advancing the sync position.
+
+Verified patterns: detect new records (LEFT JOIN sync_log IS NULL), detect updated records (JOIN sync_log + WHERE updated_at > watermark), detect soft-deleted (WHERE is_deleted = 1 + updated_at > watermark), delta since watermark (subquery from watermark table), record sync actions (INSERT + GROUP BY action + COUNT), update watermark (UPDATE + verify read-back), physical isolation.
+
+## SPEC-10.2.124 Cohort retention analysis
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/CohortRetentionAnalysisTest`, `Pdo/MysqlCohortRetentionAnalysisTest`, `Pdo/PostgresCohortRetentionAnalysisTest`, `Pdo/SqliteCohortRetentionAnalysisTest`
+
+A user cohort retention analysis system with churn detection and power-user identification works correctly through ZTD shadow store. The scenario exercises GROUP BY signup_month with COUNT for cohort sizing, JOIN users + activities with COUNT DISTINCT user_id per activity_month for retention tracking, GROUP BY signup_month with AVG(action_count) for cohort engagement metrics, COUNT DISTINCT user_id per activity_month for monthly active user counts, LEFT JOIN with IS NULL for churn detection (active in signup month but absent in following month), and SUM + HAVING for power-user identification.
+
+Verified patterns: cohort size (GROUP BY signup_month + COUNT), retention by month (JOIN + COUNT DISTINCT user_id per month), cohort average activity (GROUP BY signup_month + AVG), active users per month (COUNT DISTINCT per activity_month), churn detection (LEFT JOIN next month IS NULL), power users (SUM action_count + HAVING threshold), physical isolation.

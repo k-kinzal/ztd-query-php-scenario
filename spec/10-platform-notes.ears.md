@@ -1558,3 +1558,37 @@ A product catalog with nullable brand and discount columns exercises LIKE with p
 **Tests:** `Mysqli/AuditTrailVersioningTest`, `Pdo/MysqlAuditTrailVersioningTest`, `Pdo/PostgresAuditTrailVersioningTest`, `Pdo/SqliteAuditTrailVersioningTest`
 
 An audit trail system with documents and log entries exercises three sequential UPDATE mutations on the same row (draft→review→approved→published) verifying shadow store consistency after each step, INSERT into a second table referencing the updated state, MAX(version) with GROUP BY, JOIN with COUNT and HAVING for filtering documents by log entry count, MIN/MAX on timestamps per group, LIMIT/OFFSET pagination of audit log, DELETE by timestamp range, and bulk UPDATE with status filter. SQLite-PDO: all tests pass.
+
+## SPEC-10.2.181 JSON/JSONB column operations through CTE shadow store
+**Status:** Verified (with known issue for JSONB `?` operators)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/JsonColumnTest`, `Pdo/MysqlJsonColumnTest`, `Pdo/PostgresJsonbColumnTest`, `Pdo/SqliteJsonFunctionsTest`, `Pdo/PostgresJsonbOperatorConflictTest`
+
+JSON/JSONB column operations work correctly through the CTE shadow store across all platforms. Verified: JSON_EXTRACT/json_extract(), ->> text extraction, -> JSON extraction, nested path access, JSON in WHERE clause, JSON_CONTAINS/jsonb containment (@>), JSON_LENGTH/jsonb_array_length(), JSON_SET/jsonb_set() in UPDATE, JSON_SEARCH, GROUP BY on JSON-extracted values, ORDER BY JSON-extracted numeric values, CAST JSON text to numeric, and prepared statements with JSON extraction in WHERE.
+
+**PostgreSQL JSONB specifics:** The `->`, `->>`, `@>`, `<@` operators all work correctly. The `?` (key exists), `?|` (any key exists), and `?&` (all keys exist) operators fail — the CTE rewriter treats `?` as a parameter placeholder. See SPEC-11.PG-JSONB-QUESTION-MARK. Workaround: `jsonb_exists()`, `jsonb_exists_any()`, `jsonb_exists_all()`.
+
+**MySQL specifics:** JSON_EXTRACT returns quoted strings (`"Acme"`) — use JSON_UNQUOTE or ->> for text values. JSON_CONTAINS, JSON_SEARCH, JSON_LENGTH all work correctly.
+
+**SQLite specifics:** json_extract(), ->>, json_type(), json_array_length(), json_group_array() all work correctly (SQLite 3.38.0+).
+
+## SPEC-10.2.182 Row value constructors (tuple comparisons)
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/RowValueConstructorTest`, `Pdo/MysqlRowValueConstructorTest`, `Pdo/PostgresRowValueConstructorTest`, `Pdo/SqliteRowValueConstructorTest`
+
+Row value constructors — `WHERE (a, b) IN ((1, 'x'), (2, 'y'))` — work correctly through the CTE shadow store on all platforms. Verified: multi-column IN, multi-column NOT IN, row value equality `(a, b) = (val1, val2)`, row value greater-than comparison, row value IN with JOIN, row value IN with subquery, UPDATE/DELETE with row value WHERE, prepared statements with row value equality, and physical isolation. Composite primary key lookups using tuple syntax are correctly handled by the CTE rewriter.
+
+## SPEC-10.2.183 DISTINCT inside aggregate functions
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/DistinctAggregateTest`, `Pdo/MysqlDistinctAggregateTest`, `Pdo/PostgresDistinctAggregateTest`, `Pdo/SqliteDistinctAggregateTest`
+
+DISTINCT qualifiers inside aggregate functions work correctly through CTE shadow data on all platforms. Verified: COUNT(DISTINCT col), SUM(DISTINCT col), AVG(DISTINCT col), GROUP_CONCAT(DISTINCT col ORDER BY col) on MySQL/SQLite, STRING_AGG(DISTINCT col, sep ORDER BY col) on PostgreSQL. SUM(DISTINCT) correctly deduplicates values before summing (SUM vs SUM(DISTINCT) produce different results). COUNT(DISTINCT) with HAVING works correctly. Prepared statements with COUNT(DISTINCT) in JOINs work correctly.
+
+## SPEC-10.2.184 Anti-join patterns (LEFT JOIN WHERE NULL, NOT EXISTS, NOT IN)
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/AntiJoinPatternTest`, `Pdo/MysqlAntiJoinPatternTest`, `Pdo/PostgresAntiJoinPatternTest`, `Pdo/SqliteAntiJoinPatternTest`
+
+Anti-join patterns for finding rows without matching rows in related tables work correctly through CTE shadow data. All three equivalent anti-join forms produce identical correct results: LEFT JOIN WHERE IS NULL, NOT EXISTS correlated subquery, NOT IN subquery. Also verified: semi-join (EXISTS), chained anti-join (3-table anti-pattern), double NOT EXISTS (combined EXISTS + NOT EXISTS), anti-join mutation sensitivity (anti-join correctly reflects INSERT/DELETE mutations), prepared NOT EXISTS with bound threshold parameter, and physical isolation.

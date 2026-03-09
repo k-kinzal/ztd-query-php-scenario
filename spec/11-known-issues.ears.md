@@ -598,3 +598,30 @@ UPDATE items SET code = SUBSTRING(code FROM 1 FOR 3) WHERE id = 1;
 UPDATE items SET name = TRIM(name) WHERE id = 1;
 UPDATE items SET code = SUBSTR(code, 1, 3) WHERE id = 1;
 ```
+
+## SPEC-11.PG-JSONB-QUESTION-MARK JSONB ? / ?| / ?& operators conflict with parameter placeholder
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-3.5](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresJsonbOperatorConflictTest`, `Pdo/PostgresJsonbColumnTest`
+
+PostgreSQL JSONB operators `?` (key exists), `?|` (any key exists), and `?&` (all keys exist) conflict with the CTE rewriter's parameter placeholder detection. The PgSqlParser treats `?` as a prepared-statement parameter marker and converts it to `$N`, producing invalid SQL such as `WHERE attributes $1 'material'`. This affects both `query()` and `prepare()` calls — the `?` is replaced during CTE rewriting, not during PDO parameter binding.
+
+This is distinct from the well-known PDO limitation where `?` in prepared statements conflicts with the JSONB `?` operator. The ZTD CTE rewriter additionally converts `?` to `$N` even in non-prepared `query()` calls, making the operator unusable regardless of execution method.
+
+Workarounds:
+- Use `jsonb_exists(col, 'key')` instead of `col ? 'key'`
+- Use `jsonb_exists_any(col, array['k1', 'k2'])` instead of `col ?| array['k1', 'k2']`
+- Use `jsonb_exists_all(col, array['k1', 'k2'])` instead of `col ?& array['k1', 'k2']`
+
+```sql
+-- Fails on PostgreSQL through ZTD:
+SELECT name FROM docs WHERE meta ? 'reviewed';
+SELECT name FROM docs WHERE meta ?| array['reviewed', 'priority'];
+SELECT name FROM docs WHERE meta ?& array['author', 'reviewed'];
+
+-- Workaround (all PostgreSQL contexts):
+SELECT name FROM docs WHERE jsonb_exists(meta, 'reviewed');
+SELECT name FROM docs WHERE jsonb_exists_any(meta, array['reviewed', 'priority']);
+SELECT name FROM docs WHERE jsonb_exists_all(meta, array['author', 'reviewed']);
+```

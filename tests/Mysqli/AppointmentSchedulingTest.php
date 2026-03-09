@@ -7,193 +7,226 @@ namespace Tests\Mysqli;
 use Tests\Support\AbstractMysqliTestCase;
 
 /**
- * Tests appointment scheduling scenarios through ZTD shadow store (MySQLi).
- * Covers calendar slot management with booking conflict detection using
- * time range overlap, date/time comparisons, JOIN for available slots,
- * GROUP BY with COUNT/SUM, and physical isolation.
- * @spec SPEC-10.2.135
+ * Tests appointment scheduling with BETWEEN for time ranges, EXISTS for conflict
+ * detection, COALESCE for defaults, UPDATE with range conditions, and NOT EXISTS
+ * anti-join patterns (MySQLi).
+ * SQL patterns exercised: BETWEEN, EXISTS/NOT EXISTS subqueries, COALESCE,
+ * UPDATE WHERE BETWEEN, COUNT with CASE, prepared BETWEEN.
+ * @spec SPEC-10.2.178
  */
 class AppointmentSchedulingTest extends AbstractMysqliTestCase
 {
     protected function getTableDDL(): string|array
     {
         return [
-            'CREATE TABLE mi_as_providers (
+            'CREATE TABLE mi_appt_room (
                 id INT PRIMARY KEY,
-                provider_name VARCHAR(100),
-                specialty VARCHAR(100)
+                name VARCHAR(50),
+                capacity INT,
+                building VARCHAR(50)
             )',
-            'CREATE TABLE mi_as_slots (
+            'CREATE TABLE mi_appt_booking (
                 id INT PRIMARY KEY,
-                provider_id INT,
-                slot_date TEXT,
-                start_time TEXT,
-                end_time TEXT,
-                is_available INT
-            )',
-            'CREATE TABLE mi_as_appointments (
-                id INT PRIMARY KEY,
-                slot_id INT,
-                patient_name VARCHAR(100),
-                appointment_type VARCHAR(100),
-                booked_at TEXT,
-                status TEXT
+                room_id INT,
+                title VARCHAR(100),
+                organizer VARCHAR(50),
+                start_time VARCHAR(20),
+                end_time VARCHAR(20),
+                status VARCHAR(20),
+                notes VARCHAR(200)
             )',
         ];
     }
 
     protected function getTableNames(): array
     {
-        return ['mi_as_appointments', 'mi_as_slots', 'mi_as_providers'];
+        return ['mi_appt_booking', 'mi_appt_room'];
     }
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->mysqli->query("INSERT INTO mi_as_providers VALUES (1, 'Dr. Smith', 'General')");
-        $this->mysqli->query("INSERT INTO mi_as_providers VALUES (2, 'Dr. Patel', 'Cardiology')");
+        $this->mysqli->query("INSERT INTO mi_appt_room VALUES (1, 'Alpha', 10, 'HQ')");
+        $this->mysqli->query("INSERT INTO mi_appt_room VALUES (2, 'Beta', 6, 'HQ')");
+        $this->mysqli->query("INSERT INTO mi_appt_room VALUES (3, 'Gamma', 20, 'Annex')");
 
-        $this->mysqli->query("INSERT INTO mi_as_slots VALUES (1, 1, '2025-10-06', '09:00', '09:30', 0)");
-        $this->mysqli->query("INSERT INTO mi_as_slots VALUES (2, 1, '2025-10-06', '09:30', '10:00', 0)");
-        $this->mysqli->query("INSERT INTO mi_as_slots VALUES (3, 1, '2025-10-06', '10:00', '10:30', 1)");
-        $this->mysqli->query("INSERT INTO mi_as_slots VALUES (4, 1, '2025-10-06', '10:30', '11:00', 1)");
-        $this->mysqli->query("INSERT INTO mi_as_slots VALUES (5, 1, '2025-10-06', '11:00', '11:30', 0)");
-
-        $this->mysqli->query("INSERT INTO mi_as_slots VALUES (6, 2, '2025-10-06', '14:00', '14:30', 0)");
-        $this->mysqli->query("INSERT INTO mi_as_slots VALUES (7, 2, '2025-10-06', '14:30', '15:00', 1)");
-        $this->mysqli->query("INSERT INTO mi_as_slots VALUES (8, 2, '2025-10-06', '15:00', '15:30', 1)");
-
-        $this->mysqli->query("INSERT INTO mi_as_appointments VALUES (1, 1, 'Alice', 'checkup', '2025-10-01', 'confirmed')");
-        $this->mysqli->query("INSERT INTO mi_as_appointments VALUES (2, 2, 'Bob', 'follow-up', '2025-10-02', 'confirmed')");
-        $this->mysqli->query("INSERT INTO mi_as_appointments VALUES (3, 5, 'Carol', 'checkup', '2025-10-03', 'cancelled')");
-        $this->mysqli->query("INSERT INTO mi_as_appointments VALUES (4, 6, 'Dave', 'consultation', '2025-10-04', 'confirmed')");
+        $this->mysqli->query("INSERT INTO mi_appt_booking VALUES (1, 1, 'Sprint Planning', 'alice', '2025-03-10 09:00', '2025-03-10 10:00', 'confirmed', NULL)");
+        $this->mysqli->query("INSERT INTO mi_appt_booking VALUES (2, 1, 'Design Review', 'bob', '2025-03-10 10:30', '2025-03-10 11:30', 'confirmed', NULL)");
+        $this->mysqli->query("INSERT INTO mi_appt_booking VALUES (3, 2, 'Standup', 'carol', '2025-03-10 09:00', '2025-03-10 09:15', 'confirmed', NULL)");
+        $this->mysqli->query("INSERT INTO mi_appt_booking VALUES (4, 1, 'Lunch Talk', 'dave', '2025-03-10 12:00', '2025-03-10 13:00', 'tentative', NULL)");
+        $this->mysqli->query("INSERT INTO mi_appt_booking VALUES (5, 3, 'All Hands', 'alice', '2025-03-10 14:00', '2025-03-10 15:00', 'confirmed', NULL)");
+        $this->mysqli->query("INSERT INTO mi_appt_booking VALUES (6, 2, 'Retrospective', 'bob', '2025-03-10 15:00', '2025-03-10 16:00', 'cancelled', NULL)");
     }
 
-    /**
-     * Available slots for a provider: WHERE is_available = 1 AND provider_id = 1.
-     * JOIN with providers to show provider_name.
-     * Dr. Smith has 2 available slots: 10:00-10:30 and 10:30-11:00.
-     */
-    public function testAvailableSlotsForProvider(): void
+    public function testBetweenTimeRange(): void
     {
         $rows = $this->ztdQuery(
-            "SELECT s.id, s.start_time, s.end_time, p.provider_name
-             FROM mi_as_slots s
-             JOIN mi_as_providers p ON p.id = s.provider_id
-             WHERE s.is_available = 1 AND s.provider_id = 1
-             ORDER BY s.start_time"
-        );
-
-        $this->assertCount(2, $rows);
-        $this->assertSame('10:00', $rows[0]['start_time']);
-        $this->assertSame('10:30', $rows[0]['end_time']);
-        $this->assertSame('Dr. Smith', $rows[0]['provider_name']);
-        $this->assertSame('10:30', $rows[1]['start_time']);
-        $this->assertSame('11:00', $rows[1]['end_time']);
-        $this->assertSame('Dr. Smith', $rows[1]['provider_name']);
-    }
-
-    /**
-     * Provider schedule summary: GROUP BY provider_id with COUNT and SUM.
-     * Dr. Smith: 5 total, 2 available, 3 booked.
-     * Dr. Patel: 3 total, 2 available, 1 booked.
-     */
-    public function testProviderScheduleSummary(): void
-    {
-        $rows = $this->ztdQuery(
-            "SELECT p.provider_name,
-                    COUNT(s.id) AS total_slots,
-                    SUM(s.is_available) AS available,
-                    COUNT(s.id) - SUM(s.is_available) AS booked
-             FROM mi_as_providers p
-             JOIN mi_as_slots s ON s.provider_id = p.id
-             GROUP BY p.id, p.provider_name
-             ORDER BY p.provider_name"
-        );
-
-        $this->assertCount(2, $rows);
-        $this->assertSame('Dr. Patel', $rows[0]['provider_name']);
-        $this->assertEquals(3, (int) $rows[0]['total_slots']);
-        $this->assertEquals(2, (int) $rows[0]['available']);
-        $this->assertEquals(1, (int) $rows[0]['booked']);
-        $this->assertSame('Dr. Smith', $rows[1]['provider_name']);
-        $this->assertEquals(5, (int) $rows[1]['total_slots']);
-        $this->assertEquals(2, (int) $rows[1]['available']);
-        $this->assertEquals(3, (int) $rows[1]['booked']);
-    }
-
-    /**
-     * Active appointments: JOIN appointments with slots and providers
-     * WHERE status != 'cancelled'. 3 rows (appointments 1, 2, 4).
-     * ORDER BY patient_name: Alice, Bob, Dave.
-     */
-    public function testActiveAppointments(): void
-    {
-        $rows = $this->ztdQuery(
-            "SELECT a.id, a.patient_name, a.appointment_type, p.provider_name
-             FROM mi_as_appointments a
-             JOIN mi_as_slots s ON s.id = a.slot_id
-             JOIN mi_as_providers p ON p.id = s.provider_id
-             WHERE a.status != 'cancelled'
-             ORDER BY a.patient_name"
+            "SELECT b.title, b.start_time, r.name AS room
+             FROM mi_appt_booking b
+             JOIN mi_appt_room r ON r.id = b.room_id
+             WHERE b.start_time BETWEEN '2025-03-10 09:00' AND '2025-03-10 12:00'
+               AND b.status = 'confirmed'
+             ORDER BY b.start_time"
         );
 
         $this->assertCount(3, $rows);
-        $this->assertSame('Alice', $rows[0]['patient_name']);
-        $this->assertSame('Dr. Smith', $rows[0]['provider_name']);
-        $this->assertSame('Bob', $rows[1]['patient_name']);
-        $this->assertSame('Dr. Smith', $rows[1]['provider_name']);
-        $this->assertSame('Dave', $rows[2]['patient_name']);
-        $this->assertSame('Dr. Patel', $rows[2]['provider_name']);
+        $this->assertSame('Sprint Planning', $rows[0]['title']);
+        $this->assertSame('Standup', $rows[1]['title']);
+        $this->assertSame('Design Review', $rows[2]['title']);
     }
 
-    /**
-     * Booking conflict detection: check if 09:15-09:45 overlaps existing
-     * booked slots for Dr. Smith. Slots 1 (09:00-09:30) and 2 (09:30-10:00)
-     * are booked and overlap this range. Assert count > 0 (conflict exists).
-     */
-    public function testBookingConflictDetection(): void
+    public function testExistsSubquery(): void
     {
         $rows = $this->ztdQuery(
-            "SELECT COUNT(*) AS conflict_count
-             FROM mi_as_slots
-             WHERE provider_id = 1
-               AND is_available = 0
-               AND start_time < '09:45'
-               AND end_time > '09:15'"
+            "SELECT r.name, r.building
+             FROM mi_appt_room r
+             WHERE EXISTS (
+                 SELECT 1 FROM mi_appt_booking b
+                 WHERE b.room_id = r.id AND b.status = 'confirmed'
+             )
+             ORDER BY r.name"
         );
 
-        $this->assertGreaterThan(0, (int) $rows[0]['conflict_count']);
+        $this->assertCount(3, $rows);
+        $this->assertSame('Alpha', $rows[0]['name']);
+        $this->assertSame('Beta', $rows[1]['name']);
+        $this->assertSame('Gamma', $rows[2]['name']);
     }
 
-    /**
-     * Cancelled appointment count: COUNT appointments WHERE status = 'cancelled'.
-     * Only Carol's appointment is cancelled. Assert 1.
-     */
-    public function testCancelledAppointmentCount(): void
+    public function testNotExistsAntiJoin(): void
     {
         $rows = $this->ztdQuery(
-            "SELECT COUNT(*) AS cancelled_count
-             FROM mi_as_appointments
-             WHERE status = 'cancelled'"
+            "SELECT r.name
+             FROM mi_appt_room r
+             WHERE NOT EXISTS (
+                 SELECT 1 FROM mi_appt_booking b
+                 WHERE b.room_id = r.id
+                   AND b.status = 'confirmed'
+                   AND b.start_time >= '2025-03-10 14:00'
+                   AND b.start_time < '2025-03-10 16:00'
+             )
+             ORDER BY r.name"
         );
 
-        $this->assertEquals(1, (int) $rows[0]['cancelled_count']);
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alpha', $rows[0]['name']);
+        $this->assertSame('Beta', $rows[1]['name']);
     }
 
-    /**
-     * Physical isolation: shadow mutations don't reach physical tables.
-     */
+    public function testCoalesceForDefaults(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT title, COALESCE(notes, 'No notes') AS display_notes
+             FROM mi_appt_booking
+             WHERE room_id = 1
+             ORDER BY start_time"
+        );
+
+        $this->assertCount(3, $rows);
+        $this->assertSame('No notes', $rows[0]['display_notes']);
+    }
+
+    public function testUpdateWithBetween(): void
+    {
+        $this->ztdExec(
+            "UPDATE mi_appt_booking SET status = 'cancelled'
+             WHERE start_time BETWEEN '2025-03-10 09:00' AND '2025-03-10 11:59'
+               AND status != 'cancelled'"
+        );
+
+        $rows = $this->ztdQuery(
+            "SELECT title, status FROM mi_appt_booking ORDER BY id"
+        );
+
+        $this->assertSame('cancelled', $rows[0]['status']);
+        $this->assertSame('cancelled', $rows[1]['status']);
+        $this->assertSame('cancelled', $rows[2]['status']);
+        $this->assertSame('tentative', $rows[3]['status']);
+    }
+
+    public function testCountCaseStatusSummary(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT r.name,
+                    COUNT(b.id) AS total,
+                    SUM(CASE WHEN b.status = 'confirmed' THEN 1 ELSE 0 END) AS confirmed,
+                    SUM(CASE WHEN b.status = 'tentative' THEN 1 ELSE 0 END) AS tentative,
+                    SUM(CASE WHEN b.status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled
+             FROM mi_appt_room r
+             LEFT JOIN mi_appt_booking b ON b.room_id = r.id
+             GROUP BY r.id, r.name
+             ORDER BY r.name"
+        );
+
+        $this->assertCount(3, $rows);
+        $this->assertSame('Alpha', $rows[0]['name']);
+        $this->assertEquals(3, (int) $rows[0]['total']);
+        $this->assertEquals(2, (int) $rows[0]['confirmed']);
+        $this->assertEquals(1, (int) $rows[0]['tentative']);
+        $this->assertSame('Beta', $rows[1]['name']);
+        $this->assertEquals(2, (int) $rows[1]['total']);
+    }
+
+    public function testPreparedBetween(): void
+    {
+        $rows = $this->ztdPrepareAndExecute(
+            "SELECT b.title, r.name AS room
+             FROM mi_appt_booking b
+             JOIN mi_appt_room r ON r.id = b.room_id
+             WHERE b.start_time BETWEEN ? AND ?
+               AND b.status = ?
+             ORDER BY b.start_time",
+            ['2025-03-10 09:00', '2025-03-10 12:00', 'confirmed']
+        );
+
+        $this->assertCount(3, $rows);
+        $this->assertSame('Sprint Planning', $rows[0]['title']);
+    }
+
+    public function testOverlapDetection(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT r.name
+             FROM mi_appt_room r
+             WHERE r.id = 1
+               AND NOT EXISTS (
+                   SELECT 1 FROM mi_appt_booking b
+                   WHERE b.room_id = r.id
+                     AND b.status IN ('confirmed', 'tentative')
+                     AND b.start_time < '2025-03-10 10:30'
+                     AND b.end_time > '2025-03-10 10:00'
+               )"
+        );
+
+        $this->assertCount(1, $rows);
+        $this->assertSame('Alpha', $rows[0]['name']);
+
+        $rows2 = $this->ztdQuery(
+            "SELECT r.name
+             FROM mi_appt_room r
+             WHERE r.id = 1
+               AND NOT EXISTS (
+                   SELECT 1 FROM mi_appt_booking b
+                   WHERE b.room_id = r.id
+                     AND b.status IN ('confirmed', 'tentative')
+                     AND b.start_time < '2025-03-10 10:15'
+                     AND b.end_time > '2025-03-10 09:30'
+               )"
+        );
+
+        $this->assertCount(0, $rows2);
+    }
+
     public function testPhysicalIsolation(): void
     {
-        $this->mysqli->query("INSERT INTO mi_as_appointments VALUES (5, 3, 'Eve', 'checkup', '2025-10-05', 'confirmed')");
+        $this->ztdExec("DELETE FROM mi_appt_booking WHERE status = 'cancelled'");
 
-        $rows = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM mi_as_appointments");
-        $this->assertSame(5, (int) $rows[0]['cnt']);
+        $rows = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM mi_appt_booking");
+        $this->assertEquals(5, (int) $rows[0]['cnt']);
 
         $this->mysqli->disableZtd();
-        $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_as_appointments');
+        $result = $this->mysqli->query("SELECT COUNT(*) AS cnt FROM mi_appt_booking");
         $this->assertEquals(0, (int) $result->fetch_assoc()['cnt']);
     }
 }

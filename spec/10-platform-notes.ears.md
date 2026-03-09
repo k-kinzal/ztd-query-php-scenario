@@ -1537,3 +1537,24 @@ A fleet management system with tables `vehicle`, `vehicle_type`, and `vehicle_tr
 **Tests:** `Mysqli/DonationCampaignTest`, `Pdo/MysqlDonationCampaignTest`, `Pdo/PostgresDonationCampaignTest`, `Pdo/SqliteDonationCampaignTest`
 
 A donation campaign system with donors, campaigns, and donations exercises INSERT with explicit column list in non-DDL order, self-referencing UPDATE arithmetic (raised = raised + amount), chained self-referencing UPDATEs, COUNT(DISTINCT donor_id), COALESCE(SUM, 0) with LEFT JOIN for campaigns with zero donations, ROUND percentage calculation, DELETE + verify remaining count, and prepared 3-table JOIN by donor email. All tests pass on all platforms — the shadow store correctly handles reordered column inserts and chained self-referencing arithmetic updates.
+
+## SPEC-10.2.178 Appointment scheduling with BETWEEN, EXISTS/NOT EXISTS, overlap detection
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/AppointmentSchedulingTest`, `Pdo/MysqlAppointmentSchedulingTest`, `Pdo/PostgresAppointmentSchedulingTest`, `Pdo/SqliteAppointmentSchedulingTest`
+
+An appointment scheduling system with rooms and bookings exercises BETWEEN for time range filtering, correlated EXISTS and NOT EXISTS subqueries for room availability, NOT EXISTS with overlap detection (new_start < existing_end AND new_end > existing_start), COALESCE for nullable notes, UPDATE WHERE BETWEEN to cancel morning bookings, COUNT with CASE for status summaries via LEFT JOIN GROUP BY, prepared statements with three BETWEEN/equality params, and IN list inside NOT EXISTS. SQLite-PDO: all tests pass.
+
+## SPEC-10.2.179 Product catalog with LIKE, IN list, COALESCE chain, LIMIT/OFFSET, string functions
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ProductCatalogSearchTest`, `Pdo/MysqlProductCatalogSearchTest`, `Pdo/PostgresProductCatalogSearchTest`, `Pdo/SqliteProductCatalogSearchTest`
+
+A product catalog with nullable brand and discount columns exercises LIKE with prefix and contains patterns, NOT LIKE, IN list for multi-category filtering, COALESCE chains for NULL brand and description, COALESCE(discount_price, price) for effective pricing, multi-column ORDER BY (category ASC, price DESC), LIMIT/OFFSET pagination, LENGTH/CHAR_LENGTH and UPPER string functions through the CTE shadow store, prepared LIKE with bound wildcard parameter, and UPDATE with IS NULL in WHERE. SQLite-PDO: all tests pass.
+
+## SPEC-10.2.180 Audit trail versioning with sequential same-row updates, MIN/MAX, LIMIT/OFFSET
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/AuditTrailVersioningTest`, `Pdo/MysqlAuditTrailVersioningTest`, `Pdo/PostgresAuditTrailVersioningTest`, `Pdo/SqliteAuditTrailVersioningTest`
+
+An audit trail system with documents and log entries exercises three sequential UPDATE mutations on the same row (draft→review→approved→published) verifying shadow store consistency after each step, INSERT into a second table referencing the updated state, MAX(version) with GROUP BY, JOIN with COUNT and HAVING for filtering documents by log entry count, MIN/MAX on timestamps per group, LIMIT/OFFSET pagination of audit log, DELETE by timestamp range, and bulk UPDATE with status filter. SQLite-PDO: all tests pass.

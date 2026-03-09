@@ -626,6 +626,14 @@ SELECT name FROM docs WHERE jsonb_exists_any(meta, array['reviewed', 'priority']
 SELECT name FROM docs WHERE jsonb_exists_all(meta, array['author', 'reviewed']);
 ```
 
+## SPEC-11.SQLITE-MULTI-COL-INTERSECT Multi-column INTERSECT returns empty results on SQLite
+**Status:** Known Issue (not yet reported)
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-3.3d](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteSetOperationTest::testIntersectMultiColumnReturnsEmptyOnSqlite`
+
+Single-column INTERSECT works correctly on SQLite through the CTE shadow store, but multi-column INTERSECT returns 0 rows instead of the expected results. For example, `SELECT department, skill FROM employees INTERSECT SELECT department, skill FROM contractors` returns empty when it should return 3 matching (department, skill) pairs. PostgreSQL handles multi-column INTERSECT correctly.
+
 ## SPEC-11.INSERT-SELECT-JOIN `[Issue #49]` INSERT...SELECT with multi-table JOIN produces incorrect results
 **Status:** Known Issue
 **Platforms:** MySQL-PDO (error), MySQL-MySQLi (error), PostgreSQL-PDO (NULL columns), SQLite-PDO (NULL columns)

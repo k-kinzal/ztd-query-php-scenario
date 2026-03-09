@@ -1613,3 +1613,24 @@ DELETE statements with WHERE clauses containing subqueries that JOIN other table
 **Tests:** `Pdo/MysqlInsertSelectJoinAggregateTest`, `Pdo/PostgresInsertSelectJoinAggregateTest`, `Pdo/SqliteInsertSelectJoinAggregateTest`
 
 INSERT...SELECT with multi-table JOINs and aggregate functions (COUNT, SUM) fails or produces incorrect results. On MySQL, the InsertTransformer throws "Unknown column 'alias.col' in 'field list'" because it cannot resolve column references from JOINed table aliases. On PostgreSQL and SQLite, rows are inserted but non-PK columns from JOINed tables and aggregate expressions become NULL — extending SPEC-11.INSERT-SELECT-COMPUTED to multi-table JOIN sources. Some source columns (e.g. `c.region`) may preserve values while others (e.g. `c.name`) do not. INSERT...SELECT from a single table (no JOINs) works on MySQL as a workaround.
+
+## SPEC-10.2.188 LIKE pattern matching with ESCAPE clause
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/LikePatternTest`, `Pdo/MysqlLikePatternTest`, `Pdo/PostgresLikePatternTest`, `Pdo/SqliteLikePatternTest`
+
+LIKE pattern matching works correctly through CTE shadow data on all platforms. Verified: `%` wildcard, `_` single-character wildcard, LIKE with ESCAPE clause for literal `%` matching, NOT LIKE, LIKE in UPDATE WHERE, LIKE in DELETE WHERE, LIKE with prepared statement parameters, case-insensitive LIKE (MySQL/SQLite default), and PostgreSQL ILIKE. The CTE rewriter correctly handles ESCAPE clauses and special characters in LIKE patterns.
+
+## SPEC-10.2.189 Scalar subqueries in SELECT list
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ScalarSubqueryTest`, `Pdo/MysqlScalarSubqueryTest`, `Pdo/PostgresScalarSubqueryTest`, `Pdo/SqliteScalarSubqueryTest`
+
+Correlated scalar subqueries in SELECT lists work correctly through CTE shadow data on all platforms. Verified: single scalar subquery (COUNT), multiple scalar subqueries in same SELECT, correlated scalar subquery with aggregate (MAX), scalar subquery combined with WHERE filter, nested scalar subquery referencing multiple tables, scalar subquery returning NULL (empty result set), scalar subquery reflecting INSERT mutations, and prepared statements with scalar subqueries.
+
+## SPEC-10.2.190 INTERSECT and EXCEPT set operations
+**Status:** Partial (see [SPEC-11.MYSQL-EXCEPT-INTERSECT](11-known-issues.ears.md), [SPEC-11.SQLITE-MULTI-COL-INTERSECT](11-known-issues.ears.md))
+**Platforms:** PostgreSQL-PDO (fully working), SQLite-PDO (partial), MySQL-PDO/MySQLi (rejected)
+**Tests:** `Pdo/PostgresSetOperationTest`, `Pdo/SqliteSetOperationTest`, `Pdo/MysqlSetOperationTest`, `Mysqli/SetOperationTest`
+
+INTERSECT and EXCEPT work correctly on PostgreSQL through CTE shadow data, including INTERSECT ALL, multi-column INTERSECT, EXCEPT with ORDER BY/LIMIT, combined UNION+EXCEPT+INTERSECT with correct precedence, mutation sensitivity, and prepared statements. On SQLite, single-column INTERSECT/EXCEPT work but multi-column INTERSECT returns empty results. On MySQL (PDO and MySQLi), INTERSECT and EXCEPT are rejected as "Multi-statement SQL" by the CTE rewriter; UNION works correctly. Workarounds for MySQL: use IN/NOT IN subqueries instead.

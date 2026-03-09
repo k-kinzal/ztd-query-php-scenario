@@ -1496,3 +1496,30 @@ LEFT JOIN COALESCE (missing=0), weighted CASE WHEN, DELETE EXISTS, and per-assig
 A warehouse inventory system with bins (product, location, base quantity), inbound movements, and outbound movements exercises UNION ALL in derived table for net movement calculation, INSERT ... SELECT with GROUP BY from UNION ALL for snapshot generation, HAVING on aggregated UNION ALL, product-level aggregation with double LEFT JOIN to subqueries, and prepared UNION ALL derived table with BETWEEN date filter.
 
 **New Finding:** UNION ALL inside a derived table (subquery in FROM clause) returns empty results on SQLite and MySQL through ZTD. PostgreSQL works correctly. Top-level UNION ALL works correctly on all platforms — the CTE rewriter handles `SELECT ... UNION ALL SELECT ...` at the top level, but when wrapped in `(... UNION ALL ...) alias`, the rewriter does not rewrite table references inside the UNION branches on SQLite and MySQL. Product-level aggregation using LEFT JOIN to separate aggregate subqueries (no UNION ALL) works correctly on SQLite and PostgreSQL, but returns empty on MySQL (derived tables in LEFT JOIN not rewritten). See SPEC-11.UNION-ALL-DERIVED.
+
+## SPEC-10.2.167 Sales commission with window functions
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SalesCommissionTest`, `Pdo/MysqlSalesCommissionTest`, `Pdo/PostgresSalesCommissionTest`, `Pdo/SqliteSalesCommissionTest`
+
+A sales commission system with reps and deals exercises ROW_NUMBER() OVER (PARTITION BY rep ORDER BY date) for deal sequencing, SUM() OVER (PARTITION BY ... ROWS UNBOUNDED PRECEDING) for running totals, LAG() for comparing to previous deal amount, window function in derived table filtered by WHERE rn=1 for top deal per rep, prepared statement with window function, and physical isolation.
+
+ROW_NUMBER, SUM OVER, LAG, and prepared window queries work correctly on all platforms. **Window function in derived table returns empty** on all platforms (MySQLi, MySQL-PDO, SQLite) — the CTE rewriter does not handle derived tables containing window functions. PostgreSQL passes window function queries but derived table pattern also returns empty. See SPEC-11.WINDOW-DERIVED.
+
+## SPEC-10.2.168 Project timesheet with ROLLUP
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ProjectTimesheetTest`, `Pdo/MysqlProjectTimesheetTest`, `Pdo/PostgresProjectTimesheetTest`, `Pdo/SqliteProjectTimesheetTest`
+
+An employee timesheet system with employees, projects, and time entries exercises GROUP BY ... WITH ROLLUP (MySQL) / GROUP BY ROLLUP(...) (PostgreSQL) for department+project subtotals and grand totals, COALESCE for ROLLUP NULL labels, conditional aggregation with SUM(CASE WHEN billable ...), HAVING SUM threshold, prepared GROUP BY with department filter, and physical isolation. SQLite uses UNION ALL approach for subtotals since ROLLUP is unsupported.
+
+Conditional aggregation, HAVING threshold, and prepared GROUP BY work on all platforms. ROLLUP returns correct results on MySQL (MySQLi and PDO) and PostgreSQL. **SQLite UNION ALL subtotal approach in derived table returns only 1 row** instead of 9 — branches are lost, confirming SPEC-11.UNION-ALL-DERIVED.
+
+## SPEC-10.2.169 Waitlist reservation with NOT EXISTS and CASE
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/WaitlistReservationTest`, `Pdo/MysqlWaitlistReservationTest`, `Pdo/PostgresWaitlistReservationTest`, `Pdo/SqliteWaitlistReservationTest`
+
+A restaurant reservation system with tables, reservations, and waitlist exercises NOT EXISTS anti-pattern for available table discovery, nested CASE in SELECT for fit-status classification, multiple correlated COUNT scalar subqueries per row, UPDATE SET with correlated scalar subquery containing nested NOT EXISTS, DELETE with status filter, CASE-as-boolean in WHERE with prepared parameters, and physical isolation.
+
+NOT EXISTS, nested CASE in SELECT, scalar subqueries, correlated UPDATE, and DELETE all work correctly on all platforms. **CASE-as-boolean in WHERE with prepared parameters returns wrong row count** (3 instead of expected 2) on all platforms — the CASE expression used as a filter condition doesn't evaluate correctly when bound parameters are involved. See SPEC-11.CASE-WHERE-PARAMS.

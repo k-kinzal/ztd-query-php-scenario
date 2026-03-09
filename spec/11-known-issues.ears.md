@@ -418,3 +418,51 @@ FROM bins b
 LEFT JOIN (SELECT bin_id, SUM(qty) AS total_in FROM inbound GROUP BY bin_id) i ON i.bin_id = b.id
 LEFT JOIN (SELECT bin_id, SUM(qty) AS total_out FROM outbound GROUP BY bin_id) o ON o.bin_id = b.id;
 ```
+
+## SPEC-11.WINDOW-DERIVED Window function in derived table returns empty
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-3.3](03-read-operations.ears.md), [SPEC-10.2.167](10-platform-notes.ears.md)
+**Tests:** `Mysqli/SalesCommissionTest`, `Pdo/MysqlSalesCommissionTest`, `Pdo/PostgresSalesCommissionTest`, `Pdo/SqliteSalesCommissionTest`
+
+A SELECT from a derived table containing window functions returns empty results through ZTD on all platforms. The common "top-N per group" pattern — `SELECT * FROM (SELECT ..., ROW_NUMBER() OVER (...) AS rn FROM t) sub WHERE rn = 1` — returns 0 rows. Top-level window function queries work correctly (ROW_NUMBER, SUM OVER, LAG all return expected results). The CTE rewriter does not rewrite table references inside derived tables that contain window functions.
+
+```sql
+-- Returns empty on all platforms:
+SELECT r.name, d.client, d.amount
+FROM (
+    SELECT d.*, ROW_NUMBER() OVER (PARTITION BY d.rep_id ORDER BY d.amount DESC) AS rn
+    FROM deals d
+) d
+JOIN reps r ON r.id = d.rep_id
+WHERE d.rn = 1;
+
+-- Workaround: use correlated subquery with MAX instead:
+SELECT r.name, d.client, d.amount
+FROM deals d
+JOIN reps r ON r.id = d.rep_id
+WHERE d.amount = (SELECT MAX(d2.amount) FROM deals d2 WHERE d2.rep_id = d.rep_id);
+```
+
+## SPEC-11.CASE-WHERE-PARAMS CASE-as-boolean in WHERE with prepared params returns wrong count
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-3.6](03-read-operations.ears.md), [SPEC-10.2.169](10-platform-notes.ears.md)
+**Tests:** `Mysqli/WaitlistReservationTest`, `Pdo/MysqlWaitlistReservationTest`, `Pdo/PostgresWaitlistReservationTest`, `Pdo/SqliteWaitlistReservationTest`
+
+Using a CASE expression as a boolean filter in a WHERE clause with prepared statement parameters returns incorrect row counts through ZTD on all platforms. A query with `WHERE status = ? AND CASE WHEN ? = 'value' THEN condition END` returns more rows than expected — the CASE filter appears to be ignored or always evaluate to true.
+
+```sql
+-- Returns 3 rows instead of expected 2 on all platforms:
+SELECT w.guest_name, w.party_size, w.priority
+FROM waitlist w
+WHERE w.status = ?
+  AND CASE WHEN ? = 'high' THEN w.priority = 1
+           WHEN ? = 'medium' THEN w.priority <= 2
+           ELSE 1=1
+      END
+ORDER BY w.priority, w.id;
+-- Params: ['waiting', 'medium', 'medium']
+
+-- Workaround: expand CASE conditions into explicit OR/AND logic in the application layer.
+```

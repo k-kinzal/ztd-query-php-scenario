@@ -418,6 +418,9 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.164 | `Pdo/MysqlSubscriptionRenewalTest`, `Pdo/PostgresSubscriptionRenewalTest`, `Pdo/SqliteSubscriptionRenewalTest` | — | V | V | P | DELETE WHERE IN (subquery+JOIN), INSERT SELECT JOIN, correlated subqueries in SELECT list, prepared HAVING, UPDATE+verify |
 | SPEC-10.2.165 | `Pdo/MysqlStudentGradeReportTest`, `Pdo/PostgresStudentGradeReportTest`, `Pdo/SqliteStudentGradeReportTest` | — | V | V | P | CROSS JOIN+LEFT JOIN COALESCE missing=0, CASE WHEN letter grades, weighted average, DELETE EXISTS, prepared HAVING |
 | SPEC-10.2.166 | `Pdo/MysqlInventorySnapshotTest`, `Pdo/PostgresInventorySnapshotTest`, `Pdo/SqliteInventorySnapshotTest` | — | V | V | P | UNION ALL derived table (NEW FINDING), INSERT SELECT+UNION ALL, HAVING on UNION ALL, double LEFT JOIN aggregate, prepared UNION ALL |
+| SPEC-10.2.167 | `*SalesCommissionTest` | P | P | V | P | ROW_NUMBER OVER, SUM OVER running total, LAG compare, window in derived table (empty on all), prepared window |
+| SPEC-10.2.168 | `*ProjectTimesheetTest` | V | V | V | P | ROLLUP subtotals (MySQL/PG), UNION ALL subtotals (SQLite—1 row only), conditional SUM CASE, HAVING threshold, prepared GROUP BY |
+| SPEC-10.2.169 | `*WaitlistReservationTest` | P | P | P | P | NOT EXISTS, nested CASE SELECT, scalar subqueries, correlated UPDATE+NOT EXISTS, CASE-in-WHERE+params (wrong count on all) |
 
 ## 11. Known Issues (Selected)
 

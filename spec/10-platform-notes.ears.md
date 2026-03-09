@@ -1718,3 +1718,38 @@ PostgreSQL GENERATED ALWAYS AS (expression) STORED columns lose their computed-c
 **Tests:** `Pdo/PostgresArrayFunctionsTest`
 
 PostgreSQL ARRAY[] constructor syntax (`ARRAY['a','b','c']`) in INSERT causes "Insert values count does not match column count". The commas inside ARRAY[] are misinterpreted as value separators. This extends Issue #33 (array types broken) with a different failure mode — not just CAST issues, but INSERT parsing failures.
+
+## SPEC-10.2.203 UPDATE without WHERE clause
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/UpdateWithoutWhereTest`, `Pdo/MysqlUpdateWithoutWhereTest`, `Pdo/PostgresUpdateWithoutWhereTest`, `Pdo/SqliteUpdateWithoutWhereTest`
+
+`UPDATE table SET col = value` (no WHERE clause) correctly updates all rows in the shadow store on all platforms. This is different from DELETE without WHERE, which is silently ignored on SQLite ([Issue #7](11-known-issues.ears.md)). The `WHERE 1=1` workaround is not needed for UPDATE.
+
+## SPEC-10.2.204 Scalar subquery in INSERT VALUES position
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/InsertValuesSubqueryTest`, `Pdo/MysqlInsertValuesSubqueryTest`, `Pdo/PostgresInsertValuesSubqueryTest`, `Pdo/SqliteInsertValuesSubqueryTest`
+
+`INSERT INTO t (id, total) VALUES (1, (SELECT COUNT(*) FROM t2))` with scalar subqueries in the VALUES clause works correctly on all platforms. The CTE rewriter correctly rewrites table references inside scalar subqueries embedded in VALUES. COUNT, SUM, MAX, and filtered subqueries all produce correct values. Subqueries correctly see shadow data from prior mutations.
+
+## SPEC-10.2.205 Table-less queries through ZTD
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/TablelessQueryTest`, `Pdo/MysqlTablelessQueryTest`, `Pdo/PostgresTablelessQueryTest`, `Pdo/SqliteTablelessQueryTest`
+
+Queries that do not reference any table (system functions, arithmetic, literals) work correctly through ZTD on all platforms. Verified patterns: `SELECT 1`, `SELECT 1+1`, `SELECT 'hello'`, `SELECT CURRENT_TIMESTAMP`, `SELECT NULL`, platform-specific system functions (VERSION(), DATABASE(), sqlite_version(), current_database(), etc.), and prepared table-less queries.
+
+## SPEC-10.2.206 CREATE TABLE mid-session then DML
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/DdlMidSessionDmlTest`, `Pdo/MysqlDdlMidSessionDmlTest`, `Pdo/PostgresDdlMidSessionDmlTest`, `Pdo/SqliteDdlMidSessionDmlTest`
+
+When a table is created through ZTD mid-session (`CREATE TABLE` via exec/query), subsequent DML (INSERT, SELECT, UPDATE, DELETE) on the new table works correctly through the shadow store. On MySQL and PostgreSQL, the table is NOT physically created — the ZTD adapter maintains the schema and data entirely in the shadow store. On SQLite (fromPdo), the DDL passes through to the underlying in-memory connection.
+
+## SPEC-10.2.207 Expression-based WHERE in DELETE/UPDATE
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ExpressionWhereClauseDmlTest`, `Pdo/MysqlExpressionWhereClauseDmlTest`, `Pdo/PostgresExpressionWhereClauseDmlTest`, `Pdo/SqliteExpressionWhereClauseDmlTest`
+
+DELETE and UPDATE with function calls in WHERE (LENGTH, LOWER, ABS, CONCAT/||, arithmetic expressions) work correctly on all platforms. CASE expressions in DELETE/UPDATE WHERE fail on MySQL ([Issue #96](11-known-issues.ears.md)). Prepared DELETE with function WHERE fails on SQLite ([Issue #95](11-known-issues.ears.md)).

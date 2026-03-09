@@ -1133,4 +1133,20 @@ Affected patterns:
 
 Non-nested function patterns and single-nesting without params work correctly.
 
+**Additional finding:** This issue also affects prepared DELETE statements. `DELETE FROM t WHERE score > ? AND LENGTH(name) > ?` with params deletes 0 rows on SQLite, while the non-prepared (exec) version works correctly.
+
 Related: Issue #22 (HAVING with prepared params), Issue #75 (CASE with prepared params), Issue #80 (NULLIF with prepared param).
+
+## SPEC-11.MYSQL-CASE-WHERE-DML `[Issue #96]` MySQL: DELETE/UPDATE with CASE in WHERE matches ALL rows
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Mysqli/ExpressionWhereClauseDmlTest`, `Pdo/MysqlExpressionWhereClauseDmlTest`
+
+On MySQL (both MySQLi and PDO adapters), DELETE and UPDATE statements with a CASE expression in the WHERE clause incorrectly match ALL rows instead of only the rows where the CASE evaluates to the matching value. The shadow store's DELETE/UPDATE resolver appears to ignore the CASE expression entirely, treating it as if all rows match.
+
+- `DELETE FROM t WHERE CASE WHEN score > 80 THEN 1 ELSE 0 END = 1` — deletes ALL rows (expected: only rows with score > 80)
+- `UPDATE t SET score = 0 WHERE CASE WHEN score > 80 THEN 1 ELSE 0 END = 1` — updates ALL rows (expected: only rows with score > 80)
+- `SELECT * FROM t WHERE CASE WHEN score > 80 THEN 1 ELSE 0 END = 1` — works correctly (returns only matching rows)
+
+PostgreSQL and SQLite are NOT affected. Native MySQL (without ZTD) handles CASE in WHERE correctly for all operations.

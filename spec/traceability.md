@@ -239,6 +239,12 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.110 | `*ContentModerationTest` | V | V | V | V | V |
 | SPEC-10.2.111 | `*InventoryHoldTest` | V | V | V | V | V |
 | SPEC-10.2.112 | `*DashboardKpiTest` | V | V | V | V | V |
+| SPEC-10.2.113 | `*PasswordResetTokenTest` | V | V | V | V | V |
+| SPEC-10.2.114 | `*MultiLanguageContentTest` | V | V | V | V | V |
+| SPEC-10.2.115 | `*SplitPaymentTest` | V | V | V | V | V |
+| SPEC-10.2.116 | `*UserActivityStreakTest` | V | V | V | V | V |
+| SPEC-10.2.117 | `*DataRetentionPolicyTest` | V | V | V | V | V |
+| SPEC-10.2.118 | `*TaxCalculationTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -328,6 +334,12 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-3.3 | `*ContentModerationTest` | V | V | V | V | Flag accumulation, HAVING escalation threshold, 3-table LEFT JOIN |
 | SPEC-4.2 | `*InventoryHoldTest` | V | V | V | V | Hold/reservation workflow, date-based expiry, stock calculation |
 | SPEC-3.3 | `*DashboardKpiTest` | V | V | V | V | Multi-entity aggregation, revenue/segment, monthly trends, top pages |
+| SPEC-3.1 | `*PasswordResetTokenTest` | V | V | V | V | Date-filtered token lookup, EXISTS subquery, one-time consumption |
+| SPEC-3.3 | `*MultiLanguageContentTest` | V | V | V | V | LEFT JOIN + COALESCE language fallback, translation coverage stats |
+| SPEC-4.2 | `*SplitPaymentTest` | V | V | V | V | HAVING SUM integrity, partial refund arithmetic, percentage calc |
+| SPEC-10.2.23 | `*UserActivityStreakTest` | V | V | V | V | LAG window for previous-date, gap detection, activity date range |
+| SPEC-4.2 | `*DataRetentionPolicyTest` | V | V | V | V | PII anonymization, date-range DELETE, LEFT JOIN inactive detection |
+| SPEC-3.3 | `*TaxCalculationTest` | V | V | V | V | Multi-table JOIN tax rules, ROUND arithmetic, AVG by country |
 
 ## 11. Known Issues (Selected)
 

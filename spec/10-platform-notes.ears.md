@@ -1008,3 +1008,57 @@ Verified patterns: available stock (LEFT JOIN + SUM CASE active held), active ho
 A dashboard KPI compilation with multiple independent aggregations across 4 entity tables works correctly through ZTD shadow store on all platforms. The scenario exercises SUM/COUNT/AVG for revenue summaries, cross-entity JOINs with GROUP BY for revenue-by-segment breakdowns, priority-grouped ticket counts, per-customer health scores via multiple LEFT JOINs, SUBSTR-based date grouping for monthly order trends, and COUNT with ORDER BY/LIMIT for top-pages analysis.
 
 Verified patterns: revenue summary (SUM + COUNT + AVG on completed orders), revenue by segment (JOIN customers + orders GROUP BY segment), open tickets by priority (COUNT WHERE status GROUP BY priority), customer health score (LEFT JOIN orders + tickets with COUNT/SUM per customer), monthly order trend (SUBSTR date grouping + COUNT/SUM), top pages by views (COUNT GROUP BY page ORDER BY DESC LIMIT), physical isolation.
+
+## SPEC-10.2.113 Password reset token lifecycle
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/PasswordResetTokenTest`, `Pdo/MysqlPasswordResetTokenTest`, `Pdo/PostgresPasswordResetTokenTest`, `Pdo/SqlitePasswordResetTokenTest`
+
+A token-based password reset flow with expiry dates, one-time consumption, and expired-token cleanup works correctly through ZTD shadow store. The scenario exercises date-filtered SELECT for valid token lookup, UPDATE to mark tokens as consumed, DELETE with date comparison for expired-token cleanup, EXISTS subquery to find users with valid tokens, and JOIN with status filter to exclude locked users from token results.
+
+Verified patterns: find valid token (SELECT WHERE consumed=0 AND expires_at >= date), expired token exclusion (date-filtered SELECT returns empty), consume token (UPDATE consumed=1 + verify remaining), delete expired tokens (DELETE WHERE expires_at < date + COUNT), users with valid tokens (EXISTS subquery), active-user token filter (JOIN users WHERE status='active'), physical isolation.
+
+## SPEC-10.2.114 Multi-language content with fallback
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/MultiLanguageContentTest`, `Pdo/MysqlMultiLanguageContentTest`, `Pdo/PostgresMultiLanguageContentTest`, `Pdo/SqliteMultiLanguageContentTest`
+
+An internationalization content system with language-priority fallback using LEFT JOIN + COALESCE works correctly through ZTD shadow store. The scenario exercises direct translation lookup, double LEFT JOIN for requested-then-default language fallback via COALESCE, GROUP BY with COUNT for translation coverage statistics, and INSERT to add new translations with immediate availability.
+
+Verified patterns: direct translation (SELECT WHERE lang_code), fallback to default (LEFT JOIN requested + LEFT JOIN default + COALESCE), missing-language fallback (COALESCE returns English default), translation coverage stats (COUNT GROUP BY slug), all content with language (COALESCE across 3 items), add translation (INSERT + verify direct lookup), physical isolation.
+
+## SPEC-10.2.115 Split payment with partial refunds
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SplitPaymentTest`, `Pdo/MysqlSplitPaymentTest`, `Pdo/PostgresSplitPaymentTest`, `Pdo/SqliteSplitPaymentTest`
+
+A payment splitting system with multi-method orders, SUM integrity validation, partial refunds, and percentage calculations works correctly through ZTD shadow store. The scenario exercises HAVING SUM for split-sum integrity checks, SUM GROUP BY for method breakdowns, arithmetic UPDATE for partial refunds, net-revenue computation (amount - refunded_amount), ROUND percentage calculations, and HAVING COUNT for multi-method order detection.
+
+Verified patterns: split sum matches order total (JOIN + GROUP BY + HAVING SUM = total), payment method breakdown (SUM GROUP BY method), partial refund (UPDATE refunded_amount + status), net revenue per order (SUM of amount - refunded_amount), method percentage (ROUND price * 100.0 / total), add zero-amount split (INSERT + verify SUM unchanged), orders with multiple methods (HAVING COUNT > 1), physical isolation.
+
+## SPEC-10.2.116 User activity streak detection via LAG
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/UserActivityStreakTest`, `Pdo/MysqlUserActivityStreakTest`, `Pdo/PostgresUserActivityStreakTest`, `Pdo/SqliteUserActivityStreakTest`
+
+A user activity streak detection system using LAG window function for previous-date comparison works correctly through ZTD shadow store. The scenario exercises COUNT DISTINCT for total activity days, LAG() OVER (PARTITION BY user ORDER BY date) for previous-date retrieval, gap detection by comparing LAG output in PHP, and MIN/MAX for activity date ranges.
+
+Verified patterns: total activity days (COUNT DISTINCT activity_date GROUP BY user), LAG previous date (LAG window partitioned by user), gap detection via LAG (filter rows where prev_date shows non-consecutive gap), user with most activity (GROUP BY + ORDER BY DESC LIMIT 1), activity date range (MIN/MAX per user), physical isolation.
+
+## SPEC-10.2.117 Data retention policy (GDPR-style anonymization)
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/DataRetentionPolicyTest`, `Pdo/MysqlDataRetentionPolicyTest`, `Pdo/PostgresDataRetentionPolicyTest`, `Pdo/SqliteDataRetentionPolicyTest`
+
+A GDPR-style data retention system with PII anonymization, session cleanup, and audit trail preservation works correctly through ZTD shadow store. The scenario exercises multi-column UPDATE for anonymization (masking email, name, phone), DELETE with date-range for old session cleanup, JOIN to find active users with recent sessions, audit log preservation after anonymization, bulk anonymization with string concatenation (CONCAT on MySQL, || on PostgreSQL/SQLite), and LEFT JOIN with IS NULL for inactive-user detection.
+
+Verified patterns: baseline count (COUNT before retention), anonymize deleted user (multi-column UPDATE SET email/name/phone), delete old sessions (DELETE WHERE date < threshold + verify count), active users with recent sessions (JOIN + WHERE date + status), audit trail preserved (COUNT audit entries after anonymization), bulk anonymize (UPDATE with string concatenation WHERE created_at < date), users with no recent activity (LEFT JOIN + IS NULL), physical isolation.
+
+## SPEC-10.2.118 Multi-jurisdiction tax calculation
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/TaxCalculationTest`, `Pdo/MysqlTaxCalculationTest`, `Pdo/PostgresTaxCalculationTest`, `Pdo/SqliteTaxCalculationTest`
+
+A multi-jurisdiction tax calculation system with category-based rates, per-item tax computation, and aggregate summaries works correctly through ZTD shadow store. The scenario exercises JOIN for matching items with applicable tax rules by jurisdiction and category, ROUND arithmetic for per-item tax computation, SUM GROUP BY for total tax by jurisdiction, WHERE with arithmetic expression for high-tax filtering, AVG GROUP BY for average rate by country, and COUNT + SUM GROUP BY for category revenue summaries.
+
+Verified patterns: per-item tax (JOIN rules + ROUND arithmetic), total tax by jurisdiction (SUM + GROUP BY jurisdiction), tax-exempt items (WHERE rate = 0), price with tax (computed column + ORDER BY), average rate by country (AVG GROUP BY country), high-tax items (WHERE computed > threshold), category revenue summary (COUNT + SUM GROUP BY category), physical isolation.

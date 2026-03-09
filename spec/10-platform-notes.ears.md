@@ -849,3 +849,70 @@ Verified patterns: sequential INSERTs (10 rows, verify COUNT), INSERT then filte
 ZTD enable/disable toggle behavior is consistent across all platforms. Shadow inserts are visible when ZTD is enabled, invisible in physical queries when ZTD is disabled, and persist across disable/re-enable cycles. Physical data inserted with ZTD disabled is visible in physical queries but not through ZTD (since ZTD replaces the physical table view with the shadow store). Shadow updates survive toggle cycles.
 
 Verified patterns: shadow insert visible in ZTD (not in physical table), physical data not visible through ZTD (shadow store replaces physical view), disable ZTD sees physical only (3 physical rows, not shadow), re-enable restores shadow data, physical insert visibility (visible physically, not through ZTD), shadow update survives toggle (UPDATE persists after disable+re-enable), physical isolation.
+
+## SPEC-10.2.96 Chained user-written CTEs
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO (Known Issue), SQLite-PDO (Partially)
+**Tests:** `Mysqli/ChainedUserCteTest`, `Pdo/MysqlChainedUserCteTest`, `Pdo/PostgresChainedUserCteTest`, `Pdo/SqliteChainedUserCteTest`
+
+Multiple user-written CTEs chained together (`WITH cte1 AS (...), cte2 AS (... FROM cte1) SELECT * FROM cte2`) work correctly on MySQL (MySQLi, MySQL-PDO) and SQLite when the outer SELECT only references user CTEs. Two-CTE chains, three-CTE chains, prepared statements with chained CTEs, and post-insert visibility all work.
+
+**Known limitation (all platforms):** When the outer SELECT joins a user CTE back to the original physical table (`FROM table s JOIN user_cte t ON ...`), results may be empty. The CTE rewriter may conflict when the outer query references both a physical table and a user-defined CTE simultaneously. See [SPEC-11.CTE-JOIN-BACK](#spec-11cte-join-back).
+
+**PostgreSQL:** All chained CTE tests are affected by [SPEC-11.PG-CTE](11-known-issues.ears.md) — user CTEs read from the physical table (empty), returning 0 rows.
+
+Verified patterns: two-CTE chain (regional totals + ranking), three-CTE chain (product totals + filter + running sum), chained CTE with prepared statement and WHERE filter, chained CTE after INSERT sees new data, physical isolation.
+
+## SPEC-10.2.97 Row value (tuple) comparisons
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/RowValueComparisonTest`, `Pdo/MysqlRowValueComparisonTest`, `Pdo/PostgresRowValueComparisonTest`, `Pdo/SqliteRowValueComparisonTest`
+
+Row value comparisons for composite key lookups work correctly through ZTD on all platforms. `WHERE (col1, col2) IN ((v1, v2), (v3, v4))`, `WHERE (col1, col2) = (v1, v2)`, and `WHERE (col1, col2) > (v1, v2)` all produce correct results on shadow-stored data. Prepared statements with row value parameters also work.
+
+Verified patterns: row value IN list with multiple tuples, single tuple equality, prepared params with tuple comparison, row value greater-than (lexicographic ordering), row value query after UPDATE reflects mutation, physical isolation.
+
+## SPEC-10.2.98 SQL keywords in string data
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SqlKeywordInDataTest`, `Pdo/MysqlSqlKeywordInDataTest`, `Pdo/PostgresSqlKeywordInDataTest`, `Pdo/SqliteSqlKeywordInDataTest`
+
+String values containing SQL reserved keywords (SELECT, DROP, INSERT, UPDATE, DELETE, FROM, WHERE, GROUP BY, ORDER BY, TRUNCATE TABLE) are stored and retrieved correctly through ZTD shadow store. The CTE rewriter's SQL parser correctly distinguishes keywords inside string literals from actual SQL syntax.
+
+Verified patterns: INSERT and SELECT with keyword-containing values, LIKE filter on keyword-containing data, prepared statement with keyword value, UPDATE to keyword-containing value, storing a complete SQL statement as a string literal, physical isolation.
+
+## SPEC-10.2.99 Triple and quadruple self-joins
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/TripleSelfJoinTest`, `Pdo/MysqlTripleSelfJoinTest`, `Pdo/PostgresTripleSelfJoinTest`, `Pdo/SqliteTripleSelfJoinTest`
+
+Self-joining the same table 3 or 4 times with different aliases works correctly through ZTD on all platforms. The CTE rewriter rewrites all table references regardless of how many times the same table appears. Correlated subqueries referencing the same table also work.
+
+Verified patterns: triple self-join (employee → manager → grand-manager), quadruple self-join (4 hierarchy levels), self-join with GROUP BY and COUNT aggregate, correlated subquery counting direct reports from same table, self-join after INSERT mutation, physical isolation.
+
+## SPEC-10.2.100 Empty string vs NULL distinction
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/EmptyStringVsNullTest`, `Pdo/MysqlEmptyStringVsNullTest`, `Pdo/PostgresEmptyStringVsNullTest`, `Pdo/SqliteEmptyStringVsNullTest`
+
+The ZTD shadow store correctly preserves the distinction between empty strings (`''`) and NULL values on all platforms. `IS NULL` returns only true NULLs, `IS NOT NULL` includes empty strings, `LENGTH('')` returns 0 while `LENGTH(NULL)` returns NULL, and `COALESCE` falls through NULL but not empty strings.
+
+Verified patterns: IS NOT NULL includes empty strings, IS NULL excludes empty strings, LENGTH/CHAR_LENGTH on empty vs NULL, COALESCE distinguishes empty from NULL, UPDATE from empty to NULL and back, prepared statement with empty string parameter, physical isolation.
+
+## SPEC-10.2.101 Unicode and multi-byte character data
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/UnicodeDataTest`, `Pdo/MysqlUnicodeDataTest`, `Pdo/PostgresUnicodeDataTest`, `Pdo/SqliteUnicodeDataTest`
+
+Multi-byte Unicode strings (German umlauts, Japanese CJK, Spanish accents, Irish apostrophes, Russian Cyrillic) are stored and retrieved correctly through ZTD shadow store on all platforms. The CTE rewriter's string literal embedding preserves multi-byte characters. MySQL requires `CHARACTER SET utf8mb4` on the table; PostgreSQL and SQLite handle UTF-8 natively.
+
+Verified patterns: Unicode data INSERT and SELECT round-trip, WHERE equality with Unicode value, LIKE with Unicode substring, prepared statement with Unicode parameter, UPDATE to different Unicode text, CHAR_LENGTH/LENGTH counts characters not bytes for multi-byte strings, physical isolation.
+
+## SPEC-10.2.102 Conditional aggregation without GROUP BY
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ConditionalAggregateNoGroupByTest`, `Pdo/MysqlConditionalAggregateNoGroupByTest`, `Pdo/PostgresConditionalAggregateNoGroupByTest`, `Pdo/SqliteConditionalAggregateNoGroupByTest`
+
+Whole-table aggregation without GROUP BY works correctly through ZTD on all platforms. COUNT(*), SUM(), AVG(), MIN(), MAX() all return correct results on shadow data. Conditional COUNT with CASE expressions, SUM with positive/negative CASE, and HAVING without GROUP BY (valid SQL for single-group filtering) all work.
+
+Verified patterns: whole-table COUNT/SUM/AVG, conditional COUNT with CASE WHEN, SUM with CASE for balance calculation, HAVING without GROUP BY (match and no-match), multiple aggregate functions with WHERE filter, aggregate after INSERT sees new data, physical isolation.

@@ -328,6 +328,35 @@ Workarounds:
 - Use correlated subqueries instead of derived tables: `SELECT p.username, p.score, (SELECT COUNT(DISTINCT p2.score) FROM players p2 WHERE p2.score > p.score) + 1 AS player_rank FROM players p WHERE p.username = ?`.
 - Use `query()` with escaped parameters instead of `prepare()`.
 
+## SPEC-11.CTE-JOIN-BACK User CTE joined back to original table returns empty
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-10.2.96](10-platform-notes.ears.md), [SPEC-3.3c](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteChainedUserCteTest`, `Pdo/MysqlChainedUserCteTest`, `Mysqli/ChainedUserCteTest`
+
+When the outer SELECT of a user CTE query joins a user-defined CTE back to the original table (`FROM table s JOIN user_cte t ON ...`), the query returns empty results. Chained CTEs work correctly when the outer SELECT only references user CTEs (not the original table). The CTE rewriter may conflict when the outer query references both a physical table and a user-defined CTE simultaneously.
+
+```sql
+-- Returns empty (SQLite confirmed):
+WITH regional AS (
+    SELECT region, SUM(amount) AS region_total
+    FROM sales GROUP BY region
+),
+top_regions AS (
+    SELECT region, region_total FROM regional WHERE region_total >= 450
+)
+SELECT s.id, s.product, t.region_total
+FROM sales s
+JOIN top_regions t ON s.region = t.region;
+
+-- Workaround: avoid joining CTE back to original table.
+-- Use a single CTE or subquery instead:
+SELECT s.id, s.product, r.region_total
+FROM sales s
+JOIN (SELECT region, SUM(amount) AS region_total FROM sales GROUP BY region HAVING SUM(amount) >= 450) r
+ON s.region = r.region;
+```
+
 ## SPEC-11.CORRELATED-UPDATE-SET Correlated scalar subquery in UPDATE SET clause
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO, SQLite-PDO (confirmed); MySQLi, MySQL-PDO (works correctly)

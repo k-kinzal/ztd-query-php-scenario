@@ -222,6 +222,13 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.93 | `*StringManipulationTest` | V | V | V | V | V |
 | SPEC-10.2.94 | `*BatchInsertPatternTest` | V | V | V | V | V |
 | SPEC-10.2.95 | `*ZtdTogglePatternTest` | V | V | V | V | V |
+| SPEC-10.2.96 | `*ChainedUserCteTest` | V | V | K | P | P |
+| SPEC-10.2.97 | `*RowValueComparisonTest` | V | V | V | V | V |
+| SPEC-10.2.98 | `*SqlKeywordInDataTest` | V | V | V | V | V |
+| SPEC-10.2.99 | `*TripleSelfJoinTest` | V | V | V | V | V |
+| SPEC-10.2.100 | `*EmptyStringVsNullTest` | V | V | V | V | V |
+| SPEC-10.2.101 | `*UnicodeDataTest` | V | V | V | V | V |
+| SPEC-10.2.102 | `*ConditionalAggregateNoGroupByTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -311,6 +318,7 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-11.BARE-SUBQUERY-REWRITE | `Pdo/SqliteScalarSubqueryInSelectTest`, `Pdo/SqlitePivotReportTest`, `Pdo/SqliteScalarSubqueryWorkaroundTest` | — | — | — | K | K |
 | SPEC-11.UPDATE-AGGREGATE-SUBQUERY | `Pdo/SqliteBulkConditionalUpgradeTest`, `Pdo/SqliteDeduplicationEdgeCasesTest` | — | — | — | K | K |
 | SPEC-11.DERIVED-TABLE-PREPARED | `*LeaderboardRankingTest` | K | K | — | K | K |
+| SPEC-11.CTE-JOIN-BACK | `*ChainedUserCteTest` | — | — | — | K | K |
 
 ## Legend
 

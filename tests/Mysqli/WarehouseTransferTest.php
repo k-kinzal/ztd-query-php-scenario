@@ -1,0 +1,285 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Mysqli;
+
+use Tests\Support\AbstractMysqliTestCase;
+
+/**
+ * Tests inter-warehouse stock transfers: warehouses, products, stock levels, and transfer records.
+ * SQL patterns exercised: multi-table INSERT+UPDATE, self-join (source/dest warehouse),
+ * GROUP BY SUM for balance, HAVING for threshold, prepared statement for transfer lookup (MySQLi).
+ * @spec SPEC-10.2.144
+ */
+class WarehouseTransferTest extends AbstractMysqliTestCase
+{
+    protected function getTableDDL(): string|array
+    {
+        return [
+            'CREATE TABLE mi_wt_warehouses (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100),
+                location VARCHAR(100)
+            )',
+            'CREATE TABLE mi_wt_products (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                sku VARCHAR(50),
+                name VARCHAR(100)
+            )',
+            'CREATE TABLE mi_wt_stock (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                warehouse_id INT,
+                product_id INT,
+                quantity INT
+            )',
+            'CREATE TABLE mi_wt_transfers (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                from_warehouse_id INT,
+                to_warehouse_id INT,
+                product_id INT,
+                quantity INT,
+                transfer_date TEXT,
+                status VARCHAR(20)
+            )',
+        ];
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_wt_transfers', 'mi_wt_stock', 'mi_wt_products', 'mi_wt_warehouses'];
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Warehouses
+        $this->mysqli->query("INSERT INTO mi_wt_warehouses VALUES (1, 'Central', 'Chicago')");
+        $this->mysqli->query("INSERT INTO mi_wt_warehouses VALUES (2, 'East', 'New York')");
+        $this->mysqli->query("INSERT INTO mi_wt_warehouses VALUES (3, 'West', 'Los Angeles')");
+
+        // Products
+        $this->mysqli->query("INSERT INTO mi_wt_products VALUES (1, 'WDG-001', 'Widget A')");
+        $this->mysqli->query("INSERT INTO mi_wt_products VALUES (2, 'WDG-002', 'Widget B')");
+        $this->mysqli->query("INSERT INTO mi_wt_products VALUES (3, 'GAD-001', 'Gadget X')");
+
+        // Stock levels
+        $this->mysqli->query("INSERT INTO mi_wt_stock VALUES (1, 1, 1, 500)");
+        $this->mysqli->query("INSERT INTO mi_wt_stock VALUES (2, 1, 2, 300)");
+        $this->mysqli->query("INSERT INTO mi_wt_stock VALUES (3, 1, 3, 200)");
+        $this->mysqli->query("INSERT INTO mi_wt_stock VALUES (4, 2, 1, 150)");
+        $this->mysqli->query("INSERT INTO mi_wt_stock VALUES (5, 2, 2, 80)");
+        $this->mysqli->query("INSERT INTO mi_wt_stock VALUES (6, 3, 1, 100)");
+        $this->mysqli->query("INSERT INTO mi_wt_stock VALUES (7, 3, 3, 250)");
+
+        // Transfers
+        $this->mysqli->query("INSERT INTO mi_wt_transfers VALUES (1, 1, 2, 1, 50, '2025-10-01', 'completed')");
+        $this->mysqli->query("INSERT INTO mi_wt_transfers VALUES (2, 1, 3, 2, 30, '2025-10-03', 'completed')");
+        $this->mysqli->query("INSERT INTO mi_wt_transfers VALUES (3, 2, 3, 1, 20, '2025-10-05', 'pending')");
+        $this->mysqli->query("INSERT INTO mi_wt_transfers VALUES (4, 3, 1, 3, 100, '2025-10-07', 'completed')");
+        $this->mysqli->query("INSERT INTO mi_wt_transfers VALUES (5, 1, 2, 3, 75, '2025-10-08', 'cancelled')");
+    }
+
+    /**
+     * Stock summary per warehouse with product name JOIN.
+     */
+    public function testStockSummaryByWarehouse(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT w.name AS warehouse, p.sku, p.name AS product, s.quantity
+             FROM mi_wt_stock s
+             JOIN mi_wt_warehouses w ON w.id = s.warehouse_id
+             JOIN mi_wt_products p ON p.id = s.product_id
+             ORDER BY w.name, p.sku"
+        );
+
+        $this->assertCount(7, $rows);
+
+        $this->assertSame('Central', $rows[0]['warehouse']);
+        $this->assertSame('GAD-001', $rows[0]['sku']);
+        $this->assertEquals(200, (int) $rows[0]['quantity']);
+
+        $this->assertSame('Central', $rows[1]['warehouse']);
+        $this->assertSame('WDG-001', $rows[1]['sku']);
+        $this->assertEquals(500, (int) $rows[1]['quantity']);
+
+        $this->assertSame('Central', $rows[2]['warehouse']);
+        $this->assertSame('WDG-002', $rows[2]['sku']);
+        $this->assertEquals(300, (int) $rows[2]['quantity']);
+    }
+
+    /**
+     * Total stock per product across all warehouses using GROUP BY SUM.
+     */
+    public function testTotalStockPerProduct(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT p.sku, p.name, SUM(s.quantity) AS total_qty
+             FROM mi_wt_stock s
+             JOIN mi_wt_products p ON p.id = s.product_id
+             GROUP BY p.sku, p.name
+             ORDER BY p.sku"
+        );
+
+        $this->assertCount(3, $rows);
+
+        $this->assertSame('GAD-001', $rows[0]['sku']);
+        $this->assertEquals(450, (int) $rows[0]['total_qty']);  // 200 + 250
+
+        $this->assertSame('WDG-001', $rows[1]['sku']);
+        $this->assertEquals(750, (int) $rows[1]['total_qty']);  // 500 + 150 + 100
+
+        $this->assertSame('WDG-002', $rows[2]['sku']);
+        $this->assertEquals(380, (int) $rows[2]['total_qty']);  // 300 + 80
+    }
+
+    /**
+     * Self-join on warehouses to show transfer source and destination names.
+     */
+    public function testTransferWithWarehouseNames(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT t.id, wf.name AS from_warehouse, wt.name AS to_warehouse,
+                    p.name AS product, t.quantity, t.status
+             FROM mi_wt_transfers t
+             JOIN mi_wt_warehouses wf ON wf.id = t.from_warehouse_id
+             JOIN mi_wt_warehouses wt ON wt.id = t.to_warehouse_id
+             JOIN mi_wt_products p ON p.id = t.product_id
+             ORDER BY t.id"
+        );
+
+        $this->assertCount(5, $rows);
+
+        $this->assertSame('Central', $rows[0]['from_warehouse']);
+        $this->assertSame('East', $rows[0]['to_warehouse']);
+        $this->assertSame('Widget A', $rows[0]['product']);
+        $this->assertEquals(50, (int) $rows[0]['quantity']);
+        $this->assertSame('completed', $rows[0]['status']);
+
+        $this->assertSame('West', $rows[3]['from_warehouse']);
+        $this->assertSame('Central', $rows[3]['to_warehouse']);
+        $this->assertSame('Gadget X', $rows[3]['product']);
+        $this->assertEquals(100, (int) $rows[3]['quantity']);
+    }
+
+    /**
+     * Completed transfer volume per route using GROUP BY with HAVING.
+     */
+    public function testTransferVolumeByRouteWithHaving(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT wf.name AS from_wh, wt.name AS to_wh,
+                    SUM(t.quantity) AS total_transferred
+             FROM mi_wt_transfers t
+             JOIN mi_wt_warehouses wf ON wf.id = t.from_warehouse_id
+             JOIN mi_wt_warehouses wt ON wt.id = t.to_warehouse_id
+             WHERE t.status = 'completed'
+             GROUP BY wf.name, wt.name
+             HAVING SUM(t.quantity) >= 50
+             ORDER BY total_transferred DESC"
+        );
+
+        $this->assertCount(2, $rows);
+
+        $this->assertSame('West', $rows[0]['from_wh']);
+        $this->assertSame('Central', $rows[0]['to_wh']);
+        $this->assertEquals(100, (int) $rows[0]['total_transferred']);
+
+        $this->assertSame('Central', $rows[1]['from_wh']);
+        $this->assertSame('East', $rows[1]['to_wh']);
+        $this->assertEquals(50, (int) $rows[1]['total_transferred']);
+    }
+
+    /**
+     * Warehouses with low stock (quantity < 150) using HAVING filter.
+     */
+    public function testLowStockWarehouses(): void
+    {
+        $rows = $this->ztdQuery(
+            "SELECT w.name AS warehouse, SUM(s.quantity) AS total_stock
+             FROM mi_wt_stock s
+             JOIN mi_wt_warehouses w ON w.id = s.warehouse_id
+             GROUP BY w.name
+             HAVING SUM(s.quantity) < 400
+             ORDER BY total_stock"
+        );
+
+        $this->assertCount(2, $rows);
+
+        $this->assertSame('East', $rows[0]['warehouse']);
+        $this->assertEquals(230, (int) $rows[0]['total_stock']);  // 150 + 80
+
+        $this->assertSame('West', $rows[1]['warehouse']);
+        $this->assertEquals(350, (int) $rows[1]['total_stock']);  // 100 + 250
+    }
+
+    /**
+     * Prepared statement: lookup transfers by status.
+     */
+    public function testPreparedTransferLookupByStatus(): void
+    {
+        $rows = $this->ztdPrepareAndExecute(
+            "SELECT t.id, p.name AS product, t.quantity, t.transfer_date
+             FROM mi_wt_transfers t
+             JOIN mi_wt_products p ON p.id = t.product_id
+             WHERE t.status = ?
+             ORDER BY t.id",
+            ['completed']
+        );
+
+        $this->assertCount(3, $rows);
+
+        $this->assertEquals(1, (int) $rows[0]['id']);
+        $this->assertSame('Widget A', $rows[0]['product']);
+
+        $this->assertEquals(2, (int) $rows[1]['id']);
+        $this->assertSame('Widget B', $rows[1]['product']);
+
+        $this->assertEquals(4, (int) $rows[2]['id']);
+        $this->assertSame('Gadget X', $rows[2]['product']);
+    }
+
+    /**
+     * Record new transfer and verify shadow visibility.
+     */
+    public function testRecordTransferAndVerify(): void
+    {
+        $this->mysqli->query("INSERT INTO mi_wt_transfers VALUES (6, 2, 1, 2, 40, '2025-10-10', 'completed')");
+
+        $rows = $this->ztdQuery(
+            "SELECT COUNT(*) AS cnt FROM mi_wt_transfers WHERE status = 'completed'"
+        );
+        $this->assertEquals(4, (int) $rows[0]['cnt']);
+
+        // Update stock: reduce source
+        $this->mysqli->query("UPDATE mi_wt_stock SET quantity = quantity - 40 WHERE warehouse_id = 2 AND product_id = 2");
+        // Update stock: increase destination
+        $this->mysqli->query("UPDATE mi_wt_stock SET quantity = quantity + 40 WHERE warehouse_id = 1 AND product_id = 2");
+
+        $rows = $this->ztdQuery(
+            "SELECT s.quantity FROM mi_wt_stock s WHERE s.warehouse_id = 2 AND s.product_id = 2"
+        );
+        $this->assertEquals(40, (int) $rows[0]['quantity']);
+
+        $rows = $this->ztdQuery(
+            "SELECT s.quantity FROM mi_wt_stock s WHERE s.warehouse_id = 1 AND s.product_id = 2"
+        );
+        $this->assertEquals(340, (int) $rows[0]['quantity']);
+    }
+
+    /**
+     * Physical isolation: shadow mutations don't reach physical tables.
+     */
+    public function testPhysicalIsolation(): void
+    {
+        $this->mysqli->query("INSERT INTO mi_wt_transfers VALUES (6, 1, 3, 1, 200, '2025-10-12', 'pending')");
+
+        $rows = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM mi_wt_transfers");
+        $this->assertEquals(6, (int) $rows[0]['cnt']);
+
+        $this->mysqli->disableZtd();
+        $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_wt_transfers');
+        $this->assertEquals(0, (int) $result->fetch_assoc()['cnt']);
+    }
+}

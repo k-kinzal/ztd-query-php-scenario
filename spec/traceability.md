@@ -270,6 +270,11 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.141 | `*BadgeAchievementTest` | V | V | V | V | V |
 | SPEC-10.2.142 | `*AttendanceTrackerTest` | V | V | V | V | V |
 | SPEC-10.2.143 | `*DynamicPricingTest` | V | V | V | V | V |
+| SPEC-10.2.144 | `*WarehouseTransferTest` | V | V | V | V | V |
+| SPEC-10.2.145 | `*CoursePrerequisiteTest` | V | V | V | V | V |
+| SPEC-10.2.146 | `*MealPlanningTest` | V | V | V | V | V |
+| SPEC-10.2.147 | `*InsuranceClaimTest` | V | V | V | V | V |
+| SPEC-10.2.148 | `*ApiKeyManagementTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -390,6 +395,11 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-3.3 | `*BadgeAchievementTest` | V | V | V | V | CASE WHEN IS NOT NULL, ROUND percentage rarity, UPDATE progress + unlock, WHERE IS NULL |
 | SPEC-3.2 | `*AttendanceTrackerTest` | V | V | V | V | SUM CASE status, ROUND attendance rate, prepared BETWEEN, LEFT JOIN anti-pattern, HAVING |
 | SPEC-3.3 | `*DynamicPricingTest` | V | V | V | V | Correlated MAX subquery, CASE tier, ROUND competitor diff, derived table GROUP BY |
+| SPEC-3.3 | `*WarehouseTransferTest` | V | V | V | V | Self-join source/dest, GROUP BY SUM, HAVING threshold, multi-table INSERT+UPDATE |
+| SPEC-3.3 | `*CoursePrerequisiteTest` | V | V | V | V | Double-nested NOT EXISTS, LEFT JOIN IS NULL, COUNT DISTINCT, prepared BETWEEN |
+| SPEC-3.3 | `*MealPlanningTest` | V | V | V | V | CROSS JOIN + LEFT JOIN IS NULL (gap detection), SUM through JOIN, dietary HAVING |
+| SPEC-3.3 | `*InsuranceClaimTest` | V | V | V | V | CASE status labels, ROUND coverage utilization %, LEFT JOIN COUNT, SUM payouts |
+| SPEC-3.3 | `*ApiKeyManagementTest` | V | V | V | V | COUNT/quota ROUND %, SUM CASE error rate, AVG by tier, daily GROUP BY |
 
 ## 11. Known Issues (Selected)
 

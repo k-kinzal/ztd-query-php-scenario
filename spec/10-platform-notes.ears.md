@@ -1289,3 +1289,48 @@ Verified patterns: SUM CASE status categorization (attendance summary), GROUP BY
 A dynamic pricing system with products, price history, and competitor prices works correctly through ZTD shadow store. The scenario exercises correlated MAX subquery for effective-date price lookup (latest price per product), price change history with ORDER BY for audit trail, CASE expression for discount tier classification based on price ranges, JOIN with ROUND arithmetic for competitor price comparison and difference calculation, and derived table subquery with GROUP BY for category-level price range aggregation.
 
 Verified patterns: correlated MAX subquery (current price lookup), ORDER BY effective_date (price history), CASE WHEN price ranges (tier classification), JOIN with ROUND(a - b, 2) (competitor comparison), derived table + GROUP BY MIN/MAX (category price range), physical isolation.
+
+## SPEC-10.2.144 Warehouse transfer
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/WarehouseTransferTest`, `Pdo/MysqlWarehouseTransferTest`, `Pdo/PostgresWarehouseTransferTest`, `Pdo/SqliteWarehouseTransferTest`
+
+An inter-warehouse stock transfer system with warehouses, products, stock levels, and transfer records works correctly through ZTD shadow store. The scenario exercises multi-table JOIN for stock summary with product names, GROUP BY SUM for total stock across warehouses, self-join on warehouses table for source/destination names on transfer records, GROUP BY with HAVING SUM threshold for completed transfer volume by route, HAVING filter for low-stock warehouse detection, prepared statement for transfer lookup by status, and sequential INSERT+UPDATE for recording transfers with stock level adjustments.
+
+Verified patterns: 3-table JOIN (stock summary), GROUP BY SUM (total stock per product), self-join on same table (transfer source/destination), GROUP BY HAVING SUM >= threshold (transfer volume), HAVING SUM < threshold (low stock), prepared statement with status filter, self-referencing UPDATE arithmetic (stock adjustment), physical isolation.
+
+## SPEC-10.2.145 Course prerequisite
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/CoursePrerequisiteTest`, `Pdo/MysqlCoursePrerequisiteTest`, `Pdo/PostgresCoursePrerequisiteTest`, `Pdo/SqliteCoursePrerequisiteTest`
+
+An academic course enrollment system with courses, prerequisites, students, and completions works correctly through ZTD shadow store. The scenario exercises 3-table JOIN for student transcript display, SUM + COUNT aggregation for credits earned, double-nested NOT EXISTS for prerequisite eligibility checking (students who have completed all required courses), LEFT JOIN with IS NULL for missing prerequisite detection, COUNT DISTINCT with LEFT JOIN for prerequisite completion tracking, and prepared BETWEEN for date-range filtering.
+
+Verified patterns: 3-table JOIN (transcript), SUM + COUNT GROUP BY (credits), double-nested NOT EXISTS (eligibility), LEFT JOIN WHERE IS NULL (missing prerequisites), COUNT DISTINCT with LEFT JOIN (completion count), prepared BETWEEN (date range), physical isolation.
+
+## SPEC-10.2.146 Meal planning
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/MealPlanningTest`, `Pdo/MysqlMealPlanningTest`, `Pdo/PostgresMealPlanningTest`, `Pdo/SqliteMealPlanningTest`
+
+A weekly meal planning system with meals, ingredients, weekly plan, and day reference tables works correctly through ZTD shadow store. The scenario exercises GROUP BY category with COUNT for meal categorization, multi-table JOIN for weekly plan overview with meal names, CROSS JOIN (via UNION ALL subquery) with LEFT JOIN and IS NULL for unassigned slot detection, SUM aggregation through plan-to-ingredients JOIN for shopping list quantity totals, WHERE IN dietary tag filter with GROUP BY HAVING for vegetarian/vegan meal listing, and prepared statement for meals-by-day lookup.
+
+Verified patterns: GROUP BY COUNT (category), multi-table JOIN ORDER BY (plan overview), CROSS JOIN + LEFT JOIN WHERE IS NULL (unassigned slots), SUM aggregate through JOIN (shopping list), WHERE IN + GROUP BY HAVING (dietary filter), prepared statement (day lookup), physical isolation.
+
+## SPEC-10.2.147 Insurance claims
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/InsuranceClaimTest`, `Pdo/MysqlInsuranceClaimTest`, `Pdo/PostgresInsuranceClaimTest`, `Pdo/SqliteInsuranceClaimTest`
+
+An insurance claims processing system with policies, claims, and claim notes works correctly through ZTD shadow store. The scenario exercises multi-table JOIN with GROUP BY for per-policy claim summaries (count + total requested), GROUP BY status with COUNT and CASE for human-readable status distribution, SUM payout by policy type for paid claims, ROUND + COALESCE + SUM CASE for coverage utilization percentage, LEFT JOIN with COUNT for note count per claim, and prepared statement for claims filtered by policy type.
+
+Verified patterns: JOIN + GROUP BY COUNT + SUM (claim summary), GROUP BY + CASE label (status distribution), SUM WHERE status filter (payouts by type), ROUND + COALESCE + SUM CASE / coverage_limit (utilization %), LEFT JOIN COUNT (note count), prepared statement (policy type filter), physical isolation.
+
+## SPEC-10.2.148 API key management
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ApiKeyManagementTest`, `Pdo/MysqlApiKeyManagementTest`, `Pdo/PostgresApiKeyManagementTest`, `Pdo/SqliteApiKeyManagementTest`
+
+An API key lifecycle and usage quota tracking system with clients, keys, and usage records works correctly through ZTD shadow store. The scenario exercises JOIN with GROUP BY for key status summary per client, GROUP BY key+date with COUNT for daily usage counts, COUNT/quota percentage with ROUND for quota utilization, SUM CASE for error rate calculation by endpoint (response codes >= 400), AVG + ROUND grouped by tier for response time analysis, and prepared statement for usage lookup by key prefix.
+
+Verified patterns: JOIN + GROUP BY COUNT (key status summary), GROUP BY key+date COUNT (daily usage), COUNT/quota ROUND percentage (quota utilization), SUM CASE >= 400 / COUNT (error rate), AVG ROUND GROUP BY (response time by tier), prepared statement with JOIN (key prefix lookup), physical isolation.

@@ -807,3 +807,35 @@ Related: Issue #22 (HAVING with prepared params), Issue #62 (FILTER with prepare
 This is the SQLite counterpart of MySQL Issue #16 (`ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)` loses original value). The root cause likely resides in the shared upsert mutation logic.
 
 Workaround: Perform the read and update as separate operations.
+
+## SPEC-11.UPDATE-PK-GHOST `[Issue #65]` UPDATE SET <pk_column> creates ghost row
+**Status:** Known Issue
+**Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Related specs:** [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteUpdatePrimaryKeyValueTest`, `Pdo/MysqlUpdatePrimaryKeyValueTest`, `Pdo/PostgresUpdatePrimaryKeyValueTest`
+
+When `UPDATE SET id = new_value WHERE id = old_value` changes a primary key column, the shadow store creates a new row with the new PK but does not remove the old row. This results in ghost data: both old and new PK rows exist, `COUNT(*)` is inflated, and subsequent DELETE by new PK cannot clean up the ghost. Affects integer PKs, text PKs, and composite PK member changes.
+
+## SPEC-11.PG-NOPK-JOIN `[Issue #66]` PostgreSQL: JOIN involving no-PK table fails
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-3.3](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresNoPrimaryKeyTableTest`
+
+On PostgreSQL, JOIN between a table without a primary key and a table with a primary key fails with "ZTD Write Protection: Cannot determine columns SQL statement". The same JOIN works on MySQL and SQLite. INSERT and SELECT on no-PK tables work on all platforms.
+
+## SPEC-11.SQLITE-STRING-LITERAL `[Issue #67]` SQLite: CTE rewriter replaces table references in string literals
+**Status:** Known Issue
+**Platforms:** SQLite-PDO
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteStringLiteralRewriteTest`, `Pdo/SqliteEdgeCaseSqlPatternsTest`
+
+On SQLite, when a SQL string literal contains `FROM <tablename>` or `JOIN <tablename>` (case-insensitive), the CTE rewriter incorrectly treats it as a SQL clause and rewrites the table reference. This causes queries to silently return 0 rows. MySQL and PostgreSQL are not affected.
+
+## SPEC-11.PG-DOLLAR-INSERT `[Issue #68]` PostgreSQL: INSERT with $N params stores NULL values
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresUnicodeAndSpecialCharsTest`
+
+On PostgreSQL, INSERT via prepared statement using `$N` parameter syntax (PostgreSQL's native numbered placeholders) stores NULL for all column values in the shadow store. The row is created but all data is lost. Using `?` placeholders works correctly.

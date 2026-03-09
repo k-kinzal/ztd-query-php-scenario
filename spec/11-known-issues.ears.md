@@ -106,12 +106,12 @@ On PDO, rows inserted via `prepare()` + `execute()` cannot be subsequently updat
 
 PDO prepared REPLACE INTO and INSERT ... ON CONFLICT DO UPDATE do NOT update existing rows. Use `exec()` instead.
 
-## SPEC-11.SQLITE-HAVING-PARAMS `[Issue #22]` HAVING with prepared params (SQLite)
+## SPEC-11.SQLITE-HAVING-PARAMS `[Issue #22]` HAVING with prepared params (SQLite, PostgreSQL)
 **Status:** Known Issue
-**Platforms:** SQLite-PDO
-**Tests:** `Pdo/SqlitePreparedAggregateParamsTest`
+**Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed for complex multi-table queries)
+**Tests:** `Pdo/SqlitePreparedAggregateParamsTest`, `Pdo/SqliteSubscriptionRenewalTest`, `Pdo/SqliteStudentGradeReportTest`, `Pdo/PostgresSubscriptionRenewalTest`, `Pdo/PostgresStudentGradeReportTest`
 
-On SQLite, HAVING with bound parameters returns empty results. HAVING with literal values works. MySQL and PostgreSQL work correctly.
+On SQLite, HAVING with bound parameters returns empty results. HAVING with literal values works. MySQL works correctly. PostgreSQL also returns empty for complex multi-table HAVING with `$N` params (e.g., `HAVING SUM(amount) >= $2` with JOINs), extending this issue beyond SQLite-only.
 
 ## SPEC-11.MYSQL-BACKSLASH `[Issue #5]` Backslash corruption in MySQL shadow store
 **Status:** Known Issue
@@ -390,3 +390,31 @@ Workarounds:
 - Use explicit column lists in INSERT: `INSERT INTO table (col1, col2, ...) VALUES (...)`.
 - Rename columns to avoid the `check` substring: use `arrival_date` / `departure_date` instead of `check_in` / `check_out`.
 - Quote column names in DDL with double quotes (SQLite confirmed).
+
+## SPEC-11.UNION-ALL-DERIVED `[Issue #13]` UNION ALL in derived table returns empty
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (works correctly)
+**Related specs:** [SPEC-3.3](03-read-operations.ears.md), [SPEC-10.2.166](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteInventorySnapshotTest`, `Pdo/MysqlInventorySnapshotTest`, `Pdo/PostgresInventorySnapshotTest`
+
+UNION ALL inside a derived table (subquery in FROM clause) returns empty results through ZTD on SQLite. Top-level UNION ALL works correctly — the CTE rewriter rewrites table references in `SELECT ... FROM t1 UNION ALL SELECT ... FROM t2`. However, when UNION ALL is wrapped in a derived table — `SELECT ... FROM (SELECT ... FROM t1 UNION ALL SELECT ... FROM t2) alias` — the rewriter does not rewrite the table references inside the UNION branches. Both branches read from the physical tables (empty), returning 0 rows.
+
+This also affects INSERT ... SELECT with UNION ALL derived tables and prepared statements with UNION ALL derived tables.
+
+```sql
+-- Returns empty on SQLite:
+SELECT bin_id, SUM(qty) AS net
+FROM (
+    SELECT bin_id, qty FROM inbound
+    UNION ALL
+    SELECT bin_id, -qty FROM outbound
+) movements
+GROUP BY bin_id;
+
+-- Workaround: use separate aggregate subqueries with LEFT JOIN:
+SELECT b.id,
+       COALESCE(i.total_in, 0) - COALESCE(o.total_out, 0) AS net
+FROM bins b
+LEFT JOIN (SELECT bin_id, SUM(qty) AS total_in FROM inbound GROUP BY bin_id) i ON i.bin_id = b.id
+LEFT JOIN (SELECT bin_id, SUM(qty) AS total_out FROM outbound GROUP BY bin_id) o ON o.bin_id = b.id;
+```

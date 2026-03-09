@@ -1469,3 +1469,30 @@ Verified patterns: CASE categories (NPS classification), ROUND + SUM CASE / COUN
 A fixed asset depreciation system with assets (category, purchase cost, useful life, salvage value, status) and depreciation entries (period, amount, cumulative, book value) works correctly through ZTD shadow store. The scenario exercises GROUP BY category with COUNT and SUM for asset portfolio summary, JOIN with correlated MAX subquery for latest depreciation entry per asset, ROUND arithmetic for depreciation percentage calculation, HAVING with aggregate threshold for fully depreciated asset detection, and prepared JOIN with category filter for asset lookup.
 
 Verified patterns: GROUP BY + COUNT + SUM (category summary), JOIN + correlated MAX subquery (latest entry), ROUND arithmetic (depreciation %), HAVING aggregate threshold (fully depreciated), prepared JOIN + WHERE (category lookup), physical isolation.
+
+## SPEC-10.2.164 Subscription renewal workflow
+**Status:** Partially Verified
+**Platforms:** MySQL-PDO, SQLite-PDO
+**Tests:** `Pdo/MysqlSubscriptionRenewalTest`, `Pdo/SqliteSubscriptionRenewalTest`
+
+A SaaS subscription renewal system with plans (trial/paid, monthly price), subscriptions (customer, status, date range), and invoices (amount, period, status) exercises DELETE WHERE IN (subquery with JOIN) for expired trial cleanup, INSERT ... SELECT with JOIN for renewal invoice generation, multiple correlated subqueries in a single SELECT list (total_spent, invoice_count), prepared HAVING with JOIN for high-value customer filter, and UPDATE with status verification.
+
+DELETE WHERE IN, correlated subqueries in SELECT list, and UPDATE+verify work on all platforms. INSERT ... SELECT with JOIN has column value nullification on SQLite (SPEC-11.INSERT-SELECT-COMPUTED). Prepared HAVING returns empty on SQLite (SPEC-11.SQLITE-HAVING-PARAMS).
+
+## SPEC-10.2.165 Student grade report
+**Status:** Partially Verified
+**Platforms:** MySQL-PDO, SQLite-PDO
+**Tests:** `Pdo/MysqlStudentGradeReportTest`, `Pdo/SqliteStudentGradeReportTest`
+
+A student grading system with students, weighted assignments (homework, midterm, final), and submissions (score, graded/draft status) exercises CROSS JOIN + LEFT JOIN with COALESCE for missing submissions scored as zero, multiple nested CASE WHEN for letter grade tiers (A through F), weighted average via SUM(score/max * weight), DELETE with EXISTS for draft cleanup, per-assignment AVG with LEFT JOIN, and prepared HAVING with complex aggregate expression.
+
+LEFT JOIN COALESCE (missing=0), weighted CASE WHEN, DELETE EXISTS, and per-assignment AVG work on all platforms. Prepared HAVING with multi-table LEFT JOIN returns empty on SQLite (SPEC-11.SQLITE-HAVING-PARAMS).
+
+## SPEC-10.2.166 Inventory snapshot with UNION ALL
+**Status:** Partially Verified (New Finding)
+**Platforms:** MySQL-PDO, SQLite-PDO
+**Tests:** `Pdo/MysqlInventorySnapshotTest`, `Pdo/SqliteInventorySnapshotTest`
+
+A warehouse inventory system with bins (product, location, base quantity), inbound movements, and outbound movements exercises UNION ALL in derived table for net movement calculation, INSERT ... SELECT with GROUP BY from UNION ALL for snapshot generation, HAVING on aggregated UNION ALL, product-level aggregation with double LEFT JOIN to subqueries, and prepared UNION ALL derived table with BETWEEN date filter.
+
+**New Finding:** UNION ALL inside a derived table (subquery in FROM clause) returns empty results on SQLite and MySQL through ZTD. PostgreSQL works correctly. Top-level UNION ALL works correctly on all platforms — the CTE rewriter handles `SELECT ... UNION ALL SELECT ...` at the top level, but when wrapped in `(... UNION ALL ...) alias`, the rewriter does not rewrite table references inside the UNION branches on SQLite and MySQL. Product-level aggregation using LEFT JOIN to separate aggregate subqueries (no UNION ALL) works correctly on SQLite and PostgreSQL, but returns empty on MySQL (derived tables in LEFT JOIN not rewritten). See SPEC-11.UNION-ALL-DERIVED.

@@ -415,6 +415,9 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.161 | `*MembershipTierTest` | V | V | V | V | GROUP BY+SUM spending, SUM+CASE tier eligibility, LEFT JOIN COALESCE benefits, UPDATE+verify, prepared BETWEEN+JOIN |
 | SPEC-10.2.162 | `*CustomerNpsTest` | V | V | V | V | CASE NPS categories, ROUND SUM CASE/COUNT NPS%, GROUP BY+SUM CASE channel, LEFT JOIN IS NULL anti-join, prepared BETWEEN |
 | SPEC-10.2.163 | `*AssetDepreciationTest` | V | V | V | V | GROUP BY+COUNT+SUM category, correlated MAX subquery latest, ROUND depreciation%, HAVING aggregate threshold, prepared JOIN |
+| SPEC-10.2.164 | `Pdo/MysqlSubscriptionRenewalTest`, `Pdo/PostgresSubscriptionRenewalTest`, `Pdo/SqliteSubscriptionRenewalTest` | — | V | V | P | DELETE WHERE IN (subquery+JOIN), INSERT SELECT JOIN, correlated subqueries in SELECT list, prepared HAVING, UPDATE+verify |
+| SPEC-10.2.165 | `Pdo/MysqlStudentGradeReportTest`, `Pdo/PostgresStudentGradeReportTest`, `Pdo/SqliteStudentGradeReportTest` | — | V | V | P | CROSS JOIN+LEFT JOIN COALESCE missing=0, CASE WHEN letter grades, weighted average, DELETE EXISTS, prepared HAVING |
+| SPEC-10.2.166 | `Pdo/MysqlInventorySnapshotTest`, `Pdo/PostgresInventorySnapshotTest`, `Pdo/SqliteInventorySnapshotTest` | — | V | V | P | UNION ALL derived table (NEW FINDING), INSERT SELECT+UNION ALL, HAVING on UNION ALL, double LEFT JOIN aggregate, prepared UNION ALL |
 
 ## 11. Known Issues (Selected)
 
@@ -427,6 +430,7 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-11.DERIVED-TABLE-PREPARED | `*LeaderboardRankingTest` | K | K | — | K | K |
 | SPEC-11.CTE-JOIN-BACK | `*ChainedUserCteTest` | — | — | — | K | K |
 | SPEC-11.CHECK-COLUMN-NAME | (no dedicated test — avoided by column rename) | K | K | K | K | K |
+| SPEC-11.UNION-ALL-DERIVED | `Pdo/SqliteInventorySnapshotTest` | — | — | — | K | K |
 
 ## Legend
 

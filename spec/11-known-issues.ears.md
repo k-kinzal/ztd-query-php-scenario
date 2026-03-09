@@ -1001,9 +1001,9 @@ Workaround: Rename tables to avoid `select` and `values` as table names, or disa
 
 ## SPEC-11.PREPARED-SELECT-REEXECUTE-STALE `[Issue #87]` Prepared SELECT re-execution returns stale shadow data
 **Status:** Known Issue
-**Platforms:** SQLite-PDO (confirmed), likely all PDO adapters
+**Platforms:** SQLite-PDO, MySQL-PDO, PostgreSQL-PDO, MySQLi (all confirmed)
 **Related specs:** [SPEC-3.2](03-read-operations.ears.md)
-**Tests:** `Pdo/SqlitePreparedSelectReexecuteStaleTest`, `Pdo/SqliteCloseCursorReexecuteTest`
+**Tests:** `Pdo/SqlitePreparedSelectReexecuteStaleTest`, `Pdo/MysqlPreparedSelectReexecuteStaleTest`, `Pdo/PostgresPreparedSelectReexecuteStaleTest`, `Mysqli/MysqliPreparedSelectReexecuteStaleTest`, `Pdo/SqliteCloseCursorReexecuteTest`
 
 When a prepared SELECT statement is re-executed after intervening DML operations (INSERT, UPDATE, DELETE) via other statements, the re-executed SELECT returns stale results from the first execution instead of reflecting the shadow store mutations.
 

@@ -931,3 +931,35 @@ On SQLite, UPDATE and DELETE statements with table aliases (`UPDATE t AS alias S
 **Tests:** `Pdo/SqliteViewJoinShadowTest`
 
 When a query JOINs a view with a shadow-modified table, the results are inconsistent: the view reads physical data while the joined table reads shadow data. For example, after shadow-inserting a row into the base table, a `SELECT ... FROM view JOIN table` does not include the shadow-inserted row in the join result. After shadow-deleting a row, the deleted row still appears in the join because the view sees the physical (undeleted) row. This is a consequence of views not being CTE-rewritten, but the JOIN inconsistency may silently produce incorrect results in applications that combine views with DML-modified tables.
+
+## SPEC-11.JSON-TABLE-FUNCTION `[Issue #81]` SQLite: json_each()/json_tree() table-valued functions return empty results
+**Status:** Known Issue
+**Platforms:** SQLite-PDO
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-3.3](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteJsonTableFunctionTest`
+
+SQLite table-valued functions `json_each()` and `json_tree()` return zero rows when used on shadow-stored data. These functions appear in the FROM clause like tables (e.g., `FROM products p, json_each(p.tags) j`) but the CTE rewriter does not handle them. All query patterns are affected: SELECT, JOIN, WHERE filter, aggregation, and prepared statements. This is distinct from #13 (derived tables) — table-valued functions have different syntax from subqueries.
+
+## SPEC-11.LINE-COMMENT-DML `[Issue #82]` Line comments (--) break CTE rewriter for UPDATE and SELECT
+**Status:** Known Issue
+**Platforms:** SQLite-PDO, likely PostgreSQL-PDO
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteLineCommentNearKeywordTest`
+
+SQL line comments (`--`) break the CTE rewriter in two cases: (1) a line comment immediately before UPDATE causes "Cannot resolve UPDATE target SQL statement" error; (2) a line comment containing SQL keywords like `SELECT`, `FROM`, `DELETE` causes the following actual query to return 0 rows. Line comments before SELECT, INSERT, and DELETE, and between clauses, work correctly. Related to #69 (block comments break parser) but affects `--` syntax rather than `/* */`.
+
+## SPEC-11.INSERT-SELECT-LITERAL-NULLS `[Issue #83]` INSERT...SELECT with literal values stores NULLs (SQLite/PostgreSQL)
+**Status:** Known Issue
+**Platforms:** SQLite-PDO, PostgreSQL-PDO (MySQL not affected)
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md), [SPEC-4.1a](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteConditionalInsertNotExistsTest`, `Pdo/PostgresConditionalInsertNotExistsTest`, `Pdo/MysqlConditionalInsertNotExistsTest`
+
+`INSERT INTO t (cols) SELECT literal_values WHERE [NOT] EXISTS (...)` stores NULLs instead of the intended values on SQLite and PostgreSQL. This breaks the common portable conditional-insert pattern. Consequences: (1) NOT EXISTS checks fail to find the "existing" row because the stored value is NULL; (2) sequential conditional inserts create duplicates; (3) cross-table conditional inserts store NULLs. MySQL works correctly. Related to #20 (INSERT...SELECT with computed columns produces NULLs).
+
+## SPEC-11.PG-FORMAT-UPDATE-SET `[Issue #84]` PostgreSQL: format() in UPDATE SET produces NULL
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresFormatFunctionTest`
+
+PostgreSQL's `format()` function works correctly in SELECT, WHERE, and prepared-statement contexts, but produces NULL when used in `UPDATE SET`. For example, `UPDATE users SET code = format('USR-%s', first_name) WHERE code IS NULL` sets `code` to NULL instead of the expected formatted string. This is distinct from #47 (which is about FROM keyword in TRIM/SUBSTRING/EXTRACT syntax) and similar to the pattern in #61 (CASE in UPDATE SET).

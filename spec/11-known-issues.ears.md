@@ -720,3 +720,38 @@ When `generate_series()` with column alias (e.g., `AS d(day)`) is LEFT JOINed wi
 Integer `generate_series()` in a derived table (`(SELECT generate_series(1,5) AS n) AS gs`) LEFT JOINed with shadow table **does work** — only the `AS alias(col)` form is affected.
 
 Related: Issue #13 (derived tables not rewritten), SPEC-11.PG-LATERAL (LATERAL inner references not rewritten).
+
+## SPEC-11.PG-IS-NOT-DISTINCT-FROM `[Issue #57]` PostgreSQL IS NOT DISTINCT FROM between columns returns empty
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresNullSafeComparisonTest`
+
+`IS NOT DISTINCT FROM` between two columns (or a column and expression) returns empty results through the CTE rewriter when both values are NULL. Column-to-literal comparison (`col IS NOT DISTINCT FROM NULL`) works correctly. The bug is specifically in column-to-column or column-to-expression form.
+
+| Pattern | Behavior |
+|---------|----------|
+| `WHERE a IS NOT DISTINCT FROM NULL` | Correct |
+| `WHERE a IS DISTINCT FROM 'value'` | Correct |
+| `WHERE a IS NOT DISTINCT FROM b` | **Bug**: returns empty when both NULL |
+| `WHERE a IS NOT DISTINCT FROM expr::TYPE` | **Bug**: returns empty when both NULL |
+
+## SPEC-11.SQLITE-DELETE-HAVING `[Issue #58]` SQLite DELETE with IN (subquery GROUP BY HAVING) produces incomplete SQL
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteDeleteWithHavingSubqueryTest`
+
+On SQLite, `DELETE FROM t WHERE id IN (SELECT ... GROUP BY ... HAVING ...)` throws "SQLSTATE[HY000]: General error: 1 incomplete input". The CTE rewriter generates truncated/incomplete SQL when processing DELETE with a subquery containing GROUP BY and HAVING clauses. Also affects `DELETE ... WHERE NOT EXISTS (SELECT ... GROUP BY ... HAVING ...)`.
+
+Related: Issue #9 (UPDATE with IN subquery GROUP BY HAVING), Issue #22 (HAVING with prepared params).
+
+## SPEC-11.MYSQL-DELETE-SELF-HAVING `[Issue #59]` MySQL self-referencing DELETE with IN (subquery GROUP BY HAVING) deletes all rows
+**Status:** Known Issue
+**Platforms:** MySQL-PDO (confirmed)
+**Related specs:** [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlDeleteWithHavingSubqueryTest`
+
+When DELETE references the same table in both the target and the IN subquery with GROUP BY HAVING, the CTE rewriter incorrectly deletes all rows instead of only those matching the HAVING filter. This is the DELETE equivalent of Issue #11 (UPDATE variant).
+
+Related: Issue #11 (UPDATE self-referencing with GROUP BY HAVING).

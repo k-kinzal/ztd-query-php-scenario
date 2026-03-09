@@ -1921,3 +1921,38 @@ Tables with overlapping name prefixes (e.g., orders/order_items/order_archive) a
 **Tests:** `Pdo/PostgresBooleanColumnShadowTest`
 
 PostgreSQL BOOLEAN TRUE values work correctly in the shadow store. BOOLEAN FALSE values cause `CAST('' AS BOOLEAN)` error because PHP serializes `false` as empty string. This affects SELECT, UPDATE, and DELETE on any table with BOOLEAN columns when any shadow row contains a FALSE value. Even selecting only non-boolean columns fails because the CTE rewriter includes all columns. Using INTEGER instead of BOOLEAN avoids the issue.
+
+## SPEC-10.2.232 GROUP BY / ORDER BY position number
+**Status:** Verified
+**Platforms:** SQLite-PDO (pass), MySQL-PDO (pass), PostgreSQL-PDO (pass), MySQLi (pass)
+**Tests:** `Pdo/SqliteGroupByPositionNumberTest`, `Pdo/MysqlGroupByPositionNumberTest`, `Pdo/PostgresGroupByPositionNumberTest`, `Mysqli/GroupByPositionNumberTest`
+
+GROUP BY and ORDER BY using column position numbers (e.g., `GROUP BY 1, 2 ORDER BY 3 DESC`) work correctly through ZTD on all platforms. Tested: single-position GROUP BY, multi-position GROUP BY, ORDER BY position DESC, GROUP BY position with HAVING, and prepared statements with positional grouping + WHERE params. The CTE rewriter correctly preserves positional references when wrapping queries in CTEs.
+
+## SPEC-10.2.233 Conditional aggregation with prepared params
+**Status:** Verified
+**Platforms:** SQLite-PDO (pass), MySQL-PDO (pass), MySQLi (pass), PostgreSQL-PDO (pass with ?)
+**Tests:** `Pdo/SqliteConditionalAggregateWithParamsTest`, `Pdo/MysqlConditionalAggregateWithParamsTest`, `Pdo/PostgresConditionalAggregateWithParamsTest`, `Mysqli/ConditionalAggregateWithParamsTest`
+
+`SUM(CASE WHEN status = ? THEN amount ELSE 0 END)` and `COUNT(CASE WHEN status = ? THEN 1 END)` with prepared params work correctly on all platforms. Multiple conditional aggregates with different params in the same query also work. Conditional aggregate in HAVING with param works on SQLite and MySQL (PostgreSQL not tested with HAVING variant due to possible #22 interaction).
+
+## SPEC-10.2.234 Prepared UPDATE/DELETE with BETWEEN
+**Status:** Verified
+**Platforms:** SQLite-PDO (pass)
+**Tests:** `Pdo/SqlitePreparedUpdateBetweenTest`
+
+Prepared UPDATE and DELETE with `WHERE col BETWEEN ? AND ?` work correctly on SQLite. NOT BETWEEN also works. Chained prepared BETWEEN updates (first A range, then B range) correctly apply both modifications. The CTE rewriter preserves parameter binding positions for BETWEEN clauses in DML statements.
+
+## SPEC-10.2.235 UPDATE with multiple subqueries in SET clause
+**Status:** Partial (extends Issue #51)
+**Platforms:** MySQL-PDO (pass), MySQLi (pass), SQLite-PDO (fails for correlated/WHERE), PostgreSQL-PDO (fails)
+**Tests:** `Pdo/SqliteMultiSubqueryUpdateSetTest`, `Pdo/MysqlMultiSubqueryUpdateSetTest`, `Pdo/PostgresMultiSubqueryUpdateSetTest`, `Mysqli/MultiSubqueryUpdateSetTest`
+
+UPDATE with multiple non-correlated subqueries without WHERE in SET (`SET col1 = (SELECT MIN(x) FROM t), col2 = (SELECT MAX(x) FROM t)`) works on all platforms. However, any subquery in SET that contains `FROM ... WHERE` fails on SQLite ("near FROM: syntax error") and PostgreSQL ("ambiguous column" or "must appear in GROUP BY"). Multiple correlated subqueries and prepared subqueries with params also fail on SQLite and PostgreSQL. MySQL handles all variants correctly.
+
+## SPEC-10.2.236 MySQL UPDATE JOIN with derived table
+**Status:** Known Issue (Issue #104)
+**Platforms:** MySQLi (fails), MySQL-PDO (fails)
+**Tests:** `Pdo/MysqlUpdateJoinPatternTest`, `Mysqli/MultiSubqueryUpdateSetTest`
+
+MySQL UPDATE JOIN with a derived table (subquery in JOIN position) fails with "Identifier name is too long" — the CTE rewriter treats the subquery as a table identifier. UPDATE JOIN with direct tables works correctly. Workaround: use correlated subqueries in SET instead.

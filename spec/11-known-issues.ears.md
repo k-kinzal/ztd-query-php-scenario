@@ -634,13 +634,24 @@ SELECT name FROM docs WHERE jsonb_exists_all(meta, array['author', 'reviewed']);
 
 Single-column INTERSECT and EXCEPT work correctly on SQLite through the CTE shadow store, but multi-column variants return 0 rows instead of the expected results. For example, `SELECT department, skill FROM employees INTERSECT SELECT department, skill FROM contractors` returns empty when it should return 3 matching (department, skill) pairs. Both INTERSECT and EXCEPT are affected when the projection includes multiple non-PK columns. PostgreSQL handles these correctly.
 
-## SPEC-11.UPDATE-SET-CORRELATED-SUBQUERY `[Issue #51]` UPDATE with correlated subquery in SET clause produces errors
+## SPEC-11.UPDATE-SET-CORRELATED-SUBQUERY `[Issue #51]` UPDATE with subquery in SET clause produces errors
 **Status:** Known Issue
-**Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed); MySQL-PDO NOT affected
+**Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed); MySQL-PDO, MySQLi NOT affected
 **Related specs:** [SPEC-4.2](04-write-operations.ears.md)
-**Tests:** `Pdo/SqliteUpdateSubqueryTest`, `Pdo/PostgresUpdateSubqueryTest`, `Pdo/MysqlUpdateSubqueryTest`
+**Tests:** `Pdo/SqliteUpdateSubqueryTest`, `Pdo/PostgresUpdateSubqueryTest`, `Pdo/MysqlUpdateSubqueryTest`, `Pdo/SqliteMultiSubqueryUpdateSetTest`, `Pdo/MysqlMultiSubqueryUpdateSetTest`, `Pdo/PostgresMultiSubqueryUpdateSetTest`
 
-UPDATE statements with correlated subqueries in the SET clause fail through the CTE rewriter on SQLite and PostgreSQL. On SQLite, the rewriter produces `near "FROM": syntax error`. On PostgreSQL, it produces `column "price" does not exist` due to incorrect aliasing. Self-referencing scalar subqueries in SET (e.g., `SET price = (SELECT MAX(price) FROM same_table WHERE ...)`) also fail with different errors per platform. MySQL is NOT affected — all correlated SET patterns work correctly. UPDATE with subqueries in WHERE clause works correctly on all platforms. DELETE with correlated subqueries also works correctly on all platforms.
+UPDATE statements with subqueries in the SET clause fail through the CTE rewriter on SQLite and PostgreSQL. The issue affects **both correlated and non-correlated** subqueries — any subquery in SET that contains a `FROM ... WHERE` clause triggers the failure. Non-correlated subqueries without a WHERE clause (`SET col = (SELECT AGG(x) FROM t)`) work correctly on all platforms.
+
+**SQLite:** The rewriter produces `near "FROM": syntax error`. The SET clause extraction regex likely terminates at the first `FROM` keyword inside the subquery. This affects single and multiple subqueries in SET, correlated and non-correlated, with and without prepared params.
+
+**PostgreSQL:** Multiple error variants:
+- Correlated: `column "price" does not exist` — incorrect aliasing
+- Multi-subquery correlated: `column reference "category" is ambiguous` — the CTE rewriter adds the subquery's target table to the outer FROM clause
+- Non-correlated with WHERE: `column must appear in GROUP BY clause` — the rewriter wraps the SET subquery with the outer table reference, creating an invalid GROUP BY requirement
+
+**MySQL:** NOT affected — all subquery-in-SET patterns work correctly (MySQLi and MySQL-PDO), including multiple correlated subqueries, non-correlated subqueries, and prepared variants.
+
+Self-referencing scalar subqueries in SET (e.g., `SET price = (SELECT MAX(price) FROM same_table WHERE ...)`) also fail with different errors per platform. UPDATE with subqueries in WHERE clause works correctly on all platforms. DELETE with correlated subqueries also works correctly on all platforms.
 
 ## SPEC-11.USER-CTE-CONFLICT `[Issue #52]` User-defined CTEs silently return empty results
 **Status:** Known Issue
@@ -1264,3 +1275,32 @@ Non-derived-table patterns with JOINs work correctly on all platforms: top-level
 - **PostgreSQL**: Works correctly — all rows inserted, shadow store updated
 - Related to Issue #14 (EXCEPT/INTERSECT as multi-statement) — same parser limitation
 - Workaround: perform separate `INSERT...SELECT` statements for each source table
+
+## SPEC-11.MYSQL-UPDATE-JOIN-DERIVED `[Issue #104]` MySQL: UPDATE JOIN with derived table treats subquery as identifier
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Mysqli/MultiSubqueryUpdateSetTest`, `Pdo/MysqlUpdateJoinPatternTest`
+
+MySQL `UPDATE t1 JOIN (SELECT ... FROM t2 GROUP BY ...) alias ON ... SET t1.col = alias.col` fails with "Identifier name '(SELECT ... FROM ...' is too long". The CTE rewriter parses the entire derived table subquery as a table identifier/name rather than recognizing it as a subquery in the JOIN clause.
+
+- UPDATE JOIN with a **direct table** works correctly: `UPDATE t1 JOIN t2 ON ... SET t1.col = t2.col`
+- Prepared UPDATE JOIN with direct table + params also works correctly
+- Only the **derived table (subquery in JOIN)** form is affected
+- Related to Issue #44 (comma-syntax multi-table UPDATE) — the comma syntax recommends "Prefer JOIN syntax" as a workaround, but JOIN with derived tables is also broken
+- Related to Issue #102 (derived table with JOIN returns empty in SELECT) — same class of derived-table parsing issue but different statement type
+
+```sql
+-- Fails on MySQL (both MySQLi and PDO):
+UPDATE summary s
+JOIN (
+    SELECT category, COUNT(*) AS cnt, MIN(price) AS mn
+    FROM products GROUP BY category
+) p ON s.category = p.category
+SET s.min_price = p.mn, s.item_count = p.cnt;
+
+-- Workaround: use multiple correlated subqueries in SET (works on MySQL):
+UPDATE summary SET
+    min_price = (SELECT MIN(price) FROM products WHERE category = summary.category),
+    item_count = (SELECT COUNT(*) FROM products WHERE category = summary.category);
+```

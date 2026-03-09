@@ -426,6 +426,9 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.172 | `*TeamRosterTest` | V | V | V | V | GROUP_CONCAT/STRING_AGG in multi-table JOIN, GROUP BY, HAVING COUNT, LEFT JOIN NULL aggregate, GROUP_CONCAT after INSERT/DELETE, prepared GROUP_CONCAT |
 | SPEC-10.2.173 | `*DeleteReinsertCycleTest` | V | V | P | P | DELETE+re-INSERT same PK, chained delete-reinsert-update, UPDATE WHERE IN self-ref (PG: duplicate alias), UPDATE WHERE scalar subquery (PG: syntax error), mixed exec/prepare, JOIN after delete-reinsert |
 | SPEC-10.2.174 | `*NestedFunctionExprTest` | V | V | P | P | COALESCE(NULLIF()), COALESCE(NULLIF(TRIM())), subquery in BETWEEN, scalar subquery balance, JOIN rate conversion, UPDATE WHERE IN JOIN+GROUP BY (PG: ambiguous, SL: incomplete input), nested CASE+COALESCE, mixed exec/prepare |
+| SPEC-10.2.175 | `*PayrollDeductionTest` | V | V | V | P | UPDATE SET multiple cols+arithmetic, SUM CASE cross-tab, HAVING SUM > col*factor, INSERT...SELECT with CASE (SL: 0 rows), derived table GROUP BY+HAVING+multi-table JOIN, prepared BETWEEN |
+| SPEC-10.2.176 | `*SupplierPerformanceTest` | V | V | V | V | Derived table multi-table JOIN+GROUP BY (no window), multiple scalar subqueries in SELECT, AVG(CASE), HAVING AVG AND COUNT, UPDATE SET CASE expression, prepared region filter |
+| SPEC-10.2.177 | `*CurrencyConversionTest` | V | V | V | V | ROUND multiplication/division, nested CASE classification, UPDATE SET CASE per-currency, SUM CASE ROUND cross-currency, LEFT JOIN derived table net position, prepared arithmetic |
 
 ## 11. Known Issues (Selected)
 
@@ -440,6 +443,7 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-11.CHECK-COLUMN-NAME | (no dedicated test — avoided by column rename) | K | K | K | K | K |
 | SPEC-11.UNION-ALL-DERIVED | `Pdo/SqliteInventorySnapshotTest` | — | — | — | K | K |
 | SPEC-11.PG-SELF-REF-UPDATE | `Pdo/PostgresDeleteReinsertCycleTest`, `Pdo/PostgresNestedFunctionExprTest` | — | — | K | — | K |
+| SPEC-11.INSERT-SELECT-CASE | `Pdo/SqlitePayrollDeductionTest` | — | — | — | K | K |
 
 ## Legend
 

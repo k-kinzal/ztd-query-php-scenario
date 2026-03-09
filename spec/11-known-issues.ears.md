@@ -545,3 +545,24 @@ PostgreSQL conditional upserts with `ON CONFLICT DO UPDATE ... WHERE condition` 
 **Tests:** `Pdo/PostgresCtasTest`
 
 When `CREATE TABLE AS SELECT` creates a shadow table on PostgreSQL, all column types default to TEXT (via `ColumnType::unknown()`). Subsequent queries with integer comparisons fail with "operator does not exist: text = integer". The fix would be to infer column types from the source table schema. Workaround: use explicit `CAST` or string comparisons in WHERE clauses.
+
+## SPEC-11.INSERT-SELECT-CASE INSERT...SELECT with CASE expression produces 0 rows (SQLite)
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.1a](04-write-operations.ears.md), [SPEC-10.2.175](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqlitePayrollDeductionTest`
+
+`INSERT INTO t (cols) SELECT col, CASE WHEN condition THEN expr1 ELSE expr2 END, ... FROM source` produces 0 inserted rows on SQLite through ZTD. The INSERT appears to execute without error, but a subsequent SELECT on the target table shows no new rows were added. This extends SPEC-11.INSERT-SELECT-COMPUTED — not only do computed/aggregated values become NULL, but CASE expressions in INSERT...SELECT may cause the entire INSERT to produce no rows.
+
+```sql
+-- Produces 0 rows on SQLite (expected 4):
+INSERT INTO payroll (id, employee_id, pay_period, gross_pay, net_pay, status)
+SELECT e.id + 10, e.id, '2025-02',
+       CASE WHEN e.department = 'Engineering' THEN e.base_salary * 1.10
+            ELSE e.base_salary
+       END,
+       NULL, 'pending'
+FROM employee e;
+```
+
+Workaround: query the source data first via SELECT, compute values in application code, then INSERT explicit rows.

@@ -916,3 +916,50 @@ Verified patterns: Unicode data INSERT and SELECT round-trip, WHERE equality wit
 Whole-table aggregation without GROUP BY works correctly through ZTD on all platforms. COUNT(*), SUM(), AVG(), MIN(), MAX() all return correct results on shadow data. Conditional COUNT with CASE expressions, SUM with positive/negative CASE, and HAVING without GROUP BY (valid SQL for single-group filtering) all work.
 
 Verified patterns: whole-table COUNT/SUM/AVG, conditional COUNT with CASE WHEN, SUM with CASE for balance calculation, HAVING without GROUP BY (match and no-match), multiple aggregate functions with WHERE filter, aggregate after INSERT sees new data, physical isolation.
+
+## SPEC-10.2.103 Polymorphic comments with type discriminator
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/PolymorphicCommentTest`, `Pdo/MysqlPolymorphicCommentTest`, `Pdo/PostgresPolymorphicCommentTest`, `Pdo/SqlitePolymorphicCommentTest`
+
+A polymorphic comment system using type+id discriminator pattern (common in Laravel/Eloquent ORMs) works correctly through ZTD shadow store on all platforms. The scenario uses a `comments` table with `commentable_type` and `commentable_id` columns referencing multiple parent entity types (posts, photos). This exercises LEFT JOIN with conditional type matching, CASE expression for parent entity resolution, conditional aggregation across entity types, anti-join for untagged entities, and cross-type commenter statistics.
+
+Verified patterns: query comments by type+id (prepared statement), JOIN comments with parent entity via CASE on type (LEFT JOIN posts + LEFT JOIN photos), comment count by entity type (GROUP BY type), comment count per specific entity (LEFT JOIN with type filter), add comment (INSERT + JOIN verification), delete comment (DELETE + count verification), entities with no comments (anti-join via LEFT JOIN WHERE IS NULL), most active commenters with per-type breakdown (conditional COUNT with CASE), physical isolation.
+
+## SPEC-10.2.104 Data archival workflow with INSERT SELECT
+**Status:** Partially Verified
+**Platforms:** MySQLi (V), MySQL-PDO (V), PostgreSQL-PDO (V), SQLite-PDO (P)
+**Tests:** `Mysqli/DataArchivalTest`, `Pdo/MysqlDataArchivalTest`, `Pdo/PostgresDataArchivalTest`, `Pdo/SqliteDataArchivalTest`
+
+A data archival workflow moving completed orders from an active table to an archive table using INSERT SELECT works on all platforms with known SQLite limitations. The scenario exercises INSERT SELECT for bulk archival, DELETE after archival, cross-table UNION ALL queries for combined reporting, and read-your-writes consistency across both tables.
+
+**SQLite limitation:** Literal values in INSERT SELECT (e.g., `'2026-03-09'` as archived_at) become NULL in the shadow store ([SPEC-11.INSERT-SELECT-COMPUTED](11-known-issues.ears.md)). UNION ALL in derived tables also returns empty on SQLite ([SPEC-11.BARE-SUBQUERY-REWRITE](11-known-issues.ears.md)). Workaround: query each table separately and combine in application code.
+
+Verified patterns: INSERT SELECT with literal column (archived_at), delete archived rows from active table, archive summary verification, customer history across active + archived tables (UNION ALL with prepared params), physical isolation. SQLite: separate queries as workaround for UNION ALL and NULL literal.
+
+## SPEC-10.2.105 Social feed with multi-table relationships
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SocialFeedTest`, `Pdo/MysqlSocialFeedTest`, `Pdo/PostgresSocialFeedTest`, `Pdo/SqliteSocialFeedTest`
+
+A social feed system with users, friendships, posts, and reactions (4-table schema) works correctly through ZTD shadow store on all platforms. The scenario exercises IN subqueries for friend-based feed construction, LEFT JOIN with conditional aggregation for reaction counts, double IN subquery for mutual friend detection, friendship status transitions (pending → accepted), and feed expansion after relationship changes.
+
+Verified patterns: friend feed construction (IN subquery on friendships), feed with per-reaction-type counts (LEFT JOIN reactions + CASE COUNT), mutual friend detection (two IN subqueries intersection), friend count per user (LEFT JOIN with status filter), add reaction (INSERT + verify count), accept friend request (UPDATE status + verify feed expansion), physical isolation.
+
+## SPEC-10.2.106 Access log sessionization with window functions
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/AccessLogSessionTest`, `Pdo/MysqlAccessLogSessionTest`, `Pdo/PostgresAccessLogSessionTest`, `Pdo/SqliteAccessLogSessionTest`
+
+Access log analysis using window functions for sessionization and funnel analysis works correctly through ZTD shadow store on all platforms. The scenario exercises LAG for previous-visit detection, ROW_NUMBER for visit sequencing, conditional COUNT(DISTINCT) for funnel step analysis, SUBSTR-based date grouping for daily active users, and aggregate summaries per user.
+
+Verified patterns: page visit frequency (COUNT GROUP BY page), time between visits (LAG OVER PARTITION BY user ORDER BY time), visit sequence numbering (ROW_NUMBER OVER PARTITION BY user), funnel analysis (COUNT DISTINCT CASE per step), log new visit (INSERT + verify funnel update), user activity summary (COUNT + COUNT DISTINCT + MIN/MAX per user), daily active users (GROUP BY date substring), physical isolation.
+
+## SPEC-10.2.107 Feature flag evaluation and A/B test analysis
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/FeatureFlagTest`, `Pdo/MysqlFeatureFlagTest`, `Pdo/PostgresFeatureFlagTest`, `Pdo/SqliteFeatureFlagTest`
+
+A feature flag system with A/B test experiment tracking works correctly through ZTD shadow store on all platforms. The scenario exercises conditional aggregation for conversion rate calculation, ROUND with division for percentage metrics, CROSS JOIN for feature eligibility matrix, CASE expressions for multi-condition flag evaluation, and segment-based result grouping.
+
+Verified patterns: list enabled features (WHERE enabled + ORDER BY), A/B test conversion rate (SUM/COUNT/AVG per variant), results by user segment (JOIN segments + GROUP BY segment/variant), toggle feature (UPDATE enabled/rollout_pct), add experiment results (INSERT + verify updated aggregates), feature eligibility matrix (CROSS JOIN features × users with CASE evaluation), physical isolation.

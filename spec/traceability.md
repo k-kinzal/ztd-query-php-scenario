@@ -229,6 +229,11 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.100 | `*EmptyStringVsNullTest` | V | V | V | V | V |
 | SPEC-10.2.101 | `*UnicodeDataTest` | V | V | V | V | V |
 | SPEC-10.2.102 | `*ConditionalAggregateNoGroupByTest` | V | V | V | V | V |
+| SPEC-10.2.103 | `*PolymorphicCommentTest` | V | V | V | V | V |
+| SPEC-10.2.104 | `*DataArchivalTest` | V | V | V | P | P |
+| SPEC-10.2.105 | `*SocialFeedTest` | V | V | V | V | V |
+| SPEC-10.2.106 | `*AccessLogSessionTest` | V | V | V | V | V |
+| SPEC-10.2.107 | `*FeatureFlagTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -308,6 +313,11 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-3.3 | `*StringManipulationTest` | V | V | V | V | CONCAT, UPPER, LENGTH, TRIM, SUBSTR, REPLACE |
 | SPEC-4.1 | `*BatchInsertPatternTest` | V | V | V | V | Empty-start sequential INSERT, mixed DML visibility |
 | SPEC-2.1 | `*ZtdTogglePatternTest` | V | V | V | V | Enable/disable toggle, shadow persistence, physical isolation |
+| SPEC-3.3 | `*PolymorphicCommentTest` | V | V | V | V | Type discriminator pattern, polymorphic JOIN, CASE entity resolution |
+| SPEC-4.1a | `*DataArchivalTest` | V | V | V | P | INSERT SELECT archival, cross-table UNION, SQLite literal NULL |
+| SPEC-3.3 | `*SocialFeedTest` | V | V | V | V | 4-table schema, IN subquery feed, mutual friends, reactions |
+| SPEC-10.2.23 | `*AccessLogSessionTest` | V | V | V | V | LAG/ROW_NUMBER sessionization, funnel, daily active users |
+| SPEC-3.3 | `*FeatureFlagTest` | V | V | V | V | A/B test analysis, CROSS JOIN eligibility, conditional rollout |
 
 ## 11. Known Issues (Selected)
 

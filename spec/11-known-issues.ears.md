@@ -236,7 +236,7 @@ Full-text search queries (MATCH...AGAINST on MySQL, tsvector/tsquery on PostgreS
 
 On PostgreSQL, prepared statements with user-defined functions in WHERE clauses may return incorrect (empty) results, despite the same query working correctly via `query()`. The `$1` placeholder parameter combined with a UDF call in the WHERE condition does not filter correctly through the CTE-rewritten query.
 
-## SPEC-11.UPDATE-FROM UPDATE ... FROM syntax not supported (SQLite)
+## SPEC-11.UPDATE-FROM `[Issue #72]` UPDATE ... FROM syntax not supported (SQLite)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
 **Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.56](10-platform-notes.ears.md)
@@ -248,7 +248,7 @@ On PostgreSQL, prepared statements with user-defined functions in WHERE clauses 
 
 The shadow store is not corrupted by the failure. Workaround: use `WHERE id IN (SELECT ...)` subqueries instead of UPDATE FROM joins.
 
-## SPEC-11.PG-LATERAL LATERAL subqueries return empty (PostgreSQL)
+## SPEC-11.PG-LATERAL `[Issue #71]` LATERAL subqueries return empty (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
 **Related specs:** [SPEC-10.2.27](10-platform-notes.ears.md)
@@ -261,7 +261,7 @@ Workarounds:
 - Use regular JOINs with GROUP BY subqueries: `JOIN (SELECT fk, SUM(x) FROM t WHERE 1=1 GROUP BY fk) sub ON sub.fk = u.id`.
 - For top-N per group, use window functions: `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...) = 1`.
 
-## SPEC-11.BARE-SUBQUERY-REWRITE Bare subquery table references not rewritten (SQLite)
+## SPEC-11.BARE-SUBQUERY-REWRITE `[Issue #73]` Bare subquery table references not rewritten (SQLite)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
 **Related specs:** [SPEC-3.3](03-read-operations.ears.md)
@@ -283,7 +283,7 @@ Workarounds:
 - For user CTEs: add `WHERE 1=1` to the CTE definition, or use GROUP BY.
 - For percentage/ratio calculations: use CROSS JOIN with derived table instead of scalar subquery.
 
-## SPEC-11.UPDATE-AGGREGATE-SUBQUERY UPDATE with aggregate subquery in WHERE
+## SPEC-11.UPDATE-AGGREGATE-SUBQUERY `[Issue #9]` UPDATE with aggregate subquery in WHERE
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
 **Related specs:** [SPEC-4.2](04-write-operations.ears.md)
@@ -305,7 +305,7 @@ SELECT customer_id FROM orders WHERE status = 'completed' GROUP BY customer_id H
 UPDATE customers SET tier = 'gold' WHERE id IN (1, 3, 7);
 ```
 
-## SPEC-11.DERIVED-TABLE-PREPARED Prepared statements with derived tables return empty
+## SPEC-11.DERIVED-TABLE-PREPARED `[Issue #13]` Prepared statements with derived tables return empty
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO, SQLite-PDO (confirmed); PostgreSQL-PDO (works correctly)
 **Related specs:** [SPEC-3.3](03-read-operations.ears.md), [SPEC-10.2.65](10-platform-notes.ears.md)
@@ -328,7 +328,7 @@ Workarounds:
 - Use correlated subqueries instead of derived tables: `SELECT p.username, p.score, (SELECT COUNT(DISTINCT p2.score) FROM players p2 WHERE p2.score > p.score) + 1 AS player_rank FROM players p WHERE p.username = ?`.
 - Use `query()` with escaped parameters instead of `prepare()`.
 
-## SPEC-11.CTE-JOIN-BACK User CTE joined back to original table returns empty
+## SPEC-11.CTE-JOIN-BACK `[Issue #52]` User CTE joined back to original table returns empty
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
 **Related specs:** [SPEC-10.2.96](10-platform-notes.ears.md), [SPEC-3.3c](03-read-operations.ears.md)
@@ -357,7 +357,7 @@ JOIN (SELECT region, SUM(amount) AS region_total FROM sales GROUP BY region HAVI
 ON s.region = r.region;
 ```
 
-## SPEC-11.CORRELATED-UPDATE-SET Correlated scalar subquery in UPDATE SET clause
+## SPEC-11.CORRELATED-UPDATE-SET `[Issue #51]` Correlated scalar subquery in UPDATE SET clause
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO, SQLite-PDO (confirmed); MySQLi, MySQL-PDO (works correctly)
 **Related specs:** [SPEC-10.2.88](10-platform-notes.ears.md)
@@ -379,7 +379,7 @@ UPDATE departments SET avg_salary = 87500.00 WHERE id = 1;
 UPDATE departments SET avg_salary = 57500.00 WHERE id = 2;
 ```
 
-## SPEC-11.CHECK-COLUMN-NAME Column names containing "check" cause INSERT failures
+## SPEC-11.CHECK-COLUMN-NAME `[Issue #70]` Column names containing "check" cause INSERT failures
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), MySQLi, MySQL-PDO, PostgreSQL-PDO (likely affected)
 **Related specs:** [SPEC-4.1](04-write-operations.ears.md)
@@ -419,7 +419,7 @@ LEFT JOIN (SELECT bin_id, SUM(qty) AS total_in FROM inbound GROUP BY bin_id) i O
 LEFT JOIN (SELECT bin_id, SUM(qty) AS total_out FROM outbound GROUP BY bin_id) o ON o.bin_id = b.id;
 ```
 
-## SPEC-11.WINDOW-DERIVED Window function in derived table returns empty
+## SPEC-11.WINDOW-DERIVED `[Issue #13]` Window function in derived table returns empty
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
 **Related specs:** [SPEC-3.3](03-read-operations.ears.md), [SPEC-10.2.167](10-platform-notes.ears.md)
@@ -444,7 +444,7 @@ JOIN reps r ON r.id = d.rep_id
 WHERE d.amount = (SELECT MAX(d2.amount) FROM deals d2 WHERE d2.rep_id = d.rep_id);
 ```
 
-## SPEC-11.CASE-WHERE-PARAMS CASE-as-boolean in WHERE with prepared params returns wrong count
+## SPEC-11.CASE-WHERE-PARAMS `[Issue #75]` CASE-as-boolean in WHERE with prepared params returns wrong count
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
 **Related specs:** [SPEC-3.6](03-read-operations.ears.md), [SPEC-10.2.169](10-platform-notes.ears.md)
@@ -467,7 +467,7 @@ ORDER BY w.priority, w.id;
 -- Workaround: expand CASE conditions into explicit OR/AND logic in the application layer.
 ```
 
-## SPEC-11.PG-SELF-REF-UPDATE Self-referencing UPDATE WHERE IN/subquery (PostgreSQL)
+## SPEC-11.PG-SELF-REF-UPDATE `[Issue #74]` Self-referencing UPDATE WHERE IN/subquery (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed); MySQLi, MySQL-PDO, SQLite-PDO (works correctly)
 **Related specs:** [SPEC-10.2.173](10-platform-notes.ears.md)
@@ -546,7 +546,7 @@ PostgreSQL conditional upserts with `ON CONFLICT DO UPDATE ... WHERE condition` 
 
 When `CREATE TABLE AS SELECT` creates a shadow table on PostgreSQL, all column types default to TEXT (via `ColumnType::unknown()`). Subsequent queries with integer comparisons fail with "operator does not exist: text = integer". The fix would be to infer column types from the source table schema. Workaround: use explicit `CAST` or string comparisons in WHERE clauses.
 
-## SPEC-11.INSERT-SELECT-CASE INSERT...SELECT with CASE expression produces 0 rows (SQLite)
+## SPEC-11.INSERT-SELECT-CASE `[Issue #76]` INSERT...SELECT with CASE expression produces 0 rows (SQLite)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
 **Related specs:** [SPEC-4.1a](04-write-operations.ears.md), [SPEC-10.2.175](10-platform-notes.ears.md)
@@ -839,3 +839,53 @@ On SQLite, when a SQL string literal contains `FROM <tablename>` or `JOIN <table
 **Tests:** `Pdo/PostgresUnicodeAndSpecialCharsTest`
 
 On PostgreSQL, INSERT via prepared statement using `$N` parameter syntax (PostgreSQL's native numbered placeholders) stores NULL for all column values in the shadow store. The row is created but all data is lost. Using `?` placeholders works correctly.
+
+## SPEC-11.SQL-COMMENT-DML `[Issue #69]` SQL block comments break DML statement parsing
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (severe), PostgreSQL-PDO (partial), MySQLi/MySQL-PDO (not affected)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteSqlCommentRewriteTest`, `Pdo/SqliteCommentPositionTest`, `Pdo/SqliteSqlCommentHandlingTest`, `Pdo/MysqlSqlCommentRewriteTest`, `Pdo/PostgresSqlCommentRewriteTest`
+
+SQL block comments (`/* ... */`) near SQL keywords break the CTE rewriter's SQL parser. The parser does not strip comments before identifying statement type and table references. This is a common pattern in ORM-generated SQL (e.g., Doctrine, Eloquent, DBAL query builders add `/* query name */` annotations).
+
+**Failure modes by platform:**
+
+**SQLite (systematic):**
+- `SELECT * FROM /* comment */ table` → returns empty results (table ref not recognized)
+- `SELECT ... JOIN /* comment */ table` → returns empty results
+- `/* comment */ UPDATE table SET ...` → "Cannot resolve UPDATE target SQL statement"
+- `UPDATE /* comment */ table SET ...` → "no such table: /*" (CTE rewriter treats `/*` as table name)
+- `INSERT INTO /* comment */ table VALUES ...` → "Cannot determine columns SQL statement"
+- `DELETE FROM /* comment */ table WHERE ...` → **DELETE silently ignored** (no error, no rows deleted)
+
+**PostgreSQL (partial):**
+- `UPDATE /* comment */ table SET ...` → "Cannot resolve UPDATE target SQL statement"
+- `DELETE FROM /* comment */ table WHERE ...` → "Cannot resolve DELETE target SQL statement"
+- SELECT with comments and leading comments on DML work correctly.
+
+**MySQL:** All comment patterns work correctly.
+
+The most dangerous failure is SQLite DELETE with comment between FROM and table name: the operation silently does nothing with no error, meaning data that should be deleted is retained.
+
+Workaround: strip all SQL comments before passing queries to ZTD.
+
+## SPEC-11.DERIVED-TABLE-ALIAS-COLLISION `[Issue #13]` Derived table aliased with existing table name returns empty
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-3.3](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteTableAliasConfusionTest`
+
+When a derived table (subquery in FROM clause) is aliased with the name of an actual table that has shadow data, the query returns empty results. The CTE rewriter likely confuses the alias with a physical table reference.
+
+```sql
+-- Returns empty on SQLite:
+SELECT tac_items.name, tac_items.total_orders
+FROM (
+    SELECT c.name, COUNT(o.id) AS total_orders
+    FROM tac_customers c LEFT JOIN tac_orders o ON o.customer_id = c.id
+    GROUP BY c.name
+) tac_items
+ORDER BY tac_items.name
+```
+
+Workaround: use aliases that do not match any table name in the schema.

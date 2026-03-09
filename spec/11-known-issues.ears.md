@@ -566,3 +566,35 @@ FROM employee e;
 ```
 
 Workaround: query the source data first via SELECT, compute values in application code, then INSERT explicit rows.
+
+## SPEC-11.PG-UPDATE-SET-FROM-KEYWORD UPDATE SET with FROM-syntax functions (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-10.2.184](10-platform-notes.ears.md)
+**Tests:** `Pdo/PostgresUpdateSetFromKeywordTest`, `Pdo/MysqlUpdateSetFromKeywordTest` (control), `Mysqli/UpdateSetFromKeywordTest` (control), `Pdo/SqliteUpdateSetFromKeywordTest` (control)
+
+`PgSqlParser::extractUpdateSets` uses a regex that terminates SET clause extraction at the first `FROM` keyword. Standard SQL functions that use `FROM` as part of their syntax — `TRIM(BOTH ' ' FROM col)`, `SUBSTRING(col FROM n FOR m)`, `EXTRACT(field FROM source)` — are truncated, producing invalid SQL.
+
+Affected patterns:
+- `UPDATE t SET name = TRIM(BOTH ' ' FROM name) WHERE id = 1` — parsed as `SET name = TRIM(BOTH ' '`, producing `SELECT TRIM(BOTH ' ' AS "name"` → syntax error.
+- `UPDATE t SET code = SUBSTRING(code FROM 1 FOR 3) WHERE id = 1` — parsed as `SET code = SUBSTRING(code`, truncated at `FROM`.
+- `UPDATE t SET yr = EXTRACT(YEAR FROM created_at) WHERE id = 1` — parsed as `SET yr = EXTRACT(YEAR`, truncated at `FROM`.
+- Multiple SET assignments with TRIM(... FROM ...) lose all subsequent assignments.
+
+This is distinct from SPEC-11.PG-EXTRACT (which documents incorrect CTE casting of dates) and SPEC-11.UPDATE-SUBQUERY-SET (which documents subquery failures in SET). The root cause is the same regex (`/\bSET\s+(.+?)(?:\s+FROM\s+|...)/is`) but the trigger is standard SQL function syntax rather than subqueries or UPDATE...FROM joins.
+
+MySQL (MySQLi, MySQL-PDO) and SQLite-PDO are NOT affected — MySQL uses phpMyAdmin SqlParser (proper parser, not regex), and SQLite's regex does not use `FROM` as a SET clause terminator.
+
+Workarounds:
+- Use function-specific alternatives: `TRIM(name)` instead of `TRIM(BOTH ' ' FROM name)`, `SUBSTR(code, 1, 3)` instead of `SUBSTRING(code FROM 1 FOR 3)`.
+- Compute the value in a SELECT first, then UPDATE with the explicit result.
+
+```sql
+-- Fails on PostgreSQL:
+UPDATE items SET name = TRIM(BOTH ' ' FROM name) WHERE id = 1;
+UPDATE items SET code = SUBSTRING(code FROM 1 FOR 3) WHERE id = 1;
+
+-- Workaround (all platforms):
+UPDATE items SET name = TRIM(name) WHERE id = 1;
+UPDATE items SET code = SUBSTR(code, 1, 3) WHERE id = 1;
+```

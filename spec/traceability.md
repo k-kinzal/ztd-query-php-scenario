@@ -430,10 +430,19 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.176 | `*SupplierPerformanceTest` | V | V | V | V | Derived table multi-table JOIN+GROUP BY (no window), multiple scalar subqueries in SELECT, AVG(CASE), HAVING AVG AND COUNT, UPDATE SET CASE expression, prepared region filter |
 | SPEC-10.2.177 | `*CurrencyConversionTest` | V | V | V | V | ROUND multiplication/division, nested CASE classification, UPDATE SET CASE per-currency, SUM CASE ROUND cross-currency, LEFT JOIN derived table net position, prepared arithmetic |
 
+| SPEC-10.2.178 | `*AppointmentSchedulingTest` | V | V | V | V | BETWEEN, EXISTS/NOT EXISTS, COALESCE, UPDATE WHERE BETWEEN, COUNT CASE, prepared BETWEEN |
+| SPEC-10.2.179 | `*ProductCatalogSearchTest` | V | V | V | V | LIKE wildcards, multi-filter prepared, LEFT JOIN COUNT, HAVING, ORDER BY alias |
+| SPEC-10.2.180 | `*AuditTrailVersioningTest` | V | V | V | V | Sequential UPDATE same row, MAX+1 version, MIN/MAX, GROUP BY HAVING COUNT, LIMIT/OFFSET |
+| SPEC-10.2.181 | `*ReferralChainTest` | V | V | V | V | Self-join referral tree, NOT IN with NULLable FK, COALESCE LEFT JOIN, UPDATE counter increment |
+| SPEC-10.2.182 | `*SurveyResponseAnalysisTest` | V | V | V | P | INSERT SELECT GROUP BY (SL: 0 rows), multiple DISTINCT aggregates, conditional SUM CASE, prepared HAVING |
+| SPEC-10.2.183 | `*WarehouseBinTransferTest` | V | V | V | P | DELETE WHERE LIKE, prepared LIKE wildcard, prepared UPDATE arithmetic self-ref, mixed exec/prepare, INSERT SELECT JOIN (SL: 0 rows) |
+| SPEC-10.2.184 | `*UpdateSetFromKeywordTest` | V | V | K | V | UPDATE SET TRIM(FROM), SUBSTRING(FROM), EXTRACT(FROM) — PG parser truncates SET at FROM keyword |
+
 ## 11. Known Issues (Selected)
 
 | SPEC-ID | Test Classes | Mi | MP | PG | SL | Status |
 |---------|-------------|----|----|----|----|--------|
+| SPEC-11.PG-UPDATE-SET-FROM-KEYWORD | `Pdo/PostgresUpdateSetFromKeywordTest` | — | — | K | — | K |
 | SPEC-11.UPDATE-FROM | `Pdo/SqliteUpdateFromJoinTest` | — | — | — | K | K |
 | SPEC-11.PG-LATERAL | `Pdo/PostgresLateralSubqueryTest` | — | — | K | — | K |
 | SPEC-11.BARE-SUBQUERY-REWRITE | `Pdo/SqliteScalarSubqueryInSelectTest`, `Pdo/SqlitePivotReportTest`, `Pdo/SqliteScalarSubqueryWorkaroundTest` | — | — | — | K | K |

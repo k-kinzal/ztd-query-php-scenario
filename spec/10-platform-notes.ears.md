@@ -1415,3 +1415,30 @@ Verified patterns: GROUP BY SUBSTR month + SUM (monthly summary), GROUP BY endpo
 A document publishing workflow with documents (draft/review/approved/published status), reviewers (with expertise), and reviews (approve/reject/comment decisions) works correctly through ZTD shadow store. The scenario exercises GROUP BY status for document summary, LEFT JOIN with conditional filter and CASE for quorum check (>= 2 approvals), LEFT JOIN with SUM CASE for reviewer workload cross-tab (approve/reject/comment counts), WHERE + LEFT JOIN + HAVING for under-quorum documents in review, UPDATE status transition with subsequent verification, correlated MAX subquery in WHERE for latest review per document, and prepared statement for reviewer document lookup.
 
 Verified patterns: GROUP BY COUNT (status summary), LEFT JOIN + CASE quorum (approval check), LEFT JOIN + SUM CASE cross-tab (reviewer workload), HAVING < threshold (awaiting review), UPDATE + verify (publish transition), correlated MAX subquery in WHERE (latest review), prepared JOIN (reviewer lookup), physical isolation.
+
+## SPEC-10.2.158 Equipment maintenance scheduling
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/EquipmentMaintenanceTest`, `Pdo/MysqlEquipmentMaintenanceTest`, `Pdo/PostgresEquipmentMaintenanceTest`, `Pdo/SqliteEquipmentMaintenanceTest`
+
+An equipment maintenance system with equipment (category, location, last service date, service interval), technicians (with specialties), and service records (type, date, cost, notes) works correctly through ZTD shadow store. The scenario exercises GROUP BY category COUNT for equipment inventory, platform-specific date arithmetic for overdue detection (DATEDIFF on MySQL, date subtraction on PostgreSQL, JULIANDAY on SQLite), LEFT JOIN with COUNT and SUM for technician workload and cost totals, correlated MAX subquery for most recent service per equipment, GROUP BY with SUM and ROUND(AVG, 2) for cost breakdown by category, and prepared statement with JOIN for technician service history lookup.
+
+Verified patterns: GROUP BY COUNT (category inventory), date arithmetic overdue detection (platform-specific), LEFT JOIN + COUNT + SUM (technician workload), correlated MAX subquery in WHERE (latest service), GROUP BY + SUM + ROUND AVG (cost breakdown), prepared JOIN (technician history), physical isolation.
+
+## SPEC-10.2.159 Hotel room management
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/HotelRoomManagementTest`, `Pdo/MysqlHotelRoomManagementTest`, `Pdo/PostgresHotelRoomManagementTest`, `Pdo/SqliteHotelRoomManagementTest`
+
+A hotel management system with rooms (type, floor, rate, status), guests (VIP level), and stays (dates, charge, rating) works correctly through ZTD shadow store. The scenario exercises GROUP BY room type COUNT for inventory, WHERE status filter for occupied rooms, 2-table JOIN with SUM and ROUND(AVG, 2) for revenue by room type, LEFT JOIN with COUNT and SUM for guest stay history, 3-table JOIN with WHERE rating filter and multi-column ORDER BY for high-rated stays, and prepared statement for floor availability lookup.
+
+Verified patterns: GROUP BY COUNT (room type inventory), WHERE status filter (occupied rooms), JOIN + SUM + ROUND AVG (revenue by type), LEFT JOIN + COUNT + SUM (guest history), 3-table JOIN + WHERE + ORDER BY (high rated stays), prepared WHERE + AND (floor availability), physical isolation.
+
+## SPEC-10.2.160 IT incident management
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/IncidentManagementTest`, `Pdo/MysqlIncidentManagementTest`, `Pdo/PostgresIncidentManagementTest`, `Pdo/SqliteIncidentManagementTest`
+
+An IT incident management system with incidents (severity, status, dates, reporter), agents (team, tier), and assignments (action, notes) works correctly through ZTD shadow store. The scenario exercises GROUP BY severity COUNT for incident summary, WHERE IN with CASE for priority labeling and CASE-based ORDER BY for severity sorting, LEFT JOIN with COUNT and COUNT DISTINCT for agent workload (total actions vs unique incidents), WHERE IS NOT NULL for resolved incident filtering, NOT EXISTS subquery for unassigned incident detection, and prepared DISTINCT JOIN for team-based incident lookup.
+
+Verified patterns: GROUP BY COUNT (severity summary), WHERE IN + CASE + CASE ORDER BY (priority labeling), LEFT JOIN + COUNT + COUNT DISTINCT (agent workload), WHERE IS NOT NULL (resolved incidents), NOT EXISTS subquery (unassigned detection), prepared DISTINCT JOIN (team lookup), physical isolation.

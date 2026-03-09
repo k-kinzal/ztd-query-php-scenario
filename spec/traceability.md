@@ -409,6 +409,9 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.155 | `*LeaveBalanceTest` | V | V | V | V | 3-table JOIN SUM, LEFT JOIN COALESCE balance, self-join overlap, SUM CASE dept cross-tab, UPDATE+verify |
 | SPEC-10.2.156 | `*UsageMeteringTest` | V | V | V | V | SUBSTR month GROUP BY, ROUND CAST utilization %, HAVING quota threshold, LEFT JOIN COALESCE overage |
 | SPEC-10.2.157 | `*DocumentWorkflowTest` | V | V | V | V | LEFT JOIN CASE quorum, SUM CASE reviewer workload, correlated MAX subquery, UPDATE status transition |
+| SPEC-10.2.158 | `*EquipmentMaintenanceTest` | V | V | V | V | Date arithmetic overdue, LEFT JOIN COUNT+SUM workload, correlated MAX subquery, ROUND AVG cost |
+| SPEC-10.2.159 | `*HotelRoomManagementTest` | V | V | V | V | GROUP BY COUNT type, JOIN SUM+ROUND AVG revenue, LEFT JOIN guest history, 3-table rating JOIN |
+| SPEC-10.2.160 | `*IncidentManagementTest` | V | V | V | V | CASE priority, COUNT DISTINCT workload, NOT EXISTS unassigned, prepared DISTINCT team |
 
 ## 11. Known Issues (Selected)
 
@@ -420,6 +423,7 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-11.UPDATE-AGGREGATE-SUBQUERY | `Pdo/SqliteBulkConditionalUpgradeTest`, `Pdo/SqliteDeduplicationEdgeCasesTest` | — | — | — | K | K |
 | SPEC-11.DERIVED-TABLE-PREPARED | `*LeaderboardRankingTest` | K | K | — | K | K |
 | SPEC-11.CTE-JOIN-BACK | `*ChainedUserCteTest` | — | — | — | K | K |
+| SPEC-11.CHECK-COLUMN-NAME | (no dedicated test — avoided by column rename) | K | K | K | K | K |
 
 ## Legend
 

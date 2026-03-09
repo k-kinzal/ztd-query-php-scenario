@@ -378,3 +378,15 @@ SELECT department_id, AVG(salary) AS avg_sal FROM employees GROUP BY department_
 UPDATE departments SET avg_salary = 87500.00 WHERE id = 1;
 UPDATE departments SET avg_salary = 57500.00 WHERE id = 2;
 ```
+
+## SPEC-11.CHECK-COLUMN-NAME Column names containing "check" cause INSERT failures
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), MySQLi, MySQL-PDO, PostgreSQL-PDO (likely affected)
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md)
+
+Column names containing the substring `check` (e.g., `check_in`, `check_out`, `checkin_date`, `checkout_date`) cause `INSERT INTO table VALUES (...)` to fail with "Insert values count does not match column count". The SQL parser likely interprets `check` as the SQL `CHECK` constraint keyword during schema reflection, miscounting the columns.
+
+Workarounds:
+- Use explicit column lists in INSERT: `INSERT INTO table (col1, col2, ...) VALUES (...)`.
+- Rename columns to avoid the `check` substring: use `arrival_date` / `departure_date` instead of `check_in` / `check_out`.
+- Quote column names in DDL with double quotes (SQLite confirmed).

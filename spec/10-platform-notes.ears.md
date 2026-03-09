@@ -1788,3 +1788,52 @@ GROUP BY with HAVING aggregate thresholds (COUNT >= N, SUM >= N, AVG > N) correc
 **Tests:** `Pdo/MysqlPreparedExpressionDmlTest`, `Pdo/PostgresPreparedExpressionDmlTest`, `Pdo/SqlitePreparedExpressionDmlTest`
 
 Prepared UPDATE with arithmetic expressions in SET (`price = price * ?`), addition expressions (`quantity = quantity + ?`), re-execution with different parameters, CASE expressions with parameters in SET, and prepared SELECT with computed columns all work correctly on all platforms. Prepared DELETE with expression in WHERE (`price * quantity < ?`) works on MySQL and PostgreSQL but deletes ALL rows on SQLite ([Issue #101](11-known-issues.ears.md)). Prepared UPDATE CASE with RETURNING returns empty on PostgreSQL (existing RETURNING limitation, [Issue #53](11-known-issues.ears.md)).
+
+## SPEC-10.2.213 Derived table with multi-table JOIN
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/DerivedTableAndNestingTest`, `Pdo/MysqlDerivedTableAndNestingTest`, `Pdo/PostgresDerivedTableAndNestingTest`, `Pdo/SqliteDerivedTableAndNestingTest`
+
+SELECT from a derived table containing a multi-table JOIN with GROUP BY returns empty on MySQL (MySQLi, MySQL-PDO) and SQLite. PostgreSQL handles correctly. Derived tables with simple WHERE (no JOIN) also return empty on MySQL/SQLite. CROSS JOIN, nested subqueries (2 and 3 levels deep), and multiple scalar subqueries in WHERE all work correctly on all platforms. This extends Issue #13 — the CTE rewriter does not rewrite table references inside derived tables containing JOINs on MySQL/SQLite.
+
+## SPEC-10.2.214 Self-JOIN, NATURAL JOIN, implicit comma JOIN on shadow data
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SelfJoinHierarchyTest`, `Pdo/MysqlSelfJoinHierarchyTest`, `Pdo/PostgresSelfJoinHierarchyTest`, `Pdo/SqliteSelfJoinHierarchyTest`, `Mysqli/NaturalJoinQueryTest`, `Pdo/MysqlNaturalJoinQueryTest`, `Pdo/PostgresNaturalJoinQueryTest`, `Pdo/SqliteNaturalJoinQueryTest`, `Mysqli/ImplicitJoinAndEdgeCaseTest`, `Pdo/MysqlImplicitJoinAndEdgeCaseTest`, `Pdo/PostgresImplicitJoinAndEdgeCaseTest`, `Pdo/SqliteImplicitJoinAndEdgeCaseTest`
+
+Self-JOIN (employee→manager), NATURAL JOIN, NATURAL LEFT JOIN, and implicit comma JOIN (`FROM t1, t2 WHERE ...`) all work correctly on all platforms through the CTE shadow store. Self-JOINs correctly reflect INSERT, UPDATE, and DELETE mutations. NATURAL JOIN with aggregates works. Implicit comma joins with aggregates and after mutations work. BETWEEN, EXISTS, NOT EXISTS correlated subqueries, and conditional aggregation (SUM(CASE WHEN ...)) all work correctly.
+
+## SPEC-10.2.215 Three-table JOIN chain on shadow data
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ThreeTableJoinChainTest`, `Pdo/MysqlThreeTableJoinChainTest`, `Pdo/PostgresThreeTableJoinChainTest`, `Pdo/SqliteThreeTableJoinChainTest`
+
+Three-table INNER JOIN chains, three-table LEFT JOIN chains, three-table JOINs with GROUP BY and aggregates (COUNT, AVG), three-table JOINs with HAVING, and three-table JOINs after mutations all work correctly on all platforms.
+
+## SPEC-10.2.216 GROUP_CONCAT / STRING_AGG and COUNT(DISTINCT) on shadow data
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/GroupConcatAggregateTest`, `Pdo/MysqlGroupConcatAggregateTest`, `Pdo/PostgresStringAggTest`, `Pdo/SqliteGroupConcatAggregateTest`, `Mysqli/MultiDistinctAggregateTest`, `Pdo/MysqlMultiDistinctAggregateTest`, `Pdo/PostgresMultiDistinctAggregateTest`, `Pdo/SqliteMultiDistinctAggregateTest`
+
+GROUP_CONCAT (MySQL), STRING_AGG (PostgreSQL), GROUP_CONCAT (SQLite) all work correctly on shadow data including custom separators, DISTINCT, ORDER BY within function, and after INSERT mutations. Multiple COUNT(DISTINCT col) columns in a single query, SUM(DISTINCT), COUNT(DISTINCT) with GROUP BY, and aggregates after mutations all work correctly on all platforms.
+
+## SPEC-10.2.217 INSERT...SELECT with ORDER BY LIMIT on shadow data
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/InsertSelectLimitTest`, `Pdo/MysqlInsertSelectLimitTest`, `Pdo/PostgresInsertSelectLimitTest`, `Pdo/SqliteInsertSelectLimitTest`
+
+INSERT...SELECT with ORDER BY and LIMIT (top-N copy pattern), INSERT...SELECT with WHERE and LIMIT, INSERT...SELECT LIMIT after mutations, and INSERT...SELECT with OFFSET all work correctly on all platforms. The CTE rewriter preserves ORDER BY and LIMIT clauses in INSERT...SELECT source queries.
+
+## SPEC-10.2.218 Table aliases in UPDATE/DELETE (MySQL, PostgreSQL)
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO
+**Tests:** `Mysqli/AliasedTableDmlTest`, `Pdo/MysqlAliasedTableDmlTest`, `Pdo/PostgresAliasedTableDmlTest`
+
+MySQL-style aliased UPDATE (`UPDATE t p SET p.col = ...`) and aliased DELETE (`DELETE p FROM t p WHERE ...`) work correctly on MySQLi and MySQL-PDO. PostgreSQL-style aliased UPDATE (`UPDATE t AS p SET col = p.col * 1.10 WHERE p.col = ...`) and aliased DELETE (`DELETE FROM t p WHERE p.col = 0`) work correctly. However, PostgreSQL aliased UPDATE with self-referencing subquery (`WHERE p.price > (SELECT AVG(price) FROM same_table)`) fails with syntax error due to existing Issue #74. SQLite does not support table aliases in UPDATE/DELETE statements natively.
+
+## SPEC-10.2.219 Multi-table DML patterns on shadow data
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/MultiTableDmlPatternsTest`, `Pdo/MysqlMultiTableDmlPatternsTest`, `Pdo/PostgresMultiTableDmlPatternsTest`, `Pdo/SqliteMultiTableDmlPatternsTest`
+
+MySQL multi-table UPDATE JOIN (`UPDATE t1 JOIN t2 ON ... SET t1.col = ...`) works correctly on MySQLi and MySQL-PDO. PostgreSQL UPDATE FROM (`UPDATE t1 SET col = ... FROM t2 WHERE ...`) works correctly. SQLite UPDATE with IN subquery works correctly. DELETE with IN subquery from other table works on all platforms. DELETE with EXISTS correlated subquery works on all platforms. INSERT...SELECT from JOIN fails on all platforms (Issue #49) — MySQL produces "Unknown column" error, PostgreSQL/SQLite insert 0 rows.

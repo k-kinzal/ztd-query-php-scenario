@@ -1212,3 +1212,42 @@ On PostgreSQL, UPDATE or DELETE with `WHERE col IN (SELECT ... FROM other_table)
 **Tests:** `Pdo/SqlitePreparedExpressionDmlTest`
 
 On SQLite, a prepared DELETE with an arithmetic expression in WHERE (e.g., `DELETE FROM t WHERE price * quantity < ?`) deletes ALL rows instead of only matching ones. The prepared parameter combined with the arithmetic expression causes the WHERE condition to match every row.
+
+## SPEC-11.DERIVED-TABLE-JOIN `[Issue #102]` Derived table with multi-table JOIN returns empty
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), SQLite-PDO (confirmed); PostgreSQL-PDO (works correctly)
+**Related specs:** [SPEC-3.3](03-read-operations.ears.md), [SPEC-10.2.213](10-platform-notes.ears.md)
+**Tests:** `Mysqli/DerivedTableAndNestingTest`, `Pdo/MysqlDerivedTableAndNestingTest`, `Pdo/SqliteDerivedTableAndNestingTest`, `Pdo/PostgresDerivedTableAndNestingTest`
+
+A SELECT from a derived table (subquery in FROM) containing a multi-table JOIN with GROUP BY returns 0 rows on MySQL (MySQLi, MySQL-PDO) and SQLite-PDO, even when using `query()` (not `prepare()`). PostgreSQL handles the same query correctly.
+
+This extends the derived table family of issues (Issue #13) beyond window functions (SPEC-11.WINDOW-DERIVED), UNION ALL (SPEC-11.UNION-ALL-DERIVED), and prepared statements (SPEC-11.DERIVED-TABLE-PREPARED). Unlike SPEC-11.WINDOW-DERIVED which affects all platforms, this JOIN variant works on PostgreSQL.
+
+```sql
+-- Returns empty on MySQL and SQLite:
+SELECT sub.name, sub.total
+FROM (
+    SELECT p.name, SUM(s.qty) AS total
+    FROM products p
+    JOIN sales s ON s.product_id = p.id
+    GROUP BY p.id, p.name
+) sub
+ORDER BY sub.total DESC;
+
+-- Workaround: use top-level JOIN with GROUP BY instead of derived table:
+SELECT p.name, SUM(s.qty) AS total
+FROM products p
+JOIN sales s ON s.product_id = p.id
+GROUP BY p.id, p.name
+ORDER BY total DESC;
+```
+
+Non-derived-table patterns with JOINs work correctly on all platforms: top-level JOINs, three-table JOIN chains, self-JOINs, CROSS JOINs, JOINs with aggregates and HAVING. Only the derived table wrapper causes the issue.
+
+## SPEC-11.INSERT-SELECT-JOIN-ALIAS `[Issue #49]` INSERT...SELECT with JOIN produces errors or NULL columns
+**Status:** Known Issue (extended)
+**Platforms:** MySQLi (error), MySQL-PDO (error), PostgreSQL-PDO (NULL columns), SQLite-PDO (NULL columns)
+**Related specs:** [SPEC-4.1a](04-write-operations.ears.md), [SPEC-10.2.214](10-platform-notes.ears.md)
+**Tests:** `Mysqli/MultiTableDmlPatternsTest`, `Pdo/MysqlMultiTableDmlPatternsTest`, `Pdo/PostgresMultiTableDmlPatternsTest`, `Pdo/SqliteMultiTableDmlPatternsTest`
+
+`INSERT INTO t SELECT ... FROM t1 JOIN t2 ON ... WHERE t2.col = value` fails across all platforms. On MySQL, the InsertTransformer cannot resolve column references from JOINed table aliases (`Unknown column 'w.active' in 'where clause'`). On PostgreSQL and SQLite, 0 rows are inserted. This confirms and extends SPEC-11.INSERT-SELECT-JOIN [Issue #49] with a different JOIN pattern (inventory + warehouse lookup).

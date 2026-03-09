@@ -1334,3 +1334,30 @@ Verified patterns: JOIN + GROUP BY COUNT + SUM (claim summary), GROUP BY + CASE 
 An API key lifecycle and usage quota tracking system with clients, keys, and usage records works correctly through ZTD shadow store. The scenario exercises JOIN with GROUP BY for key status summary per client, GROUP BY key+date with COUNT for daily usage counts, COUNT/quota percentage with ROUND for quota utilization, SUM CASE for error rate calculation by endpoint (response codes >= 400), AVG + ROUND grouped by tier for response time analysis, and prepared statement for usage lookup by key prefix.
 
 Verified patterns: JOIN + GROUP BY COUNT (key status summary), GROUP BY key+date COUNT (daily usage), COUNT/quota ROUND percentage (quota utilization), SUM CASE >= 400 / COUNT (error rate), AVG ROUND GROUP BY (response time by tier), prepared statement with JOIN (key prefix lookup), physical isolation.
+
+## SPEC-10.2.149 Content moderation queue
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ContentModerationQueueTest`, `Pdo/MysqlContentModerationQueueTest`, `Pdo/PostgresContentModerationQueueTest`, `Pdo/SqliteContentModerationQueueTest`
+
+A content moderation queue system with users, content, flags, and moderator actions works correctly through ZTD shadow store. The scenario exercises JOIN with COUNT GROUP BY for flag counts per flagged content, JOIN with COUNT GROUP BY for moderator action summaries, CASE expression with IN for status categorization (active/review_needed/removed) with GROUP BY on the CASE alias, NOT EXISTS correlated subquery for finding unflagged published content, COUNT GROUP BY for flag reason breakdown, and prepared statement with JOIN for moderator-specific content lookup.
+
+Verified patterns: JOIN + COUNT GROUP BY + WHERE status filter (flagged content), JOIN + COUNT GROUP BY + ORDER BY (moderator summary), CASE WHEN IN + GROUP BY alias + COUNT (status distribution), NOT EXISTS correlated subquery (unflagged content), COUNT GROUP BY + ORDER BY count DESC (reason breakdown), prepared statement with JOIN (moderator lookup), physical isolation.
+
+## SPEC-10.2.150 Classroom quiz scoring
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ClassroomQuizScoringTest`, `Pdo/MysqlClassroomQuizScoringTest`, `Pdo/PostgresClassroomQuizScoringTest`, `Pdo/SqliteClassroomQuizScoringTest`
+
+A classroom quiz scoring system with students, quizzes, questions, and answers works correctly through ZTD shadow store. The scenario exercises 4-table JOIN with CASE for answer verification (comparing given_answer to correct_answer), SUM CASE / COUNT with ROUND for score percentage calculation, GROUP BY with HAVING for pass/fail threshold filtering against a dynamic column (passing_score), NOT EXISTS for finding students who missed a quiz, derived table JOIN for class average calculation, per-question difficulty analysis with success rate percentage, and prepared statement with multiple parameters for student+quiz lookup.
+
+Verified patterns: 4-table JOIN + CASE answer match + SUM/COUNT ROUND (score %), GROUP BY HAVING dynamic threshold (failing students), NOT EXISTS (missing submissions), derived table JOIN + AVG ROUND (class average), SUM CASE / COUNT per question (difficulty), prepared statement with 2 params (student quiz lookup), physical isolation.
+
+## SPEC-10.2.151 Onboarding checklist
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/OnboardingChecklistTest`, `Pdo/MysqlOnboardingChecklistTest`, `Pdo/PostgresOnboardingChecklistTest`, `Pdo/SqliteOnboardingChecklistTest`
+
+An employee onboarding checklist system with departments, employees, checklist items, and completions works correctly through ZTD shadow store. The scenario exercises LEFT JOIN with COUNT and scalar subquery for completion percentage per employee, NOT EXISTS for outstanding items, derived table JOIN with AVG ROUND for department-level progress summary, CASE with scalar subquery divisor for status labels (complete/in_progress/behind), INSERT followed by SELECT verification for multi-step workflow, LEFT JOIN with COUNT DISTINCT and COUNT GROUP BY category for cross-employee category completion, and prepared statement with scalar subquery for department-filtered lookup.
+
+Verified patterns: LEFT JOIN COUNT + scalar subquery ROUND (completion %), NOT EXISTS (outstanding items), derived table JOIN + AVG ROUND (department progress), CASE + scalar subquery (status labels), INSERT + SELECT verification (multi-step), LEFT JOIN COUNT DISTINCT + GROUP BY category (category breakdown), prepared statement (department filter), physical isolation. SQLite requires `WHERE 1=1` workaround in bare scalar subqueries (SPEC-11.BARE-SUBQUERY-REWRITE).

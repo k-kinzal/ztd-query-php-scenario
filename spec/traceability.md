@@ -400,6 +400,9 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-3.3 | `*MealPlanningTest` | V | V | V | V | CROSS JOIN + LEFT JOIN IS NULL (gap detection), SUM through JOIN, dietary HAVING |
 | SPEC-3.3 | `*InsuranceClaimTest` | V | V | V | V | CASE status labels, ROUND coverage utilization %, LEFT JOIN COUNT, SUM payouts |
 | SPEC-3.3 | `*ApiKeyManagementTest` | V | V | V | V | COUNT/quota ROUND %, SUM CASE error rate, AVG by tier, daily GROUP BY |
+| SPEC-10.2.149 | `*ContentModerationQueueTest` | V | V | V | V | CASE IN GROUP BY alias, NOT EXISTS, COUNT GROUP BY reason, prepared JOIN |
+| SPEC-10.2.150 | `*ClassroomQuizScoringTest` | V | V | V | V | 4-table JOIN CASE answer match, HAVING dynamic threshold, derived table AVG |
+| SPEC-10.2.151 | `*OnboardingChecklistTest` | V | V | V | V | Scalar subquery %, NOT EXISTS outstanding, CASE status labels, INSERT+verify |
 
 ## 11. Known Issues (Selected)
 

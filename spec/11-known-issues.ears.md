@@ -626,8 +626,8 @@ SELECT name FROM docs WHERE jsonb_exists_any(meta, array['reviewed', 'priority']
 SELECT name FROM docs WHERE jsonb_exists_all(meta, array['author', 'reviewed']);
 ```
 
-## SPEC-11.SQLITE-MULTI-COL-INTERSECT Multi-column INTERSECT returns empty results on SQLite
-**Status:** Known Issue (not yet reported)
+## SPEC-11.SQLITE-MULTI-COL-INTERSECT `[Issue #50]` Multi-column INTERSECT returns empty results on SQLite
+**Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
 **Related specs:** [SPEC-3.3d](03-read-operations.ears.md)
 **Tests:** `Pdo/SqliteSetOperationTest::testIntersectMultiColumnReturnsEmptyOnSqlite`

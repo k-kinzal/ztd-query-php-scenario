@@ -251,6 +251,13 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.122 | `*TemporalVersionLookupTest` | V | V | V | V | V |
 | SPEC-10.2.123 | `*IncrementalSyncDeltaTest` | V | V | V | V | V |
 | SPEC-10.2.124 | `*CohortRetentionAnalysisTest` | V | V | V | V | V |
+| SPEC-10.2.125 | `*CustomerRfmSegmentationTest` | V | V | V | P | P |
+| SPEC-10.2.126 | `*HelpDeskSlaTest` | V | V | V | V | V |
+| SPEC-10.2.127 | `*MeetingRoomBookingTest` | V | V | V | V | V |
+| SPEC-10.2.128 | `*BudgetRolloverTest` | V | V | V | V | V |
+| SPEC-10.2.129 | `*GradebookWeightedAvgTest` | V | V | V | V | V |
+| SPEC-10.2.130 | `*FleetServiceTrackingTest` | V | V | V | V | V |
+| SPEC-10.2.131 | `*QuotaManagementTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -352,6 +359,13 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-3.3 | `*TemporalVersionLookupTest` | V | V | V | V | Effective date ranges, point-in-time lookup, IS NULL current |
 | SPEC-4.1 | `*IncrementalSyncDeltaTest` | V | V | V | V | Watermark delta, LEFT JOIN new records, soft-delete detection |
 | SPEC-3.3 | `*CohortRetentionAnalysisTest` | V | V | V | V | Cohort sizing, retention by month, churn LEFT JOIN IS NULL |
+| SPEC-10.2.23 | `*CustomerRfmSegmentationTest` | V | V | V | P | NTILE window function, quartile scoring, nested AVG subquery (SQLite: derived table empty) |
+| SPEC-3.3 | `*HelpDeskSlaTest` | V | V | V | V | MIN correlated subquery, SUM CASE cross-tab, NOT EXISTS unresponded |
+| SPEC-3.3 | `*MeetingRoomBookingTest` | V | V | V | V | NOT EXISTS overlap detection, LEFT JOIN COUNT, floor aggregation |
+| SPEC-10.2.23 | `*BudgetRolloverTest` | V | V | V | V | SUM(SUM()) OVER cumulative, RANK, budget variance, scalar subquery pct |
+| SPEC-3.3 | `*GradebookWeightedAvgTest` | V | V | V | V | SUM(score*weight)/SUM(weight), CROSS JOIN missing, HAVING nested subquery |
+| SPEC-10.2.23 | `*FleetServiceTrackingTest` | V | V | V | V | LAG mileage, MAX overdue, SUM cost, active fleet summary |
+| SPEC-3.3 | `*QuotaManagementTest` | V | V | V | V | Correlated MAX subquery, percentage ROUND, CASE over-quota, AVG trend |
 
 ## 11. Known Issues (Selected)
 

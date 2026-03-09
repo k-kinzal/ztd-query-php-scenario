@@ -1116,3 +1116,68 @@ Verified patterns: detect new records (LEFT JOIN sync_log IS NULL), detect updat
 A user cohort retention analysis system with churn detection and power-user identification works correctly through ZTD shadow store. The scenario exercises GROUP BY signup_month with COUNT for cohort sizing, JOIN users + activities with COUNT DISTINCT user_id per activity_month for retention tracking, GROUP BY signup_month with AVG(action_count) for cohort engagement metrics, COUNT DISTINCT user_id per activity_month for monthly active user counts, LEFT JOIN with IS NULL for churn detection (active in signup month but absent in following month), and SUM + HAVING for power-user identification.
 
 Verified patterns: cohort size (GROUP BY signup_month + COUNT), retention by month (JOIN + COUNT DISTINCT user_id per month), cohort average activity (GROUP BY signup_month + AVG), active users per month (COUNT DISTINCT per activity_month), churn detection (LEFT JOIN next month IS NULL), power users (SUM action_count + HAVING threshold), physical isolation.
+
+## SPEC-10.2.125 Customer RFM segmentation
+**Status:** Verified (SQLite-PDO partial — derived table with window functions returns empty)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/CustomerRfmSegmentationTest`, `Pdo/MysqlCustomerRfmSegmentationTest`, `Pdo/PostgresCustomerRfmSegmentationTest`, `Pdo/SqliteCustomerRfmSegmentationTest`
+
+A customer RFM (Recency, Frequency, Monetary) segmentation system using NTILE window functions for quartile scoring works through ZTD shadow store. The scenario exercises MAX(order_date) for recency ranking, COUNT for frequency ranking, SUM for monetary ranking, NTILE(4) OVER with three independent orderings from a derived subquery for quartile scoring, HAVING with nested AVG subquery for high-value customer identification, and ROUND(SUM/COUNT) for average order value.
+
+On SQLite, the RFM scoring test (derived table with NTILE window functions) returns empty — extends SPEC-11.DERIVED-TABLE-PREPARED to affect `query()` as well as `prepare()`.
+
+Verified patterns: recency ranking (MAX + ORDER BY), frequency ranking (COUNT + ORDER BY), monetary ranking (SUM + ORDER BY), RFM quartile scoring (NTILE window function from derived subquery), high-value customers (HAVING with nested AVG subquery), average order value (ROUND SUM/COUNT), physical isolation.
+
+## SPEC-10.2.126 Help desk SLA tracking
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/HelpDeskSlaTest`, `Pdo/MysqlHelpDeskSlaTest`, `Pdo/PostgresHelpDeskSlaTest`, `Pdo/SqliteHelpDeskSlaTest`
+
+A help desk SLA tracking system with first response time, workload analysis, and priority-based status reporting works correctly through ZTD shadow store. The scenario exercises MIN correlated subquery for first response time, CASE expression on MIN aggregate for response status evaluation, COUNT(DISTINCT) + COUNT for agent workload metrics, SUM(CASE) conditional aggregation with CASE-based ORDER BY for priority cross-tab, NOT EXISTS correlated subquery for unresponded ticket detection, and LEFT JOIN with IS NULL filter for excluding internal responses.
+
+Verified patterns: first response time (MIN + LEFT JOIN), response status (CASE on MIN aggregate), agent workload (COUNT DISTINCT + COUNT), priority cross-tab (SUM CASE + CASE ORDER BY), unresponded tickets (NOT EXISTS), response count excluding internal (LEFT JOIN filter), physical isolation.
+
+## SPEC-10.2.127 Meeting room booking
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/MeetingRoomBookingTest`, `Pdo/MysqlMeetingRoomBookingTest`, `Pdo/PostgresMeetingRoomBookingTest`, `Pdo/SqliteMeetingRoomBookingTest`
+
+A meeting room booking system with availability checking, overlap detection, and utilization tracking works correctly through ZTD shadow store. The scenario exercises NOT EXISTS with compound range overlap formula (start < end AND end > start) for room availability, LEFT JOIN + COUNT + GROUP BY for bookings per room, overlap detection for proposed booking conflicts, COUNT + GROUP BY for per-user booking counts, CASE WHEN on COUNT for utilization classification, and COUNT(DISTINCT) for floor-level aggregation.
+
+Verified patterns: room availability (NOT EXISTS overlap), bookings per room (LEFT JOIN COUNT), overlap detection (compound range check), bookings per user (GROUP BY COUNT), room utilization (CASE on COUNT), floor summary (COUNT DISTINCT + COUNT), physical isolation.
+
+## SPEC-10.2.128 Budget allocation with rollover
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/BudgetRolloverTest`, `Pdo/MysqlBudgetRolloverTest`, `Pdo/PostgresBudgetRolloverTest`, `Pdo/SqliteBudgetRolloverTest`
+
+A department budget tracking system with cumulative spending, variance analysis, and category breakdown works correctly through ZTD shadow store. The scenario exercises SUM(SUM()) OVER (PARTITION BY ... ORDER BY ...) for cumulative running totals (nested aggregate window function), ROUND(actual - budget/12) for monthly budget variance, HAVING with cross-table expression for over-budget detection, scalar subquery with WHERE 1=1 for category percentage of total, and RANK() OVER for department spending ranking.
+
+Verified patterns: monthly spending (GROUP BY + SUM), cumulative spending (SUM of SUM OVER window), budget variance (arithmetic with annual_budget/12), over-budget months (HAVING > budget/12), category breakdown (scalar subquery percentage), department ranking (RANK OVER), physical isolation.
+
+## SPEC-10.2.129 Gradebook weighted averages
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/GradebookWeightedAvgTest`, `Pdo/MysqlGradebookWeightedAvgTest`, `Pdo/PostgresGradebookWeightedAvgTest`, `Pdo/SqliteGradebookWeightedAvgTest`
+
+A gradebook system with weighted average calculation, letter grade assignment, and missing assignment detection works correctly through ZTD shadow store. The scenario exercises SUM(score/max_score * 100.0 * weight) / SUM(weight) for weighted average computation (complex arithmetic inside aggregates), CASE boundaries on aggregate result for letter grade assignment, AVG/MIN/MAX of computed percentages for class statistics, CROSS JOIN + LEFT JOIN IS NULL for missing assignment detection, and HAVING with nested correlated subquery for top performer per category identification.
+
+Verified patterns: weighted average (SUM*weight/SUM weight), letter grades (CASE on aggregate), class statistics (AVG/MIN/MAX of expressions), category averages (GROUP BY category), missing assignments (CROSS JOIN + LEFT JOIN IS NULL), top performer per category (HAVING with nested subquery), physical isolation.
+
+## SPEC-10.2.130 Fleet service tracking
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/FleetServiceTrackingTest`, `Pdo/MysqlFleetServiceTrackingTest`, `Pdo/PostgresFleetServiceTrackingTest`, `Pdo/SqliteFleetServiceTrackingTest`
+
+A fleet vehicle service tracking system with overdue detection, cost analysis, and mileage tracking works correctly through ZTD shadow store. The scenario exercises MAX date/mileage aggregation per vehicle, HAVING with string date comparison for overdue service detection, SUM/COUNT/ROUND for per-vehicle cost analysis, GROUP BY service type for aggregate statistics, LAG() OVER (PARTITION BY ... ORDER BY ...) for mileage between consecutive services, and COUNT DISTINCT/SUM/MAX/MIN for active fleet summary.
+
+Verified patterns: last service per vehicle (MAX + GROUP BY), overdue services (HAVING date < cutoff), service cost analysis (SUM/COUNT/ROUND), service type summary (GROUP BY + aggregates), mileage between services (LAG window function), active fleet summary (COUNT DISTINCT + SUM + MAX + MIN), physical isolation.
+
+## SPEC-10.2.131 Quota management
+**Status:** Verified (SQLite-PDO)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/QuotaManagementTest`, `Pdo/MysqlQuotaManagementTest`, `Pdo/PostgresQuotaManagementTest`, `Pdo/SqliteQuotaManagementTest`
+
+A SaaS quota management system with utilization tracking, over-quota detection, and usage trend analysis works correctly through ZTD shadow store. The scenario exercises correlated MAX subquery in WHERE for latest usage snapshot, ROUND percentage calculations across multiple resource dimensions (storage, API calls, users), CASE-based threshold evaluation for over-quota flagging, SUM + GROUP BY for daily usage trends, compound OR conditions with arithmetic comparisons for high-risk account identification, and AVG with ROUND for daily usage averages.
+
+Verified patterns: latest usage snapshot (correlated MAX subquery), quota utilization (percentage ROUND), over-quota detection (CASE + multi-column comparison), usage trend (SUM GROUP BY date), high-risk accounts (compound threshold filter), average daily usage (AVG + ROUND), physical isolation.

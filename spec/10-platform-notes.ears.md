@@ -1991,3 +1991,24 @@ UPDATE...FROM with `$N` positional parameters does not apply the update — rows
 **Tests:** `Pdo/SqliteNamedParamTest`, `Pdo/MysqlNamedParamTest`, `Pdo/PostgresNamedParamTest`
 
 Named parameters (:name style) work correctly for SELECT, INSERT, UPDATE, DELETE, and subquery WHERE patterns on all platforms. GROUP BY HAVING with named params works on MySQL and PostgreSQL but returns empty on SQLite (consistent with Issue #22). Notably, PostgreSQL GROUP BY HAVING with `:name` params works, while `$N` positional params fail (Issue #22), suggesting the issue is in `$N` parameter handling specifically.
+
+## SPEC-10.2.242 EXPLAIN/DESCRIBE/SHOW diagnostic statements
+**Status:** Known Issue (Issue #107)
+**Platforms:** SQLite-PDO (blocked), MySQL-PDO (blocked), PostgreSQL-PDO (likely blocked)
+**Tests:** `Pdo/SqliteExplainThroughZtdTest`, `Pdo/MysqlExplainThroughZtdTest`
+
+EXPLAIN, EXPLAIN QUERY PLAN, DESCRIBE, and SHOW CREATE TABLE are all blocked by ZTD with "Statement type not supported SQL statement." These read-only diagnostic statements should pass through to the physical database.
+
+## SPEC-10.2.243 MySQL DELETE with multi-table JOIN and prepared params
+**Status:** Verified
+**Platforms:** MySQL-PDO (pass)
+**Tests:** `Pdo/MysqlDeleteMultiTablePreparedTest`
+
+DELETE with JOIN and prepared parameters works correctly on MySQL PDO. Tested: JOIN with single param, multi-param, shadow-inserted data, and comma syntax. All variants produce correct results.
+
+## SPEC-10.2.244 User-written multiple CTEs
+**Status:** Partial (extends Issue #52)
+**Platforms:** MySQL-PDO (pass), SQLite-PDO (partial — CROSS JOIN fails)
+**Tests:** `Pdo/SqliteMultipleCteSelectTest`, `Pdo/MysqlMultipleCteSelectTest`
+
+Single user-written CTEs, CTEs with shadow data, CTEs with prepared params, chained CTEs (referencing other CTEs), and multiple CTEs with scalar subqueries all work correctly on both MySQL and SQLite. However, multiple CTEs with CROSS JOIN returns 0 rows on SQLite (extends Issue #52). MySQL handles all CTE patterns correctly.

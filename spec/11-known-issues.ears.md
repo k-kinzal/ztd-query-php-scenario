@@ -1328,3 +1328,10 @@ UPSERT with simple expressions (VALUES/EXCLUDED, col + 1, literals) works correc
 `UPDATE t SET col = s.val FROM s WHERE t.id = s.id AND s.filter = $1` with prepared `$N` parameters silently fails — the UPDATE does not apply and rows remain unchanged. The same query works correctly with `?` placeholders (PDO converts internally) and `:name` named parameters. UPDATE...FROM via exec() with literal values also works correctly.
 
 This affects all variants: single param, multiple params, expression in SET with param, and shadow-inserted data. The CTE rewriter likely mishandles `$N` parameter positions when processing the FROM clause in UPDATE context.
+
+## SPEC-11.EXPLAIN-BLOCKED `[Issue #107]` EXPLAIN, DESCRIBE, SHOW blocked by ZTD Write Protection
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (likely)
+**Tests:** `Pdo/SqliteExplainThroughZtdTest`, `Pdo/MysqlExplainThroughZtdTest`
+
+Read-only diagnostic statements (EXPLAIN, EXPLAIN QUERY PLAN, DESCRIBE, SHOW CREATE TABLE) are blocked with "ZTD Write Protection: Statement type not supported SQL statement." These statements should be passed through to the physical database since they are purely read-only and do not modify data.

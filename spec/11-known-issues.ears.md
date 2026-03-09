@@ -642,6 +642,22 @@ Single-column INTERSECT and EXCEPT work correctly on SQLite through the CTE shad
 
 UPDATE statements with correlated subqueries in the SET clause fail through the CTE rewriter on SQLite and PostgreSQL. On SQLite, the rewriter produces `near "FROM": syntax error`. On PostgreSQL, it produces `column "price" does not exist` due to incorrect aliasing. Self-referencing scalar subqueries in SET (e.g., `SET price = (SELECT MAX(price) FROM same_table WHERE ...)`) also fail with different errors per platform. MySQL is NOT affected — all correlated SET patterns work correctly. UPDATE with subqueries in WHERE clause works correctly on all platforms. DELETE with correlated subqueries also works correctly on all platforms.
 
+## SPEC-11.USER-CTE-CONFLICT `[Issue #52]` User-defined CTEs silently return empty results
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (all CTE patterns), SQLite-PDO (multiple CTEs JOINed)
+**Related specs:** [SPEC-3.3](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresUserCteConflictTest`, `Pdo/SqliteUserCteConflictTest`
+
+Queries containing user-defined CTEs (`WITH ... AS (...)`) silently return 0 rows through the CTE shadow store. On PostgreSQL, ALL user CTE patterns return empty — simple CTEs, multiple CTEs, CTEs referencing other CTEs, and CTEs with prepared statements. On SQLite, simple CTEs and CTE-referencing-CTE patterns work, but multiple CTEs JOINed together return 0 rows. The CTE rewriter adds its own WITH clauses, and these appear to conflict with or shadow user-defined CTEs. This is a high-severity silent data loss bug.
+
+## SPEC-11.PG-RETURNING `[Issue #53]` PostgreSQL RETURNING clause silently drops result set
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md), [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresReturningClauseTest`
+
+INSERT/UPDATE/DELETE with RETURNING clause silently return 0 rows through the CTE shadow store. The mutations themselves succeed (shadow store is updated correctly), but the RETURNING result set is always empty. Affects: `RETURNING *`, `RETURNING col1, col2`, prepared statements with RETURNING, and all three mutation types (INSERT, UPDATE, DELETE). This is a high-severity silent data loss bug — users relying on RETURNING for auto-generated IDs or confirmation data will get no data and no error.
+
 ## SPEC-11.INSERT-SELECT-JOIN `[Issue #49]` INSERT...SELECT with multi-table JOIN produces incorrect results
 **Status:** Known Issue
 **Platforms:** MySQL-PDO (error), MySQL-MySQLi (error), PostgreSQL-PDO (NULL columns), SQLite-PDO (NULL columns)

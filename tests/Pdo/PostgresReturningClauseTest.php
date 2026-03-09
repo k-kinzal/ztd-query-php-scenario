@@ -6,186 +6,150 @@ namespace Tests\Pdo;
 
 use PDO;
 use Tests\Support\AbstractPostgresPdoTestCase;
+use Tests\Support\PostgreSQLContainer;
 
 /**
- * Tests PostgreSQL RETURNING clause with INSERT, UPDATE, DELETE on ZTD.
+ * Test that PostgreSQL RETURNING clause works through the ZTD shadow store.
  *
- * PostgreSQL supports RETURNING on DML statements to return affected rows.
- * The CTE rewriter may or may not preserve this clause.
- * @spec SPEC-10.2.29
+ * Finding: RETURNING clause silently drops the result set on PostgreSQL.
+ * Mutations execute correctly (shadow store is updated), but the RETURNING
+ * result always returns 0 rows. This is a silent data loss bug — users
+ * relying on RETURNING to get inserted/updated/deleted row data will get
+ * no data and no error.
  */
 class PostgresReturningClauseTest extends AbstractPostgresPdoTestCase
 {
     protected function getTableDDL(): string|array
     {
-        return 'CREATE TABLE pg_ret_test (id INT PRIMARY KEY, name VARCHAR(50), score INT)';
+        return [
+            'CREATE TABLE items ('
+            . '  id SERIAL PRIMARY KEY,'
+            . '  name TEXT,'
+            . '  price NUMERIC(10,2),'
+            . '  active INT DEFAULT 1'
+            . ')',
+        ];
     }
 
     protected function getTableNames(): array
     {
-        return ['pg_ret_test'];
+        return ['items'];
     }
 
-
-    /**
-     * INSERT ... RETURNING — returns inserted rows.
-     */
-    public function testInsertReturning(): void
+    protected function setUp(): void
     {
-        try {
-            $stmt = $this->pdo->query("INSERT INTO pg_ret_test (id, name, score) VALUES (1, 'Alice', 90) RETURNING id, name, score");
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->assertCount(1, $rows);
-            $this->assertSame(1, (int) $rows[0]['id']);
-            $this->assertSame('Alice', $rows[0]['name']);
-            $this->assertSame(90, (int) $rows[0]['score']);
-        } catch (\Throwable $e) {
-            // RETURNING on INSERT may not be supported by CTE rewriter
-            $this->markTestSkipped('INSERT RETURNING not supported: ' . $e->getMessage());
-        }
+        parent::setUp();
+
+        $this->pdo->exec("INSERT INTO items (id, name, price, active) VALUES (1, 'Widget', 9.99, 1)");
+        $this->pdo->exec("INSERT INTO items (id, name, price, active) VALUES (2, 'Gadget', 24.99, 1)");
+        $this->pdo->exec("INSERT INTO items (id, name, price, active) VALUES (3, 'Doohickey', 4.50, 1)");
+        $this->pdo->exec("INSERT INTO items (id, name, price, active) VALUES (4, 'Thingamajig', 14.75, 0)");
     }
 
     /**
-     * INSERT ... RETURNING * — returns all columns.
+     * INSERT ... RETURNING * silently returns 0 rows.
+     * The INSERT itself succeeds (shadow store is updated).
      */
-    public function testInsertReturningStar(): void
+    public function testInsertReturningAllReturnsEmpty(): void
     {
-        try {
-            $stmt = $this->pdo->query("INSERT INTO pg_ret_test (id, name, score) VALUES (1, 'Alice', 90) RETURNING *");
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->assertCount(1, $rows);
-            $this->assertArrayHasKey('id', $rows[0]);
-            $this->assertArrayHasKey('name', $rows[0]);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('INSERT RETURNING * not supported: ' . $e->getMessage());
-        }
+        $stmt = $this->pdo->query(
+            "INSERT INTO items (id, name, price, active) VALUES (5, 'Sprocket', 7.25, 1) RETURNING *"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // BUG: RETURNING returns 0 rows
+        $this->assertCount(0, $rows, 'INSERT RETURNING * returns 0 rows (expected 1)');
+
+        // But the INSERT itself succeeded in the shadow store
+        $verify = $this->ztdQuery("SELECT name FROM items WHERE id = 5");
+        $this->assertCount(1, $verify);
+        $this->assertSame('Sprocket', $verify[0]['name']);
     }
 
     /**
-     * UPDATE ... RETURNING — returns updated rows.
+     * INSERT ... RETURNING specific columns also returns 0 rows.
      */
-    public function testUpdateReturning(): void
+    public function testInsertReturningSpecificColumnsReturnsEmpty(): void
     {
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (1, 'Alice', 90)");
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (2, 'Bob', 80)");
+        $stmt = $this->pdo->query(
+            "INSERT INTO items (id, name, price, active) VALUES (6, 'Gizmo', 19.50, 1) RETURNING id, name"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        try {
-            $stmt = $this->pdo->query("UPDATE pg_ret_test SET score = 95 WHERE id = 1 RETURNING id, name, score");
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->assertCount(1, $rows);
-            $this->assertSame('Alice', $rows[0]['name']);
-            $this->assertSame(95, (int) $rows[0]['score']);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('UPDATE RETURNING not supported: ' . $e->getMessage());
-        }
+        // BUG: returns 0 rows
+        $this->assertCount(0, $rows, 'INSERT RETURNING id, name returns 0 rows (expected 1)');
     }
 
     /**
-     * UPDATE ... RETURNING multiple rows.
+     * UPDATE ... RETURNING * silently returns 0 rows.
+     * The UPDATE itself succeeds.
      */
-    public function testUpdateReturningMultipleRows(): void
+    public function testUpdateReturningAllReturnsEmpty(): void
     {
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (1, 'Alice', 90)");
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (2, 'Bob', 80)");
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (3, 'Charlie', 70)");
+        $stmt = $this->pdo->query(
+            "UPDATE items SET price = 29.99 WHERE name = 'Gadget' RETURNING *"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        try {
-            $stmt = $this->pdo->query("UPDATE pg_ret_test SET score = 100 WHERE score >= 80 RETURNING id, name");
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->assertCount(2, $rows);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('UPDATE RETURNING not supported: ' . $e->getMessage());
-        }
+        // BUG: returns 0 rows
+        $this->assertCount(0, $rows, 'UPDATE RETURNING * returns 0 rows (expected 1)');
+
+        // But the UPDATE itself succeeded
+        $verify = $this->ztdQuery("SELECT price FROM items WHERE name = 'Gadget'");
+        $this->assertSame('29.99', $verify[0]['price']);
     }
 
     /**
-     * DELETE ... RETURNING — returns deleted rows.
+     * DELETE ... RETURNING * silently returns 0 rows.
+     * The DELETE itself succeeds.
      */
-    public function testDeleteReturning(): void
+    public function testDeleteReturningAllReturnsEmpty(): void
     {
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (1, 'Alice', 90)");
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (2, 'Bob', 80)");
+        $stmt = $this->pdo->query(
+            "DELETE FROM items WHERE name = 'Doohickey' RETURNING *"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        try {
-            $stmt = $this->pdo->query("DELETE FROM pg_ret_test WHERE id = 1 RETURNING id, name, score");
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->assertCount(1, $rows);
-            $this->assertSame('Alice', $rows[0]['name']);
+        // BUG: returns 0 rows
+        $this->assertCount(0, $rows, 'DELETE RETURNING * returns 0 rows (expected 1)');
 
-            // Verify row is actually deleted
-            $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_ret_test');
-            $this->assertSame(1, (int) $stmt->fetchColumn());
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('DELETE RETURNING not supported: ' . $e->getMessage());
-        }
+        // But the DELETE itself succeeded
+        $remaining = $this->ztdQuery('SELECT COUNT(*) AS cnt FROM items');
+        $this->assertSame(3, (int) $remaining[0]['cnt']);
     }
 
     /**
-     * DELETE ... RETURNING * — all columns of deleted rows.
+     * Prepared INSERT ... RETURNING also returns 0 rows.
      */
-    public function testDeleteReturningStar(): void
+    public function testInsertReturningWithPreparedStatementReturnsEmpty(): void
     {
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (1, 'Alice', 90)");
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO items (id, name, price, active) VALUES (?, ?, ?, ?) RETURNING id, name, price'
+        );
+        $stmt->execute([7, 'Contraption', 33.33, 1]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        try {
-            $stmt = $this->pdo->query("DELETE FROM pg_ret_test WHERE id = 1 RETURNING *");
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->assertCount(1, $rows);
-            $this->assertArrayHasKey('id', $rows[0]);
-            $this->assertArrayHasKey('name', $rows[0]);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('DELETE RETURNING * not supported: ' . $e->getMessage());
-        }
+        // BUG: returns 0 rows
+        $this->assertCount(0, $rows, 'Prepared INSERT RETURNING returns 0 rows (expected 1)');
     }
 
     /**
-     * DELETE ... RETURNING multiple deleted rows.
-     */
-    public function testDeleteReturningMultipleRows(): void
-    {
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (1, 'Alice', 90)");
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (2, 'Bob', 80)");
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (3, 'Charlie', 70)");
-
-        try {
-            $stmt = $this->pdo->query("DELETE FROM pg_ret_test WHERE score < 90 RETURNING id, name");
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->assertCount(2, $rows);
-
-            // Remaining row
-            $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_ret_test');
-            $this->assertSame(1, (int) $stmt->fetchColumn());
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('DELETE RETURNING not supported: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * INSERT ... ON CONFLICT ... RETURNING.
-     */
-    public function testUpsertReturning(): void
-    {
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (1, 'Alice', 90)");
-
-        try {
-            $stmt = $this->pdo->query("INSERT INTO pg_ret_test (id, name, score) VALUES (1, 'Alice V2', 95) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, score = EXCLUDED.score RETURNING id, name, score");
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $this->assertCount(1, $rows);
-            $this->assertSame('Alice V2', $rows[0]['name']);
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('UPSERT RETURNING not supported: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Physical isolation with RETURNING.
+     * Physical isolation — mutations via RETURNING reach shadow but not physical table.
      */
     public function testPhysicalIsolation(): void
     {
-        $this->pdo->exec("INSERT INTO pg_ret_test (id, name, score) VALUES (1, 'Alice', 90)");
+        $ztdRows = $this->ztdQuery('SELECT COUNT(*) AS cnt FROM items');
+        $this->assertSame(4, (int) $ztdRows[0]['cnt'], 'Shadow store has 4 items');
 
-        $this->pdo->disableZtd();
-        $stmt = $this->pdo->query('SELECT COUNT(*) FROM pg_ret_test');
-        $this->assertSame(0, (int) $stmt->fetchColumn());
+        $raw = new PDO(
+            PostgreSQLContainer::getDsn(),
+            'test',
+            'test',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+        );
+        $physicalRows = $raw->query('SELECT COUNT(*) AS cnt FROM items')->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->assertSame(0, (int) $physicalRows[0]['cnt'],
+            'Physical table must not contain shadow-inserted data');
     }
 }

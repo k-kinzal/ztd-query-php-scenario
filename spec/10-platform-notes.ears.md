@@ -1655,3 +1655,17 @@ DELETE with correlated subqueries works correctly through CTE shadow data. Verif
 **Tests:** `Pdo/SqliteInsertSelectUnionTest`
 
 INSERT...SELECT where the SELECT source is a UNION or UNION ALL query works correctly through the CTE shadow store on SQLite. Both UNION ALL (preserving duplicates) and UNION (deduplicating) produce correct row counts and values.
+
+## SPEC-10.2.194 User-defined CTEs (WITH ... AS)
+**Status:** Partial (see [SPEC-11.USER-CTE-CONFLICT](11-known-issues.ears.md))
+**Platforms:** SQLite-PDO (partial), PostgreSQL-PDO (broken)
+**Tests:** `Pdo/SqliteUserCteConflictTest`, `Pdo/PostgresUserCteConflictTest`
+
+User-defined CTEs conflict with the CTE rewriter's own WITH clauses. On PostgreSQL, ALL user CTE patterns silently return 0 rows. On SQLite, simple CTEs and CTEs referencing other CTEs work correctly, but multiple CTEs JOINed together return 0 rows. CTE with INSERT...SELECT is unsupported (throws exception) on both platforms.
+
+## SPEC-10.2.195 PostgreSQL RETURNING clause
+**Status:** Known Issue (see [SPEC-11.PG-RETURNING](11-known-issues.ears.md))
+**Platforms:** PostgreSQL-PDO (broken)
+**Tests:** `Pdo/PostgresReturningClauseTest`
+
+RETURNING clause on INSERT/UPDATE/DELETE silently returns 0 rows through the CTE shadow store. Mutations execute correctly but the RETURNING result set is always empty. Affects all RETURNING variants including prepared statements.

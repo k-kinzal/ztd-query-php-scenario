@@ -1640,7 +1640,14 @@ INTERSECT and EXCEPT work correctly on PostgreSQL through CTE shadow data, inclu
 **Platforms:** SQLite-PDO, PostgreSQL-PDO
 **Tests:** `Pdo/SqliteUpdateSubqueryTest`, `Pdo/PostgresUpdateSubqueryTest`
 
-UPDATE with subqueries in WHERE clause (e.g., `WHERE category_id IN (SELECT ...)`) works correctly on both platforms. UPDATE with correlated subqueries in the SET clause (e.g., `SET price = price * (1 - (SELECT discount_pct FROM categories WHERE ...))`) fails — the CTE rewriter produces syntax errors on SQLite and column resolution errors on PostgreSQL. Self-referencing scalar subqueries in SET also fail. Zero-row updates with empty subquery WHERE work correctly.
+UPDATE with subqueries in WHERE clause (e.g., `WHERE category_id IN (SELECT ...)`) works correctly on all platforms. UPDATE with correlated subqueries in the SET clause (e.g., `SET price = price * (1 - (SELECT discount_pct FROM categories WHERE ...))`) fails on SQLite and PostgreSQL — the CTE rewriter produces syntax errors on SQLite and column resolution errors on PostgreSQL. MySQL is NOT affected (all correlated SET patterns work correctly). Self-referencing scalar subqueries in SET also fail on SQLite/PostgreSQL but work on MySQL. Zero-row updates with empty subquery WHERE work correctly on all platforms.
+
+## SPEC-10.2.193 DELETE with correlated subqueries
+**Status:** Verified
+**Platforms:** SQLite-PDO, PostgreSQL-PDO
+**Tests:** `Pdo/SqliteDeleteCorrelatedTest`, `Pdo/PostgresDeleteCorrelatedTest`
+
+DELETE with correlated subqueries works correctly through CTE shadow data. Verified: DELETE WHERE EXISTS (correlated), DELETE with scalar self-referencing subquery (performance < AVG from same table), DELETE WHERE NOT EXISTS, prepared DELETE with correlated subquery and bound parameters. Unlike UPDATE SET with correlated subqueries (which fails on SQLite/PostgreSQL), DELETE handles correlation correctly on all platforms.
 
 ## SPEC-10.2.192 INSERT...SELECT with UNION source
 **Status:** Verified

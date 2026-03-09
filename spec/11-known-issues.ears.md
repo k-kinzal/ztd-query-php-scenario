@@ -636,11 +636,11 @@ Single-column INTERSECT and EXCEPT work correctly on SQLite through the CTE shad
 
 ## SPEC-11.UPDATE-SET-CORRELATED-SUBQUERY `[Issue #51]` UPDATE with correlated subquery in SET clause produces errors
 **Status:** Known Issue
-**Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed)
+**Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed); MySQL-PDO NOT affected
 **Related specs:** [SPEC-4.2](04-write-operations.ears.md)
-**Tests:** `Pdo/SqliteUpdateSubqueryTest`, `Pdo/PostgresUpdateSubqueryTest`
+**Tests:** `Pdo/SqliteUpdateSubqueryTest`, `Pdo/PostgresUpdateSubqueryTest`, `Pdo/MysqlUpdateSubqueryTest`
 
-UPDATE statements with correlated subqueries in the SET clause fail through the CTE rewriter. On SQLite, the rewriter produces `near "FROM": syntax error`. On PostgreSQL, it produces `column "price" does not exist` due to incorrect aliasing. Self-referencing scalar subqueries in SET (e.g., `SET price = (SELECT MAX(price) FROM same_table WHERE ...)`) also fail with different errors per platform. UPDATE with subqueries in WHERE clause works correctly.
+UPDATE statements with correlated subqueries in the SET clause fail through the CTE rewriter on SQLite and PostgreSQL. On SQLite, the rewriter produces `near "FROM": syntax error`. On PostgreSQL, it produces `column "price" does not exist` due to incorrect aliasing. Self-referencing scalar subqueries in SET (e.g., `SET price = (SELECT MAX(price) FROM same_table WHERE ...)`) also fail with different errors per platform. MySQL is NOT affected — all correlated SET patterns work correctly. UPDATE with subqueries in WHERE clause works correctly on all platforms. DELETE with correlated subqueries also works correctly on all platforms.
 
 ## SPEC-11.INSERT-SELECT-JOIN `[Issue #49]` INSERT...SELECT with multi-table JOIN produces incorrect results
 **Status:** Known Issue

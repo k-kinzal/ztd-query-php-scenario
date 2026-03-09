@@ -1050,3 +1050,21 @@ The issue only affects DML statements (INSERT, UPDATE, DELETE) that go through C
 Root cause: The CTE rewriter's string literal stripping does not account for the `E` prefix on PostgreSQL escape strings.
 
 Workaround: Use standard single-quoted strings with PostgreSQL's default `standard_conforming_strings = on` setting, or use prepared statement parameters instead of E-string literals.
+
+## SPEC-11.PG-BIT-TYPE `[Issue #90]` BIT type values corrupted in shadow store (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresBitTypeTest`, `Pdo/PostgresStringPrefixTest`
+
+PostgreSQL BIT and BIT VARYING type values are silently corrupted when stored in the CTE shadow store. Bit string literals like `B'11111111'` are converted to boolean-like integers (`1` or `0`) instead of preserving the 8-bit pattern.
+
+Impact:
+- `B'11111111'` becomes `1`, `B'00001111'` becomes `0`, `B'00000001'` becomes `0`
+- WHERE comparisons with BIT literals return 0 rows (shadow store has `1` not `11111111`)
+- BIT operations (`&`, `|`) fail with "cannot AND bit strings of different sizes"
+- All BIT(n) and BIT VARYING(n) columns are affected
+
+Root cause: The CTE shadow store's CAST logic likely maps BIT types to INTEGER or BOOLEAN, losing the bit string representation.
+
+Workaround: Store BIT values as TEXT and cast at query time, or avoid BIT columns with ZTD enabled.

@@ -1669,3 +1669,52 @@ User-defined CTEs conflict with the CTE rewriter's own WITH clauses. On PostgreS
 **Tests:** `Pdo/PostgresReturningClauseTest`
 
 RETURNING clause on INSERT/UPDATE/DELETE silently returns 0 rows through the CTE shadow store. Mutations execute correctly but the RETURNING result set is always empty. Affects all RETURNING variants including prepared statements.
+
+## SPEC-10.2.196 INSERT IGNORE / ON CONFLICT DO NOTHING with UNIQUE constraints
+**Status:** Known Issue (see [SPEC-11.INSERT-IGNORE-UNIQUE](11-known-issues.ears.md))
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO (all confirmed)
+**Tests:** `Mysqli/InsertIgnoreTest`, `Pdo/MysqlInsertIgnoreTest`
+
+The shadow store only checks PRIMARY KEY for duplicate detection in INSERT IGNORE / INSERT OR IGNORE / ON CONFLICT DO NOTHING operations. Non-PK UNIQUE key constraints are silently ignored, allowing duplicate rows to be inserted. Affects all platforms.
+
+## SPEC-10.2.197 MySQL ENUM type ordering and semantics
+**Status:** Known Issue (see [SPEC-11.ENUM-ORDERING](11-known-issues.ears.md))
+**Platforms:** MySQLi, MySQL-PDO (confirmed)
+**Tests:** `Mysqli/EnumTypeTest`, `Pdo/MysqlEnumTypeTest`
+
+ENUM columns in CTE shadow store lose internal index ordering. ORDER BY uses alphabetical order instead of definition order. Comparison operators (`>`, `<`) use alphabetical semantics. DEFAULT ENUM values are not applied. Basic INSERT/SELECT/WHERE equality for ENUM works correctly.
+
+## SPEC-10.2.198 DELETE/UPDATE ORDER BY LIMIT
+**Status:** Partial (see [SPEC-11.UPDATE-WHERE-ORDER-DESC-LIMIT](11-known-issues.ears.md))
+**Platforms:** MySQLi (works), MySQL-PDO (partial)
+**Tests:** `Mysqli/DeleteLimitTest`, `Pdo/MysqlDeleteLimitTest`
+
+Basic DELETE/UPDATE with ORDER BY LIMIT works correctly on MySQLi. On MySQL-PDO, UPDATE with WHERE + ORDER BY DESC + LIMIT updates the wrong row (DESC ordering not respected). DELETE with ORDER BY LIMIT works correctly on both adapters.
+
+## SPEC-10.2.199 Hex literal syntax
+**Status:** Partial (see [SPEC-11.HEX-LITERAL-UPDATE](11-known-issues.ears.md))
+**Platforms:** MySQLi (partial), MySQL-PDO (partial), SQLite-PDO (works)
+**Tests:** `Mysqli/HexLiteralTest`, `Pdo/MysqlHexLiteralTest`, `Pdo/SqliteHexLiteralTest`
+
+INSERT and SELECT with hex literals (`0x...` and `X'...'`) work correctly on all platforms. UPDATE SET with `X'...'` syntax fails on MySQL (parsed as column name 'X'). The `0x...` prefix syntax works in all contexts. SQLite handles both syntaxes correctly in all contexts.
+
+## SPEC-10.2.200 Nested function expressions with prepared params
+**Status:** Known Issue (see [SPEC-11.SQLITE-NESTED-FUNC-PARAMS](11-known-issues.ears.md))
+**Platforms:** SQLite-PDO (broken); MySQL-PDO, PostgreSQL-PDO (works)
+**Tests:** `Pdo/SqliteNestedFunctionWhereTest`
+
+SQLite-only: WHERE clauses with nested function expressions (e.g., `LENGTH(REPLACE(col, 'a', '')) > ?`) return 0 rows when used with prepared statement parameters. The same queries work correctly on MySQL and PostgreSQL.
+
+## SPEC-10.2.201 PostgreSQL GENERATED columns in CTE shadow store
+**Status:** Partial
+**Platforms:** PostgreSQL-PDO
+**Tests:** `Pdo/PostgresGeneratedColumnTest`
+
+PostgreSQL GENERATED ALWAYS AS (expression) STORED columns lose their computed-column semantics in the CTE shadow store. Computed values become TEXT type, causing aggregate functions (SUM, AVG) to fail with "function does not exist" type errors. GENERATED ALWAYS AS IDENTITY columns are also not supported — the shadow store does not generate identity values, resulting in duplicate/null IDs.
+
+## SPEC-10.2.202 PostgreSQL ARRAY literal with ARRAY[] constructor
+**Status:** Known Issue (extends [Issue #33](11-known-issues.ears.md))
+**Platforms:** PostgreSQL-PDO
+**Tests:** `Pdo/PostgresArrayFunctionsTest`
+
+PostgreSQL ARRAY[] constructor syntax (`ARRAY['a','b','c']`) in INSERT causes "Insert values count does not match column count". The commas inside ARRAY[] are misinterpreted as value separators. This extends Issue #33 (array types broken) with a different failure mode — not just CAST issues, but INSERT parsing failures.

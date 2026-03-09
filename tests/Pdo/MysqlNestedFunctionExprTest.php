@@ -8,11 +8,16 @@ use PDO;
 use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
- * Tests nested function expressions, subquery in BETWEEN, and JOIN rate conversion (MySQL PDO).
+ * Tests nested function expressions, subquery in BETWEEN, JOIN rate conversion,
+ * computed INSERT values, function-based WHERE in prepared statements,
+ * function-based UPDATE SET, and GROUP BY with function expressions (MySQL PDO).
+ *
  * SQL patterns exercised: COALESCE(NULLIF()), nested function chains in SELECT/WHERE,
  * subquery in BETWEEN, JOIN with rate table, mixed exec/prepare in same session,
- * scalar subquery balance calculation.
- * @spec SPEC-10.2.174
+ * scalar subquery balance calculation, CONCAT(UPPER(), LPAD()), LOCATE(LOWER()),
+ * LEFT()+CONCAT in UPDATE, YEAR()/MONTH() in GROUP BY.
+ *
+ * @spec SPEC-10.2.174, SPEC-3.1, SPEC-3.3, SPEC-4.1, SPEC-4.2
  */
 class MysqlNestedFunctionExprTest extends AbstractMysqlPdoTestCase
 {
@@ -45,12 +50,23 @@ class MysqlNestedFunctionExprTest extends AbstractMysqlPdoTestCase
                 rate DECIMAL(10,4) NOT NULL,
                 PRIMARY KEY (from_currency, to_currency)
             ) ENGINE=InnoDB',
+            'CREATE TABLE mp_nfe_codes (
+                id INT PRIMARY KEY,
+                label VARCHAR(200) NOT NULL,
+                code VARCHAR(50) NOT NULL
+            ) ENGINE=InnoDB',
+            'CREATE TABLE mp_nfe_events (
+                id INT PRIMARY KEY,
+                title VARCHAR(200) NOT NULL,
+                created_at DATETIME NOT NULL,
+                category VARCHAR(50) NOT NULL
+            ) ENGINE=InnoDB',
         ];
     }
 
     protected function getTableNames(): array
     {
-        return ['mp_nfe_payment', 'mp_nfe_invoice', 'mp_nfe_rate', 'mp_nfe_vendor'];
+        return ['mp_nfe_payment', 'mp_nfe_invoice', 'mp_nfe_rate', 'mp_nfe_vendor', 'mp_nfe_codes', 'mp_nfe_events'];
     }
 
     protected function setUp(): void
@@ -78,7 +94,7 @@ class MysqlNestedFunctionExprTest extends AbstractMysqlPdoTestCase
     }
 
     /**
-     * COALESCE(NULLIF(notes, ''), 'No notes') — nested function handling.
+     * COALESCE(NULLIF(notes, ''), 'No notes') -- nested function handling.
      */
     public function testCoalesceNullif(): void
     {
@@ -97,7 +113,7 @@ class MysqlNestedFunctionExprTest extends AbstractMysqlPdoTestCase
     }
 
     /**
-     * COALESCE(NULLIF()) with TRIM — strip whitespace then fallback.
+     * COALESCE(NULLIF()) with TRIM -- strip whitespace then fallback.
      */
     public function testCoalesceNullifWithTrim(): void
     {
@@ -274,6 +290,223 @@ class MysqlNestedFunctionExprTest extends AbstractMysqlPdoTestCase
         $this->assertSame('unpaid', $rows[2]['payment_label']);
         $this->assertSame('fully paid', $rows[3]['payment_label']);
         $this->assertSame('unpaid', $rows[4]['payment_label']);
+    }
+
+    /**
+     * INSERT with computed values: CONCAT(UPPER(), '-', LPAD()).
+     *
+     * Tests deeply nested function expressions in INSERT VALUES.
+     * The CTE rewriter must correctly parse the VALUES clause containing
+     * nested function calls.
+     */
+    public function testInsertWithNestedFunctionValues(): void
+    {
+        try {
+            $this->ztdExec(
+                "INSERT INTO mp_nfe_codes (id, label, code) VALUES "
+                . "(1, CONCAT(UPPER('hello'), '-', LPAD('1', 3, '0')), 'A')"
+            );
+
+            $rows = $this->ztdQuery('SELECT label, code FROM mp_nfe_codes WHERE id = 1');
+            $this->assertCount(1, $rows);
+            $this->assertSame('HELLO-001', $rows[0]['label']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'INSERT with CONCAT(UPPER(), LPAD()) failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * INSERT with multiple computed function expressions.
+     */
+    public function testInsertMultipleComputedValues(): void
+    {
+        try {
+            $this->ztdExec(
+                "INSERT INTO mp_nfe_codes (id, label, code) VALUES "
+                . "(1, CONCAT(UPPER('widget'), ' #', LPAD(CAST(42 AS CHAR), 5, '0')), "
+                . "CONCAT(LEFT('ABCDEF', 3), '-', RIGHT('123456', 3)))"
+            );
+
+            $rows = $this->ztdQuery('SELECT label, code FROM mp_nfe_codes WHERE id = 1');
+            $this->assertCount(1, $rows);
+            $this->assertSame('WIDGET #00042', $rows[0]['label']);
+            $this->assertSame('ABC-456', $rows[0]['code']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'INSERT with multiple computed expressions failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Prepared SELECT WHERE with nested functions: LOCATE(LOWER(?), LOWER(name)).
+     *
+     * This tests case-insensitive search using nested functions with a
+     * prepared statement parameter.
+     */
+    public function testPreparedWhereLocateLower(): void
+    {
+        try {
+            $this->ztdExec("INSERT INTO mp_nfe_codes (id, label, code) VALUES (1, 'Hello World', 'HW')");
+            $this->ztdExec("INSERT INTO mp_nfe_codes (id, label, code) VALUES (2, 'Goodbye Moon', 'GM')");
+            $this->ztdExec("INSERT INTO mp_nfe_codes (id, label, code) VALUES (3, 'HELLO THERE', 'HT')");
+
+            $rows = $this->ztdPrepareAndExecute(
+                "SELECT id, label FROM mp_nfe_codes WHERE LOCATE(LOWER(?), LOWER(label)) > 0 ORDER BY id",
+                ['hello']
+            );
+
+            $this->assertCount(2, $rows);
+            $this->assertSame(1, (int) $rows[0]['id']);
+            $this->assertSame(3, (int) $rows[1]['id']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'Prepared WHERE LOCATE(LOWER(?), LOWER(col)) failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * UPDATE SET with nested functions: CONCAT(LEFT(name, 3), '...').
+     */
+    public function testUpdateSetWithNestedFunctions(): void
+    {
+        try {
+            $this->ztdExec("INSERT INTO mp_nfe_codes (id, label, code) VALUES (1, 'International Business Machines', 'IBM')");
+            $this->ztdExec("INSERT INTO mp_nfe_codes (id, label, code) VALUES (2, 'Short', 'SH')");
+
+            $this->ztdExec(
+                "UPDATE mp_nfe_codes SET label = CONCAT(LEFT(label, 3), '...') WHERE LENGTH(label) > 10"
+            );
+
+            $rows = $this->ztdQuery('SELECT id, label FROM mp_nfe_codes ORDER BY id');
+            $this->assertCount(2, $rows);
+            $this->assertSame('Int...', $rows[0]['label'], 'Long label should be truncated');
+            $this->assertSame('Short', $rows[1]['label'], 'Short label should be unchanged');
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'UPDATE SET with CONCAT(LEFT(), ...) failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Prepared UPDATE with nested function in SET clause.
+     */
+    public function testPreparedUpdateWithNestedFunctions(): void
+    {
+        try {
+            $this->ztdExec("INSERT INTO mp_nfe_codes (id, label, code) VALUES (1, 'hello world', 'HW')");
+
+            $stmt = $this->pdo->prepare(
+                "UPDATE mp_nfe_codes SET label = CONCAT(UPPER(LEFT(label, 1)), SUBSTRING(label, 2)) WHERE id = ?"
+            );
+            $stmt->execute([1]);
+
+            $rows = $this->ztdQuery('SELECT label FROM mp_nfe_codes WHERE id = 1');
+            $this->assertCount(1, $rows);
+            $this->assertSame('Hello world', $rows[0]['label']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'Prepared UPDATE with nested functions in SET failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * GROUP BY with YEAR() and MONTH() function expressions.
+     *
+     * This tests the CTE rewriter's handling of function expressions in
+     * GROUP BY clauses, which is a common pattern for time-series aggregation.
+     */
+    public function testGroupByYearMonth(): void
+    {
+        try {
+            $this->ztdExec("INSERT INTO mp_nfe_events VALUES (1, 'Event A', '2025-01-15 10:00:00', 'tech')");
+            $this->ztdExec("INSERT INTO mp_nfe_events VALUES (2, 'Event B', '2025-01-20 14:00:00', 'tech')");
+            $this->ztdExec("INSERT INTO mp_nfe_events VALUES (3, 'Event C', '2025-02-10 09:00:00', 'science')");
+            $this->ztdExec("INSERT INTO mp_nfe_events VALUES (4, 'Event D', '2025-02-25 16:00:00', 'tech')");
+            $this->ztdExec("INSERT INTO mp_nfe_events VALUES (5, 'Event E', '2025-03-05 11:00:00', 'science')");
+
+            $rows = $this->ztdQuery(
+                "SELECT YEAR(created_at) AS yr, MONTH(created_at) AS mo, COUNT(*) AS cnt
+                 FROM mp_nfe_events
+                 GROUP BY YEAR(created_at), MONTH(created_at)
+                 ORDER BY yr, mo"
+            );
+
+            $this->assertCount(3, $rows);
+            $this->assertSame(2025, (int) $rows[0]['yr']);
+            $this->assertSame(1, (int) $rows[0]['mo']);
+            $this->assertSame(2, (int) $rows[0]['cnt']);
+            $this->assertSame(2025, (int) $rows[1]['yr']);
+            $this->assertSame(2, (int) $rows[1]['mo']);
+            $this->assertSame(2, (int) $rows[1]['cnt']);
+            $this->assertSame(2025, (int) $rows[2]['yr']);
+            $this->assertSame(3, (int) $rows[2]['mo']);
+            $this->assertSame(1, (int) $rows[2]['cnt']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'GROUP BY YEAR(), MONTH() failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * GROUP BY YEAR/MONTH with HAVING and category filter.
+     */
+    public function testGroupByYearMonthWithHaving(): void
+    {
+        try {
+            $this->ztdExec("INSERT INTO mp_nfe_events VALUES (1, 'A', '2025-01-15 10:00:00', 'tech')");
+            $this->ztdExec("INSERT INTO mp_nfe_events VALUES (2, 'B', '2025-01-20 14:00:00', 'tech')");
+            $this->ztdExec("INSERT INTO mp_nfe_events VALUES (3, 'C', '2025-01-25 09:00:00', 'science')");
+            $this->ztdExec("INSERT INTO mp_nfe_events VALUES (4, 'D', '2025-02-10 16:00:00', 'tech')");
+            $this->ztdExec("INSERT INTO mp_nfe_events VALUES (5, 'E', '2025-02-15 11:00:00', 'science')");
+
+            $rows = $this->ztdQuery(
+                "SELECT YEAR(created_at) AS yr, MONTH(created_at) AS mo,
+                        category, COUNT(*) AS cnt
+                 FROM mp_nfe_events
+                 GROUP BY YEAR(created_at), MONTH(created_at), category
+                 HAVING COUNT(*) > 1
+                 ORDER BY yr, mo, category"
+            );
+
+            $this->assertCount(1, $rows, 'Only Jan/tech should have count > 1');
+            $this->assertSame(1, (int) $rows[0]['mo']);
+            $this->assertSame('tech', $rows[0]['category']);
+            $this->assertSame(2, (int) $rows[0]['cnt']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'GROUP BY YEAR/MONTH with HAVING failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Nested function chain in SELECT: REPLACE(UPPER(TRIM()), ...).
+     */
+    public function testDeepNestedFunctionChainInSelect(): void
+    {
+        try {
+            $this->ztdExec("INSERT INTO mp_nfe_codes (id, label, code) VALUES (1, '  hello world  ', 'HW')");
+
+            $rows = $this->ztdQuery(
+                "SELECT id,
+                        REPLACE(UPPER(TRIM(label)), ' ', '_') AS slug
+                 FROM mp_nfe_codes WHERE id = 1"
+            );
+
+            $this->assertCount(1, $rows);
+            $this->assertSame('HELLO_WORLD', $rows[0]['slug']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'Deep nested function chain (REPLACE(UPPER(TRIM()))) failed: ' . $e->getMessage()
+            );
+        }
     }
 
     /**

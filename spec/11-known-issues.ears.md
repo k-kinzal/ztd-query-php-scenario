@@ -1068,3 +1068,69 @@ Impact:
 Root cause: The CTE shadow store's CAST logic likely maps BIT types to INTEGER or BOOLEAN, losing the bit string representation.
 
 Workaround: Store BIT values as TEXT and cast at query time, or avoid BIT columns with ZTD enabled.
+
+## SPEC-11.INSERT-IGNORE-UNIQUE `[Issue #91]` INSERT IGNORE / ON CONFLICT DO NOTHING does not enforce non-PK UNIQUE constraints
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2e](04-write-operations.ears.md), [SPEC-8.1](08-constraints.ears.md)
+**Tests:** `Mysqli/InsertIgnoreTest`, `Pdo/MysqlInsertIgnoreTest`, `Pdo/SqliteDeleteReinsertPkCycleTest`
+
+INSERT IGNORE (MySQL), INSERT OR IGNORE (SQLite), and INSERT...ON CONFLICT (col) DO NOTHING (PostgreSQL) only check for primary key duplicates in the shadow store. Non-PK UNIQUE key constraint violations are silently inserted as duplicate rows, causing data integrity violations. The shadow store does not reflect or enforce UNIQUE constraints from the DDL.
+
+- Multi-row INSERT IGNORE with UNIQUE duplicates inserts all rows instead of skipping conflicts.
+- Affects exec() and prepared statement paths.
+- Common pattern in idempotent insert workflows.
+
+Workaround: Check for existing rows via SELECT before inserting, or use a different deduplication strategy at the application level.
+
+## SPEC-11.ENUM-ORDERING `[Issue #92]` MySQL ENUM column type loses internal index ordering in CTE shadow store
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Mysqli/EnumTypeTest`, `Pdo/MysqlEnumTypeTest`
+
+MySQL ENUM columns lose their internal index semantics when stored in the CTE shadow store. The CTE rewriter casts ENUM values to VARCHAR/TEXT, causing ORDER BY to use alphabetical ordering instead of the ENUM definition order. For example, `ENUM('small', 'medium', 'large')` sorted ASC produces `large, medium, small` (alphabetical) instead of `small, medium, large` (definition order).
+
+Additional failures:
+- Comparison operators (`>`, `<`, `>=`, `<=`) use alphabetical instead of internal index
+- GROUP BY ENUM produces wrong group ordering
+- DEFAULT ENUM values not applied (returns NULL instead of declared DEFAULT)
+
+Workaround: Use an integer column with application-level mapping instead of ENUM, or add an explicit sort column.
+
+## SPEC-11.HEX-LITERAL-UPDATE `[Issue #93]` X'...' hex literal in UPDATE SET parsed as column name
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (likely affected)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Mysqli/HexLiteralTest`
+
+The CTE rewriter's SQL parser treats `X'...'` hex literal syntax in UPDATE SET clauses as a column identifier `X` followed by a string literal, producing "Unknown column 'X' in 'field list'" error. INSERT with `X'...'` and the `0x...` prefix syntax work correctly in all contexts.
+
+Workaround: Use `0x...` prefix syntax instead of `X'...'`, or use prepared statements with binary parameters.
+
+## SPEC-11.UPDATE-WHERE-ORDER-DESC-LIMIT `[Issue #94]` UPDATE WHERE + ORDER BY DESC + LIMIT updates wrong row
+**Status:** Known Issue
+**Platforms:** MySQL-PDO (confirmed), MySQLi (likely affected)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlDeleteLimitTest`
+
+`UPDATE ... SET ... WHERE ... ORDER BY col DESC LIMIT 1` does not respect the DESC ordering. Instead of updating the row with the highest value (as DESC ordering specifies), it updates a row from the start of the natural table order. Basic DELETE/UPDATE with ORDER BY LIMIT (without WHERE+DESC combination) works correctly.
+
+Workaround: Query the target row ID first via SELECT with ORDER BY DESC LIMIT, then UPDATE by explicit ID.
+
+## SPEC-11.SQLITE-NESTED-FUNC-PARAMS `[Issue #95]` SQLite: Nested function WHERE expressions with prepared params return empty
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed); MySQL-PDO, PostgreSQL-PDO NOT affected
+**Related specs:** [SPEC-3.2](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteNestedFunctionWhereTest`
+
+On SQLite, WHERE clauses with nested function expressions that include prepared statement parameters return 0 rows, even when matching rows exist. The same queries work correctly via `query()` with literal values. The CTE rewriter appears to mishandle parameter binding positions when nested function calls precede the `?` placeholders.
+
+Affected patterns:
+- `WHERE LENGTH(REPLACE(col, 'a', '')) > ?` — 0 rows
+- `WHERE ABS(col1 - col2) BETWEEN ? AND ?` — 0 rows
+- Combined nested functions with multiple params — 0 rows
+
+Non-nested function patterns and single-nesting without params work correctly.
+
+Related: Issue #22 (HAVING with prepared params), Issue #75 (CASE with prepared params), Issue #80 (NULLIF with prepared param).

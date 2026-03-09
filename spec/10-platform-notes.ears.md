@@ -1442,3 +1442,30 @@ Verified patterns: GROUP BY COUNT (room type inventory), WHERE status filter (oc
 An IT incident management system with incidents (severity, status, dates, reporter), agents (team, tier), and assignments (action, notes) works correctly through ZTD shadow store. The scenario exercises GROUP BY severity COUNT for incident summary, WHERE IN with CASE for priority labeling and CASE-based ORDER BY for severity sorting, LEFT JOIN with COUNT and COUNT DISTINCT for agent workload (total actions vs unique incidents), WHERE IS NOT NULL for resolved incident filtering, NOT EXISTS subquery for unassigned incident detection, and prepared DISTINCT JOIN for team-based incident lookup.
 
 Verified patterns: GROUP BY COUNT (severity summary), WHERE IN + CASE + CASE ORDER BY (priority labeling), LEFT JOIN + COUNT + COUNT DISTINCT (agent workload), WHERE IS NOT NULL (resolved incidents), NOT EXISTS subquery (unassigned detection), prepared DISTINCT JOIN (team lookup), physical isolation.
+
+## SPEC-10.2.161 Membership tier management
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/MembershipTierTest`, `Pdo/MysqlMembershipTierTest`, `Pdo/PostgresMembershipTierTest`, `Pdo/SqliteMembershipTierTest`
+
+A loyalty program with tier rules (min spending thresholds, benefit percentages), members (current tier, join date), and purchases (amount, category, date) works correctly through ZTD shadow store. The scenario exercises GROUP BY member + category with SUM for spending breakdown, SUM with CASE for tier eligibility determination based on cumulative spending thresholds, LEFT JOIN COALESCE for current benefit percentage lookup, UPDATE for tier promotion with SELECT verification, and prepared BETWEEN + JOIN for date-range purchase history.
+
+Verified patterns: GROUP BY + SUM (spending by category), SUM + CASE thresholds (tier eligibility), LEFT JOIN + COALESCE (benefit lookup), UPDATE + SELECT verify (tier promotion), prepared BETWEEN + JOIN (purchase history), physical isolation.
+
+## SPEC-10.2.162 Customer feedback NPS
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/CustomerNpsTest`, `Pdo/MysqlCustomerNpsTest`, `Pdo/PostgresCustomerNpsTest`, `Pdo/SqliteCustomerNpsTest`
+
+A Net Promoter Score system with customers (segment, signup date) and surveys (score 0-10, channel, comment) works correctly through ZTD shadow store. The scenario exercises CASE for NPS category classification (promoter/passive/detractor), ROUND with SUM CASE and COUNT for overall NPS percentage arithmetic, GROUP BY channel with SUM CASE for per-channel breakdown, LEFT JOIN IS NULL for anti-join detection of customers without feedback, and prepared BETWEEN for score range filtering with JOIN.
+
+Verified patterns: CASE categories (NPS classification), ROUND + SUM CASE / COUNT (NPS percentage), GROUP BY + SUM CASE (channel breakdown), LEFT JOIN IS NULL (no-feedback anti-join), prepared BETWEEN + JOIN (score range), physical isolation.
+
+## SPEC-10.2.163 Asset depreciation tracking
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/AssetDepreciationTest`, `Pdo/MysqlAssetDepreciationTest`, `Pdo/PostgresAssetDepreciationTest`, `Pdo/SqliteAssetDepreciationTest`
+
+A fixed asset depreciation system with assets (category, purchase cost, useful life, salvage value, status) and depreciation entries (period, amount, cumulative, book value) works correctly through ZTD shadow store. The scenario exercises GROUP BY category with COUNT and SUM for asset portfolio summary, JOIN with correlated MAX subquery for latest depreciation entry per asset, ROUND arithmetic for depreciation percentage calculation, HAVING with aggregate threshold for fully depreciated asset detection, and prepared JOIN with category filter for asset lookup.
+
+Verified patterns: GROUP BY + COUNT + SUM (category summary), JOIN + correlated MAX subquery (latest entry), ROUND arithmetic (depreciation %), HAVING aggregate threshold (fully depreciated), prepared JOIN + WHERE (category lookup), physical isolation.

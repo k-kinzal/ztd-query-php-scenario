@@ -412,6 +412,9 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.158 | `*EquipmentMaintenanceTest` | V | V | V | V | Date arithmetic overdue, LEFT JOIN COUNT+SUM workload, correlated MAX subquery, ROUND AVG cost |
 | SPEC-10.2.159 | `*HotelRoomManagementTest` | V | V | V | V | GROUP BY COUNT type, JOIN SUM+ROUND AVG revenue, LEFT JOIN guest history, 3-table rating JOIN |
 | SPEC-10.2.160 | `*IncidentManagementTest` | V | V | V | V | CASE priority, COUNT DISTINCT workload, NOT EXISTS unassigned, prepared DISTINCT team |
+| SPEC-10.2.161 | `*MembershipTierTest` | V | V | V | V | GROUP BY+SUM spending, SUM+CASE tier eligibility, LEFT JOIN COALESCE benefits, UPDATE+verify, prepared BETWEEN+JOIN |
+| SPEC-10.2.162 | `*CustomerNpsTest` | V | V | V | V | CASE NPS categories, ROUND SUM CASE/COUNT NPS%, GROUP BY+SUM CASE channel, LEFT JOIN IS NULL anti-join, prepared BETWEEN |
+| SPEC-10.2.163 | `*AssetDepreciationTest` | V | V | V | V | GROUP BY+COUNT+SUM category, correlated MAX subquery latest, ROUND depreciation%, HAVING aggregate threshold, prepared JOIN |
 
 ## 11. Known Issues (Selected)
 

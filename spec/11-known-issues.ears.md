@@ -998,3 +998,17 @@ Tables whose names are SQL statement keywords `SELECT` or `VALUES` (quoted with 
 Both keywords that fail are used in INSERT statement parsing (`SELECT` for INSERT...SELECT, `VALUES` for INSERT...VALUES). Other DML keywords as table names work because they are parsed at the statement-type level, not within INSERT clause parsing.
 
 Workaround: Rename tables to avoid `select` and `values` as table names, or disable ZTD for queries referencing these tables.
+
+## SPEC-11.PREPARED-SELECT-REEXECUTE-STALE `[Issue #87]` Prepared SELECT re-execution returns stale shadow data
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), likely all PDO adapters
+**Related specs:** [SPEC-3.2](03-read-operations.ears.md)
+**Tests:** `Pdo/SqlitePreparedSelectReexecuteStaleTest`, `Pdo/SqliteCloseCursorReexecuteTest`
+
+When a prepared SELECT statement is re-executed after intervening DML operations (INSERT, UPDATE, DELETE) via other statements, the re-executed SELECT returns stale results from the first execution instead of reflecting the shadow store mutations.
+
+Fresh `query()` calls correctly reflect mutations. Only re-executed prepared SELECT statements are affected. The issue occurs regardless of whether `closeCursor()` is called between executions. DML prepared re-execution (INSERT/UPDATE/DELETE) is not affected.
+
+Root cause: The CTE-rewritten SQL is baked into the inner PDO prepared statement at first `execute()` time. On subsequent `execute()` calls, the shadow store CTE data is not regenerated.
+
+Workaround: Use `query()` instead of re-executing a prepared SELECT, or prepare a new statement for each execution after DML mutations.

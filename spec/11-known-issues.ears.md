@@ -626,8 +626,8 @@ SELECT name FROM docs WHERE jsonb_exists_any(meta, array['reviewed', 'priority']
 SELECT name FROM docs WHERE jsonb_exists_all(meta, array['author', 'reviewed']);
 ```
 
-## SPEC-11.INSERT-SELECT-JOIN INSERT...SELECT with multi-table JOIN produces incorrect results
-**Status:** Known Issue (not yet reported)
+## SPEC-11.INSERT-SELECT-JOIN `[Issue #49]` INSERT...SELECT with multi-table JOIN produces incorrect results
+**Status:** Known Issue
 **Platforms:** MySQL-PDO (error), MySQL-MySQLi (error), PostgreSQL-PDO (NULL columns), SQLite-PDO (NULL columns)
 **Related specs:** [SPEC-4.1a](04-write-operations.ears.md), SPEC-11.INSERT-SELECT-COMPUTED
 **Tests:** `Pdo/MysqlInsertSelectJoinAggregateTest`, `Pdo/PostgresInsertSelectJoinAggregateTest`, `Pdo/SqliteInsertSelectJoinAggregateTest`

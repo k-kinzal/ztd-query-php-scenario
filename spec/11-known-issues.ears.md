@@ -599,7 +599,7 @@ UPDATE items SET name = TRIM(name) WHERE id = 1;
 UPDATE items SET code = SUBSTR(code, 1, 3) WHERE id = 1;
 ```
 
-## SPEC-11.PG-JSONB-QUESTION-MARK JSONB ? / ?| / ?& operators conflict with parameter placeholder
+## SPEC-11.PG-JSONB-QUESTION-MARK `[Issue #48]` JSONB ? / ?| / ?& operators conflict with parameter placeholder
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
 **Related specs:** [SPEC-3.5](03-read-operations.ears.md)

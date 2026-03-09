@@ -963,3 +963,22 @@ SQL line comments (`--`) break the CTE rewriter in two cases: (1) a line comment
 **Tests:** `Pdo/PostgresFormatFunctionTest`
 
 PostgreSQL's `format()` function works correctly in SELECT, WHERE, and prepared-statement contexts, but produces NULL when used in `UPDATE SET`. For example, `UPDATE users SET code = format('USR-%s', first_name) WHERE code IS NULL` sets `code` to NULL instead of the expected formatted string. This is distinct from #47 (which is about FROM keyword in TRIM/SUBSTRING/EXTRACT syntax) and similar to the pattern in #61 (CASE in UPDATE SET).
+
+## SPEC-11.PG-DOLLAR-SELECT `[Issue #85]` PostgreSQL: SELECT with $N prepared params returns empty results
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-3.2](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresDollarParamSelectTest`, `Pdo/PostgresBetweenWithParamsTest`, `Pdo/PostgresGroupByCaseExpressionTest`, `Pdo/PostgresTypeCastOperatorTest`, `Pdo/PostgresStringAggTest`, `Pdo/PostgresUnionAllShadowTablesTest`, `Pdo/PostgresReplaceFunctionInQueryTest`
+
+The most basic SELECT pattern — `SELECT name FROM t WHERE id = $1` — returns empty results through the CTE rewriter on PostgreSQL, even when the shadow store contains matching data. The same query using `?` placeholders returns correct results. This affects ALL SELECT queries using PostgreSQL's native `$N` parameter syntax:
+
+- `WHERE col = $1` — basic equality
+- `WHERE col BETWEEN $1 AND $2` — range queries
+- `WHERE col > $1 AND col2 = $2` — multi-condition
+- `GROUP BY CASE WHEN col >= $1 THEN ... END` — expression grouping (returns wrong groups)
+- `UNION ALL ... WHERE col > $1` — set operations
+- `REPLACE(col, $1, $2)` in UPDATE SET — string functions with params
+
+This broadens the scope of known $N param issues (#62 FILTER, #63 JOIN USING, #68 INSERT) to all SELECT contexts. The root cause is likely in the CTE rewriter's parameter handling during query transformation.
+
+Workaround: Use `?` placeholders instead of `$N` on PostgreSQL.

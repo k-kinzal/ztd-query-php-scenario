@@ -1244,3 +1244,48 @@ Verified patterns: poll results (LEFT JOIN + percentage scalar subquery), poll w
 A task management kanban board system with boards, tasks, and task dependencies works correctly through ZTD shadow store. The scenario exercises GROUP BY with multi-column grouping (board + status) for task count per status, GROUP BY assignee with WHERE filter for active workload analysis, EXISTS correlated subquery on dependency table for blocked task detection (todo tasks with unfinished dependencies), date comparison with status filter for overdue task identification, CASE expression mapping priority numbers to labels with GROUP BY for priority distribution, and SUM(CASE)/COUNT with ROUND for per-board completion percentage.
 
 Verified patterns: task count by status (GROUP BY + COUNT), assignee workload (GROUP BY + WHERE + NULL exclusion), blocked tasks (EXISTS correlated subquery on dependencies), overdue tasks (date comparison + status filter), priority distribution (CASE + GROUP BY), completion percentage (SUM CASE / COUNT + ROUND), physical isolation.
+
+## SPEC-10.2.139 Prescription tracking
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/PrescriptionTrackingTest`, `Pdo/MysqlPrescriptionTrackingTest`, `Pdo/PostgresPrescriptionTrackingTest`, `Pdo/SqlitePrescriptionTrackingTest`
+
+A medical prescription tracking system with patients, doctors, visits, and prescriptions works correctly through ZTD shadow store. The scenario exercises 4-table JOIN (patients JOIN visits JOIN prescriptions JOIN doctors) for patient prescription summaries, self-referencing UPDATE arithmetic for refill count decrement, date BETWEEN for active prescription filtering at different points in time, and GROUP BY with COUNT and COUNT DISTINCT for per-doctor prescription and patient statistics.
+
+Verified patterns: 4-table JOIN with ORDER BY (patient summary), self-referencing UPDATE SET col = col - 1 (refill tracking), BETWEEN on date columns (active prescriptions), GROUP BY with COUNT + COUNT DISTINCT (doctor stats), physical isolation.
+
+## SPEC-10.2.140 Playlist management
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/PlaylistManagementTest`, `Pdo/MysqlPlaylistManagementTest`, `Pdo/PostgresPlaylistManagementTest`, `Pdo/SqlitePlaylistManagementTest`
+
+A playlist management system with playlists, songs, and playlist-song associations works correctly through ZTD shadow store. The scenario exercises 3-table JOIN for playlist contents with position ordering, UPDATE with arithmetic expressions for position reordering (shift positions down then move item), GROUP BY genre with COUNT for genre distribution across playlists, SUM of play counts across playlists per song for most-played ranking, and SUM of song durations per playlist for total playlist length.
+
+Verified patterns: 3-table JOIN with ORDER BY position (playlist contents), UPDATE SET position = position + 1 with range WHERE (position shift), GROUP BY genre COUNT (distribution), SUM play_count GROUP BY song (most played), SUM duration JOIN (playlist duration), physical isolation.
+
+## SPEC-10.2.141 Badge achievement system
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/BadgeAchievementTest`, `Pdo/MysqlBadgeAchievementTest`, `Pdo/PostgresBadgeAchievementTest`, `Pdo/SqliteBadgeAchievementTest`
+
+A gamification badge achievement system with users, badges, and user-badge progress tracking works correctly through ZTD shadow store. The scenario exercises 3-table JOIN with CASE WHEN for unlock status display, GROUP BY badge with COUNT and ROUND percentage for rarity calculation, COUNT with WHERE IS NOT NULL filter for unlocked badge tallying, sequential UPDATE for progress increment and unlock timestamp, and WHERE IS NULL filter for in-progress badge listing.
+
+Verified patterns: 3-table JOIN with CASE WHEN IS NOT NULL (progress display), GROUP BY with COUNT + ROUND percentage (rarity), COUNT WHERE IS NOT NULL (unlocked per user), UPDATE progress + UPDATE unlocked_at (progress tracking), WHERE IS NULL filter (in-progress badges), physical isolation.
+
+## SPEC-10.2.142 Attendance tracker
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/AttendanceTrackerTest`, `Pdo/MysqlAttendanceTrackerTest`, `Pdo/PostgresAttendanceTrackerTest`, `Pdo/SqliteAttendanceTrackerTest`
+
+An employee attendance tracking system with employees and daily attendance records works correctly through ZTD shadow store. The scenario exercises SUM CASE for status categorization (present/late/absent counts per employee), GROUP BY department with ROUND percentage for attendance rate, prepared statements with BETWEEN for date-range queries, LEFT JOIN anti-pattern for finding employees with no record on a given date, and HAVING with SUM CASE = 0 for perfect attendance detection.
+
+Verified patterns: SUM CASE status categorization (attendance summary), GROUP BY department ROUND percentage (attendance rate), prepared statement with BETWEEN (date range), LEFT JOIN WHERE IS NULL (absence detection), HAVING SUM CASE = 0 (perfect attendance), physical isolation.
+
+## SPEC-10.2.143 Dynamic pricing
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/DynamicPricingTest`, `Pdo/MysqlDynamicPricingTest`, `Pdo/PostgresDynamicPricingTest`, `Pdo/SqliteDynamicPricingTest`
+
+A dynamic pricing system with products, price history, and competitor prices works correctly through ZTD shadow store. The scenario exercises correlated MAX subquery for effective-date price lookup (latest price per product), price change history with ORDER BY for audit trail, CASE expression for discount tier classification based on price ranges, JOIN with ROUND arithmetic for competitor price comparison and difference calculation, and derived table subquery with GROUP BY for category-level price range aggregation.
+
+Verified patterns: correlated MAX subquery (current price lookup), ORDER BY effective_date (price history), CASE WHEN price ranges (tier classification), JOIN with ROUND(a - b, 2) (competitor comparison), derived table + GROUP BY MIN/MAX (category price range), physical isolation.

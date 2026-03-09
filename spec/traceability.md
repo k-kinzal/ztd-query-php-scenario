@@ -265,6 +265,11 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.136 | `*ExpenseReportTest` | V | V | V | V | V |
 | SPEC-10.2.137 | `*VotingPollTest` | V | V | V | V | V |
 | SPEC-10.2.138 | `*KanbanBoardTest` | V | V | V | V | V |
+| SPEC-10.2.139 | `*PrescriptionTrackingTest` | V | V | V | V | V |
+| SPEC-10.2.140 | `*PlaylistManagementTest` | V | V | V | V | V |
+| SPEC-10.2.141 | `*BadgeAchievementTest` | V | V | V | V | V |
+| SPEC-10.2.142 | `*AttendanceTrackerTest` | V | V | V | V | V |
+| SPEC-10.2.143 | `*DynamicPricingTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -380,6 +385,11 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-3.3 | `*VotingPollTest` | V | V | V | V | LEFT JOIN percentage, HAVING COUNT, NOT IN subquery anti-join |
 | SPEC-3.3 | `*ExpenseReportTest` | V | V | V | V | Self-join manager lookup, 3-table category breakdown, HAVING SUM threshold |
 | SPEC-3.3 | `*KanbanBoardTest` | V | V | V | V | EXISTS correlated dependency check, CASE priority labels, SUM CASE completion % |
+| SPEC-3.3 | `*PrescriptionTrackingTest` | V | V | V | V | 4-table JOIN, self-referencing UPDATE arithmetic, BETWEEN date filter, COUNT DISTINCT |
+| SPEC-3.3 | `*PlaylistManagementTest` | V | V | V | V | 3-table JOIN, UPDATE position arithmetic, GROUP BY genre COUNT, SUM play counts |
+| SPEC-3.3 | `*BadgeAchievementTest` | V | V | V | V | CASE WHEN IS NOT NULL, ROUND percentage rarity, UPDATE progress + unlock, WHERE IS NULL |
+| SPEC-3.2 | `*AttendanceTrackerTest` | V | V | V | V | SUM CASE status, ROUND attendance rate, prepared BETWEEN, LEFT JOIN anti-pattern, HAVING |
+| SPEC-3.3 | `*DynamicPricingTest` | V | V | V | V | Correlated MAX subquery, CASE tier, ROUND competitor diff, derived table GROUP BY |
 
 ## 11. Known Issues (Selected)
 

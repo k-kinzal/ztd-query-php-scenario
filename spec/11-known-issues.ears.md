@@ -795,3 +795,15 @@ SELECT with `JOIN ... USING (col)` works correctly via `query()`, but when combi
 Workaround: Use `JOIN ... ON t1.col = t2.col` instead of `USING (col)`.
 
 Related: Issue #22 (HAVING with prepared params), Issue #62 (FILTER with prepared params).
+
+## SPEC-11.SQLITE-UPSERT-SELFREF `[Issue #64]` ON CONFLICT DO UPDATE self-referencing expression loses value (SQLite)
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed); MySQL has same class of bug (Issue #16)
+**Related specs:** [SPEC-4.2a](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteReplaceAndUpsertEdgeCasesTest`
+
+`INSERT ... ON CONFLICT(id) DO UPDATE SET version = table.version + 1` evaluates the self-referencing expression as `0 + 1 = 0` instead of `original_value + 1`. The shadow store does not resolve the existing row's column value when computing the SET expression. Using `excluded.column` (the incoming value) works correctly.
+
+This is the SQLite counterpart of MySQL Issue #16 (`ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)` loses original value). The root cause likely resides in the shared upsert mutation logic.
+
+Workaround: Perform the read and update as separate operations.

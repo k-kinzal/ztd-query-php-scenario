@@ -494,6 +494,13 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-3.3 | `Pdo/SqliteSetOperationsQueryTest` | — | — | — | P | UNION/UNION ALL pass; multi-column INTERSECT/EXCEPT empty (KI #50) |
 | SPEC-3.3 | `Pdo/SqlitePreparedBetweenAndCaseHavingTest` | — | — | — | P | BETWEEN works; CASE in HAVING with params empty (KI #22) |
 | SPEC-3.3 | `Pdo/SqliteGroupConcatAndMultiDmlLifecycleTest` | — | — | — | V | GROUP_CONCAT, multi-DML lifecycle, sequential mutations (all pass) |
+| SPEC-10.2.225 | `Pdo/MysqlColumnOrderAndMultiRowInsertTest`, `Pdo/PostgresColumnOrderAndMultiRowInsertTest`, `Mysqli/ColumnOrderAndMultiRowInsertTest` | V | V | V | — | Column order INSERT, multi-row VALUES (all pass; extends SQLite test) |
+| SPEC-10.2.226 | `Pdo/MysqlHavingPreparedAndCompoundWhereTest`, `Pdo/PostgresHavingPreparedAndCompoundWhereTest`, `Pdo/SqliteHavingPreparedAndCompoundWhereTest` | — | V | V | P | HAVING+params (MySQL/PG pass, SQLite KI #22); compound WHERE (all pass) |
+| SPEC-10.2.227 | `Pdo/MysqlCaseWhereAndUnionSelectTest`, `Pdo/PostgresCaseWhereAndUnionSelectTest`, `Pdo/SqliteCaseWhereAndUnionSelectTest` | — | V | V | V | CASE WHERE SELECT, UNION SELECT (all pass); nested CASE PG type issue |
+| SPEC-10.2.228 | `Pdo/MysqlGroupByExpressionAndInsertFunctionTest`, `Pdo/SqliteGroupByExpressionAndInsertFunctionTest` | — | V | — | V | GROUP BY CASE/function, INSERT with functions (all pass) |
+| SPEC-10.2.229 | `Pdo/MysqlPreparedCaseSetAndSubqueryInsertTest`, `Pdo/PostgresPreparedCaseSetAndSubqueryInsertTest` | — | V | V | — | Prepared CASE SET (?-params), INSERT subquery VALUES, self-ref DELETE (all pass) |
+| SPEC-10.2.230 | `Pdo/SqliteTableNamePrefixConfusionTest` | — | — | — | V | Table name prefix isolation (orders/order_items/order_archive all pass) |
+| SPEC-10.2.231 | `Pdo/PostgresBooleanColumnShadowTest` | — | — | P | — | BOOLEAN TRUE works; FALSE fails CAST('' AS BOOLEAN) (confirms Issue #6) |
 
 ## Legend
 

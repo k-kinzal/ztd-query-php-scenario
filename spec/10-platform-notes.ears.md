@@ -1872,3 +1872,52 @@ Prepared SELECT/UPDATE/DELETE with BETWEEN work correctly on SQLite. Prepared BE
 **Tests:** `Pdo/SqliteGroupConcatAndMultiDmlLifecycleTest`
 
 GROUP_CONCAT with custom separator, GROUP_CONCAT after INSERT/DELETE, GROUP_CONCAT DISTINCT, and multi-step DML lifecycles (INSERT→UPDATE→SELECT, multiple UPDATEs on same row, INSERT→UPDATE→DELETE cycle, bulk UPDATE→partial DELETE, batch INSERT→aggregate) all work correctly on SQLite. GROUP_CONCAT with ORDER BY subquery returns empty (known derived table issue). The shadow store correctly maintains state across arbitrary sequences of mutations on the same rows.
+
+## SPEC-10.2.225 Column order INSERT and multi-row INSERT VALUES
+**Status:** Verified
+**Platforms:** MySQL-PDO, PostgreSQL-PDO, MySQLi (all pass); SQLite-PDO (previously verified)
+**Tests:** `Pdo/MysqlColumnOrderAndMultiRowInsertTest`, `Pdo/PostgresColumnOrderAndMultiRowInsertTest`, `Mysqli/ColumnOrderAndMultiRowInsertTest`
+
+INSERT with columns in non-DDL order (reverse, partial, mixed) correctly maps values to columns on all platforms. Multi-row INSERT VALUES (3+ rows in single statement) works on all platforms. Combined multi-row + reordered columns works. Prepared INSERT with reordered columns works. UPDATE after reordered INSERT preserves column mappings. Multi-row INSERT followed by aggregate queries returns correct results. This extends `SqliteColumnOrderInsertTest` cross-platform coverage.
+
+## SPEC-10.2.226 HAVING with prepared params and compound WHERE conditions
+**Status:** Partially Verified
+**Platforms:** MySQL-PDO (pass), PostgreSQL-PDO (pass), SQLite-PDO (HAVING with params fails — Issue #22)
+**Tests:** `Pdo/MysqlHavingPreparedAndCompoundWhereTest`, `Pdo/PostgresHavingPreparedAndCompoundWhereTest`, `Pdo/SqliteHavingPreparedAndCompoundWhereTest`
+
+HAVING COUNT/SUM with bound parameters works on MySQL PDO and PostgreSQL PDO. SQLite fails (confirms Issue #22). HAVING combined with WHERE and two bound parameters works on MySQL/PostgreSQL. HAVING after shadow INSERT/DELETE correctly reflects mutations on MySQL/PostgreSQL. Compound WHERE with OR/AND and parentheses works for UPDATE and DELETE on all platforms. Nested OR/AND in SELECT works. Prepared compound WHERE UPDATE works. Compound WHERE after multiple mutations (INSERT + UPDATE) works.
+
+## SPEC-10.2.227 CASE in WHERE and UNION/UNION ALL SELECT
+**Status:** Verified
+**Platforms:** MySQL-PDO (pass), PostgreSQL-PDO (pass, 1 incomplete — nested CASE type mismatch), SQLite-PDO (pass)
+**Tests:** `Pdo/MysqlCaseWhereAndUnionSelectTest`, `Pdo/PostgresCaseWhereAndUnionSelectTest`, `Pdo/SqliteCaseWhereAndUnionSelectTest`
+
+CASE expressions in SELECT WHERE clause work on all platforms (simple CASE, CASE with prepared param, CASE after UPDATE, searched CASE). Nested CASE works on MySQL and SQLite; PostgreSQL requires boolean return type (integer return triggers type error). UNION ALL between two shadow tables works on all platforms. UNION DISTINCT works. UNION ALL after mutations (INSERT + DELETE) correctly reflects changes. UNION with prepared params works. UNION ALL on same table with different WHERE conditions works. String concat (|| on PostgreSQL/SQLite, CONCAT on MySQL) in UPDATE SET and WHERE works after mutations. Note: CASE in WHERE for DML (DELETE/UPDATE) still matches all rows on MySQL (Issue #96) — SELECT is not affected.
+
+## SPEC-10.2.228 GROUP BY expression and INSERT with function calls
+**Status:** Verified
+**Platforms:** MySQL-PDO (pass), SQLite-PDO (pass)
+**Tests:** `Pdo/MysqlGroupByExpressionAndInsertFunctionTest`, `Pdo/SqliteGroupByExpressionAndInsertFunctionTest`
+
+GROUP BY with CASE expression works, including after INSERT mutations and with HAVING. GROUP BY with function expression (UPPER) works. GROUP BY with date extraction (MONTH on MySQL, SUBSTR on SQLite) works. GROUP BY expression with prepared params works on MySQL. INSERT with UPPER/LOWER, CONCAT/||, arithmetic expressions, NOW()/datetime() all produce correct shadow data. INSERT with function then UPDATE then query lifecycle works.
+
+## SPEC-10.2.229 Prepared UPDATE CASE in SET and INSERT with scalar subquery in VALUES
+**Status:** Verified
+**Platforms:** MySQL-PDO (pass), PostgreSQL-PDO (pass)
+**Tests:** `Pdo/MysqlPreparedCaseSetAndSubqueryInsertTest`, `Pdo/PostgresPreparedCaseSetAndSubqueryInsertTest`
+
+Prepared UPDATE with CASE in SET using ? params works on both MySQL and PostgreSQL (note: Issue #61 is specific to $N params on PostgreSQL). Multiple CASE expressions in single SET clause with prepared params works. INSERT with scalar subquery in VALUES (single-row SELECT, MAX, COUNT*10, cross-table subquery) works on both platforms. DELETE with self-referencing AVG subquery (WHERE price < (SELECT AVG(price) FROM same_table)) works. String concat || in UPDATE SET and WHERE works on PostgreSQL.
+
+## SPEC-10.2.230 Table name prefix isolation
+**Status:** Verified
+**Platforms:** SQLite-PDO (pass)
+**Tests:** `Pdo/SqliteTableNamePrefixConfusionTest`
+
+Tables with overlapping name prefixes (e.g., orders/order_items/order_archive) are correctly distinguished by the CTE rewriter. INSERT into one table does not affect queries on a table with a shared prefix. JOIN between prefix-sharing tables works. Mutating one or both tables then JOINing works correctly. All three tables in a single session maintain independent shadow stores.
+
+## SPEC-10.2.231 PostgreSQL BOOLEAN FALSE in shadow store
+**Status:** Known Issue (confirms Issue #6)
+**Platforms:** PostgreSQL-PDO
+**Tests:** `Pdo/PostgresBooleanColumnShadowTest`
+
+PostgreSQL BOOLEAN TRUE values work correctly in the shadow store. BOOLEAN FALSE values cause `CAST('' AS BOOLEAN)` error because PHP serializes `false` as empty string. This affects SELECT, UPDATE, and DELETE on any table with BOOLEAN columns when any shadow row contains a FALSE value. Even selecting only non-boolean columns fails because the CTE rewriter includes all columns. Using INTEGER instead of BOOLEAN avoids the issue.

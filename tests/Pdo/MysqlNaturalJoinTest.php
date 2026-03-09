@@ -8,10 +8,11 @@ use PDO;
 use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
- * Tests NATURAL JOIN through ZTD shadow store on MySQL.
+ * Tests NATURAL JOIN through the CTE rewriter on MySQL.
+ * Cross-platform verification of SqliteNaturalJoinTest.
  *
- * NATURAL JOIN implicitly joins on columns with the same name.
- * The CTE rewriter must handle the implicit column matching.
+ * SQL patterns exercised: NATURAL JOIN, NATURAL LEFT JOIN, NATURAL JOIN
+ * with shadow data, NATURAL JOIN with aggregate.
  * @spec SPEC-3.3
  */
 class MysqlNaturalJoinTest extends AbstractMysqlPdoTestCase
@@ -19,130 +20,102 @@ class MysqlNaturalJoinTest extends AbstractMysqlPdoTestCase
     protected function getTableDDL(): string|array
     {
         return [
-            'CREATE TABLE mnj_users (id INT PRIMARY KEY, name VARCHAR(50), dept_id INT)',
-            'CREATE TABLE mnj_depts (dept_id INT PRIMARY KEY, dept_name VARCHAR(50))',
-            'CREATE TABLE mnj_roles (id INT PRIMARY KEY, role_name VARCHAR(50))',
+            'CREATE TABLE my_nj_departments (
+                dept_id INT PRIMARY KEY,
+                dept_name VARCHAR(100) NOT NULL
+            ) ENGINE=InnoDB',
+            'CREATE TABLE my_nj_employees (
+                emp_id INT PRIMARY KEY,
+                emp_name VARCHAR(100) NOT NULL,
+                dept_id INT NOT NULL
+            ) ENGINE=InnoDB',
         ];
     }
 
     protected function getTableNames(): array
     {
-        return ['mnj_users', 'mnj_depts', 'mnj_roles'];
+        return ['my_nj_employees', 'my_nj_departments'];
     }
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->pdo->exec("INSERT INTO mnj_users VALUES (1, 'Alice', 10)");
-        $this->pdo->exec("INSERT INTO mnj_users VALUES (2, 'Bob', 20)");
-        $this->pdo->exec("INSERT INTO mnj_users VALUES (3, 'Charlie', 10)");
-        $this->pdo->exec("INSERT INTO mnj_depts VALUES (10, 'Engineering')");
-        $this->pdo->exec("INSERT INTO mnj_depts VALUES (20, 'Marketing')");
-        $this->pdo->exec("INSERT INTO mnj_roles VALUES (1, 'Admin')");
-        $this->pdo->exec("INSERT INTO mnj_roles VALUES (2, 'User')");
+        $this->pdo->exec("INSERT INTO my_nj_departments VALUES (1, 'Engineering')");
+        $this->pdo->exec("INSERT INTO my_nj_departments VALUES (2, 'Marketing')");
+        $this->pdo->exec("INSERT INTO my_nj_departments VALUES (3, 'Sales')");
+
+        $this->pdo->exec("INSERT INTO my_nj_employees VALUES (1, 'Alice', 1)");
+        $this->pdo->exec("INSERT INTO my_nj_employees VALUES (2, 'Bob', 1)");
+        $this->pdo->exec("INSERT INTO my_nj_employees VALUES (3, 'Carol', 2)");
     }
 
     /**
-     * NATURAL JOIN on common column (dept_id).
+     * Basic NATURAL JOIN — should match on dept_id column.
      */
-    public function testNaturalJoin(): void
+    public function testBasicNaturalJoin(): void
     {
-        try {
-            $rows = $this->ztdQuery(
-                'SELECT u.name, d.dept_name
-                 FROM mnj_users u NATURAL JOIN mnj_depts d
-                 ORDER BY u.name'
-            );
+        $rows = $this->ztdQuery(
+            "SELECT emp_name, dept_name
+             FROM my_nj_employees NATURAL JOIN my_nj_departments
+             ORDER BY emp_name"
+        );
 
-            $this->assertCount(3, $rows);
-            $this->assertSame('Alice', $rows[0]['name']);
-            $this->assertSame('Engineering', $rows[0]['dept_name']);
-        } catch (\Exception $e) {
-            $this->markTestSkipped('NATURAL JOIN not supported on MySQL: ' . $e->getMessage());
-        }
+        $this->assertCount(3, $rows);
+        $this->assertSame('Alice', $rows[0]['emp_name']);
+        $this->assertSame('Engineering', $rows[0]['dept_name']);
     }
 
     /**
-     * NATURAL JOIN with id column (common but different meaning).
+     * NATURAL LEFT JOIN — departments with no employees.
      */
-    public function testNaturalJoinOnId(): void
+    public function testNaturalLeftJoin(): void
     {
-        try {
-            $rows = $this->ztdQuery(
-                'SELECT u.name, r.role_name
-                 FROM mnj_users u NATURAL JOIN mnj_roles r
-                 ORDER BY u.name'
-            );
+        $rows = $this->ztdQuery(
+            "SELECT dept_name, emp_name
+             FROM my_nj_departments NATURAL LEFT JOIN my_nj_employees
+             ORDER BY dept_name"
+        );
 
-            // Only matches where mnj_users.id = mnj_roles.id
-            $this->assertCount(2, $rows);
-        } catch (\Exception $e) {
-            $this->markTestSkipped('NATURAL JOIN on id not supported on MySQL: ' . $e->getMessage());
-        }
+        $this->assertCount(4, $rows);
+        $salesRow = array_values(array_filter($rows, fn($r) => $r['dept_name'] === 'Sales'));
+        $this->assertCount(1, $salesRow);
+        $this->assertNull($salesRow[0]['emp_name']);
     }
 
     /**
-     * Shadow mutation affects NATURAL JOIN results.
+     * NATURAL JOIN after shadow INSERT.
      */
-    public function testMutationAffectsNaturalJoin(): void
+    public function testNaturalJoinAfterInsert(): void
     {
-        $this->pdo->exec("INSERT INTO mnj_depts VALUES (30, 'Sales')");
-        $this->pdo->exec("INSERT INTO mnj_users VALUES (4, 'Diana', 30)");
+        $this->pdo->exec("INSERT INTO my_nj_employees VALUES (4, 'Diana', 3)");
 
-        try {
-            $rows = $this->ztdQuery(
-                "SELECT u.name, d.dept_name
-                 FROM mnj_users u NATURAL JOIN mnj_depts d
-                 WHERE d.dept_name = 'Sales'"
-            );
+        $rows = $this->ztdQuery(
+            "SELECT emp_name, dept_name
+             FROM my_nj_employees NATURAL JOIN my_nj_departments
+             WHERE dept_name = 'Sales'"
+        );
 
-            $this->assertCount(1, $rows);
-            $this->assertSame('Diana', $rows[0]['name']);
-        } catch (\Exception $e) {
-            $this->markTestSkipped('NATURAL JOIN after mutation not supported on MySQL: ' . $e->getMessage());
-        }
+        $this->assertCount(1, $rows);
+        $this->assertSame('Diana', $rows[0]['emp_name']);
     }
 
     /**
-     * NATURAL JOIN after DELETE.
+     * NATURAL JOIN with aggregate.
      */
-    public function testNaturalJoinAfterDelete(): void
+    public function testNaturalJoinWithAggregate(): void
     {
-        $this->pdo->exec("DELETE FROM mnj_users WHERE id = 2");
+        $rows = $this->ztdQuery(
+            "SELECT dept_name, COUNT(emp_id) AS cnt
+             FROM my_nj_departments NATURAL LEFT JOIN my_nj_employees
+             GROUP BY dept_name
+             ORDER BY dept_name"
+        );
 
-        try {
-            $rows = $this->ztdQuery(
-                'SELECT u.name, d.dept_name
-                 FROM mnj_users u NATURAL JOIN mnj_depts d
-                 ORDER BY u.name'
-            );
-
-            $this->assertCount(2, $rows);
-            $this->assertSame('Alice', $rows[0]['name']);
-            $this->assertSame('Charlie', $rows[1]['name']);
-        } catch (\Exception $e) {
-            $this->markTestSkipped('NATURAL JOIN after DELETE not supported on MySQL: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * NATURAL JOIN with prepared statement.
-     */
-    public function testNaturalJoinPrepared(): void
-    {
-        try {
-            $rows = $this->ztdPrepareAndExecute(
-                'SELECT u.name, d.dept_name
-                 FROM mnj_users u NATURAL JOIN mnj_depts d
-                 WHERE u.name = ?',
-                ['Alice']
-            );
-
-            $this->assertCount(1, $rows);
-            $this->assertSame('Engineering', $rows[0]['dept_name']);
-        } catch (\Exception $e) {
-            $this->markTestSkipped('NATURAL JOIN prepared not supported on MySQL: ' . $e->getMessage());
-        }
+        $this->assertCount(3, $rows);
+        $this->assertSame('Engineering', $rows[0]['dept_name']);
+        $this->assertEquals(2, (int) $rows[0]['cnt']);
+        $this->assertSame('Sales', $rows[2]['dept_name']);
+        $this->assertEquals(0, (int) $rows[2]['cnt']);
     }
 }

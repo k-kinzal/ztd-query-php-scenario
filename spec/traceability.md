@@ -258,6 +258,13 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-10.2.129 | `*GradebookWeightedAvgTest` | V | V | V | V | V |
 | SPEC-10.2.130 | `*FleetServiceTrackingTest` | V | V | V | V | V |
 | SPEC-10.2.131 | `*QuotaManagementTest` | V | V | V | V | V |
+| SPEC-10.2.132 | `*ShippingTrackerTest` | V | V | V | V | V |
+| SPEC-10.2.133 | `*ReturnRefundTest` | V | V | V | V | V |
+| SPEC-10.2.134 | `*ChatMessagingTest` | V | V | V | V | V |
+| SPEC-10.2.135 | `*AppointmentSchedulingTest` | V | V | V | V | V |
+| SPEC-10.2.136 | `*ExpenseReportTest` | V | V | V | V | V |
+| SPEC-10.2.137 | `*VotingPollTest` | V | V | V | V | V |
+| SPEC-10.2.138 | `*KanbanBoardTest` | V | V | V | V | V |
 
 ## Cross-Cutting Workflow and Integration Tests
 
@@ -366,6 +373,13 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-3.3 | `*GradebookWeightedAvgTest` | V | V | V | V | SUM(score*weight)/SUM(weight), CROSS JOIN missing, HAVING nested subquery |
 | SPEC-10.2.23 | `*FleetServiceTrackingTest` | V | V | V | V | LAG mileage, MAX overdue, SUM cost, active fleet summary |
 | SPEC-3.3 | `*QuotaManagementTest` | V | V | V | V | Correlated MAX subquery, percentage ROUND, CASE over-quota, AVG trend |
+| SPEC-3.3 | `*ShippingTrackerTest` | V | V | V | V | Double correlated MAX subquery, SUM CASE cross-tab, delivery rate |
+| SPEC-3.3 | `*ReturnRefundTest` | V | V | V | V | Double LEFT JOIN, COALESCE, restocking fee arithmetic, prepared SUM |
+| SPEC-3.3 | `*ChatMessagingTest` | V | V | V | V | Correlated MAX subquery, NOT EXISTS anti-join, COUNT DISTINCT |
+| SPEC-3.3 | `*AppointmentSchedulingTest` | V | V | V | V | Range overlap conflict, GROUP BY COUNT+SUM, multi-table JOIN |
+| SPEC-3.3 | `*VotingPollTest` | V | V | V | V | LEFT JOIN percentage, HAVING COUNT, NOT IN subquery anti-join |
+| SPEC-3.3 | `*ExpenseReportTest` | V | V | V | V | Self-join manager lookup, 3-table category breakdown, HAVING SUM threshold |
+| SPEC-3.3 | `*KanbanBoardTest` | V | V | V | V | EXISTS correlated dependency check, CASE priority labels, SUM CASE completion % |
 
 ## 11. Known Issues (Selected)
 

@@ -9,9 +9,8 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests appointment scheduling scenarios through ZTD shadow store (MySQLi).
  * Covers calendar slot management with booking conflict detection using
- * NOT EXISTS for overlap detection, date/time comparisons, prepared
- * statement with date params, LEFT JOIN for available slots, GROUP BY
- * with COUNT, and physical isolation.
+ * time range overlap, date/time comparisons, JOIN for available slots,
+ * GROUP BY with COUNT/SUM, and physical isolation.
  * @spec SPEC-10.2.135
  */
 class AppointmentSchedulingTest extends AbstractMysqliTestCase

@@ -5,27 +5,27 @@ declare(strict_types=1);
 namespace Tests\Pdo;
 
 use PDO;
-use Tests\Support\AbstractPostgresPdoTestCase;
+use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
  * Tests an order-to-delivery tracking lifecycle: orders, shipments, and tracking events.
  * SQL patterns exercised: multi-table JOIN, date arithmetic, COUNT/SUM CASE cross-tab,
- * correlated subquery for latest event (PostgreSQL PDO).
+ * correlated subquery for latest event (SQLite PDO).
  * @spec SPEC-10.2.132
  */
-class PostgresShippingTrackerTest extends AbstractPostgresPdoTestCase
+class SqliteShippingTrackerTest extends AbstractSqlitePdoTestCase
 {
     protected function getTableDDL(): string|array
     {
         return [
-            'CREATE TABLE pg_st_orders (
-                id SERIAL PRIMARY KEY,
+            'CREATE TABLE sl_st_orders (
+                id INTEGER PRIMARY KEY,
                 customer_name TEXT,
                 order_date TEXT,
-                total_amount NUMERIC(10,2)
+                total_amount REAL
             )',
-            'CREATE TABLE pg_st_shipments (
-                id SERIAL PRIMARY KEY,
+            'CREATE TABLE sl_st_shipments (
+                id INTEGER PRIMARY KEY,
                 order_id INTEGER,
                 carrier TEXT,
                 tracking_number TEXT,
@@ -33,8 +33,8 @@ class PostgresShippingTrackerTest extends AbstractPostgresPdoTestCase
                 estimated_delivery TEXT,
                 actual_delivery TEXT
             )',
-            'CREATE TABLE pg_st_tracking_events (
-                id SERIAL PRIMARY KEY,
+            'CREATE TABLE sl_st_tracking_events (
+                id INTEGER PRIMARY KEY,
                 shipment_id INTEGER,
                 event_date TEXT,
                 event_type TEXT,
@@ -45,7 +45,7 @@ class PostgresShippingTrackerTest extends AbstractPostgresPdoTestCase
 
     protected function getTableNames(): array
     {
-        return ['pg_st_tracking_events', 'pg_st_shipments', 'pg_st_orders'];
+        return ['sl_st_tracking_events', 'sl_st_shipments', 'sl_st_orders'];
     }
 
     protected function setUp(): void
@@ -53,36 +53,36 @@ class PostgresShippingTrackerTest extends AbstractPostgresPdoTestCase
         parent::setUp();
 
         // Orders
-        $this->pdo->exec("INSERT INTO pg_st_orders VALUES (1, 'Alice', '2025-09-01', 150.00)");
-        $this->pdo->exec("INSERT INTO pg_st_orders VALUES (2, 'Bob', '2025-09-05', 89.99)");
-        $this->pdo->exec("INSERT INTO pg_st_orders VALUES (3, 'Carol', '2025-09-10', 320.00)");
-        $this->pdo->exec("INSERT INTO pg_st_orders VALUES (4, 'Dave', '2025-09-12', 45.00)");
+        $this->pdo->exec("INSERT INTO sl_st_orders VALUES (1, 'Alice', '2025-09-01', 150.00)");
+        $this->pdo->exec("INSERT INTO sl_st_orders VALUES (2, 'Bob', '2025-09-05', 89.99)");
+        $this->pdo->exec("INSERT INTO sl_st_orders VALUES (3, 'Carol', '2025-09-10', 320.00)");
+        $this->pdo->exec("INSERT INTO sl_st_orders VALUES (4, 'Dave', '2025-09-12', 45.00)");
 
         // Shipments
-        $this->pdo->exec("INSERT INTO pg_st_shipments VALUES (1, 1, 'FedEx', 'FX100001', '2025-09-02', '2025-09-05', '2025-09-04')");
-        $this->pdo->exec("INSERT INTO pg_st_shipments VALUES (2, 2, 'UPS', 'UP200002', '2025-09-06', '2025-09-10', '2025-09-09')");
-        $this->pdo->exec("INSERT INTO pg_st_shipments VALUES (3, 3, 'DHL', 'DH300003', '2025-09-11', '2025-09-15', NULL)");
-        $this->pdo->exec("INSERT INTO pg_st_shipments VALUES (4, 4, 'FedEx', 'FX400004', '2025-09-13', '2025-09-16', NULL)");
+        $this->pdo->exec("INSERT INTO sl_st_shipments VALUES (1, 1, 'FedEx', 'FX100001', '2025-09-02', '2025-09-05', '2025-09-04')");
+        $this->pdo->exec("INSERT INTO sl_st_shipments VALUES (2, 2, 'UPS', 'UP200002', '2025-09-06', '2025-09-10', '2025-09-09')");
+        $this->pdo->exec("INSERT INTO sl_st_shipments VALUES (3, 3, 'DHL', 'DH300003', '2025-09-11', '2025-09-15', NULL)");
+        $this->pdo->exec("INSERT INTO sl_st_shipments VALUES (4, 4, 'FedEx', 'FX400004', '2025-09-13', '2025-09-16', NULL)");
 
         // Tracking events — Shipment 1 (FedEx, delivered)
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (1, 1, '2025-09-02', 'picked_up', 'warehouse')");
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (2, 1, '2025-09-03', 'in_transit', 'hub')");
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (3, 1, '2025-09-04', 'out_for_delivery', 'local')");
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (4, 1, '2025-09-04', 'delivered', 'doorstep')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (1, 1, '2025-09-02', 'picked_up', 'warehouse')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (2, 1, '2025-09-03', 'in_transit', 'hub')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (3, 1, '2025-09-04', 'out_for_delivery', 'local')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (4, 1, '2025-09-04', 'delivered', 'doorstep')");
 
         // Tracking events — Shipment 2 (UPS, delivered)
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (5, 2, '2025-09-06', 'picked_up', 'warehouse')");
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (6, 2, '2025-09-07', 'in_transit', 'hub')");
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (7, 2, '2025-09-09', 'delivered', 'mailroom')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (5, 2, '2025-09-06', 'picked_up', 'warehouse')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (6, 2, '2025-09-07', 'in_transit', 'hub')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (7, 2, '2025-09-09', 'delivered', 'mailroom')");
 
         // Tracking events — Shipment 3 (DHL, in transit)
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (8, 3, '2025-09-11', 'picked_up', 'warehouse')");
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (9, 3, '2025-09-12', 'in_transit', 'hub')");
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (10, 3, '2025-09-13', 'in_transit', 'regional')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (8, 3, '2025-09-11', 'picked_up', 'warehouse')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (9, 3, '2025-09-12', 'in_transit', 'hub')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (10, 3, '2025-09-13', 'in_transit', 'regional')");
 
         // Tracking events — Shipment 4 (FedEx, exception)
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (11, 4, '2025-09-13', 'picked_up', 'warehouse')");
-        $this->pdo->exec("INSERT INTO pg_st_tracking_events VALUES (12, 4, '2025-09-14', 'exception', 'customs')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (11, 4, '2025-09-13', 'picked_up', 'warehouse')");
+        $this->pdo->exec("INSERT INTO sl_st_tracking_events VALUES (12, 4, '2025-09-14', 'exception', 'customs')");
     }
 
     /**
@@ -92,8 +92,8 @@ class PostgresShippingTrackerTest extends AbstractPostgresPdoTestCase
     {
         $rows = $this->ztdQuery(
             "SELECT o.id AS order_id, o.customer_name, s.carrier, s.shipped_date, s.actual_delivery
-             FROM pg_st_orders o
-             JOIN pg_st_shipments s ON s.order_id = o.id
+             FROM sl_st_orders o
+             JOIN sl_st_shipments s ON s.order_id = o.id
              ORDER BY o.id"
         );
 
@@ -131,15 +131,15 @@ class PostgresShippingTrackerTest extends AbstractPostgresPdoTestCase
     {
         $rows = $this->ztdQuery(
             "SELECT te.shipment_id, te.event_type, te.event_date, te.location
-             FROM pg_st_tracking_events te
+             FROM sl_st_tracking_events te
              WHERE te.event_date = (
                  SELECT MAX(te2.event_date)
-                 FROM pg_st_tracking_events te2
+                 FROM sl_st_tracking_events te2
                  WHERE te2.shipment_id = te.shipment_id
              )
              AND te.id = (
                  SELECT MAX(te3.id)
-                 FROM pg_st_tracking_events te3
+                 FROM sl_st_tracking_events te3
                  WHERE te3.shipment_id = te.shipment_id
                    AND te3.event_date = te.event_date
              )
@@ -171,7 +171,7 @@ class PostgresShippingTrackerTest extends AbstractPostgresPdoTestCase
                     COUNT(*) AS total_shipments,
                     SUM(CASE WHEN s.actual_delivery IS NOT NULL THEN 1 ELSE 0 END) AS delivered_count,
                     ROUND(SUM(CASE WHEN s.actual_delivery IS NOT NULL THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 0) AS delivery_rate_pct
-             FROM pg_st_shipments s
+             FROM sl_st_shipments s
              GROUP BY s.carrier
              ORDER BY s.carrier"
         );
@@ -206,7 +206,7 @@ class PostgresShippingTrackerTest extends AbstractPostgresPdoTestCase
             "SELECT COUNT(*) AS delivered_total,
                     SUM(CASE WHEN s.actual_delivery <= s.estimated_delivery THEN 1 ELSE 0 END) AS on_time_count,
                     ROUND(SUM(CASE WHEN s.actual_delivery <= s.estimated_delivery THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 0) AS on_time_pct
-             FROM pg_st_shipments s
+             FROM sl_st_shipments s
              WHERE s.actual_delivery IS NOT NULL"
         );
 
@@ -223,7 +223,7 @@ class PostgresShippingTrackerTest extends AbstractPostgresPdoTestCase
     {
         $rows = $this->ztdQuery(
             "SELECT event_type, COUNT(*) AS cnt
-             FROM pg_st_tracking_events
+             FROM sl_st_tracking_events
              GROUP BY event_type
              ORDER BY event_type"
         );
@@ -251,15 +251,15 @@ class PostgresShippingTrackerTest extends AbstractPostgresPdoTestCase
      */
     public function testPhysicalIsolation(): void
     {
-        $this->pdo->exec("INSERT INTO pg_st_orders VALUES (5, 'Eve', '2025-09-15', 200.00)");
+        $this->pdo->exec("INSERT INTO sl_st_orders VALUES (5, 'Eve', '2025-09-15', 200.00)");
 
         // ZTD sees the new order
-        $rows = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM pg_st_orders");
+        $rows = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM sl_st_orders");
         $this->assertEquals(5, (int) $rows[0]['cnt']);
 
         // Physical table untouched
         $this->pdo->disableZtd();
-        $rows = $this->pdo->query("SELECT COUNT(*) AS cnt FROM pg_st_orders")->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $this->pdo->query("SELECT COUNT(*) AS cnt FROM sl_st_orders")->fetchAll(PDO::FETCH_ASSOC);
         $this->assertEquals(0, (int) $rows[0]['cnt']);
     }
 }

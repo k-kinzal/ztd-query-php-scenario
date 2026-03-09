@@ -1181,3 +1181,66 @@ Verified patterns: last service per vehicle (MAX + GROUP BY), overdue services (
 A SaaS quota management system with utilization tracking, over-quota detection, and usage trend analysis works correctly through ZTD shadow store. The scenario exercises correlated MAX subquery in WHERE for latest usage snapshot, ROUND percentage calculations across multiple resource dimensions (storage, API calls, users), CASE-based threshold evaluation for over-quota flagging, SUM + GROUP BY for daily usage trends, compound OR conditions with arithmetic comparisons for high-risk account identification, and AVG with ROUND for daily usage averages.
 
 Verified patterns: latest usage snapshot (correlated MAX subquery), quota utilization (percentage ROUND), over-quota detection (CASE + multi-column comparison), usage trend (SUM GROUP BY date), high-risk accounts (compound threshold filter), average daily usage (AVG + ROUND), physical isolation.
+
+## SPEC-10.2.132 Shipping tracker
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ShippingTrackerTest`, `Pdo/MysqlShippingTrackerTest`, `Pdo/PostgresShippingTrackerTest`, `Pdo/SqliteShippingTrackerTest`
+
+An order-to-delivery tracking system with orders, shipments, and tracking events works correctly through ZTD shadow store. The scenario exercises multi-table JOIN for order-shipment summaries with NULL handling for undelivered shipments, double correlated MAX subquery with id tiebreaker for latest tracking event per shipment, GROUP BY with SUM(CASE) cross-tab for delivery rate by carrier with ROUND percentage, date string comparison for on-time delivery analysis, and GROUP BY with COUNT for event type distribution.
+
+Verified patterns: order-shipment summary (multi-table JOIN + NULL), latest event per shipment (double correlated MAX subquery), delivery rate (SUM CASE cross-tab + ROUND), on-time delivery (date comparison + aggregate percentage), event type distribution (GROUP BY COUNT), physical isolation.
+
+## SPEC-10.2.133 Return and refund processing
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ReturnRefundTest`, `Pdo/MysqlReturnRefundTest`, `Pdo/PostgresReturnRefundTest`, `Pdo/SqliteReturnRefundTest`
+
+A return authorization and refund processing system with orders, order items, and returns works correctly through ZTD shadow store. The scenario exercises double LEFT JOIN (orders → order_items → returns) with GROUP BY and COALESCE for per-order return summaries, SUM with prepared statement WHERE filter for approved refund totals, GROUP BY reason with COUNT and SUM for return reason breakdown, multi-table JOIN with DISTINCT for pending return detection, and arithmetic (unit_price - refund_amount) for restocking fee calculation.
+
+Verified patterns: order return summary (double LEFT JOIN + GROUP BY + COALESCE), approved refund total (SUM + prepared statement), reason breakdown (GROUP BY + COUNT + SUM), pending returns (multi-table JOIN + DISTINCT), restocking fee (arithmetic expression), physical isolation.
+
+## SPEC-10.2.134 Chat messaging
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ChatMessagingTest`, `Pdo/MysqlChatMessagingTest`, `Pdo/PostgresChatMessagingTest`, `Pdo/SqliteChatMessagingTest`
+
+A chat messaging system with users, conversations, messages, and read receipts works correctly through ZTD shadow store. The scenario exercises correlated MAX subquery with JOIN for latest message per conversation, NOT EXISTS anti-join for unread message counting per user per conversation, GROUP BY with COUNT for message counts, COUNT DISTINCT for participant counting, and multi-column GROUP BY with COUNT and MAX aggregation for per-user message statistics.
+
+Verified patterns: latest message per conversation (correlated MAX subquery + JOIN), unread count (NOT EXISTS anti-join + GROUP BY), message count (GROUP BY COUNT), conversation participants (COUNT DISTINCT), user message stats (GROUP BY + COUNT + MAX), physical isolation.
+
+## SPEC-10.2.135 Appointment scheduling
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/AppointmentSchedulingTest`, `Pdo/MysqlAppointmentSchedulingTest`, `Pdo/PostgresAppointmentSchedulingTest`, `Pdo/SqliteAppointmentSchedulingTest`
+
+An appointment scheduling system with providers, time slots, and appointments works correctly through ZTD shadow store. The scenario exercises JOIN with WHERE filter on availability and provider for open slot lookup, GROUP BY with COUNT and SUM for provider schedule summaries (total/available/booked using integer flag arithmetic), multi-table JOIN (appointments → slots → providers) with status filter for active appointment listing, time range overlap detection (start_time < X AND end_time > Y) for booking conflict detection, and simple COUNT with WHERE for cancelled appointment tallying.
+
+Verified patterns: available slots (JOIN + WHERE filter), provider schedule summary (GROUP BY + COUNT + SUM), active appointments (multi-table JOIN + status filter), booking conflict detection (range overlap), cancelled count (COUNT + WHERE), physical isolation.
+
+## SPEC-10.2.136 Expense report workflow
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ExpenseReportTest`, `Pdo/MysqlExpenseReportTest`, `Pdo/PostgresExpenseReportTest`, `Pdo/SqliteExpenseReportTest`
+
+An employee expense reporting system with employees, expense reports, and expense items works correctly through ZTD shadow store. The scenario exercises multi-table JOIN with GROUP BY and SUM for verifying report item totals, 3-table JOIN with multi-column GROUP BY (department + category) for category breakdown by department, self-join on employees table for manager-based pending approval lookup, GROUP BY with SUM and WHERE filter for reimbursement summary per employee, HAVING with SUM aggregate threshold for high-value report detection, and scalar subquery with ROUND for category percentage of total across approved/reimbursed reports.
+
+Verified patterns: report item totals (JOIN + GROUP BY SUM), category breakdown by department (3-table JOIN + multi-column GROUP BY), pending approvals (self-join + WHERE filter), reimbursement summary (GROUP BY + SUM + status filter), high-value reports (HAVING SUM threshold), category percentage (scalar subquery + ROUND), physical isolation.
+
+## SPEC-10.2.137 Voting poll
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/VotingPollTest`, `Pdo/MysqlVotingPollTest`, `Pdo/PostgresVotingPollTest`, `Pdo/SqliteVotingPollTest`
+
+A polling and voting system with polls, options, and votes works correctly through ZTD shadow store. The scenario exercises LEFT JOIN with GROUP BY and COUNT for vote tallying including zero-vote options, inline scalar subquery for percentage calculation (COUNT * 100.0 / (SELECT COUNT(*))), ORDER BY aggregate with LIMIT 1 for poll winner detection, COUNT DISTINCT for unique voter participation, HAVING with COUNT for minimum-vote threshold filtering, and NOT IN subquery for anti-join voter cross-participation analysis.
+
+Verified patterns: poll results (LEFT JOIN + percentage scalar subquery), poll winner (ORDER BY aggregate + LIMIT 1), voter participation (COUNT DISTINCT), minimum votes (HAVING COUNT), non-voters (NOT IN subquery anti-join), physical isolation.
+
+## SPEC-10.2.138 Kanban board task management
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/KanbanBoardTest`, `Pdo/MysqlKanbanBoardTest`, `Pdo/PostgresKanbanBoardTest`, `Pdo/SqliteKanbanBoardTest`
+
+A task management kanban board system with boards, tasks, and task dependencies works correctly through ZTD shadow store. The scenario exercises GROUP BY with multi-column grouping (board + status) for task count per status, GROUP BY assignee with WHERE filter for active workload analysis, EXISTS correlated subquery on dependency table for blocked task detection (todo tasks with unfinished dependencies), date comparison with status filter for overdue task identification, CASE expression mapping priority numbers to labels with GROUP BY for priority distribution, and SUM(CASE)/COUNT with ROUND for per-board completion percentage.
+
+Verified patterns: task count by status (GROUP BY + COUNT), assignee workload (GROUP BY + WHERE + NULL exclusion), blocked tasks (EXISTS correlated subquery on dependencies), overdue tasks (date comparison + status filter), priority distribution (CASE + GROUP BY), completion percentage (SUM CASE / COUNT + ROUND), physical isolation.

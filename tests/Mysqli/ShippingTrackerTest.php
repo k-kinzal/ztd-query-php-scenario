@@ -9,7 +9,7 @@ use Tests\Support\AbstractMysqliTestCase;
 /**
  * Tests an order-to-delivery tracking lifecycle: orders, shipments, and tracking events.
  * SQL patterns exercised: multi-table JOIN, date arithmetic, COUNT/SUM CASE cross-tab,
- * correlated subquery for latest event, prepared statement with date range (MySQLi).
+ * correlated subquery for latest event (MySQLi).
  * @spec SPEC-10.2.132
  */
 class ShippingTrackerTest extends AbstractMysqliTestCase

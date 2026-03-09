@@ -1178,3 +1178,37 @@ On MySQL (PDO and MySQLi), a SELECT with `CASE WHEN EXISTS (subquery) THEN ... E
 - `SELECT u.id FROM users u WHERE CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.id) THEN 1 ELSE 0 END = 1` → multi-statement error
 - The same `CASE WHEN EXISTS` pattern works correctly in the SELECT list on all platforms.
 - PostgreSQL and SQLite are NOT affected.
+
+## SPEC-11.INSERT-SELECT-DISTINCT `[Issue #99]` INSERT...SELECT DISTINCT ignores DISTINCT keyword
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Mysqli/InsertSelectDistinctTest`, `Pdo/MysqlInsertSelectDistinctTest`, `Pdo/PostgresInsertSelectDistinctTest`, `Pdo/SqliteInsertSelectDistinctTest`
+
+`INSERT INTO t2 SELECT DISTINCT col FROM t1` through ZTD ignores the DISTINCT keyword. On MySQL, all rows are inserted instead of unique rows. On PostgreSQL and SQLite, NULL values are stored instead of actual column values.
+
+- MySQL: 5 rows inserted instead of 3 distinct (DISTINCT completely ignored)
+- PostgreSQL: correct row count but `name` column is NULL
+- SQLite: correct row count but `name` column is NULL
+- The same issue affects `INSERT...SELECT DISTINCT ... WHERE` and `INSERT...SELECT DISTINCT ON (...)` (PostgreSQL)
+- Workaround: use `GROUP BY` instead of `DISTINCT`
+
+## SPEC-11.PG-CROSS-TABLE-SUBQUERY-DML `[Issue #100]` PostgreSQL: UPDATE/DELETE with IN(subquery on different table) syntax error
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-4.3](04-write-operations.ears.md), [SPEC-4.5](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresCrossTableShadowDeleteTest`, `Pdo/PostgresAnyAllSubqueryComparisonTest`
+
+On PostgreSQL, UPDATE or DELETE with `WHERE col IN (SELECT ... FROM other_table)` where `other_table` is a different table produces a syntax error. The CTE rewriter incorrectly adds the subquery's table reference to the outer statement's FROM clause, generating invalid SQL like `FROM "target_table", other_table)`.
+
+- Distinct from Issue #74 (self-referencing subqueries on same table)
+- Also affects `= ANY (SELECT ... FROM other_table)` in UPDATE WHERE clause
+- MySQL and SQLite handle these patterns correctly
+
+## SPEC-11.SQLITE-PREPARED-DELETE-EXPR-WHERE `[Issue #101]` SQLite: Prepared DELETE with arithmetic expression in WHERE deletes all rows
+**Status:** Known Issue
+**Platforms:** SQLite-PDO
+**Related specs:** [SPEC-4.5](04-write-operations.ears.md)
+**Tests:** `Pdo/SqlitePreparedExpressionDmlTest`
+
+On SQLite, a prepared DELETE with an arithmetic expression in WHERE (e.g., `DELETE FROM t WHERE price * quantity < ?`) deletes ALL rows instead of only matching ones. The prepared parameter combined with the arithmetic expression causes the WHERE condition to match every row.

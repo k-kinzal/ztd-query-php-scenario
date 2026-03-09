@@ -1753,3 +1753,38 @@ When a table is created through ZTD mid-session (`CREATE TABLE` via exec/query),
 **Tests:** `Mysqli/ExpressionWhereClauseDmlTest`, `Pdo/MysqlExpressionWhereClauseDmlTest`, `Pdo/PostgresExpressionWhereClauseDmlTest`, `Pdo/SqliteExpressionWhereClauseDmlTest`
 
 DELETE and UPDATE with function calls in WHERE (LENGTH, LOWER, ABS, CONCAT/||, arithmetic expressions) work correctly on all platforms. CASE expressions in DELETE/UPDATE WHERE fail on MySQL ([Issue #96](11-known-issues.ears.md)). Prepared DELETE with function WHERE fails on SQLite ([Issue #95](11-known-issues.ears.md)).
+
+## SPEC-10.2.208 ALL/ANY/SOME subquery comparison operators
+**Status:** Partially Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/MysqlAnyAllSubqueryComparisonTest`, `Pdo/PostgresAnyAllSubqueryComparisonTest`, `Pdo/SqliteAnyAllSubqueryComparisonTest`
+
+SQL-standard `> ALL (SELECT ...)`, `= ANY (SELECT ...)`, and `>= SOME (SELECT ...)` comparison operators work correctly on MySQL through the CTE shadow store, including in SELECT, UPDATE, and DELETE contexts. Shadow mutations in both the main and subquery tables are correctly reflected. On SQLite, equivalent patterns using `> (SELECT MAX(...))`, `IN (SELECT ...)`, and `< (SELECT MIN(...))` work correctly. On PostgreSQL, SELECT-only ALL/ANY/SOME patterns work, but UPDATE with `= ANY(SELECT ...)` or `WHERE id IN (SELECT ... FROM other_table)` fails with syntax error — the CTE rewriter incorrectly adds the subquery's table to the outer FROM clause ([Issue #100](11-known-issues.ears.md)).
+
+## SPEC-10.2.209 INSERT ... SELECT DISTINCT
+**Status:** Known Issue ([Issue #99](11-known-issues.ears.md))
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/InsertSelectDistinctTest`, `Pdo/MysqlInsertSelectDistinctTest`, `Pdo/PostgresInsertSelectDistinctTest`, `Pdo/SqliteInsertSelectDistinctTest`
+
+`INSERT INTO t2 SELECT DISTINCT col FROM t1` ignores the DISTINCT keyword on all platforms. On MySQL (PDO and MySQLi), all source rows are inserted without deduplication. On PostgreSQL and SQLite, correct row count but NULL values stored instead of actual values. COUNT(DISTINCT col) in standalone SELECT works correctly on all platforms.
+
+## SPEC-10.2.210 Cross-table shadow DELETE/UPDATE with IN subquery
+**Status:** Partially Verified
+**Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/MysqlCrossTableShadowDeleteTest`, `Pdo/PostgresCrossTableShadowDeleteTest`, `Pdo/SqliteCrossTableShadowDeleteTest`
+
+DELETE/UPDATE with WHERE IN (subquery on a different table) where BOTH tables have shadow data works correctly on MySQL and SQLite. On PostgreSQL, the CTE rewriter incorrectly adds the subquery's table to the outer FROM clause causing syntax errors ([Issue #100](11-known-issues.ears.md)). Additionally, PostgreSQL tables with BOOLEAN columns trigger CAST('' AS BOOLEAN) errors due to existing [Issue #6](11-known-issues.ears.md). Three-table chain operations (ban→update user→delete posts) work correctly on MySQL and SQLite.
+
+## SPEC-10.2.211 GROUP BY HAVING with aggregate thresholds on shadow data
+**Status:** Verified
+**Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/MysqlHavingThresholdShadowTest`, `Pdo/PostgresHavingThresholdShadowTest`, `Pdo/SqliteHavingThresholdShadowTest`
+
+GROUP BY with HAVING aggregate thresholds (COUNT >= N, SUM >= N, AVG > N) correctly filters shadow data on all platforms. Verified: HAVING COUNT, HAVING SUM, HAVING with multiple conditions (COUNT AND AVG), multi-column GROUP BY HAVING, HAVING with scalar subquery threshold, HAVING reflecting INSERT/DELETE/UPDATE mutations, conditional aggregation with SUM(CASE WHEN ...) in HAVING, PostgreSQL-specific FILTER clause with HAVING, and prepared HAVING with bound threshold parameter.
+
+## SPEC-10.2.212 Prepared statements with expressions in SET and subqueries in WHERE
+**Status:** Partially Verified
+**Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/MysqlPreparedExpressionDmlTest`, `Pdo/PostgresPreparedExpressionDmlTest`, `Pdo/SqlitePreparedExpressionDmlTest`
+
+Prepared UPDATE with arithmetic expressions in SET (`price = price * ?`), addition expressions (`quantity = quantity + ?`), re-execution with different parameters, CASE expressions with parameters in SET, and prepared SELECT with computed columns all work correctly on all platforms. Prepared DELETE with expression in WHERE (`price * quantity < ?`) works on MySQL and PostgreSQL but deletes ALL rows on SQLite ([Issue #101](11-known-issues.ears.md)). Prepared UPDATE CASE with RETURNING returns empty on PostgreSQL (existing RETURNING limitation, [Issue #53](11-known-issues.ears.md)).

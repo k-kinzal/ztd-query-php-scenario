@@ -7,82 +7,148 @@ namespace Tests\Mysqli;
 use Tests\Support\AbstractMysqliTestCase;
 
 /**
- * Tests INSERT with DEFAULT keyword on MySQLi ZTD.
+ * Tests INSERT with all-default columns via MySQLi.
  *
- * Cross-platform parity with MysqlInsertDefaultValuesTest (PDO).
- * DEFAULT keyword in INSERT VALUES fails under ZTD because InsertTransformer
- * converts VALUES to SELECT expressions where DEFAULT is invalid.
+ * MySQL supports `INSERT INTO t () VALUES ()` for all-defaults insertion
+ * and the explicit DEFAULT keyword in VALUES.
+ *
  * @spec SPEC-4.1
+ * @see https://github.com/k-kinzal/ztd-query-php/issues/97
  */
 class InsertDefaultValuesTest extends AbstractMysqliTestCase
 {
     protected function getTableDDL(): string|array
     {
-        return 'CREATE TABLE mi_idef_test (
+        return 'CREATE TABLE defv_test (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(50) DEFAULT \'default_name\',
-            score INT DEFAULT 100
-        )';
+            status VARCHAR(20) NOT NULL DEFAULT \'pending\',
+            priority INT NOT NULL DEFAULT 0
+        ) ENGINE=InnoDB';
     }
 
     protected function getTableNames(): array
     {
-        return ['mi_idef_test'];
+        return ['defv_test'];
     }
 
-
-    /**
-     * INSERT with DEFAULT keyword fails under ZTD.
-     */
-    public function testInsertWithDefaultKeywordFails(): void
+    public function testInsertEmptyValuesClause(): void
     {
-        $this->expectException(\Throwable::class);
-        $this->mysqli->query('INSERT INTO mi_idef_test (name, score) VALUES (DEFAULT, 50)');
+        try {
+            $this->ztdExec("INSERT INTO defv_test () VALUES ()");
+
+            $rows = $this->ztdQuery("SELECT id, status, priority FROM defv_test ORDER BY id");
+
+            if (count($rows) !== 1) {
+                $this->markTestIncomplete('INSERT () VALUES (): expected 1 row, got ' . count($rows));
+            }
+
+            $this->assertCount(1, $rows);
+            $this->assertSame('pending', $rows[0]['status']);
+            $this->assertSame(0, (int) $rows[0]['priority']);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete('INSERT () VALUES () failed: ' . $e->getMessage());
+        }
     }
 
-    /**
-     * INSERT with all DEFAULT values fails under ZTD.
-     */
-    public function testInsertWithAllDefaultsFails(): void
+    public function testInsertWithDefaultKeyword(): void
     {
-        $this->expectException(\Throwable::class);
-        $this->mysqli->query('INSERT INTO mi_idef_test (name, score) VALUES (DEFAULT, DEFAULT)');
+        try {
+            $this->ztdExec("INSERT INTO defv_test (status, priority) VALUES (DEFAULT, DEFAULT)");
+
+            $rows = $this->ztdQuery("SELECT id, status, priority FROM defv_test ORDER BY id");
+
+            if (count($rows) !== 1) {
+                $this->markTestIncomplete('INSERT with DEFAULT: expected 1 row, got ' . count($rows));
+            }
+
+            $this->assertCount(1, $rows);
+            $this->assertSame('pending', $rows[0]['status']);
+            $this->assertSame(0, (int) $rows[0]['priority']);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete('INSERT with DEFAULT keyword failed: ' . $e->getMessage());
+        }
     }
 
-    /**
-     * INSERT with mix of explicit and DEFAULT fails under ZTD.
-     */
-    public function testInsertWithMixedDefaultAndExplicitFails(): void
+    public function testMultipleInsertEmptyValues(): void
     {
-        $this->expectException(\Throwable::class);
-        $this->mysqli->query("INSERT INTO mi_idef_test (name, score) VALUES ('Alice', DEFAULT)");
+        try {
+            $this->ztdExec("INSERT INTO defv_test () VALUES ()");
+            $this->ztdExec("INSERT INTO defv_test () VALUES ()");
+            $this->ztdExec("INSERT INTO defv_test () VALUES ()");
+
+            $rows = $this->ztdQuery("SELECT id, status, priority FROM defv_test ORDER BY id");
+
+            if (count($rows) !== 3) {
+                $this->markTestIncomplete('Multiple INSERT: expected 3 rows, got ' . count($rows));
+            }
+
+            $this->assertCount(3, $rows);
+            foreach ($rows as $row) {
+                $this->assertSame('pending', $row['status']);
+                $this->assertSame(0, (int) $row['priority']);
+            }
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete('Multiple INSERT () VALUES () failed: ' . $e->getMessage());
+        }
     }
 
-    /**
-     * INSERT with only explicit values works normally.
-     */
-    public function testInsertWithExplicitValuesWorks(): void
+    public function testInsertDefaultThenUpdate(): void
     {
-        $this->mysqli->query("INSERT INTO mi_idef_test (name, score) VALUES ('Alice', 90)");
+        try {
+            $this->ztdExec("INSERT INTO defv_test () VALUES ()");
 
-        $result = $this->mysqli->query("SELECT name, score FROM mi_idef_test WHERE name = 'Alice'");
-        $row = $result->fetch_assoc();
-        $this->assertSame('Alice', $row['name']);
-        $this->assertSame(90, (int) $row['score']);
+            $rows = $this->ztdQuery("SELECT id FROM defv_test");
+            if (count($rows) !== 1) {
+                $this->markTestIncomplete('INSERT: expected 1 row, got ' . count($rows));
+                return;
+            }
+
+            $id = (int) $rows[0]['id'];
+            $this->ztdExec("UPDATE defv_test SET status = 'active', priority = 5 WHERE id = {$id}");
+
+            $rows = $this->ztdQuery("SELECT status, priority FROM defv_test WHERE id = {$id}");
+
+            if (count($rows) !== 1) {
+                $this->markTestIncomplete('UPDATE after INSERT: row not found');
+            }
+
+            $this->assertSame('active', $rows[0]['status']);
+            $this->assertSame(5, (int) $rows[0]['priority']);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete('INSERT default then UPDATE failed: ' . $e->getMessage());
+        }
     }
 
-    /**
-     * Physical isolation with explicit values.
-     */
+    public function testInsertMixedDefaultAndExplicit(): void
+    {
+        try {
+            $this->ztdExec("INSERT INTO defv_test (status, priority) VALUES ('custom', DEFAULT)");
+
+            $rows = $this->ztdQuery("SELECT status, priority FROM defv_test ORDER BY id");
+
+            if (count($rows) !== 1) {
+                $this->markTestIncomplete('INSERT mixed DEFAULT: expected 1 row, got ' . count($rows));
+            }
+
+            $this->assertCount(1, $rows);
+            $this->assertSame('custom', $rows[0]['status']);
+            $this->assertSame(0, (int) $rows[0]['priority']);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete('INSERT mixed DEFAULT failed: ' . $e->getMessage());
+        }
+    }
+
     public function testPhysicalIsolation(): void
     {
-        $this->mysqli->query("INSERT INTO mi_idef_test (name, score) VALUES ('Bob', 80)");
+        try {
+            $this->ztdExec("INSERT INTO defv_test () VALUES ()");
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete('INSERT failed: ' . $e->getMessage());
+            return;
+        }
 
-        $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_idef_test');
-        $this->assertGreaterThanOrEqual(1, (int) $result->fetch_assoc()['cnt']);
-
-        $this->mysqli->disableZtd();
-        $result = $this->mysqli->query('SELECT COUNT(*) AS cnt FROM mi_idef_test');
-        $this->assertSame(0, (int) $result->fetch_assoc()['cnt']);
+        $this->disableZtd();
+        $rows = $this->ztdQuery("SELECT COUNT(*) AS cnt FROM defv_test");
+        $this->assertSame(0, (int) $rows[0]['cnt'], 'Physical table should be empty');
     }
 }

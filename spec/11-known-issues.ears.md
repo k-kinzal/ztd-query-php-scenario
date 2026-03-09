@@ -1150,3 +1150,31 @@ On MySQL (both MySQLi and PDO adapters), DELETE and UPDATE statements with a CAS
 - `SELECT * FROM t WHERE CASE WHEN score > 80 THEN 1 ELSE 0 END = 1` — works correctly (returns only matching rows)
 
 PostgreSQL and SQLite are NOT affected. Native MySQL (without ZTD) handles CASE in WHERE correctly for all operations.
+
+## SPEC-11.INSERT-DEFAULT-VALUES `[Issue #97]` INSERT DEFAULT VALUES / INSERT () VALUES () not supported
+**Status:** Known Issue
+**Platforms:** MySQL-PDO, MySQLi, PostgreSQL-PDO, SQLite-PDO
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlInsertDefaultValuesTest`, `Pdo/PostgresInsertDefaultValuesTest`, `Pdo/SqliteInsertDefaultValuesTest`, `Mysqli/InsertDefaultValuesTest`
+
+The CTE rewriter cannot handle INSERT statements with no explicit values:
+
+- **PostgreSQL**: `INSERT INTO t DEFAULT VALUES` → "ZTD Write Protection: Cannot extract INSERT values SQL statement."
+- **SQLite**: `INSERT INTO t DEFAULT VALUES` → "Insert statement has no values to project."
+- **MySQL**: `INSERT INTO t () VALUES ()` → "Insert values count does not match column count."
+
+Additionally, on MySQL the `DEFAULT` keyword in VALUES (`INSERT INTO t (col) VALUES (DEFAULT)`) generates invalid rewritten SQL (`DEFAULT AS column`).
+
+These are standard SQL patterns used by ORMs when inserting rows where all columns have defaults.
+
+## SPEC-11.CASE-EXISTS-WHERE-MULTISTATEMENT `[Issue #98]` MySQL: SELECT with CASE WHEN EXISTS in WHERE misdetected as multi-statement
+**Status:** Known Issue
+**Platforms:** MySQL-PDO, MySQLi
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/MysqlCaseExistsSubqueryTest`, `Mysqli/CaseExistsSubqueryTest`
+
+On MySQL (PDO and MySQLi), a SELECT with `CASE WHEN EXISTS (subquery) THEN ... END` in the WHERE clause is rejected with "ZTD Write Protection: Multi-statement SQL statement." The CTE rewriter's statement boundary detection confuses the nested subquery or the `END` keyword with a statement separator.
+
+- `SELECT u.id FROM users u WHERE CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.id) THEN 1 ELSE 0 END = 1` → multi-statement error
+- The same `CASE WHEN EXISTS` pattern works correctly in the SELECT list on all platforms.
+- PostgreSQL and SQLite are NOT affected.

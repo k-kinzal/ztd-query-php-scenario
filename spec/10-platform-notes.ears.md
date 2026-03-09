@@ -2026,3 +2026,45 @@ UPDATE SET with CASE WHEN EXISTS(correlated subquery) and CASE WHEN (scalar corr
 **Tests:** `Pdo/MysqlInsertSelectOnDuplicateTest`
 
 INSERT...SELECT...ON DUPLICATE KEY UPDATE works correctly on MySQL PDO, including with prepared params in the WHERE clause. Both conflict (update) and no-conflict (insert) paths produce correct results.
+
+## SPEC-10.2.247 Prepared LIMIT ? OFFSET ? parameter handling
+**Status:** Partial
+**Platforms:** SQLite-PDO (pass), MySQL-PDO (partial — PARAM_INT workaround), PostgreSQL-PDO (partial — ?-style passes, $N fails)
+**Tests:** `Pdo/SqlitePreparedLimitOffsetParamsTest`, `Pdo/MysqlPreparedLimitOffsetParamsTest`, `Pdo/PostgresPreparedLimitOffsetParamsTest`
+
+Prepared SELECT with `LIMIT ? OFFSET ?` pagination: SQLite works for all variants (basic, WHERE+LIMIT+OFFSET, shadow data, re-execute, bindValue). MySQL fails with `execute([3, 2])` because PDO sends string values `'3'` (SPEC-10.2.17) — workaround `bindValue($pos, $val, PDO::PARAM_INT)` works. PostgreSQL works with `?` placeholders but fails with `$N` — `LIMIT $1 OFFSET $2` returns all rows (ignores LIMIT), and `WHERE $1 LIMIT $2 OFFSET $3` returns empty (extends Issue #106).
+
+## SPEC-10.2.248 INSERT...SELECT WHERE NOT EXISTS (anti-join conditional insert)
+**Status:** Partial
+**Platforms:** SQLite-PDO (partial), MySQL-PDO (pass), PostgreSQL-PDO (partial)
+**Tests:** `Pdo/SqliteInsertWhereNotExistsTest`, `Pdo/MysqlInsertWhereNotExistsTest`, `Pdo/PostgresInsertWhereNotExistsTest`
+
+INSERT...SELECT WHERE NOT EXISTS (anti-join) works on all platforms for basic cross-table exec, prepared with WHERE param, and shadow-inserted data visibility. Self-referencing INSERT NOT EXISTS on same table (`INSERT INTO t SELECT ... FROM t WHERE NOT EXISTS(SELECT 1 FROM t ...)`) fails: SQLite produces rows with incorrect computed columns (extends Issue #20), MySQL works correctly. PostgreSQL $1 param variant inserts only 1 row instead of 2 (extends Issue #106).
+
+## SPEC-10.2.249 UPDATE SET with multiple independent scalar subqueries
+**Status:** Partial (extends Issues #51, #61)
+**Platforms:** MySQL-PDO (pass), SQLite-PDO (fails — syntax error), PostgreSQL-PDO (fails — grouping error)
+**Tests:** `Pdo/SqliteUpdateMultiSubquerySetTest`, `Pdo/MysqlUpdateMultiSubquerySetTest`, `Pdo/PostgresUpdateMultiSubquerySetTest`
+
+UPDATE with 2-3 correlated scalar subqueries from different tables in SET (`SET a = (SELECT ... FROM t2), b = (SELECT ... FROM t3)`) works on MySQL for all variants: exec, prepared with WHERE param, and shadow data. SQLite fails with "near FROM: syntax error" (extends Issue #51 — the CTE rewriter truncates at FROM keyword in correlated subqueries within SET). PostgreSQL fails with "must appear in GROUP BY" (extends Issue #61 — the rewriter incorrectly combines subqueries, adding table references that require GROUP BY).
+
+## SPEC-10.2.250 DELETE WHERE IN (SELECT ... GROUP BY HAVING)
+**Status:** Partial
+**Platforms:** MySQL-PDO (pass), SQLite-PDO (fails — incomplete input), PostgreSQL-PDO (partial — ? pass, $1 fails)
+**Tests:** `Pdo/SqliteDeleteWithAggregatedInSubqueryTest`, `Pdo/MysqlDeleteWithAggregatedInSubqueryTest`, `Pdo/PostgresDeleteWithAggregatedInSubqueryTest`
+
+DELETE WHERE col IN (SELECT ... GROUP BY HAVING) and DELETE WHERE col NOT IN (SELECT ... GROUP BY HAVING SUM()): MySQL passes all variants (exec, prepared, shadow data). SQLite fails with "incomplete input" — the CTE rewriter truncates the SQL when DELETE has a subquery with GROUP BY HAVING (already known). PostgreSQL passes with `?` params but `$1` prepared variant doesn't filter (extends Issue #106).
+
+## SPEC-10.2.251 Sequential DML with subquery references to shadow data
+**Status:** Partial
+**Platforms:** SQLite-PDO (partial), MySQL-PDO (partial), PostgreSQL-PDO (partial)
+**Tests:** `Pdo/SqliteSequentialDmlSubqueryVisibilityTest`, `Pdo/MysqlSequentialDmlSubqueryVisibilityTest`, `Pdo/PostgresSequentialDmlSubqueryVisibilityTest`
+
+Sequential DML chains where each operation references data from the previous: INSERT→UPDATE (with subquery referencing shadow-inserted row) passes on SQLite and MySQL. INSERT→UPDATE→DELETE chain passes on all platforms. Cross-table INSERT...SELECT JOIN chain fails: SQLite produces NULL columns (extends Issue #20), MySQL fails with "Unknown column" for JOINed alias (extends Issue #49), PostgreSQL fails with "operator does not exist: text = integer" (CTE casts produce type mismatches). UPDATE based on AVG of shadow-inserted log entries fails on SQLite/PostgreSQL (extends Issues #51/#61).
+
+## SPEC-10.2.252 INSERT...SELECT with partial column list (explicit INSERT column list)
+**Status:** Partial (extends Issue #20)
+**Platforms:** MySQL-PDO (pass), SQLite-PDO (fails — NULL columns), PostgreSQL-PDO (fails — NULL columns)
+**Tests:** `Pdo/SqliteInsertSelectPartialColumnListTest`, `Pdo/MysqlInsertSelectPartialColumnListTest`, `Pdo/PostgresInsertSelectPartialColumnListTest`
+
+INSERT...SELECT with explicit column list omitting AUTOINCREMENT/SERIAL PK (`INSERT INTO t (col1, col2) SELECT ...`) produces rows with all-NULL values on SQLite and PostgreSQL. MySQL works correctly. This extends Issue #20 beyond computed columns — even simple column references produce NULLs when the INSERT column list doesn't include all table columns. INSERT...SELECT * (matching schemas, no column list) works on SQLite but is blocked on MySQL/PostgreSQL with "Cannot determine columns SQL statement" (extends Issue #40 to PostgreSQL).

@@ -207,6 +207,8 @@ SELECT immediately after CTAS fails with "no such table". After INSERT, original
 
 Computed columns and aggregated values become NULL when using INSERT...SELECT on SQLite and PostgreSQL. MySQL works correctly. This extends to GROUP BY with aggregate functions (COUNT, SUM) — both exec() and prepared statement paths produce NULL aggregates on SQLite and PostgreSQL.
 
+**Extended scope (2026-03-10):** The NULL column issue is broader than computed/aggregated columns. INSERT...SELECT with an explicit partial column list (`INSERT INTO t (col1, col2) SELECT ...`) that omits columns with defaults (AUTOINCREMENT/SERIAL PKs, nullable columns) produces all-NULL values even for simple column references on SQLite and PostgreSQL. This affects common patterns like `INSERT INTO log_table (ref_id, name, action) SELECT id, name, 'imported' FROM source_table`. MySQL handles this correctly. Tests: `Pdo/SqliteInsertSelectPartialColumnListTest`, `Pdo/PostgresInsertSelectPartialColumnListTest`.
+
 ## SPEC-11.MYSQL-COMMA-UPDATE `[Issue #44]` MySQL comma-syntax multi-table UPDATE
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
@@ -1330,6 +1332,14 @@ UPSERT with simple expressions (VALUES/EXCLUDED, col + 1, literals) works correc
 `UPDATE t SET col = s.val FROM s WHERE t.id = s.id AND s.filter = $1` with prepared `$N` parameters silently fails — the UPDATE does not apply and rows remain unchanged. The same query works correctly with `?` placeholders (PDO converts internally) and `:name` named parameters. UPDATE...FROM via exec() with literal values also works correctly.
 
 This affects all variants: single param, multiple params, expression in SET with param, and shadow-inserted data. The CTE rewriter likely mishandles `$N` parameter positions when processing the FROM clause in UPDATE context.
+
+**Extended scope (2026-03-10):** The `$N` parameter issue extends beyond UPDATE...FROM:
+- **LIMIT $1 OFFSET $2:** Returns all rows (LIMIT/OFFSET ignored entirely). `?` placeholders work correctly. Tests: `Pdo/PostgresPreparedLimitOffsetParamsTest`.
+- **WHERE $1 LIMIT $2 OFFSET $3:** Returns empty results (WHERE not applied). Three `?` placeholders work correctly.
+- **INSERT...SELECT WHERE category = $1 AND NOT EXISTS(...):** Inserts only 1 row instead of expected 2. `?` placeholder works correctly. Tests: `Pdo/PostgresInsertWhereNotExistsTest`.
+- **DELETE WHERE IN (SELECT ... HAVING COUNT(*) < $1):** Doesn't filter (all 4 rows remain). `?` placeholder works correctly. Tests: `Pdo/PostgresDeleteWithAggregatedInSubqueryTest`.
+
+Root cause appears to be that the CTE rewriter doesn't correctly track `$N` parameter positions across all SQL statement types, not just UPDATE...FROM.
 
 ## SPEC-11.EXPLAIN-BLOCKED `[Issue #107]` EXPLAIN, DESCRIBE, SHOW blocked by ZTD Write Protection
 **Status:** Known Issue

@@ -502,6 +502,13 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.230 | `Pdo/SqliteTableNamePrefixConfusionTest` | — | — | — | V | Table name prefix isolation (orders/order_items/order_archive all pass) |
 | SPEC-10.2.231 | `Pdo/PostgresBooleanColumnShadowTest` | — | — | P | — | BOOLEAN TRUE works; FALSE fails CAST('' AS BOOLEAN) (confirms Issue #6) |
 
+| SPEC-10.2.247 | `Pdo/SqlitePreparedLimitOffsetParamsTest`, `Pdo/MysqlPreparedLimitOffsetParamsTest`, `Pdo/PostgresPreparedLimitOffsetParamsTest` | — | P | P | V | LIMIT ? OFFSET ? pagination: SQLite pass, MySQL needs PARAM_INT, PG $N ignored (extends #106) |
+| SPEC-10.2.248 | `Pdo/SqliteInsertWhereNotExistsTest`, `Pdo/MysqlInsertWhereNotExistsTest`, `Pdo/PostgresInsertWhereNotExistsTest` | — | V | P | P | Anti-join INSERT NOT EXISTS: MySQL pass, SQLite/PG self-ref fails (extends #20/#106) |
+| SPEC-10.2.249 | `Pdo/SqliteUpdateMultiSubquerySetTest`, `Pdo/MysqlUpdateMultiSubquerySetTest`, `Pdo/PostgresUpdateMultiSubquerySetTest` | — | V | K | K | Multi-subquery UPDATE SET: MySQL pass, SQLite syntax error (#51), PG grouping error (#61) |
+| SPEC-10.2.250 | `Pdo/SqliteDeleteWithAggregatedInSubqueryTest`, `Pdo/MysqlDeleteWithAggregatedInSubqueryTest`, `Pdo/PostgresDeleteWithAggregatedInSubqueryTest` | — | V | P | K | DELETE IN (GROUP BY HAVING): MySQL pass, SQLite incomplete input, PG $1 fails (#106) |
+| SPEC-10.2.251 | `Pdo/SqliteSequentialDmlSubqueryVisibilityTest`, `Pdo/MysqlSequentialDmlSubqueryVisibilityTest`, `Pdo/PostgresSequentialDmlSubqueryVisibilityTest` | — | P | P | P | Sequential DML chain: basic pass, cross-table JOIN fails (#20/#49/#51/#61) |
+| SPEC-10.2.252 | `Pdo/SqliteInsertSelectPartialColumnListTest`, `Pdo/MysqlInsertSelectPartialColumnListTest`, `Pdo/PostgresInsertSelectPartialColumnListTest` | — | V | K | K | Partial column INSERT SELECT: MySQL pass, SQLite/PG NULL columns (extends #20) |
+
 ## Legend
 
 - `*FooTest` = shorthand for all platform variants (e.g., `Mysqli/FooTest`, `Pdo/MysqlFooTest`, `Pdo/PostgresFooTest`, `Pdo/SqliteFooTest`)

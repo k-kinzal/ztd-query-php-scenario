@@ -466,3 +466,36 @@ ORDER BY w.priority, w.id;
 
 -- Workaround: expand CASE conditions into explicit OR/AND logic in the application layer.
 ```
+
+## SPEC-11.PG-SELF-REF-UPDATE Self-referencing UPDATE WHERE IN/subquery (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed); MySQLi, MySQL-PDO, SQLite-PDO (works correctly)
+**Related specs:** [SPEC-10.2.173](10-platform-notes.ears.md)
+**Tests:** `Pdo/PostgresDeleteReinsertCycleTest`
+
+Three related failures when UPDATE references its own table in WHERE subqueries on PostgreSQL:
+
+1. **UPDATE WHERE IN (SELECT from same table):** `UPDATE t SET status = 'x' WHERE id IN (SELECT id FROM t WHERE condition)` fails with "table name specified more than once". The CTE rewriter generates a duplicate table reference in the rewritten SQL.
+
+2. **UPDATE WHERE = (scalar subquery from same table):** `UPDATE t SET price = price * 1.1 WHERE category = (SELECT category FROM t ORDER BY price DESC LIMIT 1)` fails with syntax error. The CTE rewriter incorrectly expands the table reference inside the scalar subquery.
+
+3. **UPDATE WHERE IN (SELECT with JOIN+GROUP BY):** `UPDATE t SET status = 'x' WHERE id IN (SELECT i.id FROM t i JOIN (SELECT ... GROUP BY ...) p ON ... WHERE ...)` fails with "column reference 'id' is ambiguous". The CTE rewriter loses table qualification on the outer WHERE clause.
+
+All three patterns work correctly on MySQL (both MySQLi and PDO) and SQLite-PDO. Only PostgreSQL is affected.
+
+Workarounds:
+- Query the IDs first via SELECT, then UPDATE by explicit ID list.
+- Use application-side filtering instead of self-referencing subqueries.
+
+```sql
+-- All fail on PostgreSQL:
+UPDATE products SET status = 'featured' WHERE id IN (SELECT id FROM products WHERE category = 'x');
+UPDATE products SET price = price * 1.1 WHERE category = (SELECT category FROM products ORDER BY price DESC LIMIT 1);
+UPDATE invoices SET status = 'paid' WHERE id IN (SELECT i.id FROM invoices i JOIN (...) p ON ... WHERE p.total >= i.amount);
+
+-- Workaround (all platforms):
+-- Step 1: Query IDs
+SELECT id FROM products WHERE category = 'electronics';
+-- Step 2: UPDATE by explicit list
+UPDATE products SET status = 'featured' WHERE id IN (1, 2);
+```

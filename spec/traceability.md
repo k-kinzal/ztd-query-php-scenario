@@ -423,6 +423,9 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.169 | `*WaitlistReservationTest` | P | P | P | P | NOT EXISTS, nested CASE SELECT, scalar subqueries, correlated UPDATE+NOT EXISTS, CASE-in-WHERE+params (wrong count on all) |
 | SPEC-10.2.170 | `*FleetVehicleTrackingTest` | V | V | V | V | 3-table JOIN prefix-overlapping names, GROUP BY SUM, COUNT(DISTINCT), self-ref UPDATE, chained self-ref UPDATE, prepared BETWEEN, single-table query with overlapping-name tables |
 | SPEC-10.2.171 | `*DonationCampaignTest` | V | V | V | V | INSERT reordered columns, self-ref UPDATE arithmetic, chained self-ref, COUNT(DISTINCT), COALESCE SUM LEFT JOIN zero, ROUND %, DELETE+verify, prepared 3-table JOIN |
+| SPEC-10.2.172 | `*TeamRosterTest` | V | V | V | V | GROUP_CONCAT/STRING_AGG in multi-table JOIN, GROUP BY, HAVING COUNT, LEFT JOIN NULL aggregate, GROUP_CONCAT after INSERT/DELETE, prepared GROUP_CONCAT |
+| SPEC-10.2.173 | `*DeleteReinsertCycleTest` | V | V | P | P | DELETE+re-INSERT same PK, chained delete-reinsert-update, UPDATE WHERE IN self-ref (PG: duplicate alias), UPDATE WHERE scalar subquery (PG: syntax error), mixed exec/prepare, JOIN after delete-reinsert |
+| SPEC-10.2.174 | `*NestedFunctionExprTest` | V | V | P | P | COALESCE(NULLIF()), COALESCE(NULLIF(TRIM())), subquery in BETWEEN, scalar subquery balance, JOIN rate conversion, UPDATE WHERE IN JOIN+GROUP BY (PG: ambiguous, SL: incomplete input), nested CASE+COALESCE, mixed exec/prepare |
 
 ## 11. Known Issues (Selected)
 
@@ -431,11 +434,12 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-11.UPDATE-FROM | `Pdo/SqliteUpdateFromJoinTest` | — | — | — | K | K |
 | SPEC-11.PG-LATERAL | `Pdo/PostgresLateralSubqueryTest` | — | — | K | — | K |
 | SPEC-11.BARE-SUBQUERY-REWRITE | `Pdo/SqliteScalarSubqueryInSelectTest`, `Pdo/SqlitePivotReportTest`, `Pdo/SqliteScalarSubqueryWorkaroundTest` | — | — | — | K | K |
-| SPEC-11.UPDATE-AGGREGATE-SUBQUERY | `Pdo/SqliteBulkConditionalUpgradeTest`, `Pdo/SqliteDeduplicationEdgeCasesTest` | — | — | — | K | K |
+| SPEC-11.UPDATE-AGGREGATE-SUBQUERY | `Pdo/SqliteBulkConditionalUpgradeTest`, `Pdo/SqliteDeduplicationEdgeCasesTest`, `Pdo/SqliteDeleteReinsertCycleTest`, `Pdo/SqliteNestedFunctionExprTest` | — | — | — | K | K |
 | SPEC-11.DERIVED-TABLE-PREPARED | `*LeaderboardRankingTest` | K | K | — | K | K |
 | SPEC-11.CTE-JOIN-BACK | `*ChainedUserCteTest` | — | — | — | K | K |
 | SPEC-11.CHECK-COLUMN-NAME | (no dedicated test — avoided by column rename) | K | K | K | K | K |
 | SPEC-11.UNION-ALL-DERIVED | `Pdo/SqliteInventorySnapshotTest` | — | — | — | K | K |
+| SPEC-11.PG-SELF-REF-UPDATE | `Pdo/PostgresDeleteReinsertCycleTest`, `Pdo/PostgresNestedFunctionExprTest` | — | — | K | — | K |
 
 ## Legend
 

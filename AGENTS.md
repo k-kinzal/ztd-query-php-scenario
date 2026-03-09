@@ -13,6 +13,8 @@ Good progress increases confidence about real user-visible behavior.
 Tests, scenarios, specifications, and repository structure are means, not ends.
 When choosing what to do next, prefer the action that most changes understanding of user-facing behavior.
 
+Good progress is accompanied by reports to the upstream. It is a sign of bad progress when commits are being made but the number of reports does not increase.
+
 ## Baseline
 
 - Keep a clear current behavioral baseline for supported versions.

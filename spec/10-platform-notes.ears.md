@@ -1592,3 +1592,17 @@ DISTINCT qualifiers inside aggregate functions work correctly through CTE shadow
 **Tests:** `Mysqli/AntiJoinPatternTest`, `Pdo/MysqlAntiJoinPatternTest`, `Pdo/PostgresAntiJoinPatternTest`, `Pdo/SqliteAntiJoinPatternTest`
 
 Anti-join patterns for finding rows without matching rows in related tables work correctly through CTE shadow data. All three equivalent anti-join forms produce identical correct results: LEFT JOIN WHERE IS NULL, NOT EXISTS correlated subquery, NOT IN subquery. Also verified: semi-join (EXISTS), chained anti-join (3-table anti-pattern), double NOT EXISTS (combined EXISTS + NOT EXISTS), anti-join mutation sensitivity (anti-join correctly reflects INSERT/DELETE mutations), prepared NOT EXISTS with bound threshold parameter, and physical isolation.
+
+## SPEC-10.2.185 Multiple self-joins (same table aliased N times)
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/MultiSelfJoinTest`, `Pdo/MysqlMultiSelfJoinTest`, `Pdo/PostgresMultiSelfJoinTest`, `Pdo/SqliteMultiSelfJoinTest`
+
+Self-joins where the same table is joined to itself up to 4 times with different aliases work correctly through CTE shadow data on all platforms. Verified: simple self-join (employee + manager via LEFT JOIN), two-level self-join (employee + manager + grand-manager), triple self-join (4 aliases for same table), self-join comparison (e.salary > m.salary), self-join for pair discovery (e1.dept = e2.dept AND e1.id < e2.id), self-join with aggregate (COUNT direct reports per manager with HAVING), NOT EXISTS with self-referencing subquery (top earner per department), self-join after INSERT mutation, and prepared self-join with department filter. The CTE rewriter correctly generates independent CTE references for each alias of the same table.
+
+## SPEC-10.2.186 DELETE with subquery JOIN (orphan cleanup pattern)
+**Status:** Verified
+**Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/MysqlDeleteWithSubqueryJoinTest`, `Pdo/PostgresDeleteWithSubqueryJoinTest`, `Pdo/SqliteDeleteWithSubqueryJoinTest`
+
+DELETE statements with WHERE clauses containing subqueries that JOIN other tables work correctly through CTE shadow data. Verified: DELETE WHERE IN (subquery filtering related table), DELETE WHERE NOT EXISTS (orphan detection), DELETE WHERE NOT IN (unordered items), DELETE with compound condition (discontinued AND NOT EXISTS), DELETE with multi-table subquery (subquery JOINs 2 tables), DELETE followed by JOIN verification of remaining data consistency, and prepared DELETE with subquery parameter. The CTE rewriter correctly handles the DELETE target table and subquery source tables simultaneously.

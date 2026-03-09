@@ -567,7 +567,7 @@ FROM employee e;
 
 Workaround: query the source data first via SELECT, compute values in application code, then INSERT explicit rows.
 
-## SPEC-11.PG-UPDATE-SET-FROM-KEYWORD UPDATE SET with FROM-syntax functions (PostgreSQL)
+## SPEC-11.PG-UPDATE-SET-FROM-KEYWORD `[Issue #47]` UPDATE SET with FROM-syntax functions (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
 **Related specs:** [SPEC-10.2.184](10-platform-notes.ears.md)

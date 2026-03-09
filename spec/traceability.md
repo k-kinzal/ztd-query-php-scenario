@@ -421,6 +421,8 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.167 | `*SalesCommissionTest` | P | P | V | P | ROW_NUMBER OVER, SUM OVER running total, LAG compare, window in derived table (empty on all), prepared window |
 | SPEC-10.2.168 | `*ProjectTimesheetTest` | V | V | V | P | ROLLUP subtotals (MySQL/PG), UNION ALL subtotals (SQLite—1 row only), conditional SUM CASE, HAVING threshold, prepared GROUP BY |
 | SPEC-10.2.169 | `*WaitlistReservationTest` | P | P | P | P | NOT EXISTS, nested CASE SELECT, scalar subqueries, correlated UPDATE+NOT EXISTS, CASE-in-WHERE+params (wrong count on all) |
+| SPEC-10.2.170 | `*FleetVehicleTrackingTest` | V | V | V | V | 3-table JOIN prefix-overlapping names, GROUP BY SUM, COUNT(DISTINCT), self-ref UPDATE, chained self-ref UPDATE, prepared BETWEEN, single-table query with overlapping-name tables |
+| SPEC-10.2.171 | `*DonationCampaignTest` | V | V | V | V | INSERT reordered columns, self-ref UPDATE arithmetic, chained self-ref, COUNT(DISTINCT), COALESCE SUM LEFT JOIN zero, ROUND %, DELETE+verify, prepared 3-table JOIN |
 
 ## 11. Known Issues (Selected)
 

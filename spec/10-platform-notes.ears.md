@@ -1523,3 +1523,17 @@ Conditional aggregation, HAVING threshold, and prepared GROUP BY work on all pla
 A restaurant reservation system with tables, reservations, and waitlist exercises NOT EXISTS anti-pattern for available table discovery, nested CASE in SELECT for fit-status classification, multiple correlated COUNT scalar subqueries per row, UPDATE SET with correlated scalar subquery containing nested NOT EXISTS, DELETE with status filter, CASE-as-boolean in WHERE with prepared parameters, and physical isolation.
 
 NOT EXISTS, nested CASE in SELECT, scalar subqueries, correlated UPDATE, and DELETE all work correctly on all platforms. **CASE-as-boolean in WHERE with prepared parameters returns wrong row count** (3 instead of expected 2) on all platforms — the CASE expression used as a filter condition doesn't evaluate correctly when bound parameters are involved. See SPEC-11.CASE-WHERE-PARAMS.
+
+## SPEC-10.2.170 Fleet vehicle tracking with prefix-overlapping table names
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/FleetVehicleTrackingTest`, `Pdo/MysqlFleetVehicleTrackingTest`, `Pdo/PostgresFleetVehicleTrackingTest`, `Pdo/SqliteFleetVehicleTrackingTest`
+
+A fleet management system with tables `vehicle`, `vehicle_type`, and `vehicle_trip` — where "vehicle" is a prefix of both other table names — exercises the CTE rewriter's table reference detection with overlapping names. Tests verify 3-table JOIN across prefix-overlapping tables, GROUP BY SUM with LEFT JOIN for zero-trip vehicles, COUNT(DISTINCT vehicle_id) per type, self-referencing UPDATE arithmetic (mileage += distance), chained self-referencing UPDATEs, prepared BETWEEN date range, and querying only the "vehicle" table when all three tables have shadow data. All tests pass on all platforms — the CTE rewriter correctly distinguishes prefix-overlapping table names.
+
+## SPEC-10.2.171 Donation campaign with self-referencing arithmetic and reordered INSERT
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/DonationCampaignTest`, `Pdo/MysqlDonationCampaignTest`, `Pdo/PostgresDonationCampaignTest`, `Pdo/SqliteDonationCampaignTest`
+
+A donation campaign system with donors, campaigns, and donations exercises INSERT with explicit column list in non-DDL order, self-referencing UPDATE arithmetic (raised = raised + amount), chained self-referencing UPDATEs, COUNT(DISTINCT donor_id), COALESCE(SUM, 0) with LEFT JOIN for campaigns with zero donations, ROUND percentage calculation, DELETE + verify remaining count, and prepared 3-table JOIN by donor email. All tests pass on all platforms — the shadow store correctly handles reordered column inserts and chained self-referencing arithmetic updates.

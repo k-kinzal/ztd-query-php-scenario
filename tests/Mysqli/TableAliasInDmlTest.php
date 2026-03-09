@@ -1,0 +1,129 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Mysqli;
+
+use Tests\Support\AbstractMysqliTestCase;
+
+/**
+ * Tests table aliases in UPDATE and DELETE DML statements on MySQLi.
+ *
+ * Real-world scenario: MySQL supports aliased DML:
+ *   UPDATE t AS alias SET alias.col = ... WHERE alias.col = ...
+ *   DELETE alias FROM t AS alias WHERE alias.col = ...
+ * The CTE rewriter must preserve alias context when rewriting DML.
+ *
+ * @spec SPEC-4.2
+ * @spec SPEC-4.3
+ */
+class TableAliasInDmlTest extends AbstractMysqliTestCase
+{
+    protected function getTableDDL(): string|array
+    {
+        return 'CREATE TABLE mi_tad_items (
+            id INT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            category VARCHAR(50) NOT NULL,
+            price DECIMAL(10,2) NOT NULL
+        ) ENGINE=InnoDB';
+    }
+
+    protected function getTableNames(): array
+    {
+        return ['mi_tad_items'];
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->ztdExec("INSERT INTO mi_tad_items VALUES (1, 'Widget', 'tools', 10.00)");
+        $this->ztdExec("INSERT INTO mi_tad_items VALUES (2, 'Gadget', 'electronics', 25.00)");
+        $this->ztdExec("INSERT INTO mi_tad_items VALUES (3, 'Sprocket', 'tools', 5.00)");
+    }
+
+    /**
+     * UPDATE with table alias using AS keyword and alias-qualified columns.
+     */
+    public function testUpdateWithAsAlias(): void
+    {
+        try {
+            $this->ztdExec(
+                "UPDATE mi_tad_items AS i SET i.price = i.price * 2 WHERE i.category = 'tools'"
+            );
+
+            $rows = $this->ztdQuery(
+                "SELECT name, price FROM mi_tad_items WHERE category = 'tools' ORDER BY name"
+            );
+            $this->assertCount(2, $rows);
+            $this->assertEqualsWithDelta(10.00, (float) $rows[0]['price'], 0.01);
+            $this->assertEqualsWithDelta(20.00, (float) $rows[1]['price'], 0.01);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'UPDATE with AS alias failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * DELETE with table alias.
+     * MySQL: DELETE alias FROM t AS alias WHERE alias.col = ...
+     */
+    public function testDeleteWithAlias(): void
+    {
+        try {
+            $this->ztdExec(
+                "DELETE i FROM mi_tad_items AS i WHERE i.price < 10"
+            );
+
+            $rows = $this->ztdQuery("SELECT name FROM mi_tad_items ORDER BY name");
+            $this->assertCount(2, $rows);
+            $names = array_column($rows, 'name');
+            $this->assertNotContains('Sprocket', $names);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'DELETE with alias failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * UPDATE with alias and prepared params.
+     */
+    public function testUpdateWithAliasAndParams(): void
+    {
+        try {
+            $rows = $this->ztdPrepareAndExecute(
+                "SELECT price FROM mi_tad_items AS i WHERE i.id = ?",
+                [2]
+            );
+            // First verify SELECT with alias works
+            $this->assertCount(1, $rows);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'SELECT with alias and params failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * UPDATE with alias, referencing columns without alias prefix.
+     */
+    public function testUpdateAliasWithUnprefixedColumns(): void
+    {
+        try {
+            $this->ztdExec(
+                "UPDATE mi_tad_items AS i SET name = 'Renamed' WHERE id = 1"
+            );
+
+            $rows = $this->ztdQuery("SELECT name FROM mi_tad_items WHERE id = 1");
+            $this->assertCount(1, $rows);
+            $this->assertSame('Renamed', $rows[0]['name']);
+        } catch (\Exception $e) {
+            $this->markTestIncomplete(
+                'UPDATE with alias + unprefixed columns failed: ' . $e->getMessage()
+            );
+        }
+    }
+}

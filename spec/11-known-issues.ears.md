@@ -907,3 +907,27 @@ Affects: exec INSERT, prepared INSERT, explicit PK INSERT. The shadow store trac
 **Tests:** `Pdo/SqliteMultiStatementExecTest`
 
 Executing multiple SQL statements separated by semicolons in a single `exec()` call throws `ZTD Write Protection: Multi-statement SQL statement`. While this may be intentional, the limitation is undocumented and the error message does not suggest a workaround. Native `PDO::exec()` supports multi-statement execution on SQLite.
+
+## SPEC-11.DML-TABLE-ALIAS `[Issue #79]` SQLite: Table alias in UPDATE/DELETE causes "no such column" error
+**Status:** Known Issue
+**Platforms:** SQLite-PDO
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteTableAliasInDmlTest`, `Pdo/MysqlTableAliasInDmlTest`, `Pdo/PostgresTableAliasInDmlTest`, `Mysqli/TableAliasInDmlTest`
+
+On SQLite, UPDATE and DELETE statements with table aliases (`UPDATE t AS alias SET ... WHERE alias.col = ...` or `DELETE FROM t AS alias WHERE alias.col = ...`) fail with "no such column: alias.col". The CTE rewriter wraps the table in a CTE but does not preserve the alias, so alias-qualified column references become unresolvable. This syntax is supported natively by SQLite (3.33+) and is commonly emitted by ORMs. MySQL and PostgreSQL are not affected. Workaround: use unqualified column names (`WHERE col = ...` instead of `WHERE alias.col = ...`).
+
+## SPEC-11.NULLIF-PREPARED-PARAM `[Issue #80]` NULLIF with prepared parameter returns wrong results
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), likely MySQL-PDO, PostgreSQL-PDO
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-3.2](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteCoalesceWithParamsTest`, `Pdo/MysqlNullifWithParamsTest`, `Pdo/PostgresNullifWithParamsTest`
+
+`NULLIF(column, ?)` with a prepared parameter returns incorrect results. For example, `SELECT name FROM t WHERE NULLIF(score, ?) IS NULL` with param `100` should match rows where `score = 100` (NULLIF returns NULL) AND rows where `score IS NULL`. Through ZTD, only the `score IS NULL` rows are returned — the parameter inside NULLIF is not properly evaluated, so `NULLIF(100, 100)` does not return NULL as expected. The same query via `query()` (without parameters) works correctly. This is related to but distinct from Issue #75 (CASE in WHERE with params).
+
+## SPEC-11.VIEW-JOIN-SHADOW `View JOIN with shadow table produces inconsistent results
+**Status:** Known Limitation
+**Platforms:** SQLite-PDO (confirmed), likely all platforms
+**Related specs:** [SPEC-3.3b](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteViewJoinShadowTest`
+
+When a query JOINs a view with a shadow-modified table, the results are inconsistent: the view reads physical data while the joined table reads shadow data. For example, after shadow-inserting a row into the base table, a `SELECT ... FROM view JOIN table` does not include the shadow-inserted row in the join result. After shadow-deleting a row, the deleted row still appears in the join because the view sees the physical (undeleted) row. This is a consequence of views not being CTE-rewritten, but the JOIN inconsistency may silently produce incorrect results in applications that combine views with DML-modified tables.

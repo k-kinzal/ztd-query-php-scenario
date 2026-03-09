@@ -1970,3 +1970,24 @@ INSERT...SELECT with GROUP BY and aggregate functions (COUNT, SUM) stores NULL a
 **Tests:** `Pdo/SqliteInsertOrReplaceComputedTest`
 
 INSERT OR REPLACE with function calls (UPPER, LOWER), string concatenation (||), and arithmetic expressions (1+1) in the VALUES clause works correctly on SQLite through ZTD. Both replacement (conflict) and insert (no conflict) paths produce correct computed values. No duplicate PKs created after multiple replaces.
+
+## SPEC-10.2.239 ON DUPLICATE KEY UPDATE with subquery in SET
+**Status:** Known Issue (Issue #105)
+**Platforms:** MySQLi (fails), MySQL-PDO (fails)
+**Tests:** `Pdo/MysqlUpsertSubqueryInSetTest`, `Mysqli/UpsertSubqueryInSetTest`
+
+INSERT...ON DUPLICATE KEY UPDATE with a subquery in the SET expression evaluates to 0 instead of the subquery result. The prepared variant breaks parameter count. New row inserts (no conflict) work correctly. ON DUPLICATE KEY UPDATE with simple expressions works.
+
+## SPEC-10.2.240 PostgreSQL UPDATE...FROM with prepared $N params
+**Status:** Known Issue (Issue #106)
+**Platforms:** PostgreSQL-PDO (fails with $N, passes with ? and :name)
+**Tests:** `Pdo/PostgresUpdateFromPreparedTest`
+
+UPDATE...FROM with `$N` positional parameters does not apply the update — rows remain unchanged. The same query works with `?` placeholders and `:name` named parameters. UPDATE...FROM via exec() with literals also works.
+
+## SPEC-10.2.241 Named parameters (:name style)
+**Status:** Verified
+**Platforms:** SQLite-PDO (pass, except HAVING — Issue #22), MySQL-PDO (pass), PostgreSQL-PDO (pass)
+**Tests:** `Pdo/SqliteNamedParamTest`, `Pdo/MysqlNamedParamTest`, `Pdo/PostgresNamedParamTest`
+
+Named parameters (:name style) work correctly for SELECT, INSERT, UPDATE, DELETE, and subquery WHERE patterns on all platforms. GROUP BY HAVING with named params works on MySQL and PostgreSQL but returns empty on SQLite (consistent with Issue #22). Notably, PostgreSQL GROUP BY HAVING with `:name` params works, while `$N` positional params fail (Issue #22), suggesting the issue is in `$N` parameter handling specifically.

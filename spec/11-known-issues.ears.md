@@ -1304,3 +1304,23 @@ UPDATE summary SET
     min_price = (SELECT MIN(price) FROM products WHERE category = summary.category),
     item_count = (SELECT COUNT(*) FROM products WHERE category = summary.category);
 ```
+
+## SPEC-11.MYSQL-UPSERT-SUBQUERY-SET `[Issue #105]` MySQL: ON DUPLICATE KEY UPDATE with subquery in SET evaluates to 0
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
+**Related specs:** [SPEC-4.2a](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlUpsertSubqueryInSetTest`, `Mysqli/UpsertSubqueryInSetTest`
+
+`INSERT INTO t VALUES (...) ON DUPLICATE KEY UPDATE col = (SELECT val FROM other WHERE ...)` does not evaluate the subquery — the column receives value 0. The prepared statement variant fails with "Invalid parameter number: number of bound variables does not match number of tokens", indicating the CTE rewriter alters the parameter token count when processing subqueries in the ON DUPLICATE KEY UPDATE clause.
+
+ON DUPLICATE KEY UPDATE with simple expressions (VALUES(col), col + 1, literals) works correctly. Only subqueries in the SET expression are affected.
+
+## SPEC-11.PG-UPDATE-FROM-PREPARED `[Issue #106]` PostgreSQL: UPDATE...FROM with $N prepared params does not apply
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresUpdateFromPreparedTest`
+
+`UPDATE t SET col = s.val FROM s WHERE t.id = s.id AND s.filter = $1` with prepared `$N` parameters silently fails — the UPDATE does not apply and rows remain unchanged. The same query works correctly with `?` placeholders (PDO converts internally) and `:name` named parameters. UPDATE...FROM via exec() with literal values also works correctly.
+
+This affects all variants: single param, multiple params, expression in SET with param, and shadow-inserted data. The CTE rewriter likely mishandles `$N` parameter positions when processing the FROM clause in UPDATE context.

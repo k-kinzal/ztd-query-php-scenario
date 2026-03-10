@@ -1473,3 +1473,34 @@ DML statements containing window functions (ROW_NUMBER, DENSE_RANK, RANK) in sub
 - Prepared INSERT...SELECT HAVING with `?` param returns 0 rows on SQLite (related to Issue #22)
 - Prepared INSERT...SELECT HAVING with `$N` param returns 0 rows on PostgreSQL (related to Issue #106)
 - Related to Issue #20 (INSERT...SELECT with computed columns/aggregation)
+
+## SPEC-11.PREPARED-BETWEEN-DML `[Issue #118]` Prepared BETWEEN in DML (UPDATE/DELETE) has no effect
+**Status:** Known Issue
+**Platforms:** MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), MySQLi (confirmed)
+**Not affected:** SQLite-PDO (works correctly)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlBetweenParamDmlTest`, `Pdo/PostgresBetweenParamDmlTest`, `Mysqli/BetweenParamDmlTest`, `Pdo/SqliteBetweenParamDmlTest`
+
+Prepared `UPDATE` and `DELETE` statements using `WHERE col BETWEEN ? AND ?` with bound parameters have no effect on MySQL and PostgreSQL. The statement executes without error but 0 rows are affected.
+
+- **MySQL (PDO, MySQLi)**: `UPDATE t SET stock = stock + 10 WHERE price BETWEEN ? AND ?` with params `[20.00, 75.00]` — 0 rows updated, all values unchanged
+- **PostgreSQL**: Same pattern, 0 rows affected
+- **SQLite**: Works correctly — rows matching the BETWEEN range are properly updated/deleted
+- Combining BETWEEN with additional `AND` conditions also fails: `WHERE price BETWEEN ? AND ? AND stock < ?`
+- Non-prepared `BETWEEN` with literal values (via `exec()`) works correctly on all platforms
+- The CTE rewriter likely confuses the `AND` inside `BETWEEN ? AND ?` with a logical `AND` operator
+
+## SPEC-11.CAST-IN-DML `[Issue #119]` CAST expression in DML produces wrong values or is ignored
+**Status:** Known Issue
+**Platforms:** All platforms affected in different patterns
+**Related specs:** [SPEC-4.1a](04-write-operations.ears.md), [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteCastInDmlTest`, `Pdo/MysqlCastInDmlTest`, `Pdo/PostgresCastInDmlTest`, `Mysqli/CastInDmlTest`
+
+`CAST(column AS type)` expressions inside DML statements produce incorrect results. The `AS` keyword inside CAST confuses the CTE rewriter, which interprets it as a column or table alias.
+
+- **INSERT...SELECT with CAST** (SQLite, PostgreSQL): `INSERT INTO t SELECT label, CAST(str_amount AS REAL) FROM raw` — inserts rows but CAST values become 0.0 (SQLite) or empty (PostgreSQL). MySQL works correctly.
+- **CAST arithmetic** (SQLite, PostgreSQL): `CAST(a AS REAL) * CAST(b AS INTEGER)` in INSERT...SELECT produces 0 on SQLite and PostgreSQL. MySQL works correctly.
+- **DELETE WHERE CAST** (MySQL, PostgreSQL, MySQLi): `DELETE FROM t WHERE CAST(col AS DECIMAL) > 100` — no rows deleted (expression ignored). SQLite works correctly.
+- **UPDATE SET with CAST subquery** (SQLite, PostgreSQL, MySQL): Syntax errors or 0 values depending on platform
+- Non-CAST expressions in the same positions work correctly
+- Related to Issue #33 (PostgreSQL array types with CAST) — same root cause of AS keyword confusion

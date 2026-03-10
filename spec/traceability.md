@@ -518,6 +518,12 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.260 | `Pdo/SqliteDeleteWithMultipleSubqueryConditionsTest` | — | — | — | V | Multi-subquery DELETE (IN+NOT IN+scalar+EXISTS): all pass |
 | SPEC-10.2.261 | `Pdo/SqliteUpdateWithSubqueryInMultipleSetsTest` | — | — | — | V | Non-correlated multi-aggregate SET: all pass (contrasts correlated variants) |
 | SPEC-10.2.262 | `Pdo/MysqlMultiCorrelatedSetUpdateTest`, `Pdo/PostgresMultiCorrelatedSetUpdateTest`, `Mysqli/MultiCorrelatedSetUpdateTest` | V | V | K | K | Multi-correlated SET: MySQL all pass; PG GROUP BY error (all variants incl. non-correlated); SL syntax error |
+| SPEC-11.PREPARED-BETWEEN-DML | `Pdo/SqliteBetweenParamDmlTest`, `Pdo/MysqlBetweenParamDmlTest`, `Pdo/PostgresBetweenParamDmlTest`, `Mysqli/BetweenParamDmlTest` | K | K | K | V | Prepared BETWEEN DML: SQLite all pass; MySQL/PG/MySQLi no-op (#118) |
+| SPEC-11.CAST-IN-DML | `Pdo/SqliteCastInDmlTest`, `Pdo/MysqlCastInDmlTest`, `Pdo/PostgresCastInDmlTest`, `Mysqli/CastInDmlTest` | K | P | K | K | CAST in DML: INSERT SELECT 0-values (SL/PG); DELETE WHERE ignored (MY/PG/Mi) (#119) |
+| SPEC-10.2.263 | `Pdo/SqliteSelfJoinDmlTest`, `Pdo/MysqlSelfJoinDmlTest`, `Pdo/PostgresSelfJoinDmlTest`, `Mysqli/SelfJoinDmlTest` | V | V | P | P | Self-join DML: DELETE pass all; UPDATE correlated SL/PG syntax error (extends #51) |
+| SPEC-10.2.264 | `Pdo/SqliteParamInListDmlTest`, `Pdo/MysqlParamInListDmlTest`, `Pdo/PostgresParamInListDmlTest`, `Mysqli/ParamInListDmlTest` | V | V | V | V | Parameterized IN list DML: all pass on all platforms |
+| SPEC-10.2.265 | `Pdo/SqliteLikeParamDmlTest` | — | — | — | V | LIKE with prepared wildcard params: all pass on SQLite |
+| SPEC-10.2.266 | `Pdo/SqliteInsertSelectUnionAdvancedTest`, `Pdo/MysqlInsertSelectUnionAdvancedTest`, `Pdo/PostgresInsertSelectUnionAdvancedTest`, `Mysqli/InsertSelectUnionAdvancedTest` | K | K | V | P | Advanced INSERT UNION: PG all pass; MySQL multi-stmt error; SL triple fails (extends #103) |
 
 ## Legend
 

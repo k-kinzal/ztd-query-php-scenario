@@ -2278,3 +2278,70 @@ Upsert with scalar subquery in SET using EXCLUDED/VALUES reference: `ON CONFLICT
 **Tests:** `Pdo/PostgresOverlapsAndRangeTest`
 
 The SQL standard OVERLAPS operator for temporal range comparison works correctly through the CTE shadow store in non-prepared contexts: SELECT with OVERLAPS in WHERE, UPDATE with OVERLAPS condition, DELETE with OVERLAPS condition all return correct results on shadow data. INSERT...SELECT with OVERLAPS fails due to self-join requirement (Issue #135, not OVERLAPS itself). **Known issue:** Prepared SELECT/UPDATE with OVERLAPS and `$N` params returns 0 rows (extends Issue #106).
+
+## SPEC-10.2.283 GLOB operator in DML (SQLite)
+**Status:** Verified
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteRegexOperatorDmlTest`
+
+SQLite's GLOB operator works correctly in UPDATE and DELETE WHERE clauses through the CTE shadow store. All patterns tested: `UPDATE ... WHERE code GLOB 'PRD-*'`, `DELETE ... WHERE code GLOB 'SVC-*'`, prepared UPDATE with GLOB and bound parameters, NOT GLOB, and SELECT GLOB on shadow-inserted data. GLOB is the only regex-family operator that works in DML contexts — MySQL REGEXP/RLIKE and PostgreSQL ~/~*/SIMILAR TO do NOT work in UPDATE/DELETE [Issue #136].
+
+## SPEC-10.2.284 CASE expression in ORDER BY
+**Status:** Verified
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteCaseOrderByDmlTest`
+
+CASE expressions in ORDER BY clauses work correctly through the CTE shadow store on SQLite. Tested patterns: `ORDER BY CASE col WHEN 'critical' THEN 1 ... END`, prepared SELECT with CASE ORDER BY, INSERT...SELECT with CASE ORDER BY LIMIT, UPDATE with CASE in both SET and WHERE clauses. Combined CASE ORDER BY with NULLS LAST also works.
+
+## SPEC-10.2.285 EXISTS in SELECT list
+**Status:** Verified (SQLite only)
+**Platforms:** SQLite-PDO (works); MySQL-PDO, PostgreSQL-PDO (broken, [Issue #137])
+**Tests:** `Pdo/SqliteExistsInSelectListTest`, `Pdo/MysqlExistsInSelectListTest`, `Pdo/PostgresExistsInSelectListTest`
+
+EXISTS and NOT EXISTS as boolean expressions in the SELECT list work correctly on SQLite through the CTE shadow store. The correlated EXISTS subquery correctly reads from shadow data: after shadow INSERT, EXISTS reflects the new row; after shadow DELETE, EXISTS correctly returns false. Multiple EXISTS in the same SELECT list and prepared statements with EXISTS also work.
+
+MySQL and PostgreSQL are affected by [Issue #137] — EXISTS in SELECT list always returns 0 (MySQL) or causes type mismatch error (PostgreSQL).
+
+## SPEC-10.2.286 NULLS FIRST / NULLS LAST in ORDER BY
+**Status:** Verified
+**Platforms:** SQLite-PDO, PostgreSQL-PDO (non-$N prepared)
+**Tests:** `Pdo/SqliteNullsFirstLastDmlTest`, `Pdo/PostgresNullsFirstLastDmlTest`
+
+NULLS FIRST and NULLS LAST in ORDER BY work correctly through the CTE shadow store on SQLite and PostgreSQL. Tested patterns: SELECT with NULLS FIRST, SELECT with NULLS LAST, INSERT...SELECT with NULLS LAST LIMIT (window function + ORDER BY NULLS LAST), prepared SELECT with NULLS FIRST (? params on both platforms). PostgreSQL FETCH FIRST N ROWS ONLY with NULLS LAST also works.
+
+**Known issue:** Prepared SELECT with `$N` params and NULLS FIRST returns 0 rows on PostgreSQL (extends Issue #85). MySQL < 8.0.26 does not support NULLS FIRST/LAST syntax.
+
+## SPEC-10.2.287 Quoted identifiers in DML
+**Status:** Verified (SQLite); Known Issue (MySQL [Issue #139])
+**Platforms:** SQLite-PDO (works), MySQLi (broken), MySQL-PDO (broken)
+**Tests:** `Pdo/SqliteQuotedIdentifierDmlTest`, `Pdo/MysqlQuotedIdentifierDmlTest`, `Mysqli/QuotedIdentifierDmlTest`
+
+SQLite double-quoted mixed-case identifiers (`"UserId"`, `"FirstName"`, `"sl_UserProfiles"`) work correctly in all DML contexts: INSERT, SELECT, UPDATE, DELETE, prepared statements, JOIN, and UPDATE SET with concatenation referencing quoted column names.
+
+MySQL backtick-quoted identifiers (`\`UserId\``, `\`my_UserProfiles\``) work for INSERT and SELECT but fail for UPDATE and DELETE [Issue #139].
+
+## SPEC-10.2.288 GROUPING SETS / ROLLUP / CUBE
+**Status:** Verified
+**Platforms:** PostgreSQL-PDO, MySQL-PDO (WITH ROLLUP only), SQLite-PDO (simulated via UNION ALL)
+**Tests:** `Pdo/PostgresGroupingSetsTest`, `Pdo/MysqlGroupingSetsTest`, `Pdo/SqliteGroupingSetsCubeRollupTest`, `Mysqli/GroupingSetsTest`
+
+Advanced GROUP BY extensions work correctly through the CTE shadow store:
+- **PostgreSQL**: GROUPING SETS, ROLLUP, CUBE, and GROUPING() function all produce correct subtotals and grand totals from shadow data.
+- **MySQL**: WITH ROLLUP syntax and GROUPING() function work correctly.
+- **SQLite**: Simulated ROLLUP via UNION ALL with GROUP BY works correctly.
+
+## SPEC-10.2.289 Numeric precision in shadow store
+**Status:** Verified (partial)
+**Platforms:** MySQLi
+**Tests:** `Mysqli/NumericPrecisionTest`
+
+DECIMAL(20,10) values are preserved correctly in the shadow store: high-precision values (3.1415926535), very small values (0.0000000001), and negative decimals. DOUBLE values with scientific-scale magnitudes (1e15, 1e-10) are approximately preserved.
+
+**Known issue:** DECIMAL arithmetic in UPDATE SET (`dec_val = dec_val * 1.075`) does not compute the multiplication [Issue #140]. BIGINT boundary values are returned with correct values but may differ in PHP type representation (int vs string).
+
+## SPEC-10.2.290 INSERT...SELECT with LIMIT/OFFSET
+**Status:** Verified
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteInsertSelectLimitTest`
+
+INSERT...SELECT with LIMIT, LIMIT OFFSET, ORDER BY DESC LIMIT (top-N), prepared INSERT...SELECT LIMIT, and INSERT...SELECT LIMIT on shadow-inserted data all work correctly through the CTE shadow store on SQLite. The LIMIT/OFFSET clauses are preserved in the CTE-rewritten INSERT...SELECT.

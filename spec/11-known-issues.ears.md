@@ -1772,3 +1772,101 @@ The equivalent `SELECT a.id, b.id FROM source a JOIN source b ON ...` without IN
 Related to Issue #49 (INSERT...SELECT with multi-table JOIN) but with distinct behavior: self-join produces 0 rows on PostgreSQL/SQLite instead of rows with NULLs.
 
 This is a common pattern for detecting overlapping records, finding duplicates, and hierarchical data queries.
+
+## SPEC-11.REGEX-OPERATOR-DML `[Issue #136]` REGEXP / RLIKE / ~ / ~* / SIMILAR TO in UPDATE/DELETE WHERE ignored
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed); SQLite-PDO (GLOB works correctly)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Mysqli/RegexOperatorDmlTest`, `Pdo/MysqlRegexOperatorDmlTest`, `Pdo/PostgresRegexOperatorDmlTest`, `Pdo/SqliteRegexOperatorDmlTest`
+
+Regex-family pattern matching operators in UPDATE/DELETE WHERE clauses are not recognized by the CTE rewriter. The WHERE condition is effectively ignored, causing:
+
+- **UPDATE with REGEXP/RLIKE** (MySQL, MySQLi): UPDATE is a no-op — 0 rows affected, values unchanged. `UPDATE t SET status = 'x' WHERE code REGEXP '^PRD-'` does nothing.
+- **DELETE with REGEXP** (MySQL, MySQLi): DELETE is a no-op — all rows remain. `DELETE FROM t WHERE code REGEXP '^SVC-'` deletes 0 rows.
+- **UPDATE with ~ (regex match)** (PostgreSQL): UPDATE does not apply. `UPDATE t SET status = 'x' WHERE code ~ '^PRD-'` is a no-op.
+- **DELETE with ~** (PostgreSQL): DELETE is a no-op.
+- **UPDATE with ~* (case-insensitive regex)** (PostgreSQL): Returns 0 updated rows.
+- **UPDATE with !~ (regex not match)** (PostgreSQL): Returns 0 updated rows.
+- **DELETE with SIMILAR TO** (PostgreSQL): DELETE is a no-op.
+- **Prepared variants**: Also fail — UPDATE/DELETE with REGEXP/~ and bound parameters are no-ops.
+- **NOT REGEXP / NOT RLIKE** (MySQL): Also fails — 0 rows updated.
+
+SELECT queries with REGEXP/~/~*/SIMILAR TO work correctly on all platforms — the issue is specific to the DML mutation resolver, which does not evaluate these operators when filtering rows for UPDATE/DELETE.
+
+**SQLite GLOB is NOT affected** — GLOB in UPDATE/DELETE WHERE works correctly on SQLite.
+
+This is a high-severity silent data consistency bug: applications relying on regex patterns for batch UPDATE/DELETE (e.g., updating product codes by pattern, deleting log entries by regex) will silently fail to modify any rows.
+
+Workaround: query matching IDs first via SELECT with REGEXP/~, then UPDATE/DELETE by explicit ID list.
+
+## SPEC-11.EXISTS-IN-SELECT-LIST `[Issue #137]` EXISTS subquery in SELECT list broken (all platforms)
+**Status:** Known Issue
+**Platforms:** MySQLi (likely), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (works correctly)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-3.3](03-read-operations.ears.md)
+**Tests:** `Pdo/MysqlExistsInSelectListTest`, `Pdo/PostgresExistsInSelectListTest`, `Pdo/SqliteExistsInSelectListTest`
+
+`SELECT id, EXISTS(SELECT 1 FROM orders o WHERE o.customer_id = c.id) AS has_orders FROM customers c` fails on MySQL and PostgreSQL:
+
+- **MySQL (PDO):** EXISTS always evaluates to 0 (false) regardless of data. The correlated EXISTS subquery reads from the physical table (which is empty in ZTD mode) instead of the shadow CTE. All EXISTS variants in SELECT list return 0: simple EXISTS, NOT EXISTS, EXISTS after shadow INSERT/DELETE, CASE WHEN EXISTS, and prepared statements with EXISTS.
+
+- **PostgreSQL (PDO):** Produces `operator does not exist: integer = text` error. The CTE rewriter casts INTEGER columns (including SERIAL PKs) to TEXT in the CTE definition, but the correlated subquery references the original column type. The JOIN condition `o.customer_id = c.id` compares integer (from physical table) with text (from CTE), causing a type mismatch.
+
+- **SQLite (PDO):** Works correctly — EXISTS in SELECT list evaluates correctly against shadow data.
+
+This affects a very common application pattern: flagging rows based on related table presence (e.g., "customers with orders", "users with recent activity", "products in stock"). Also affects CASE WHEN EXISTS in SELECT list and prepared statements with EXISTS parameters.
+
+Related: SPEC-11.BARE-SUBQUERY-REWRITE [Issue #73] (bare subqueries not rewritten on SQLite) — but this issue is distinct: EXISTS in SELECT list fails on MySQL and PostgreSQL while working on SQLite.
+
+## SPEC-11.PG-DELETE-IS-NULL `[Issue #138]` DELETE WHERE column IS NULL does not delete (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresNullsFirstLastDmlTest`
+
+`DELETE FROM t WHERE priority IS NULL` does not delete any rows on PostgreSQL. After the DELETE, all rows (including those with NULL priority) remain. This is a silent failure — no error is thrown.
+
+This is distinct from Issue #7 (SQLite DELETE without WHERE) — this specifically affects `IS NULL` conditions in DELETE WHERE on PostgreSQL. The CTE rewriter likely fails to match rows where the column value is NULL during DELETE row filtering.
+
+Workaround: query IDs of NULL-priority rows first via SELECT, then DELETE by explicit ID list.
+
+## SPEC-11.MYSQL-BACKTICK-DML `[Issue #139]` Backtick-quoted identifiers break UPDATE/DELETE (MySQL)
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Mysqli/QuotedIdentifierDmlTest`, `Pdo/MysqlQuotedIdentifierDmlTest`
+
+DML with backtick-quoted table and column names (`UPDATE \`table\` SET \`col\` = ... WHERE \`pk\` = ...`) fails silently on MySQL:
+
+- **UPDATE**: Returns 0 rows after UPDATE — the SELECT via `ztdQuery` cannot find the row. The UPDATE either corrupts the shadow store or fails to apply.
+- **DELETE**: Does not delete — all 3 rows remain when expecting 2.
+- **UPDATE SET with CONCAT and quoted columns**: Same failure — row not found after UPDATE.
+- **Prepared UPDATE with quoted identifiers**: Also fails.
+- **SELECT and INSERT with quoted identifiers**: Work correctly.
+
+SQLite double-quoted identifiers (`"table"`, `"column"`) work correctly. PostgreSQL double-quoted identifiers have a separate issue (CTE type casting).
+
+This affects applications that consistently quote identifiers, as recommended by many coding standards and ORMs. MySQL's backtick quoting is the most common pattern.
+
+## SPEC-11.DECIMAL-ARITHMETIC-UPDATE `[Issue #140]` UPDATE SET with DECIMAL multiplication preserves old value (MySQLi)
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Mysqli/NumericPrecisionTest`
+
+`UPDATE t SET dec_val = dec_val * 1.075 WHERE label = 'price'` does not compute the multiplication. The value remains 100.5 instead of becoming 108.0375. The shadow store does not evaluate the arithmetic expression `col * literal` correctly for DECIMAL columns.
+
+This may be related to a broader issue with DECIMAL type handling in the shadow store, or with self-referencing arithmetic expressions in UPDATE SET.
+
+## SPEC-11.COLUMN-SWAP-UPDATE `[Issue #141]` UPDATE SET a=b, b=a returns 0 rows (MySQLi)
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Mysqli/ColumnSwapUpdateTest`
+
+`UPDATE t SET col_a = col_b, col_b = col_a WHERE id = 1` followed by a SELECT returns 0 rows on MySQLi. The shadow store appears to corrupt data when multiple SET assignments reference each other. All three tested patterns fail:
+
+- `SET col_a = col_b, col_b = col_a` — SELECT returns 0 rows
+- `SET col_a = col_b, col_b = CONCAT('', CAST(col_a AS UNSIGNED))` — SELECT returns 0 rows
+- `SET col_a = CONCAT(col_a, '-', col_b), col_b = UPPER(col_a)` — SELECT returns 0 rows
+
+This may indicate that the shadow store's UPDATE resolver fails when column references in the SET clause form a dependency cycle.

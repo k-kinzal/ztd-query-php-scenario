@@ -1102,6 +1102,8 @@ INSERT IGNORE (MySQL), INSERT OR IGNORE (SQLite), and INSERT...ON CONFLICT (col)
 - Affects exec() and prepared statement paths.
 - Common pattern in idempotent insert workflows.
 
+**Extended scope (2026-03-10):** The same non-PK UNIQUE blind spot affects REPLACE INTO, INSERT OR REPLACE, and INSERT...ON CONFLICT(col) DO UPDATE (Issue #153). REPLACE on a single-column or multi-column UNIQUE constraint creates duplicate rows instead of replacing. Row count grows unboundedly with repeated REPLACE on the same UNIQUE value. Tests: `Pdo/SqliteReplaceNonPkUniqueTest`.
+
 Workaround: Check for existing rows via SELECT before inserting, or use a different deduplication strategy at the application level.
 
 ## SPEC-11.ENUM-ORDERING `[Issue #92]` MySQL ENUM column type loses internal index ordering in CTE shadow store
@@ -1599,8 +1601,11 @@ Prepared DELETE with COALESCE containing a `?` parameter and a second `?` in the
 The ZTD shadow store does not enforce FOREIGN KEY constraints or propagate CASCADE effects:
 - **ON DELETE CASCADE:** Deleting a parent row does NOT cascade-delete child rows in the shadow store. Child rows remain as orphans.
 - **ON UPDATE CASCADE:** Updating a parent PK does NOT cascade-update child FK references. Children still reference the old PK value.
+- **ON DELETE SET NULL:** Deleting a parent row does NOT set child FK columns to NULL. Children retain the original FK value.
 - **FK constraint enforcement:** INSERT with a non-existent FK reference succeeds silently — the shadow store does not validate referential integrity.
 - **Multi-level cascades:** Grandchild rows are unaffected when a grandparent is deleted.
+
+**Extended scope (2026-03-10):** Confirmed ON DELETE SET NULL and ON UPDATE CASCADE on SQLite with PRAGMA foreign_keys = ON. All four FK action types (CASCADE, SET NULL, SET DEFAULT, RESTRICT) are invisible to the shadow store. Tests: `Pdo/SqliteFkCascadeVisibilityTest`.
 
 This affects any application relying on FK cascades for data consistency. After deleting a parent row, SELECT queries via ZTD return orphaned child rows with dangling FK references. LEFT JOIN queries show NULL in the parent columns for these orphans.
 
@@ -2027,3 +2032,19 @@ The CTE VALUES clause generates `CAST('' AS BOOLEAN)` for `false` values, which 
 The same patterns work correctly on MySQL (TINYINT boolean) and SQLite (INTEGER boolean).
 
 **Impact:** BOOLEAN is one of PostgreSQL's most commonly used types. Applications with active/enabled/visible flags are completely broken on PostgreSQL.
+
+## SPEC-11.INDEXED-BY `[Issue #154]` INDEXED BY / NOT INDEXED hints produce error through CTE shadow store
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteIndexedByHintTest`
+
+SQLite's `INDEXED BY idx_name` and `NOT INDEXED` query hints produce `General error: 1 no such index` when the CTE rewriter wraps the table reference. The CTE does not carry the original table's indexes, making these hints invalid. Affects SELECT, UPDATE, and DELETE with INDEXED BY. NOT INDEXED also fails (CTE has no table to scan). Workaround: remove INDEXED BY hints when using ZTD.
+
+## SPEC-11.TYPEOF `[Issue #155]` typeof() returns wrong storage class for shadow store data
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteTypeofPreservationTest`
+
+`typeof(int_col)` returns `'text'` instead of `'integer'`, and `typeof(real_col)` returns `'text'` instead of `'real'`. The CTE shadow store embeds all non-NULL values as text string literals, losing SQLite's type affinity. `typeof(NULL)` correctly returns `'null'`. Arithmetic expressions still produce correct types due to SQLite's coercion (`typeof(int_col + 5)` = `'integer'`), but direct `typeof()` on raw column values is wrong. Affects `GROUP BY typeof()` grouping and any type-dispatch logic.

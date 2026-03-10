@@ -2745,3 +2745,52 @@ DELETE with WHERE+LIMIT, ORDER BY+LIMIT, prepared LIMIT parameter, and shadow-on
 **Tests:** `Pdo/SqliteHavingWithoutGroupByTest`
 
 SQL standard HAVING without GROUP BY (entire result as one group) works correctly for non-prepared queries. Prepared `SELECT SUM(amount) FROM t WHERE status = ? HAVING SUM(amount) > ?` returns 0 rows — the HAVING with `?` parameter is not evaluated. This extends Issue #22 (HAVING with prepared params) to the HAVING-without-GROUP-BY context.
+
+## SPEC-10.2.345 INDEXED BY / NOT INDEXED hints broken through CTE shadow store
+**Status:** Confirms [Issue #154] on SQLite
+**Platforms:** SQLite-PDO (fails)
+**Tests:** `Pdo/SqliteIndexedByHintTest`
+
+SQLite's `INDEXED BY idx_name` and `NOT INDEXED` query hints produce `General error: 1 no such index` when the CTE rewriter wraps the table reference. The CTE does not carry the original table's indexes, making these hints invalid. Affects SELECT, UPDATE, DELETE with INDEXED BY. NOT INDEXED also fails. Verified patterns: direct query, prepared with params, after shadow DML, DELETE/UPDATE variants.
+
+## SPEC-10.2.346 typeof() returns wrong storage class for shadow data
+**Status:** Confirms [Issue #155] on SQLite
+**Platforms:** SQLite-PDO (fails for INTEGER/REAL)
+**Tests:** `Pdo/SqliteTypeofPreservationTest`
+
+`typeof(int_col)` returns `'text'` instead of `'integer'`, and `typeof(real_col)` returns `'text'` instead of `'real'`. The CTE shadow store embeds all non-NULL values as text string literals, losing SQLite type affinity. `typeof(text_col)` correctly returns `'text'` (trivially). `typeof(NULL)` correctly returns `'null'`. Arithmetic type preservation works due to SQLite's coercion (e.g., `typeof(int_col + 5)` = `'integer'`), but `GROUP BY typeof()` produces incorrect groupings. CAST works correctly through the shadow store.
+
+## SPEC-10.2.347 Compound SELECT (UNION/INTERSECT/EXCEPT) works correctly with two DML-modified tables
+**Status:** Verified (works correctly)
+**Platforms:** SQLite-PDO (passes)
+**Tests:** `Pdo/SqliteCompoundSelectAfterDmlTest`
+
+UNION, UNION ALL, INTERSECT, and EXCEPT all work correctly when both source tables have been modified through the shadow store. The CTE rewriter correctly rewrites both table references. Verified patterns: UNION/UNION ALL/INTERSECT/EXCEPT after INSERT+UPDATE+DELETE on both tables, UNION with WHERE on each branch, prepared UNION with params.
+
+## SPEC-10.2.348 REPLACE INTO / INSERT OR REPLACE with non-PK UNIQUE constraints creates duplicates
+**Status:** Confirms [Issue #153] (extended scope) on SQLite
+**Platforms:** SQLite-PDO (fails)
+**Tests:** `Pdo/SqliteReplaceNonPkUniqueTest`
+
+REPLACE INTO, INSERT OR REPLACE, and INSERT...ON CONFLICT(col) DO UPDATE all create duplicate rows when the conflict is on a non-PK UNIQUE constraint. The shadow store only tracks PK-based conflicts. Affected variants: single-column UNIQUE (email), multi-column UNIQUE (code+category), prepared REPLACE, ON CONFLICT DO UPDATE on non-PK UNIQUE. Row count grows unboundedly with repeated REPLACE on same UNIQUE value. Extends Issue #153 (previously only covered IODKU/ON CONFLICT DO UPDATE).
+
+## SPEC-10.2.349 INSERT...SELECT cross-table works; INSERT...SELECT with aggregate produces empty values
+**Status:** Partially verified on SQLite; extends [Issue #20]
+**Platforms:** SQLite-PDO (basic works, aggregate fails)
+**Tests:** `Pdo/SqliteInsertSelectCrossTableTest`
+
+INSERT...SELECT between two shadow-managed tables works correctly for basic column selection, including with JOIN and prepared statements. DELETE after INSERT...SELECT correctly leaves archived rows independent. However, INSERT...SELECT with GROUP BY aggregate (SUM, COUNT) produces empty values in the target table — the aggregate results are not materialized. This extends Issue #20 (INSERT...SELECT with computed columns becomes NULL).
+
+## SPEC-10.2.350 Row value (tuple) comparisons work correctly with shadow data
+**Status:** Verified (works correctly)
+**Platforms:** SQLite-PDO (passes)
+**Tests:** `Pdo/SqliteRowValueTupleTest`
+
+Row value comparisons `(year, month) > (2024, 3)`, `(a, b, c) IN ((1,2,3), (4,5,6))`, `(a, b) BETWEEN ... AND ...`, `(a, b) NOT IN (...)`, and prepared row value comparisons all work correctly through the CTE shadow store. DELETE with row value WHERE clause also works. All comparisons correctly evaluate against DML-modified shadow data.
+
+## SPEC-10.2.351 FK CASCADE/SET NULL/UPDATE CASCADE not reflected in shadow store
+**Status:** Confirms [Issue #126] (extended scope) on SQLite
+**Platforms:** SQLite-PDO (fails)
+**Tests:** `Pdo/SqliteFkCascadeVisibilityTest`
+
+When PRAGMA foreign_keys = ON, foreign key cascade operations are not reflected in the shadow store. ON DELETE CASCADE: deleting a parent row does not remove child rows from shadow (all children remain visible). Multi-level CASCADE (grandparent → parent → child): only the directly deleted row is removed. ON DELETE SET NULL: child rows retain the original FK value instead of being set to NULL. ON UPDATE CASCADE: child FK columns are not updated when parent PK changes. All four cascade types are invisible to the shadow store.

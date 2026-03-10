@@ -2647,3 +2647,17 @@ CTE rewriter correctly preserves: empty strings (not confused with NULL), string
 **Tests:** `Mysqli/DerivedTableFromShadowTest`, `Pdo/SqliteDerivedTableFromShadowTest`
 
 `SELECT sub.* FROM (SELECT ... FROM shadow_table) sub` — derived tables (subqueries in the FROM clause) return empty results when the referenced table has only shadow data. The CTE is injected at the query's top level, but all rows are lost through the derived table. Affects: simple derived tables, derived tables with aggregates, derived tables after DELETE, and nested derived tables. Confirmed Issue #13 on both MySQL and SQLite.
+
+## SPEC-10.2.331 UPDATE affected_rows/rowCount returns matched-rows count instead of changed-rows count
+**Status:** Confirms new [Issue #150] on MySQL and SQLite; PostgreSQL native behavior coincidentally matches
+**Platforms:** MySQLi (fails), SQLite-PDO (fails), PostgreSQL-PDO (documents cross-platform inconsistency)
+**Tests:** `Mysqli/UpdateNoChangeRowCountTest`, `Pdo/SqliteUpdateNoChangeRowCountTest`, `Pdo/PostgresUpdateNoChangeRowCountTest`
+
+ZTD transforms UPDATE to SELECT and returns `count($rows)` as affected_rows/rowCount, which counts matched rows, not changed rows. Native MySQL and SQLite count only rows where values actually changed (e.g., `UPDATE t SET col = col WHERE id = 1` returns 0 natively but 1 via ZTD). This affects: single-row no-change UPDATE (ZTD returns 1, native returns 0), multi-row no-change UPDATE (ZTD returns N matched, native returns 0), partial-change UPDATE where some rows already have the target value (ZTD returns all matched, native returns only changed). Positive control (actual value change) passes on all platforms. PostgreSQL natively returns matched-rows (like ZTD), so the bug doesn't manifest on PostgreSQL alone — but ZTD's uniform matched-rows behavior means cross-platform applications get different semantics than native MySQL/SQLite. Filed as Issue #150.
+
+## SPEC-10.2.332 SQLite REAL values lose precision through CTE shadow (PHP float-to-string truncation)
+**Status:** Confirms new [Issue #151] on SQLite only; MySQL and PostgreSQL unaffected
+**Platforms:** SQLite-PDO (fails), MySQLi (passes), PostgreSQL-PDO (passes)
+**Tests:** `Pdo/SqliteFloatPrecisionInShadowTest`, `Mysqli/FloatPrecisionInShadowTest`, `Pdo/PostgresFloatPrecisionInShadowTest`
+
+The CTE rewriter converts shadow values to SQL literals via PHP's `(string)$val` cast, which uses `precision=14` by default (14 significant digits). SQLite PDO returns REAL column values as native PHP floats, so the round-trip float→string→CTE loses digits beyond 14. Examples: `2.718281828459045` (16 sig digits) becomes `2.718281828459` (13 sig digits after decimal); `0.30000000000000004` (IEEE 754 representation of 0.1+0.2) becomes `0.3` (different float value). MySQL and PostgreSQL are unaffected because their PHP drivers return DOUBLE values as strings, preserving all original digits through the shadow store. Filed as Issue #151.

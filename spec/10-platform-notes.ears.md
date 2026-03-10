@@ -2629,8 +2629,8 @@ The CTE rewriter's `quoteValue()` method only escapes single quotes (`'` → `''
 
 ## SPEC-10.2.328 Transaction ROLLBACK does not undo shadow store mutations
 **Status:** Confirms new [Issue #149] on all platforms
-**Platforms:** MySQLi (fails), SQLite-PDO (fails)
-**Tests:** `Mysqli/TransactionRollbackShadowTest`, `Pdo/SqliteTransactionRollbackShadowTest`
+**Platforms:** MySQLi (fails), PostgreSQL-PDO (fails), SQLite-PDO (fails)
+**Tests:** `Mysqli/TransactionRollbackShadowTest`, `Pdo/PostgresTransactionRollbackShadowTest`, `Pdo/SqliteTransactionRollbackShadowTest`
 
 `beginTransaction()` / `begin_transaction()`, `commit()`, and `rollBack()` / `rollback()` on ZtdPdo and ZtdMysqli are pass-through to the underlying connection and do not interact with the shadow store. Shadow mutations from INSERT, UPDATE, and DELETE survive ROLLBACK: rolled-back INSERTs remain visible, rolled-back UPDATEs persist, rolled-back DELETEs stay applied. Committed transactions work correctly (positive control passes). Mixed scenario (commit first, rollback second) shows rolled-back mutations from the second transaction persisting alongside correctly committed first transaction data. Filed as Issue #149.
 
@@ -2640,3 +2640,10 @@ The CTE rewriter's `quoteValue()` method only escapes single quotes (`'` → `''
 **Tests:** `Mysqli/EmptyStringAndSpecialValueTest`, `Pdo/SqliteEmptyStringAndSpecialValueTest`
 
 CTE rewriter correctly preserves: empty strings (not confused with NULL), string `'0'` (not treated as falsy), DECIMAL precision (e.g., 123456.7890), negative integers (INT_MIN), multi-byte UTF-8 emoji characters, WHERE filtering on empty string columns, and strings containing single quotes (O'Brien). All patterns pass on both platforms.
+
+## SPEC-10.2.330 Derived tables (subquery in FROM) do not see shadow data
+**Status:** Confirms [Issue #13] on all tested platforms
+**Platforms:** MySQLi (fails), SQLite-PDO (fails)
+**Tests:** `Mysqli/DerivedTableFromShadowTest`, `Pdo/SqliteDerivedTableFromShadowTest`
+
+`SELECT sub.* FROM (SELECT ... FROM shadow_table) sub` — derived tables (subqueries in the FROM clause) return empty results when the referenced table has only shadow data. The CTE is injected at the query's top level, but all rows are lost through the derived table. Affects: simple derived tables, derived tables with aggregates, derived tables after DELETE, and nested derived tables. Confirmed Issue #13 on both MySQL and SQLite.

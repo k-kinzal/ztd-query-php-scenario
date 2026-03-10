@@ -1754,3 +1754,21 @@ This is a widely-used PostgreSQL pattern for atomic DML-then-audit workflows. Ex
 **Tests:** `Pdo/PostgresIntersectExceptDmlTest`
 
 `UPDATE t SET item = UPPER(item) WHERE item IN (SELECT item FROM a EXCEPT SELECT item FROM b)` produces "syntax error at or near )" on PostgreSQL. The CTE rewriter does not correctly handle EXCEPT/INTERSECT inside WHERE IN subqueries for UPDATE statements. DELETE with WHERE IN (INTERSECT/EXCEPT) works on PostgreSQL; only UPDATE is broken.
+
+## SPEC-11.INSERT-SELECT-SELF-JOIN `[Issue #135]` INSERT...SELECT with self-join fails (all platforms)
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Mysqli/InsertSelectSelfJoinTest`, `Pdo/MysqlInsertSelectSelfJoinTest`, `Pdo/PostgresInsertSelectSelfJoinTest`, `Pdo/SqliteInsertSelectSelfJoinTest`
+
+`INSERT INTO target SELECT a.id, b.id FROM source a JOIN source b ON a.id < b.id AND ...` fails when both aliases reference the same base table (self-join in INSERT...SELECT):
+
+- **MySQL (PDO + MySQLi):** `Unknown column 'b.id' in 'field list'` — the CTE rewriter cannot resolve the second alias when both refer to the same physical table
+- **PostgreSQL:** INSERT succeeds but 0 rows inserted (silent failure)
+- **SQLite:** INSERT succeeds but 0 rows inserted (silent failure)
+
+The equivalent `SELECT a.id, b.id FROM source a JOIN source b ON ...` without INSERT works correctly on all platforms. Cross-table INSERT...SELECT (different source tables) works. DELETE with self-join subquery (`DELETE FROM t WHERE id IN (SELECT a.id FROM t a JOIN t b ON ...)`) also works on SQLite.
+
+Related to Issue #49 (INSERT...SELECT with multi-table JOIN) but with distinct behavior: self-join produces 0 rows on PostgreSQL/SQLite instead of rows with NULLs.
+
+This is a common pattern for detecting overlapping records, finding duplicates, and hierarchical data queries.

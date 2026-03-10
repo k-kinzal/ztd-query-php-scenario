@@ -2236,3 +2236,45 @@ MySQL-specific UPDATE/DELETE with ORDER BY and LIMIT clauses are completely non-
 **Tests:** `Pdo/PostgresMultiCteDmlTest`, `Pdo/SqliteMultiCteDmlTest`
 
 PostgreSQL writable CTEs (WITH ... AS (DELETE/UPDATE RETURNING *) ...) fail: CTE name is not recognized in outer query ("relation does not exist"). Multi-writable CTEs return empty results. SQLite correctly rejects writable CTEs (not supported by the engine) with clear error messages. Data integrity is preserved after failed writable CTE attempts on SQLite [extends Issue #28].
+
+## SPEC-10.2.277 INSERT...SELECT with self-join
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/InsertSelectSelfJoinTest`, `Pdo/MysqlInsertSelectSelfJoinTest`, `Pdo/PostgresInsertSelectSelfJoinTest`, `Pdo/SqliteInsertSelectSelfJoinTest`
+
+INSERT...SELECT where the SELECT involves a self-join (same table with different aliases) fails on all platforms [Issue #135]. MySQL throws "Unknown column 'b.id' in 'field list'" — the CTE rewriter cannot resolve the second alias. PostgreSQL and SQLite silently insert 0 rows. Cross-table INSERT...SELECT (no self-join) works. SELECT with self-join (no INSERT) works on all platforms. Related to Issue #49 (INSERT...SELECT multi-table JOIN) but with distinct 0-row behavior on PostgreSQL/SQLite vs NULLs in #49.
+
+## SPEC-10.2.278 UPDATE with string concatenation (self-referencing)
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO (exec only), SQLite-PDO
+**Tests:** `Mysqli/UpdateConcatSelfRefTest`, `Pdo/MysqlUpdateConcatSelfRefTest`, `Pdo/PostgresUpdateConcatSelfRefTest`, `Pdo/SqliteUpdateConcatSelfRefTest`
+
+UPDATE with string concatenation referencing the column being updated works correctly: append (`path = path || '/archived'` / `CONCAT(path, '/archived')`), prepend, bulk update wrapping (`label = '[' || label || ']'`), prepared with `?` params (MySQL, SQLite). Multi-column self-referencing concat (`SET label = label || '_old', path = path || '/' || label`) correctly uses pre-update values for all SET expressions (SQL standard). **Known issue:** Prepared UPDATE concat with `$N` params on PostgreSQL returns 0 rows (extends Issue #106).
+
+## SPEC-10.2.279 Chained DML mutation consistency
+**Status:** Verified
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteChainedDmlConsistencyTest`
+
+Sequential DML operations maintain correct shadow store state: INSERT→UPDATE on shadow-inserted rows, INSERT→UPDATE→DELETE chains, physical seed→shadow UPDATE→shadow DELETE, double UPDATE on same row (accumulates correctly), DELETE→re-INSERT with same PK (returns new values), and aggregate queries after mutation chains all produce correct results. The shadow store correctly tracks and applies arbitrary sequences of mutations including quantity arithmetic (`quantity = quantity + 50`, `quantity = quantity * 2`).
+
+## SPEC-10.2.280 UPDATE with mathematical expressions and subqueries
+**Status:** Verified (with known issues for correlated subqueries on SQLite)
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteUpdateMathExpressionTest`
+
+UPDATE with math expressions referencing columns works: percentage calculation (`balance * 1.05`), cross-column expressions (`credit_limit - balance`), CASE with math branches, prepared UPDATE with math and `?` params. **Known issues:** UPDATE SET with correlated subquery SUM in expression (`balance = balance + COALESCE((SELECT SUM(amount) FROM bonuses WHERE ...), 0.0)`) produces "near FROM: syntax error" on SQLite — extends Issue #51. Same applies to prepared variant.
+
+## SPEC-10.2.281 Upsert with scalar subquery in SET clause
+**Status:** Known Issue (extends #105)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/UpsertScalarSubquerySetTest`, `Pdo/MysqlUpsertScalarSubquerySetTest`, `Pdo/PostgresUpsertScalarSubquerySetTest`, `Pdo/SqliteUpsertScalarSubquerySetTest`
+
+Upsert with scalar subquery in SET using EXCLUDED/VALUES reference: `ON CONFLICT DO UPDATE SET discount = (SELECT discount_pct FROM categories WHERE id = EXCLUDED.category_id)` evaluates to 0 on SQLite and MySQL instead of the subquery result [extends Issue #105]. On PostgreSQL, the CTE rewriter wraps the subquery text as a CAST literal string: `CAST('(SELECT discount_pct ...' AS numeric)` which produces "invalid input syntax for type numeric". Prepared variants produce param count mismatch on MySQL/SQLite or column index out of range on SQLite. COALESCE wrapping the subquery produces 0.0 on all platforms (subquery not evaluated, COALESCE falls through to default). No-conflict fresh inserts work correctly across all platforms.
+
+## SPEC-10.2.282 PostgreSQL OVERLAPS operator in DML
+**Status:** Verified (non-prepared only)
+**Platforms:** PostgreSQL-PDO
+**Tests:** `Pdo/PostgresOverlapsAndRangeTest`
+
+The SQL standard OVERLAPS operator for temporal range comparison works correctly through the CTE shadow store in non-prepared contexts: SELECT with OVERLAPS in WHERE, UPDATE with OVERLAPS condition, DELETE with OVERLAPS condition all return correct results on shadow data. INSERT...SELECT with OVERLAPS fails due to self-join requirement (Issue #135, not OVERLAPS itself). **Known issue:** Prepared SELECT/UPDATE with OVERLAPS and `$N` params returns 0 rows (extends Issue #106).

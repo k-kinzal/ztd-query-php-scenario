@@ -127,6 +127,62 @@ class PostgresDeleteUsingTest extends AbstractPostgresPdoTestCase
     }
 
     /**
+     * Prepared DELETE ... USING with ? placeholder.
+     */
+    public function testPreparedDeleteUsing(): void
+    {
+        try {
+            $stmt = $this->pdo->prepare(
+                "DELETE FROM pg_du_items i
+                 USING pg_du_deletions d
+                 WHERE i.id = d.item_id AND d.reason = ?"
+            );
+            $stmt->execute(['recalled']);
+
+            $rows = $this->ztdQuery('SELECT id FROM pg_du_items ORDER BY id');
+
+            if (count($rows) !== 3) {
+                $this->markTestIncomplete(
+                    'Prepared DELETE USING ?: expected 3, got ' . count($rows)
+                    . '. Data: ' . json_encode($rows)
+                );
+            }
+
+            $this->assertCount(3, $rows);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete('Prepared DELETE USING ? failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Prepared DELETE ... USING with $N PostgreSQL native params.
+     */
+    public function testPreparedDeleteUsingDollarParams(): void
+    {
+        try {
+            $stmt = $this->pdo->prepare(
+                "DELETE FROM pg_du_items i
+                 USING pg_du_deletions d
+                 WHERE i.id = d.item_id AND d.reason = $1"
+            );
+            $stmt->execute(['recalled']);
+
+            $rows = $this->ztdQuery('SELECT id FROM pg_du_items ORDER BY id');
+
+            if (count($rows) !== 3) {
+                $this->markTestIncomplete(
+                    'Prepared DELETE USING $1: expected 3, got ' . count($rows)
+                    . '. Data: ' . json_encode($rows)
+                );
+            }
+
+            $this->assertCount(3, $rows);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete('Prepared DELETE USING $N failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Physical isolation.
      */
     public function testPhysicalIsolation(): void

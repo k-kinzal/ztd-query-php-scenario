@@ -2159,3 +2159,31 @@ INSERT with function calls as value expressions works correctly through the CTE 
 **Tests:** `Mysqli/MultiRowUpsertTest`, `Pdo/MysqlMultiRowUpsertTest`, `Pdo/SqliteMultiRowUpsertTest`
 
 Multi-row INSERT (no conflict) works correctly on all platforms. Multi-row INSERT ON DUPLICATE KEY UPDATE with VALUES() references (direct replacement) works correctly on MySQL. Prepared multi-row INSERT ON DUPLICATE KEY UPDATE works correctly on MySQL. Multi-row INSERT IGNORE works correctly on MySQL. **Known issues:** (1) Multi-row upsert with self-referencing accumulate expression (table.qty + VALUES(qty)) evaluates to 0 — Issue #112; (2) SQLite multi-row ON CONFLICT DO NOTHING inserts duplicate PK rows — extends Issue #41; (3) SQLite prepared multi-row ON CONFLICT DO UPDATE inserts duplicates — extends Issue #41.
+
+## SPEC-10.2.266 Row value constructor in DML WHERE
+**Status:** Verified (with known issue on PostgreSQL)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/RowValueConstructorDmlTest`, `Pdo/MysqlRowValueConstructorDmlTest`, `Pdo/PostgresRowValueConstructorDmlTest`, `Pdo/SqliteRowValueConstructorDmlTest`
+
+Row value constructors (tuple comparisons) `WHERE (col1, col2) IN (SELECT ...)` in DELETE and UPDATE through ZTD shadow store. DELETE with `(a,b) IN (SELECT ...)` works on all platforms. UPDATE with `(a,b) IN (SELECT ...)` works on MySQL (MySQLi, PDO) and SQLite. Prepared DELETE with `(a,b) = (?, ?)` works on all platforms. DELETE with `(a,b) NOT IN (SELECT ...)` works on MySQL. **Known issues:** (1) UPDATE WHERE `(a,b) IN (SELECT ...)` produces syntax error on PostgreSQL — Issue #116; (2) Prepared DELETE WHERE `(a,b) = ($1, $2)` with `$N` params fails on PostgreSQL (extends Issue #106).
+
+## SPEC-10.2.267 Window function in DML subquery
+**Status:** Verified (with known issues)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/WindowFunctionDmlTest`, `Pdo/MysqlWindowFunctionDmlTest`, `Pdo/PostgresWindowFunctionDmlTest`, `Pdo/SqliteWindowFunctionDmlTest`
+
+Window functions (ROW_NUMBER, DENSE_RANK, RANK) in subqueries within DML. INSERT...SELECT with window functions works on all platforms. DELETE with ROW_NUMBER subquery works on MySQL and SQLite. **Known issues:** (1) DELETE with ROW_NUMBER subquery produces syntax error on PostgreSQL — Issue #115; (2) UPDATE JOIN with window function subquery treated as identifier on MySQL — extends Issue #104/Issue #115; (3) UPDATE with correlated subquery containing window function produces syntax error on SQLite — Issue #115.
+
+## SPEC-10.2.268 DISTINCT in DML subquery and INSERT...SELECT with HAVING
+**Status:** Verified (with known issues)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/UpdateDistinctSubqueryTest`, `Pdo/MysqlUpdateDistinctSubqueryTest`, `Pdo/PostgresUpdateDistinctSubqueryTest`, `Pdo/SqliteUpdateDistinctSubqueryTest`
+
+COUNT(DISTINCT) and AVG(DISTINCT) in correlated UPDATE SET subqueries work on MySQL (MySQLi, PDO). DELETE WHERE id IN (SELECT DISTINCT ...) works on all platforms. INSERT...SELECT with GROUP BY HAVING works on MySQL. **Known issues:** (1) UPDATE SET = (SELECT COUNT(DISTINCT ...)) produces syntax error on SQLite and GROUP BY error on PostgreSQL — extends Issue #10/Issue #115; (2) INSERT...SELECT with GROUP BY HAVING produces "no such column" error on SQLite and PostgreSQL — Issue #117; (3) Prepared INSERT...SELECT HAVING returns 0 rows on SQLite (extends Issue #22) and PostgreSQL with `$N` (extends Issue #106).
+
+## SPEC-10.2.269 DELETE...USING (PostgreSQL)
+**Status:** Verified (with known $N param issue)
+**Platforms:** PostgreSQL-PDO
+**Tests:** `Pdo/PostgresDeleteUsingTest`
+
+PostgreSQL DELETE...USING (multi-table DELETE syntax) works through ZTD shadow store: simple USING join, USING with additional WHERE condition, USING on shadow-inserted data, and prepared DELETE USING with `?` placeholders all work correctly. **Known issue:** Prepared DELETE USING with `$N` parameters does not apply the delete (extends Issue #106).

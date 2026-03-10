@@ -1286,13 +1286,14 @@ Non-derived-table patterns with JOINs work correctly on all platforms: top-level
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
 **Related specs:** [SPEC-4.2](04-write-operations.ears.md)
-**Tests:** `Mysqli/MultiSubqueryUpdateSetTest`, `Pdo/MysqlUpdateJoinPatternTest`
+**Tests:** `Mysqli/MultiSubqueryUpdateSetTest`, `Pdo/MysqlUpdateJoinPatternTest`, `Mysqli/WindowFunctionDmlTest`, `Pdo/MysqlWindowFunctionDmlTest`
 
 MySQL `UPDATE t1 JOIN (SELECT ... FROM t2 GROUP BY ...) alias ON ... SET t1.col = alias.col` fails with "Identifier name '(SELECT ... FROM ...' is too long". The CTE rewriter parses the entire derived table subquery as a table identifier/name rather than recognizing it as a subquery in the JOIN clause.
 
 - UPDATE JOIN with a **direct table** works correctly: `UPDATE t1 JOIN t2 ON ... SET t1.col = t2.col`
 - Prepared UPDATE JOIN with direct table + params also works correctly
 - Only the **derived table (subquery in JOIN)** form is affected
+- Window function subqueries in JOIN also trigger this: `UPDATE r JOIN (SELECT player, DENSE_RANK() OVER (...) FROM scores GROUP BY player) s ON ... SET r.rank_pos = s.drank` — same "Identifier name too long" error. Tests: `Mysqli/WindowFunctionDmlTest`, `Pdo/MysqlWindowFunctionDmlTest`. [Issue #115]
 - Related to Issue #44 (comma-syntax multi-table UPDATE) — the comma syntax recommends "Prefer JOIN syntax" as a workaround, but JOIN with derived tables is also broken
 - Related to Issue #102 (derived table with JOIN returns empty in SELECT) — same class of derived-table parsing issue but different statement type
 
@@ -1348,6 +1349,9 @@ Root cause appears to be that the CTE rewriter doesn't correctly track `$N` para
 - **Chained EXISTS with $1:** `DELETE WHERE EXISTS(...) AND NOT EXISTS(... status = $1)` deletes wrong rows. Exec variant works. Tests: `Pdo/PostgresDeleteChainedExistsTest`.
 - **UPDATE SET REPLACE($1, $2):** `SET code = REPLACE(code, $1, $2)` stores NULL values instead of replaced string. Tests: `Pdo/PostgresStringFunctionDmlTest`. [Issue #108]
 - **UPDATE SET concatenation with $1:** `SET label = label || $1` doesn't apply the concatenation (value unchanged). Tests: `Pdo/PostgresStringFunctionDmlTest`. [Issue #108]
+- **DELETE USING with $1:** `DELETE FROM t USING s WHERE t.id = s.id AND s.reason = $1` doesn't apply (all rows remain). `?` placeholder works correctly. Tests: `Pdo/PostgresDeleteUsingTest`.
+- **DELETE WHERE (a,b) = ($1, $2):** Row value constructor with `$N` params doesn't delete (all rows remain). `?` placeholders work correctly. Tests: `Pdo/PostgresRowValueConstructorDmlTest`.
+- **INSERT...SELECT HAVING SUM(qty) > $1:** Returns 0 rows (no data inserted). `?` placeholder also returns 0 rows on SQLite. Tests: `Pdo/PostgresUpdateDistinctSubqueryTest`.
 
 ## SPEC-11.PG-STRING-FUNC-PARAMS `[Issue #108]` UPDATE SET with string functions and $N params produces NULL
 **Status:** Known Issue
@@ -1428,3 +1432,44 @@ INSERT with upsert clause containing a JSON function call (JSON_SET, jsonb_set) 
 - **PostgreSQL**: `ON CONFLICT DO UPDATE SET meta = jsonb_set(pg_jdml_items.meta, '{color}', '"purple"')` → "invalid input syntax for type json... Token 'jsonb_set' is invalid"
 - Non-upsert UPDATE with JSON_SET/jsonb_set works correctly on all platforms
 - Related to Issue #105 (upsert with subquery in SET) — same class of issue where complex expressions in upsert SET are not handled by the CTE rewriter
+
+## SPEC-11.WINDOW-FUNC-DML `[Issue #115]` Window function in DML subquery breaks CTE rewriter
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed), MySQLi (confirmed), MySQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresWindowFunctionDmlTest`, `Pdo/MysqlWindowFunctionDmlTest`, `Pdo/SqliteWindowFunctionDmlTest`, `Mysqli/WindowFunctionDmlTest`
+
+DML statements containing window functions (ROW_NUMBER, DENSE_RANK, RANK) in subqueries break the CTE rewriter. The failure mode differs by platform:
+
+- **PostgreSQL**: `DELETE WHERE id IN (SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY player ...) ...) WHERE rn > 1)` — syntax error: the OVER clause is truncated during rewrite
+- **MySQL (MySQLi, PDO)**: `UPDATE r JOIN (SELECT player, DENSE_RANK() OVER (...) FROM scores GROUP BY player) s ON ... SET r.rank_pos = s.drank` — "Identifier name '(SELECT player, DENSE_RANK() OVER ...' is too long" (subquery text treated as identifier, extends Issue #104)
+- **SQLite**: `UPDATE t SET col = (SELECT drank FROM (SELECT player, DENSE_RANK() OVER (...) FROM scores GROUP BY player) WHERE player = t.player)` — "near FROM: syntax error"
+- DELETE with ROW_NUMBER works on MySQL and SQLite but not PostgreSQL
+- INSERT...SELECT with window function (RANK() OVER ...) works correctly on all platforms
+- Non-DML SELECT with window functions works correctly on all platforms
+
+## SPEC-11.PG-ROW-VALUE-UPDATE `[Issue #116]` Row value constructor in UPDATE WHERE produces syntax error (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresRowValueConstructorDmlTest`
+
+`UPDATE t SET col = 0 WHERE (col1, col2) IN (SELECT a, b FROM s)` produces a syntax error on PostgreSQL. The CTE rewriter generates invalid SQL when the UPDATE WHERE clause contains a row value constructor (tuple comparison).
+
+- `DELETE FROM t WHERE (col1, col2) IN (SELECT ...)` works correctly on PostgreSQL
+- Both UPDATE and DELETE with row value constructors work correctly on MySQL (MySQLi, PDO) and SQLite
+- Prepared DELETE WHERE (a,b) = ($1, $2) with `$N` params also fails on PostgreSQL (Issue #106)
+- Prepared DELETE WHERE (a,b) = (?, ?) with `?` params works correctly on PostgreSQL
+
+## SPEC-11.INSERT-SELECT-HAVING `[Issue #117]` INSERT...SELECT with GROUP BY HAVING produces "no such column" error
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.1a](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteUpdateDistinctSubqueryTest`, `Pdo/PostgresUpdateDistinctSubqueryTest`, `Mysqli/UpdateDistinctSubqueryTest`, `Pdo/MysqlUpdateDistinctSubqueryTest`
+
+`INSERT INTO summary (product_id, total_qty, order_count) SELECT product_id, SUM(qty), COUNT(*) FROM orders GROUP BY product_id HAVING COUNT(*) >= 2` fails on SQLite and PostgreSQL with "no such column: total_qty". The CTE rewriter references INSERT target column names in the verification SELECT, but those names don't exist in the source query's output.
+
+- Works correctly on MySQL (MySQLi, PDO)
+- Prepared INSERT...SELECT HAVING with `?` param returns 0 rows on SQLite (related to Issue #22)
+- Prepared INSERT...SELECT HAVING with `$N` param returns 0 rows on PostgreSQL (related to Issue #106)
+- Related to Issue #20 (INSERT...SELECT with computed columns/aggregation)

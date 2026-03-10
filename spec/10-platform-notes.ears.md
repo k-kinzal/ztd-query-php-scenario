@@ -3098,3 +3098,52 @@ DML with a subquery containing ORDER BY + LIMIT (batch processing pattern) fails
 **Tests:** `Pdo/PostgresRollupDmlTest`
 
 SELECT with GROUP BY ROLLUP, CUBE, and GROUPING SETS all work correctly through the PostgreSQL shadow store. INSERT...SELECT with GROUPING SETS also works for the initial data. However, after prior shadow DML (e.g., additional INSERTs), INSERT...SELECT GROUPING SETS produces 0-value aggregates — the GROUPING SETS query doesn't see the shadow-only mutations. This is consistent with Issue #4 (CTE rewriter not rewriting inner table references).
+
+## SPEC-10.2.394 Arithmetic self-referencing UPDATE SET silently ignored on all platforms
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Tests:** `Pdo/SqliteArithmeticUpdateDmlTest`, `Pdo/MysqlArithmeticUpdateDmlTest`, `Pdo/PostgresArithmeticUpdateDmlTest`, `Mysqli/ArithmeticUpdateDmlTest`
+
+`UPDATE SET quantity = quantity + 1` and similar arithmetic self-referencing expressions are silently ignored on all platforms — the column retains its original value. Affected patterns: increment (`col + 1`), decrement (`col - 1`), multiplication (`col * 1.1`), multi-column arithmetic (`SET col1 = col1 + 5, col2 = col2 + 1`). Double increment (two consecutive `SET col = col + 1`) also fails — value stays at original. Bulk arithmetic (`UPDATE t SET views = views * 2` without WHERE) also has no effect. The CTE shadow store stores literal values only and does not evaluate expressions referencing the current column value.
+
+## SPEC-10.2.395 CASE WHEN expression in UPDATE SET silently ignored on all platforms
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Tests:** `Pdo/SqliteCaseWhenUpdateDmlTest`, `Pdo/MysqlCaseWhenUpdateDmlTest`, `Pdo/PostgresCaseWhenUpdateDmlTest`, `Mysqli/CaseWhenUpdateDmlTest`
+
+`UPDATE SET tier = CASE WHEN amount >= 500 THEN 'gold' WHEN amount >= 100 THEN 'silver' ELSE 'bronze' END` is silently ignored on all platforms — the column retains its previous value (NULL or original). CASE WHEN with WHERE clause also fails: `UPDATE SET status = CASE WHEN ... END WHERE status = 'pending'` leaves status unchanged. Multi-column CASE WHEN (`SET tier = CASE ..., status = CASE ...`) also fails. CASE WHEN applied to newly inserted shadow rows (after DML) also has no effect.
+
+## SPEC-10.2.396 INSERT...SELECT UNION ALL blocked on MySQL as "multi-statement" or partially broken
+**Status:** Known Issue
+**Platforms:** MySQLi (blocked), MySQL-PDO (blocked), PostgreSQL-PDO (works), SQLite-PDO (partial)
+**Tests:** `Pdo/SqliteInsertSelectUnionDmlTest`, `Pdo/MysqlInsertSelectUnionDmlTest`, `Pdo/PostgresInsertSelectUnionDmlTest`, `Mysqli/InsertSelectUnionDmlTest`
+
+`INSERT INTO combined SELECT ... FROM a UNION ALL SELECT ... FROM b` fails on MySQL/MySQLi with "ZTD Write Protection: Multi-statement SQL statement" — the UNION keyword is misidentified as a statement separator. On SQLite, the INSERT succeeds and row count is correct, but column values from the SELECT list are incorrectly mapped (literal 'a' origin column returns NULL). PostgreSQL handles INSERT...SELECT UNION ALL correctly, including after prior DML on source tables. UNION (DISTINCT) and EXCEPT variants: PostgreSQL works; SQLite row count correct but values misaligned; MySQL blocked.
+
+## SPEC-10.2.397 DELETE/UPDATE WHERE EXISTS/NOT EXISTS correlated subquery silently ignored
+**Status:** Known Issue
+**Platforms:** MySQLi (silent no-op), MySQL-PDO (silent no-op), PostgreSQL-PDO (type error), SQLite-PDO (silent no-op)
+**Tests:** `Pdo/SqliteCorrelatedDeleteDmlTest`, `Pdo/MysqlCorrelatedDeleteDmlTest`, `Pdo/PostgresCorrelatedDeleteDmlTest`, `Mysqli/CorrelatedDeleteDmlTest`
+
+`DELETE FROM orders WHERE NOT EXISTS (SELECT 1 FROM customers WHERE customers.id = orders.customer_id)` is silently ignored on MySQL, MySQLi, and SQLite — no rows are deleted. `DELETE WHERE EXISTS` with a correlated condition also has no effect. `UPDATE WHERE EXISTS` similarly fails (amount unchanged). On PostgreSQL, the CTE rewriter causes a type mismatch: "operator does not exist: text = integer" because the shadow CTE stores all values as TEXT, breaking INTEGER comparisons in the correlated subquery.
+
+## SPEC-10.2.398 UPDATE SET col = (scalar subquery) broken on all platforms
+**Status:** Known Issue
+**Platforms:** MySQLi (empty value), MySQL-PDO (empty value), PostgreSQL-PDO (type error), SQLite-PDO (syntax error)
+**Tests:** `Pdo/SqliteSubqueryUpdateSetDmlTest`, `Pdo/MysqlSubqueryUpdateSetDmlTest`, `Pdo/PostgresSubqueryUpdateSetDmlTest`, `Mysqli/SubqueryUpdateSetDmlTest`
+
+`UPDATE customers SET total_spent = (SELECT SUM(amount) FROM orders WHERE orders.customer_id = customers.id)` fails differently per platform. SQLite: "near FROM: syntax error" — the CTE rewriter corrupts the SQL containing the subquery in SET. MySQL/MySQLi: no error, but total_spent becomes empty string instead of the computed value. PostgreSQL: "operator does not exist: integer = text" — CTE shadow TEXT columns cannot be compared with INTEGER columns in the correlated subquery. Subquery after prior DML also fails on all platforms.
+
+## SPEC-10.2.399 INSERT...SELECT with COALESCE/IFNULL: function not evaluated, NULLs pass through
+**Status:** Known Issue (extends [Issue #174])
+**Platforms:** MySQLi (partial), MySQL-PDO (partial), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Tests:** `Pdo/SqliteCoalesceInsertSelectDmlTest`, `Pdo/MysqlCoalesceInsertSelectDmlTest`, `Pdo/PostgresCoalesceInsertSelectDmlTest`, `Mysqli/CoalesceInsertSelectDmlTest`
+
+`INSERT INTO clean SELECT COALESCE(name, 'Unknown'), COALESCE(email, 'none') FROM raw` inserts rows but COALESCE is not evaluated — NULL values from the source pass through to the target. On SQLite and PostgreSQL, non-NULL values also appear as NULL in the target (column mapping broken). On MySQL, the basic INSERT COALESCE inserts correct row count but IFNULL variant inserts 0 rows. After prior DML on source, INSERT...SELECT with WHERE returns 0 rows on all platforms. UPDATE with COALESCE (`SET name = COALESCE(name, 'Patched') WHERE name IS NULL`) fails on all platforms (combines Issue #177 IS NULL in WHERE + function expression in SET).
+
+## SPEC-10.2.400 UPDATE SET with function expressions silently ignored (systemic pattern)
+**Status:** Known Issue (generalizes [Issue #174])
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Tests:** All tests in SPEC-10.2.394–399
+
+The CTE shadow store does not evaluate ANY expression in UPDATE SET clauses. This is a systemic issue that affects: arithmetic (`col + 1`), string functions (`UPPER(col)`, `LOWER(col)`, `REPLACE(col, old, new)`, `CONCAT(...)`), CASE WHEN expressions, COALESCE/IFNULL, scalar subqueries, and JSON functions (Issue #174). Only simple literal assignments (`SET col = 'value'` or `SET col = 42`) work correctly. The shadow store extracts the SET value as a literal string; when the value is an expression, it is either stored as the expression text itself or discarded.

@@ -2283,3 +2283,63 @@ Issue #138 reported DELETE WHERE IS NULL failure for PostgreSQL. These tests con
 INSERT...SELECT GROUP BY WITH ROLLUP on MySQL drops the grand total (NULL region) row. SELECT WITH ROLLUP correctly returns all rows including the grand total; only the INSERT...SELECT variant drops it. PostgreSQL ROLLUP/CUBE/GROUPING SETS work for SELECT, and INSERT works for initial data, but INSERT after prior DML produces stale aggregates.
 
 **Impact:** ROLLUP is used for materializing summary tables with subtotals in ETL pipelines and reporting dashboards.
+
+## SPEC-11.ARITHMETIC-UPDATE-SET `[Issue #179]` Arithmetic self-referencing UPDATE SET silently ignored
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.394](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteArithmeticUpdateDmlTest`, `Pdo/MysqlArithmeticUpdateDmlTest`, `Pdo/PostgresArithmeticUpdateDmlTest`, `Mysqli/ArithmeticUpdateDmlTest`
+
+`UPDATE SET quantity = quantity + 1` and all arithmetic self-referencing expressions are silently ignored. Increment, decrement, multiplication, multi-column arithmetic, and bulk arithmetic all retain original values. The shadow store stores literal values only and cannot evaluate expressions referencing the current column value.
+
+**Impact:** Counter patterns (`views = views + 1`), inventory management (`stock = stock - 1`), pricing adjustments (`price = price * 1.1`), and any incremental update. These are among the most common UPDATE patterns in real applications.
+
+## SPEC-11.CASE-WHEN-UPDATE-SET `[Issue #180]` CASE WHEN in UPDATE SET silently ignored
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.395](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteCaseWhenUpdateDmlTest`, `Pdo/MysqlCaseWhenUpdateDmlTest`, `Pdo/PostgresCaseWhenUpdateDmlTest`, `Mysqli/CaseWhenUpdateDmlTest`
+
+`UPDATE SET tier = CASE WHEN amount >= 500 THEN 'gold' ... END` is silently ignored. Column stays NULL or retains previous value. CASE WHEN with WHERE clause, multi-column CASE, and CASE on shadow-inserted rows all fail.
+
+**Impact:** Conditional business logic in bulk updates: status transitions, tiered pricing, batch categorization, and conditional field computation. CASE WHEN in UPDATE is one of the most common SQL patterns for batch data transformation.
+
+## SPEC-11.INSERT-SELECT-UNION `[Issue #181]` INSERT...SELECT UNION ALL blocked as "multi-statement" on MySQL
+**Status:** Known Issue
+**Platforms:** MySQLi (blocked), MySQL-PDO (blocked), SQLite-PDO (partial — column mapping broken), PostgreSQL-PDO (works)
+**Related specs:** [SPEC-4.1a](04-write-operations.ears.md), [SPEC-10.2.396](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteInsertSelectUnionDmlTest`, `Pdo/MysqlInsertSelectUnionDmlTest`, `Pdo/PostgresInsertSelectUnionDmlTest`, `Mysqli/InsertSelectUnionDmlTest`
+
+On MySQL/MySQLi, `INSERT INTO t SELECT ... UNION ALL SELECT ...` is blocked with "ZTD Write Protection: Multi-statement SQL statement" — the UNION keyword is misidentified as a statement separator. On SQLite, the row count is correct but SELECT-list columns are misaligned (literal constants become NULL). PostgreSQL works correctly.
+
+**Impact:** Data consolidation from multiple source tables, ETL pipelines, data migration, and UNION-based report materialization.
+
+## SPEC-11.CORRELATED-EXISTS-DML `[Issue #182]` DELETE/UPDATE WHERE EXISTS/NOT EXISTS correlated subquery silently ignored
+**Status:** Known Issue
+**Platforms:** MySQLi (silent no-op), MySQL-PDO (silent no-op), PostgreSQL-PDO (type error), SQLite-PDO (silent no-op)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.397](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteCorrelatedDeleteDmlTest`, `Pdo/MysqlCorrelatedDeleteDmlTest`, `Pdo/PostgresCorrelatedDeleteDmlTest`, `Mysqli/CorrelatedDeleteDmlTest`
+
+`DELETE WHERE NOT EXISTS (correlated subquery)` and `DELETE WHERE EXISTS (correlated subquery)` are silently ignored on MySQL, MySQLi, and SQLite — no rows are deleted or updated. On PostgreSQL, the CTE rewriter produces type errors because shadow CTE columns are TEXT, not the original types.
+
+**Impact:** Orphan record cleanup (`DELETE WHERE NOT EXISTS` to remove orders without customers), conditional multi-table operations, and FK integrity maintenance. EXISTS subqueries are a fundamental SQL pattern.
+
+## SPEC-11.SUBQUERY-UPDATE-SET `[Issue #183]` UPDATE SET col = (scalar subquery) broken on all platforms
+**Status:** Known Issue
+**Platforms:** MySQLi (empty value), MySQL-PDO (empty value), PostgreSQL-PDO (type error), SQLite-PDO (syntax error)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.398](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteSubqueryUpdateSetDmlTest`, `Pdo/MysqlSubqueryUpdateSetDmlTest`, `Pdo/PostgresSubqueryUpdateSetDmlTest`, `Mysqli/SubqueryUpdateSetDmlTest`
+
+`UPDATE customers SET total_spent = (SELECT SUM(amount) FROM orders WHERE orders.customer_id = customers.id)` fails differently per platform: SQLite produces syntax error (CTE rewriter corrupts SQL), MySQL/MySQLi sets the column to empty string, PostgreSQL gets type mismatch from TEXT shadow columns.
+
+**Impact:** Denormalized totals, cached aggregates, materialized computed fields, and any derived UPDATE pattern. Common in reporting, billing, and analytics applications.
+
+## SPEC-11.EXPRESSION-UPDATE-SET-SYSTEMIC `[Issue #184]` UPDATE SET with any non-literal expression silently ignored (systemic)
+**Status:** Known Issue (generalizes [Issue #174], [Issue #179], [Issue #180], [Issue #183])
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.400](10-platform-notes.ears.md)
+**Tests:** All tests in SPEC-10.2.394–399
+
+The CTE shadow store does not evaluate ANY expression in UPDATE SET. Only simple literal assignments (`SET col = 'value'`) work. All of the following are silently ignored or produce errors: arithmetic (`col + 1`), string functions (`UPPER(col)`), CASE WHEN, COALESCE, scalar subqueries, and JSON functions. This is the root cause behind Issues #174, #179, #180, #183.
+
+**Impact:** This is the single highest-impact limitation of the shadow store. Nearly every real-world UPDATE uses some form of expression in SET. Applications must disable ZTD for any UPDATE that is not a simple literal assignment.

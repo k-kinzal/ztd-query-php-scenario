@@ -1870,3 +1870,53 @@ This may be related to a broader issue with DECIMAL type handling in the shadow 
 - `SET col_a = CONCAT(col_a, '-', col_b), col_b = UPPER(col_a)` — SELECT returns 0 rows
 
 This may indicate that the shadow store's UPDATE resolver fails when column references in the SET clause form a dependency cycle.
+
+## SPEC-11.CASE-IN-SET-WITH-WHERE `[Issue #142]` CASE expression in UPDATE SET not evaluated when WHERE clause is present (all platforms)
+**Status:** Known Issue
+**Platforms:** MySQL PDO (confirmed), PostgreSQL PDO (confirmed), MySQLi (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlCaseInUpdateSetTest`, `Pdo/PostgresCaseInUpdateSetTest`, `Mysqli/CaseInUpdateSetTest`
+
+`UPDATE t SET tier = CASE WHEN balance >= 10000 THEN 'platinum' ELSE 'gold' END WHERE balance >= 1000` does not evaluate the CASE expression. The WHERE clause correctly selects the target rows, but the SET CASE expression is not evaluated — columns retain their original values.
+
+A simple CASE in SET **without** a WHERE clause works correctly:
+`UPDATE t SET tier = CASE WHEN balance >= 10000 THEN 'gold' ELSE 'silver' END` → works
+
+Additionally, arithmetic expressions within CASE branches in SET are not computed:
+`SET balance = CASE WHEN balance >= 10000 THEN balance * 1.05 ELSE balance END` → balance stays at original value
+
+This is distinct from Issue #96 (CASE in WHERE clause matches ALL rows). Here the CASE is in SET, not WHERE.
+
+## SPEC-11.ANTI-JOIN-PATTERNS `[Issue #143]` Anti-join query patterns return wrong results (MySQL, MySQLi, PostgreSQL)
+**Status:** Known Issue
+**Platforms:** MySQL PDO (confirmed), MySQLi (confirmed), PostgreSQL PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlAntiJoinNullPatternTest`, `Pdo/PostgresAntiJoinNullPatternTest`, `Mysqli/ExistsInSelectListTest`
+
+Three equivalent anti-join patterns all produce wrong results:
+
+- **LEFT JOIN ... WHERE IS NULL** (MySQL): Returns ALL rows instead of only unmatched rows. The IS NULL condition on the joined table's column is ignored.
+- **NOT EXISTS in WHERE** (MySQL, MySQLi): Returns ALL rows instead of unmatched rows. The NOT EXISTS condition is completely ignored.
+- **NOT IN(subquery)** (MySQL): Returns EMPTY set (0 rows) instead of unmatched rows.
+
+On PostgreSQL, all three patterns fail with `operator does not exist: text = integer` due to the CTE rewriter casting SERIAL PKs to text.
+
+DELETE with anti-join patterns (e.g., `DELETE FROM t WHERE id NOT IN (SELECT ...)`) also has no effect.
+
+These are extremely common application patterns (find orphaned records, find inactive users, delete stale data). Related to Issue #137 (EXISTS in SELECT list) but distinct: these involve WHERE-clause anti-join filtering, not SELECT-list boolean expressions.
+
+## SPEC-11.PG-COALESCE-DML `[Issue #144]` Multi-column COALESCE in UPDATE SET and nested COALESCE produce wrong results (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresCoalesceInDmlTest`
+
+Several COALESCE evaluation bugs on PostgreSQL:
+
+1. **Multi-column COALESCE UPDATE**: `UPDATE SET description = COALESCE(description, 'default'), category = COALESCE(category, 'uncategorized')` does not evaluate — NULL columns stay NULL.
+2. **Nested COALESCE**: `SET price = COALESCE(discount, price, ?)` returns the wrong argument (price instead of discount when discount is non-null).
+3. **DELETE WHERE COALESCE**: `DELETE WHERE COALESCE(price, 0) < 15` has no effect AND the id column appears as NULL in subsequent SELECTs.
+
+Simple single-column `UPDATE SET price = COALESCE(price, 0.00)` works. MySQL handles all COALESCE patterns correctly.
+
+On PostgreSQL, prepared variants also fail with `operator does not exist: text = integer` (SERIAL PK type mismatch, same root cause as many PostgreSQL issues).

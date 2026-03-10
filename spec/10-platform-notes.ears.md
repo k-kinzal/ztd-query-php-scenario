@@ -2345,3 +2345,28 @@ DECIMAL(20,10) values are preserved correctly in the shadow store: high-precisio
 **Tests:** `Pdo/SqliteInsertSelectLimitTest`
 
 INSERT...SELECT with LIMIT, LIMIT OFFSET, ORDER BY DESC LIMIT (top-N), prepared INSERT...SELECT LIMIT, and INSERT...SELECT LIMIT on shadow-inserted data all work correctly through the CTE shadow store on SQLite. The LIMIT/OFFSET clauses are preserved in the CTE-rewritten INSERT...SELECT.
+
+## SPEC-10.2.291 CASE expression in UPDATE SET
+**Status:** Verified (SQLite); Known Issue (MySQL, PostgreSQL [Issue #142])
+**Platforms:** SQLite-PDO (works), MySQL-PDO (partial), PostgreSQL-PDO (partial), MySQLi (partial)
+**Tests:** `Pdo/SqliteCaseInUpdateSetTest`, `Pdo/MysqlCaseInUpdateSetTest`, `Pdo/PostgresCaseInUpdateSetTest`, `Mysqli/CaseInUpdateSetTest`
+
+CASE expressions in UPDATE SET clause: Simple CASE without WHERE works on all platforms. Prepared CASE in SET works on all platforms. **Known issue:** CASE in SET + WHERE clause does not evaluate the CASE (columns keep original values) on MySQL, PostgreSQL, and MySQLi [Issue #142]. Multiple CASE with arithmetic branches (`balance * 1.05`) also does not compute. Nested CASE, searched CASE, and CASE + further mutations all work on SQLite.
+
+## SPEC-10.2.292 COALESCE in DML operations
+**Status:** Verified (MySQL, SQLite); Known Issue (PostgreSQL [Issue #144])
+**Platforms:** MySQL-PDO (works), SQLite-PDO (works), PostgreSQL-PDO (partial)
+**Tests:** `Pdo/MysqlCoalesceInDmlTest`, `Pdo/SqliteCoalesceInDmlTest`, `Pdo/PostgresCoalesceInDmlTest`
+
+COALESCE in UPDATE SET and DELETE WHERE: All patterns work on MySQL and SQLite — single-column COALESCE default, prepared COALESCE with params, nested COALESCE, multi-column COALESCE, DELETE WHERE COALESCE, and SELECT COALESCE on shadow data.
+
+PostgreSQL: Simple single-column `UPDATE SET price = COALESCE(price, 0.00)` works. **Known issues:** Multi-column COALESCE UPDATE does not evaluate (NULL stays NULL), nested COALESCE returns wrong argument, DELETE WHERE COALESCE has no effect and corrupts id column, prepared variants fail with type mismatch [Issue #144].
+
+## SPEC-10.2.293 Anti-join query patterns
+**Status:** Verified (SQLite); Known Issue (MySQL [Issue #143], PostgreSQL [Issue #143])
+**Platforms:** SQLite-PDO (works), MySQL-PDO (broken), PostgreSQL-PDO (broken)
+**Tests:** `Pdo/SqliteAntiJoinNullPatternTest`, `Pdo/MysqlAntiJoinNullPatternTest`, `Pdo/PostgresAntiJoinNullPatternTest`
+
+Three equivalent anti-join patterns (LEFT JOIN IS NULL, NOT EXISTS, NOT IN) all return correct and identical results on SQLite — find unmatched rows, with additional filters, with prepared params, and DELETE using anti-join.
+
+**Known issues:** On MySQL, LEFT JOIN IS NULL and NOT EXISTS return ALL rows (condition ignored), NOT IN returns EMPTY set. On PostgreSQL, all patterns fail with type mismatch (text = integer). DELETE with anti-join also broken on both platforms [Issue #143].

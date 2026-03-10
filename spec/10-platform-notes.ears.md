@@ -2465,3 +2465,66 @@ On PostgreSQL, ALL operations on tables with BOOLEAN columns fail with `invalid 
 **Tests:** `Mysqli/IntervalArithmeticDmlTest`, `Pdo/MysqlIntervalArithmeticDmlTest`, `Pdo/PostgresIntervalArithmeticDmlTest`, `Pdo/SqliteIntervalArithmeticDmlTest`
 
 SQLite `datetime(col, '+30 days')` and PostgreSQL `col + INTERVAL '30 days'` work correctly in UPDATE SET. MySQL `col + INTERVAL 30 DAY` produces syntax error (CTE rewriter treats INTERVAL as column expression). MySQL `DATE_ADD(col, INTERVAL 7 DAY)` works as workaround. Date comparisons in WHERE work on all platforms. String formatting functions (`strftime`, `to_char`, `DATE_FORMAT`, `CONCAT`) in UPDATE SET work on all platforms.
+
+## SPEC-10.2.305 LIKE / NOT LIKE pattern in DML WHERE
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/LikePatternDmlTest`, `Pdo/MysqlLikePatternDmlTest`, `Pdo/PostgresLikePatternDmlTest`, `Pdo/SqliteLikePatternDmlTest`
+
+LIKE and NOT LIKE pattern matching in UPDATE and DELETE WHERE clauses work correctly through ZTD shadow store on all platforms. Tested patterns: suffix match (`%@example.com`), prefix match (`A%`), NOT LIKE inverse match, underscore wildcard (`_ve`), prepared UPDATE with LIKE parameter, and LIKE combined with AND condition. PostgreSQL ILIKE (case-insensitive) also works. This is distinct from REGEXP/~ operators ([Issue #136]) which are silently ignored.
+
+## SPEC-10.2.306 Multi-row INSERT with per-row function expressions
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/MultiRowInsertExprTest`, `Pdo/MysqlMultiRowInsertExprTest`, `Pdo/PostgresMultiRowInsertExprTest`, `Pdo/SqliteMultiRowInsertExprTest`
+
+Multi-row INSERT with function calls in VALUES works correctly on all platforms. Tested patterns: UPPER()/LOWER() per row, string concatenation (CONCAT on MySQL, `||` on PG/SQLite), arithmetic expressions (`10.00 * 1.1`, `5 + 3`), mixed literal and function rows, IF() conditional (MySQL), CASE WHEN expression (PG/SQLite). The CTE rewriter correctly evaluates each row's expressions independently.
+
+## SPEC-10.2.307 UPDATE SET with REPLACE() string function
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/StringReplaceDmlTest`, `Pdo/MysqlStringReplaceDmlTest`, `Pdo/PostgresStringReplaceDmlTest`, `Pdo/SqliteStringReplaceDmlTest`
+
+`UPDATE SET col = REPLACE(col, 'old', 'new')` (MySQL) and `replace(col, 'old', 'new')` (PG/SQLite) work correctly in ZTD shadow store on all platforms. Tested patterns: basic replace, replace with WHERE, nested REPLACE (chained), CONCAT+REPLACE combined, and prepared UPDATE with REPLACE parameters. Distinct from [Issue #108] which covers PG string functions with `$N` params only.
+
+## SPEC-10.2.308 GROUP_CONCAT / string_agg aggregate after shadow DML
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/GroupConcatAfterDmlTest`, `Pdo/MysqlGroupConcatAfterDmlTest`, `Pdo/PostgresStringAggAfterDmlTest`, `Pdo/SqliteGroupConcatAfterDmlTest`
+
+GROUP_CONCAT (MySQL), string_agg (PostgreSQL), and group_concat (SQLite) correctly reflect shadow DML mutations. After shadow INSERT, new values appear in aggregate. After shadow DELETE, removed values disappear. After shadow UPDATE, changed values are reflected. Custom separators, DISTINCT, and ORDER BY (MySQL/PG) all work. SQLite group_concat without derived table ordering works; with derived table ordering fails due to [Issue #13].
+
+## SPEC-10.2.309 Math functions in UPDATE SET and DELETE WHERE
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/MathFunctionDmlTest`, `Pdo/MysqlMathFunctionDmlTest`, `Pdo/PostgresMathFunctionDmlTest`, `Pdo/SqliteMathFunctionDmlTest`
+
+ROUND(), CEIL(), ABS(), MOD(), FLOOR() in UPDATE SET expressions work correctly through ZTD shadow store on all platforms. Compound function conditions in DELETE WHERE (`ABS(price) < 6 OR quantity = 0`) work. Combined arithmetic and function (`ROUND(price * 1.1, 2)`) works. FLOOR() in DELETE WHERE works.
+
+## SPEC-10.2.310 DELETE WHERE with subquery on different shadow-modified table
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/DeleteWithSubqueryOnOtherTableTest`, `Pdo/MysqlDeleteWithSubqueryOnOtherTableTest`, `Pdo/PostgresDeleteWithSubqueryOnOtherTableTest`, `Pdo/SqliteDeleteWithSubqueryOnOtherTableTest`
+
+DELETE WHERE col IN (SELECT ... FROM other_table WHERE ...) works correctly when both tables have shadow mutations. The CTE rewriter correctly rewrites references in both the outer DELETE and the inner subquery. Tested patterns: IN subquery, IN subquery after shadow UPDATE on referenced table, IN subquery after shadow INSERT of new category + product, NOT IN subquery, EXISTS correlated subquery. All patterns work on all platforms.
+
+## SPEC-10.2.311 Cross-table INSERT...SELECT with shadow-modified tables
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/CrossTableShadowInsertSelectTest`, `Pdo/MysqlCrossTableShadowInsertSelectTest`, `Pdo/PostgresCrossTableShadowInsertSelectTest`, `Pdo/SqliteCrossTableShadowInsertSelectTest`
+
+INSERT...SELECT with explicit column list works correctly when both source and destination tables have shadow mutations. Shadow-inserted source rows are included, shadow-deleted source rows are excluded, shadow-updated source rows reflect the update. Both-tables-modified scenario works. Note: `SELECT *` on MySQL still triggers [Issue #40] (column count mismatch) — use explicit column lists as workaround.
+
+## SPEC-10.2.312 UPDATE SET with UPPER()/LOWER()/TRIM() string functions
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, SQLite-PDO (PostgreSQL not tested separately but LOWER/UPPER verified in other scenarios)
+**Tests:** `Mysqli/UpdateSetLowerUpperTest`, `Pdo/SqliteUpdateSetLowerUpperTest`
+
+UPDATE SET with UPPER(), LOWER(), TRIM(), LEFT(), SUBSTRING()/SUBSTR() string functions works correctly on all tested platforms. Multi-column SET with different string functions per column works. Combined UPPER(TRIM(col)) works. SUBSTRING with LOCATE (MySQL) and SUBSTR with INSTR (SQLite) work.
+
+## SPEC-10.2.313 Cross-table correlated subquery in UPDATE SET
+**Status:** Partially Verified; extends [Issue #147]
+**Platforms:** MySQLi (works), MySQL-PDO (works), PostgreSQL-PDO (fails), SQLite-PDO (fails)
+**Tests:** `Mysqli/UpdateSetCrossTableSubqueryTest`, `Pdo/MysqlUpdateSetCrossTableSubqueryTest`, `Pdo/PostgresUpdateSetCrossTableSubqueryTest`, `Pdo/SqliteUpdateSetCrossTableSubqueryTest`
+
+`UPDATE customers SET total = (SELECT COUNT(*) FROM orders WHERE orders.cust_id = customers.id)` — the denormalization pattern with a DIFFERENT table in the subquery. MySQL handles this correctly for COUNT, SUM/COALESCE, subquery after shadow INSERT, subquery after shadow DELETE, and sequential multi-column updates. PostgreSQL produces "column must appear in GROUP BY" error. SQLite produces "near FROM: syntax error". This extends Issue #147 to confirm cross-table correlated subqueries in UPDATE SET fail on SQLite and PostgreSQL. Sequential updates on the same row work on all platforms.

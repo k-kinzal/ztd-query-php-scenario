@@ -3035,3 +3035,66 @@ DML with a CTE (WITH clause) nested inside a subquery has mixed results:
 **Tests:** `Pdo/PostgresReturningChainDmlTest`, `Pdo/SqliteReturningChainDmlTest`
 
 INSERT/UPDATE/DELETE RETURNING used for chaining DML operations confirms Issues #32, #53, #121: On PostgreSQL, INSERT RETURNING returns no rows (fetchAll returns empty array), UPDATE RETURNING returns 0 rows, DELETE RETURNING returns 0 rows. On SQLite, INSERT RETURNING returns no rows, UPDATE/DELETE RETURNING produces "syntax error near RETURNING". The pattern of using RETURNING to capture the generated id for child INSERT, or DELETE RETURNING for audit logging, cannot be used through ZTD.
+
+## SPEC-10.2.385 WITH RECURSIVE CTE broken through shadow store
+**Status:** Known Issue
+**Platforms:** MySQLi (syntax error), MySQL-PDO (syntax error), PostgreSQL-PDO (0 rows / syntax error / duplicate alias), SQLite-PDO (0 rows / no values)
+**Tests:** `Pdo/SqliteRecursiveCteDmlTest`, `Pdo/MysqlRecursiveCteDmlTest`, `Pdo/PostgresRecursiveCteDmlTest`, `Mysqli/RecursiveCteDmlTest`
+
+`WITH RECURSIVE` CTEs are broken through the ZTD shadow store. On MySQL (PDO and MySQLi), the CTE rewriter consumes the `WITH` keyword but leaves `RECURSIVE` behind, causing syntax error 1064. On SQLite and PostgreSQL, SELECT WITH RECURSIVE returns 0 rows — the recursive CTE references the shadow CTE which is empty. INSERT...SELECT FROM recursive CTE fails with "Insert statement has no values to project" (MySQL/SQLite) or syntax error (PostgreSQL). DELETE WHERE IN (recursive CTE subquery) works on all platforms. UPDATE WHERE IN (recursive CTE subquery) works on MySQL but fails on PostgreSQL (duplicate alias) and SQLite (no rows updated).
+
+## SPEC-10.2.386 JSON functions in UPDATE SET and DELETE WHERE silently ignored
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Tests:** `Pdo/SqliteJsonColumnDmlTest`, `Pdo/MysqlJsonColumnDmlTest`, `Pdo/PostgresJsonColumnDmlTest`, `Mysqli/JsonColumnDmlTest`
+
+JSON function calls in UPDATE SET and DELETE WHERE are silently ignored on all platforms. `UPDATE t SET metadata = json_set(metadata, '$.key', 'val')` retains the old value; `DELETE FROM t WHERE json_extract(metadata, '$.key') = 'val'` matches nothing. Affected functions: json_set, json_replace, json_insert, JSON_SET, JSON_REPLACE, JSON_EXTRACT, JSON_UNQUOTE, jsonb_set, ->> operator, || merge operator, @> containment operator. SELECT with JSON functions works correctly — the issue is in SET expressions and WHERE predicate evaluation within the CTE rewriter. Prepared variants are also affected.
+
+## SPEC-10.2.387 INSERT DEFAULT VALUES blocked on all platforms
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Tests:** `Pdo/SqliteInsertDefaultValuesDmlTest`, `Pdo/MysqlInsertDefaultValuesDmlTest`, `Pdo/PostgresInsertDefaultValuesDmlTest`, `Mysqli/InsertDefaultValuesDmlTest`
+
+`INSERT INTO table DEFAULT VALUES` (SQL standard) and MySQL's `INSERT INTO table () VALUES ()` are blocked by the shadow store. Error messages vary: SQLite "Insert statement has no values to project", MySQL "Insert values count does not match column count", PostgreSQL "ZTD Write Protection: Cannot extract INSERT values SQL statement". The shadow store requires explicit column/value lists to construct the CTE.
+
+## SPEC-10.2.388 Composite PK DML: basic operations work, duplicate INSERT bypasses constraint
+**Status:** Partially Verified
+**Platforms:** MySQLi (3 pass), MySQL-PDO (4 pass), PostgreSQL-PDO (4 pass, 1 fail), SQLite-PDO (5 pass, 1 fail)
+**Tests:** `Pdo/SqliteCompositePkDmlTest`, `Pdo/MysqlCompositePkDmlTest`, `Pdo/PostgresCompositePkDmlTest`, `Mysqli/CompositePkDmlTest`
+
+Tables with composite (multi-column) primary keys generally work through the shadow store: UPDATE and DELETE targeting specific composite PK values, partial PK matching, and most prepared variants all pass. Two exceptions: (1) SQLite — INSERT with duplicate composite PK is silently accepted, creating 2 rows instead of raising a constraint violation (extends Issue #126 shadow store constraint bypass). (2) PostgreSQL — prepared UPDATE with $N params on composite PK retains old value.
+
+## SPEC-10.2.389 DELETE WHERE IS NULL / UPDATE WHERE IS NOT NULL silently ignored (cross-platform)
+**Status:** Known Issue (extends [Issue #138])
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Tests:** `Pdo/SqlitePreparedNullDmlTest`, `Pdo/MysqlPreparedNullDmlTest`, `Pdo/PostgresPreparedNullDmlTest`, `Mysqli/PreparedNullDmlTest`
+
+DELETE WHERE column IS NULL and UPDATE WHERE column IS NOT NULL are silently ignored on all platforms — no rows are deleted or updated. UPDATE SET column = NULL via prepared statement also fails (old value retained). Issue #138 reported this for PostgreSQL only; these tests confirm the same behavior on MySQL, MySQLi, and SQLite. INSERT with NULL parameter and SELECT WHERE IS NULL work correctly. The CTE shadow store does not correctly evaluate IS NULL / IS NOT NULL predicates.
+
+## SPEC-10.2.390 Unicode data in DELETE WHERE / UPDATE SET silently ignored
+**Status:** Partially Verified
+**Platforms:** MySQLi (1 pass, 2 fail), MySQL-PDO (2 pass, 2 fail), PostgreSQL-PDO (3 pass, 2 fail), SQLite-PDO (4 pass, 3 fail)
+**Tests:** `Pdo/SqliteUnicodeDataDmlTest`, `Pdo/MysqlUnicodeDataDmlTest`, `Pdo/PostgresUnicodeDataDmlTest`, `Mysqli/UnicodeDataDmlTest`
+
+INSERT and SELECT with Unicode data (CJK, emoji, diacriticals, RTL) work correctly through the shadow store. However, UPDATE SET and DELETE WHERE with Unicode literal values in the WHERE clause fail on all platforms — `UPDATE t SET city = '大阪' WHERE name = '田中太郎'` retains old value; `DELETE FROM t WHERE city = 'München'` matches nothing. The CTE rewriter does not correctly propagate Unicode literal values in WHERE predicates. PostgreSQL additionally fails on prepared INSERT with Unicode params (0 rows visible).
+
+## SPEC-10.2.391 DELETE/UPDATE WHERE IN (SELECT ... ORDER BY ... LIMIT) silently ignored or syntax error
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (syntax error), SQLite-PDO (confirmed)
+**Tests:** `Pdo/SqliteSubqueryLimitDmlTest`, `Pdo/MysqlSubqueryLimitDmlTest`, `Pdo/PostgresSubqueryLimitDmlTest`, `Mysqli/SubqueryLimitDmlTest`
+
+DML with a subquery containing ORDER BY + LIMIT (batch processing pattern) fails on all platforms. On MySQL and SQLite, DELETE and UPDATE are silently ignored — no error, no rows affected. On PostgreSQL, the CTE rewriter truncates the SQL at the ORDER BY clause, producing "syntax error at end of input". Both exec() and prepared variants are affected. Sequential batch delete (delete LIMIT 3 twice) also fails — the first batch has no effect so the second also operates on the full set. The MySQL variant wraps the self-referencing subquery in a derived table per MySQL requirements, but this also fails.
+
+## SPEC-10.2.392 INSERT...SELECT WITH ROLLUP drops NULL grand total row on MySQL
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
+**Tests:** `Pdo/MysqlRollupDmlTest`, `Mysqli/RollupDmlTest`
+
+`INSERT INTO summary SELECT region, SUM(amount) FROM sales GROUP BY region WITH ROLLUP` on MySQL inserts only the per-group rows and drops the grand total (NULL region) row. SELECT WITH ROLLUP works correctly and returns all 3 rows (2 groups + grand total). INSERT...SELECT produces only 2 rows. PostgreSQL SELECT ROLLUP, CUBE, and GROUPING SETS all work correctly through the shadow store, but INSERT...SELECT GROUPING SETS doesn't see prior DML changes (aggregate values are 0).
+
+## SPEC-10.2.393 PostgreSQL ROLLUP/CUBE/GROUPING SETS: SELECT works, INSERT after DML stale
+**Status:** Partially Verified
+**Platforms:** PostgreSQL-PDO (SELECT all pass, INSERT after DML stale)
+**Tests:** `Pdo/PostgresRollupDmlTest`
+
+SELECT with GROUP BY ROLLUP, CUBE, and GROUPING SETS all work correctly through the PostgreSQL shadow store. INSERT...SELECT with GROUPING SETS also works for the initial data. However, after prior shadow DML (e.g., additional INSERTs), INSERT...SELECT GROUPING SETS produces 0-value aggregates — the GROUPING SETS query doesn't see the shadow-only mutations. This is consistent with Issue #4 (CTE rewriter not rewriting inner table references).

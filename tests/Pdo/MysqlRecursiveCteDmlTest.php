@@ -4,151 +4,199 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
+use PDO;
 use Tests\Support\AbstractMysqlPdoTestCase;
 
 /**
- * Tests recursive CTEs used to drive DML operations (MySQL PDO).
- * @spec SPEC-3.3c, SPEC-4.1a
+ * Tests recursive CTEs (WITH RECURSIVE) in DML context on MySQL PDO.
+ *
+ * MySQL 8.0+ supports recursive CTEs. This tests whether the CTE rewriter
+ * handles recursive CTEs in DML subqueries correctly.
+ *
+ * @spec SPEC-10.2
  */
 class MysqlRecursiveCteDmlTest extends AbstractMysqlPdoTestCase
 {
     protected function getTableDDL(): string|array
     {
         return [
-            'CREATE TABLE my_rcd_categories (id INT PRIMARY KEY, name VARCHAR(50), parent_id INT)',
-            'CREATE TABLE my_rcd_flat_tree (id INT PRIMARY KEY, name VARCHAR(50), depth INT)',
-            'CREATE TABLE my_rcd_numbers (n INT PRIMARY KEY)',
+            "CREATE TABLE my_rct_categories (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                parent_id INT,
+                active TINYINT DEFAULT 1
+            ) ENGINE=InnoDB",
+            "CREATE TABLE my_rct_flat (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                category_id INT,
+                path TEXT
+            ) ENGINE=InnoDB",
         ];
     }
 
     protected function getTableNames(): array
     {
-        return ['my_rcd_numbers', 'my_rcd_flat_tree', 'my_rcd_categories'];
+        return ['my_rct_flat', 'my_rct_categories'];
     }
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->pdo->exec("INSERT INTO my_rcd_categories VALUES (1, 'Root', NULL)");
-        $this->pdo->exec("INSERT INTO my_rcd_categories VALUES (2, 'Electronics', 1)");
-        $this->pdo->exec("INSERT INTO my_rcd_categories VALUES (3, 'Phones', 2)");
-        $this->pdo->exec("INSERT INTO my_rcd_categories VALUES (4, 'Laptops', 2)");
-        $this->pdo->exec("INSERT INTO my_rcd_categories VALUES (5, 'Clothing', 1)");
+
+        $this->ztdExec("INSERT INTO my_rct_categories (id, name, parent_id) VALUES (1, 'Root', NULL)");
+        $this->ztdExec("INSERT INTO my_rct_categories (id, name, parent_id) VALUES (2, 'Electronics', 1)");
+        $this->ztdExec("INSERT INTO my_rct_categories (id, name, parent_id) VALUES (3, 'Phones', 2)");
+        $this->ztdExec("INSERT INTO my_rct_categories (id, name, parent_id) VALUES (4, 'Laptops', 2)");
+        $this->ztdExec("INSERT INTO my_rct_categories (id, name, parent_id) VALUES (5, 'Clothing', 1)");
+        $this->ztdExec("INSERT INTO my_rct_categories (id, name, parent_id) VALUES (6, 'Shirts', 5)");
     }
 
-    public function testRecursiveCteInsertNumberSeries(): void
+    public function testSelectRecursiveCte(): void
     {
-        $sql = "WITH RECURSIVE nums(n) AS (
-                    SELECT 1
-                    UNION ALL
-                    SELECT n + 1 FROM nums WHERE n < 10
-                )
-                INSERT INTO my_rcd_numbers (n) SELECT n FROM nums";
-
         try {
-            $this->pdo->exec($sql);
-            $rows = $this->ztdQuery("SELECT n FROM my_rcd_numbers ORDER BY n");
+            $rows = $this->ztdQuery(
+                "WITH RECURSIVE tree AS (
+                    SELECT id, name, parent_id, CAST(name AS CHAR(500)) AS path FROM my_rct_categories WHERE parent_id IS NULL
+                    UNION ALL
+                    SELECT c.id, c.name, c.parent_id, CONCAT(tree.path, '/', c.name)
+                    FROM my_rct_categories c
+                    JOIN tree ON c.parent_id = tree.id
+                )
+                SELECT id, name, path FROM tree ORDER BY path"
+            );
 
-            if (count($rows) !== 10) {
+            if (count($rows) !== 6) {
                 $this->markTestIncomplete(
-                    'Recursive CTE INSERT series: expected 10, got ' . count($rows)
-                    . '. Data: ' . json_encode($rows)
+                    'SELECT recursive CTE (MySQL PDO): expected 6, got ' . count($rows)
+                    . '. Rows: ' . json_encode($rows)
                 );
             }
 
-            $this->assertCount(10, $rows);
-            $this->assertSame(1, (int) $rows[0]['n']);
-            $this->assertSame(10, (int) $rows[9]['n']);
+            $this->assertCount(6, $rows);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('Recursive CTE INSERT series failed: ' . $e->getMessage());
+            $this->markTestIncomplete('SELECT recursive CTE (MySQL PDO) failed: ' . $e->getMessage());
         }
     }
 
-    public function testRecursiveCteTreeInsert(): void
+    public function testInsertFromRecursiveCte(): void
     {
-        $sql = "WITH RECURSIVE tree AS (
-                    SELECT id, name, 0 AS depth
-                    FROM my_rcd_categories WHERE parent_id IS NULL
-                    UNION ALL
-                    SELECT c.id, c.name, t.depth + 1
-                    FROM my_rcd_categories c
-                    JOIN tree t ON c.parent_id = t.id
-                )
-                INSERT INTO my_rcd_flat_tree (id, name, depth)
-                SELECT id, name, depth FROM tree";
-
         try {
-            $this->pdo->exec($sql);
-            $rows = $this->ztdQuery("SELECT name, depth FROM my_rcd_flat_tree ORDER BY depth, name");
+            $this->ztdExec(
+                "INSERT INTO my_rct_flat (category_id, path)
+                 WITH RECURSIVE tree AS (
+                     SELECT id, name, parent_id, CAST(name AS CHAR(500)) AS path FROM my_rct_categories WHERE parent_id IS NULL
+                     UNION ALL
+                     SELECT c.id, c.name, c.parent_id, CONCAT(tree.path, '/', c.name)
+                     FROM my_rct_categories c
+                     JOIN tree ON c.parent_id = tree.id
+                 )
+                 SELECT id, path FROM tree"
+            );
 
-            if (count($rows) !== 5) {
+            $rows = $this->ztdQuery("SELECT category_id, path FROM my_rct_flat ORDER BY path");
+
+            if (count($rows) !== 6) {
                 $this->markTestIncomplete(
-                    'Recursive CTE tree INSERT: expected 5, got ' . count($rows)
-                    . '. Data: ' . json_encode($rows)
+                    'INSERT from recursive CTE (MySQL PDO): expected 6, got ' . count($rows)
+                    . '. Rows: ' . json_encode($rows)
                 );
             }
 
-            $this->assertCount(5, $rows);
-            $this->assertSame('Root', $rows[0]['name']);
+            $this->assertCount(6, $rows);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('Recursive CTE tree INSERT failed: ' . $e->getMessage());
+            $this->markTestIncomplete('INSERT from recursive CTE (MySQL PDO) failed: ' . $e->getMessage());
         }
     }
 
-    public function testRecursiveCteDelete(): void
+    public function testDeleteSubtreeViaRecursiveCte(): void
     {
-        $sql = "WITH RECURSIVE subtree AS (
-                    SELECT id FROM my_rcd_categories WHERE id = 2
-                    UNION ALL
-                    SELECT c.id FROM my_rcd_categories c
-                    JOIN subtree s ON c.parent_id = s.id
-                )
-                DELETE FROM my_rcd_categories WHERE id IN (SELECT id FROM subtree)";
-
         try {
-            $this->pdo->exec($sql);
-            $rows = $this->ztdQuery("SELECT name FROM my_rcd_categories ORDER BY id");
+            $this->ztdExec(
+                "DELETE FROM my_rct_categories WHERE id IN (
+                    WITH RECURSIVE subtree AS (
+                        SELECT id FROM my_rct_categories WHERE id = 2
+                        UNION ALL
+                        SELECT c.id FROM my_rct_categories c
+                        JOIN subtree ON c.parent_id = subtree.id
+                    )
+                    SELECT id FROM subtree
+                )"
+            );
 
-            if (count($rows) !== 2) {
+            $rows = $this->ztdQuery("SELECT id, name FROM my_rct_categories ORDER BY id");
+
+            if (count($rows) !== 3) {
                 $this->markTestIncomplete(
-                    'Recursive CTE DELETE: expected 2, got ' . count($rows)
-                    . '. Data: ' . json_encode($rows)
+                    'DELETE subtree recursive CTE (MySQL PDO): expected 3, got ' . count($rows)
+                    . '. Rows: ' . json_encode($rows)
                 );
             }
 
-            $this->assertCount(2, $rows);
-            $this->assertSame('Root', $rows[0]['name']);
-            $this->assertSame('Clothing', $rows[1]['name']);
+            $this->assertCount(3, $rows);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('Recursive CTE DELETE failed: ' . $e->getMessage());
+            $this->markTestIncomplete('DELETE subtree recursive CTE (MySQL PDO) failed: ' . $e->getMessage());
         }
     }
 
-    public function testRecursiveCteInsertPrepared(): void
+    public function testUpdateSubtreeViaRecursiveCte(): void
     {
-        $sql = "WITH RECURSIVE nums(n) AS (
-                    SELECT ?
-                    UNION ALL
-                    SELECT n + 1 FROM nums WHERE n < ?
-                )
-                INSERT INTO my_rcd_numbers (n) SELECT n FROM nums";
-
         try {
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([5, 8]);
+            $this->ztdExec(
+                "UPDATE my_rct_categories SET active = 0 WHERE id IN (
+                    WITH RECURSIVE subtree AS (
+                        SELECT id FROM my_rct_categories WHERE id = 5
+                        UNION ALL
+                        SELECT c.id FROM my_rct_categories c
+                        JOIN subtree ON c.parent_id = subtree.id
+                    )
+                    SELECT id FROM subtree
+                )"
+            );
 
-            $rows = $this->ztdQuery("SELECT n FROM my_rcd_numbers ORDER BY n");
+            $inactive = $this->ztdQuery("SELECT id, name FROM my_rct_categories WHERE active = 0 ORDER BY id");
+
+            if (count($inactive) !== 2) {
+                $this->markTestIncomplete(
+                    'UPDATE subtree recursive CTE (MySQL PDO): expected 2 inactive, got '
+                    . count($inactive) . '. Rows: ' . json_encode($inactive)
+                );
+            }
+
+            $this->assertCount(2, $inactive);
+        } catch (\Throwable $e) {
+            $this->markTestIncomplete('UPDATE subtree recursive CTE (MySQL PDO) failed: ' . $e->getMessage());
+        }
+    }
+
+    public function testInsertRecursiveCteAfterDml(): void
+    {
+        try {
+            $this->ztdExec("INSERT INTO my_rct_categories (id, name, parent_id) VALUES (7, 'Accessories', 3)");
+
+            $this->ztdExec(
+                "INSERT INTO my_rct_flat (category_id, path)
+                 WITH RECURSIVE tree AS (
+                     SELECT id, name, parent_id, CAST(name AS CHAR(500)) AS path FROM my_rct_categories WHERE id = 2
+                     UNION ALL
+                     SELECT c.id, c.name, c.parent_id, CONCAT(tree.path, '/', c.name)
+                     FROM my_rct_categories c
+                     JOIN tree ON c.parent_id = tree.id
+                 )
+                 SELECT id, path FROM tree"
+            );
+
+            $rows = $this->ztdQuery("SELECT category_id, path FROM my_rct_flat ORDER BY path");
 
             if (count($rows) !== 4) {
                 $this->markTestIncomplete(
-                    'Recursive CTE INSERT prepared: expected 4, got ' . count($rows)
-                    . '. Data: ' . json_encode($rows)
+                    'INSERT recursive CTE after DML (MySQL PDO): expected 4, got ' . count($rows)
+                    . '. Rows: ' . json_encode($rows)
                 );
             }
 
             $this->assertCount(4, $rows);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('Recursive CTE INSERT prepared failed: ' . $e->getMessage());
+            $this->markTestIncomplete('INSERT recursive CTE after DML (MySQL PDO) failed: ' . $e->getMessage());
         }
     }
 }

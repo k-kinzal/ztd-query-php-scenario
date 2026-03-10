@@ -591,6 +591,15 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.382 | `*CteInSubqueryDmlTest` | P | P | P | P | Nested CTE in DML subquery: syntax errors or silent no-op |
 | SPEC-10.2.383 | `*InsertSelectGroupByHavingTest` | P | P | P | P | INSERT...SELECT GROUP BY HAVING: basic works, prior DML not reflected |
 | SPEC-10.2.384 | `*ReturningChainDmlTest` | — | — | K | K | RETURNING chain DML: confirms #32/#53/#121 |
+| SPEC-10.2.385 | `*RecursiveCteDmlTest` | K | K | K | K | WITH RECURSIVE: syntax error (MySQL), 0 rows (PG/SL), DELETE subquery works (#173) |
+| SPEC-10.2.386 | `*JsonColumnDmlTest` | K | K | K | K | JSON funcs in UPDATE SET/DELETE WHERE silently ignored (#174) |
+| SPEC-10.2.387 | `*InsertDefaultValuesDmlTest` | K | K | K | K | INSERT DEFAULT VALUES / () VALUES () blocked (#175) |
+| SPEC-10.2.388 | `*CompositePkDmlTest` | V | V | P | P | Composite PK DML: basic works; SL dup accepted; PG prepared fails |
+| SPEC-10.2.389 | `*PreparedNullDmlTest` | K | K | K | P | IS NULL/IS NOT NULL in DML silently ignored; extends #138 (#177) |
+| SPEC-10.2.390 | `*UnicodeDataDmlTest` | K | K | K | P | Unicode in DELETE WHERE / UPDATE SET silently ignored |
+| SPEC-10.2.391 | `*SubqueryLimitDmlTest` | K | K | K | K | Subquery LIMIT in DML: silent no-op (MySQL/SL), syntax error (PG) (#176) |
+| SPEC-10.2.392 | `Pdo/MysqlRollupDmlTest`, `Mysqli/RollupDmlTest` | K | K | — | — | INSERT WITH ROLLUP drops NULL grand total row (#178) |
+| SPEC-10.2.393 | `Pdo/PostgresRollupDmlTest` | — | — | P | — | ROLLUP/CUBE/GROUPING SETS: SELECT works, INSERT after DML stale |
 
 ## Legend
 

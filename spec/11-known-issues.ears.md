@@ -2223,3 +2223,63 @@ DML statements with a CTE (WITH clause) nested inside a subquery have mixed resu
 - Prepared variants with bound parameters return 0 rows on all platforms.
 
 **Impact:** Nested CTEs in DML subqueries are used for complex conditional operations — deleting lowest-ranked items per group, updating based on windowed rankings, etc. Applications using this pattern must restructure as two-step operations (SELECT with CTE first, then DML with the results).
+
+## SPEC-11.RECURSIVE-CTE-DML `[Issue #173]` WITH RECURSIVE CTE broken through shadow store
+**Status:** Known Issue
+**Platforms:** MySQLi (syntax error), MySQL-PDO (syntax error), PostgreSQL-PDO (0 rows / errors), SQLite-PDO (0 rows / no values)
+**Related specs:** [SPEC-3.3e](03-read-operations.ears.md), [SPEC-10.2.385](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteRecursiveCteDmlTest`, `Pdo/MysqlRecursiveCteDmlTest`, `Pdo/PostgresRecursiveCteDmlTest`, `Mysqli/RecursiveCteDmlTest`
+
+`WITH RECURSIVE` CTEs are completely broken through the ZTD shadow store. On MySQL (PDO and MySQLi), the CTE rewriter consumes the `WITH` keyword but leaves `RECURSIVE` behind, producing a syntax error. On SQLite and PostgreSQL, SELECT WITH RECURSIVE returns 0 rows. INSERT...SELECT from recursive CTE fails with "no values to project" or syntax errors. DELETE with recursive CTE in subquery works on all platforms; UPDATE with recursive CTE works on MySQL only.
+
+**Impact:** Recursive CTEs are fundamental for hierarchical data (org charts, category trees, bill of materials, threaded comments). Applications using WITH RECURSIVE must disable ZTD.
+
+## SPEC-11.JSON-DML-IGNORED `[Issue #174]` JSON functions in UPDATE SET and DELETE WHERE silently ignored
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.386](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteJsonColumnDmlTest`, `Pdo/MysqlJsonColumnDmlTest`, `Pdo/PostgresJsonColumnDmlTest`, `Mysqli/JsonColumnDmlTest`
+
+JSON function calls in UPDATE SET expressions and DELETE WHERE predicates are silently ignored on all platforms. `UPDATE SET metadata = json_set(metadata, '$.key', 'val')` retains old value; `DELETE WHERE json_extract(metadata, '$.key') = 'val'` matches nothing. Affected functions: json_set, json_replace, json_insert, JSON_SET, JSON_REPLACE, JSON_EXTRACT, jsonb_set, ->> operator, || merge, @> containment. SELECT with JSON functions works correctly. The CTE shadow store does not evaluate JSON function calls.
+
+**Impact:** JSON columns are increasingly common for feature flags, user preferences, dynamic attributes, configuration storage, and API caching. Applications using JSON functions in DML must disable ZTD.
+
+## SPEC-11.INSERT-DEFAULT-VALUES `[Issue #175]` INSERT DEFAULT VALUES blocked on all platforms
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md), [SPEC-10.2.387](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteInsertDefaultValuesDmlTest`, `Pdo/MysqlInsertDefaultValuesDmlTest`, `Pdo/PostgresInsertDefaultValuesDmlTest`, `Mysqli/InsertDefaultValuesDmlTest`
+
+`INSERT INTO table DEFAULT VALUES` (SQL standard) and MySQL's `INSERT INTO table () VALUES ()` are blocked. SQLite: "Insert statement has no values to project". MySQL: "Insert values count does not match column count". PostgreSQL: "ZTD Write Protection: Cannot extract INSERT values SQL statement". The shadow store requires explicit column/value lists.
+
+**Impact:** INSERT DEFAULT VALUES is used for auto-increment ID generation, queue/counter tables, ORM placeholder rows, and any table with all-default columns.
+
+## SPEC-11.SUBQUERY-LIMIT-DML `[Issue #176]` DELETE/UPDATE with subquery LIMIT silently ignored or syntax error
+**Status:** Known Issue
+**Platforms:** MySQLi (silent no-op), MySQL-PDO (silent no-op), PostgreSQL-PDO (syntax error), SQLite-PDO (silent no-op)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.391](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqliteSubqueryLimitDmlTest`, `Pdo/MysqlSubqueryLimitDmlTest`, `Pdo/PostgresSubqueryLimitDmlTest`, `Mysqli/SubqueryLimitDmlTest`
+
+`DELETE WHERE id IN (SELECT id FROM t ORDER BY ... LIMIT N)` and `UPDATE WHERE id IN (SELECT id FROM t ORDER BY ... LIMIT N)` fail on all platforms. MySQL/SQLite: silently ignored, no rows affected. PostgreSQL: CTE rewriter truncates SQL at ORDER BY, producing syntax error. Sequential batch processing (delete LIMIT N, repeat) is impossible through ZTD.
+
+**Impact:** Subquery with LIMIT is used for batch processing, queue consumption, pagination in DML, and top-N cleanup operations.
+
+## SPEC-11.IS-NULL-DML-CROSS-PLATFORM `[Issue #177]` DELETE WHERE IS NULL / UPDATE WHERE IS NOT NULL cross-platform (extends #138)
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.389](10-platform-notes.ears.md)
+**Tests:** `Pdo/SqlitePreparedNullDmlTest`, `Pdo/MysqlPreparedNullDmlTest`, `Pdo/PostgresPreparedNullDmlTest`, `Mysqli/PreparedNullDmlTest`
+
+Issue #138 reported DELETE WHERE IS NULL failure for PostgreSQL. These tests confirm the same behavior on all platforms: DELETE WHERE IS NULL, UPDATE WHERE IS NOT NULL, and prepared UPDATE SET NULL all silently fail. The CTE shadow store does not evaluate IS NULL / IS NOT NULL predicates correctly.
+
+**Impact:** NULL handling is fundamental to SQL. Affects data cleanup, batch normalization, and any DML targeting nullable columns.
+
+## SPEC-11.ROLLUP-INSERT-DROP `[Issue #178]` INSERT...SELECT WITH ROLLUP drops NULL grand total row (MySQL)
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
+**Related specs:** [SPEC-4.1a](04-write-operations.ears.md), [SPEC-10.2.392](10-platform-notes.ears.md)
+**Tests:** `Pdo/MysqlRollupDmlTest`, `Mysqli/RollupDmlTest`
+
+INSERT...SELECT GROUP BY WITH ROLLUP on MySQL drops the grand total (NULL region) row. SELECT WITH ROLLUP correctly returns all rows including the grand total; only the INSERT...SELECT variant drops it. PostgreSQL ROLLUP/CUBE/GROUPING SETS work for SELECT, and INSERT works for initial data, but INSERT after prior DML produces stale aggregates.
+
+**Impact:** ROLLUP is used for materializing summary tables with subtotals in ETL pipelines and reporting dashboards.

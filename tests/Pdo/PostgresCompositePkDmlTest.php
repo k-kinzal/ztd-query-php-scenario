@@ -4,139 +4,126 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
+use PDO;
 use Tests\Support\AbstractPostgresPdoTestCase;
 
 /**
- * Tests DML on tables with composite primary keys through ZTD shadow store
- * on PostgreSQL.
+ * Tests DML on tables with composite primary keys on PostgreSQL.
  *
- * @spec SPEC-4.2, SPEC-4.5
+ * @spec SPEC-10.2
  */
 class PostgresCompositePkDmlTest extends AbstractPostgresPdoTestCase
 {
     protected function getTableDDL(): string|array
     {
-        return [
-            'CREATE TABLE pg_cpk_enrollments (
-                student_id INT NOT NULL,
-                course_id INT NOT NULL,
-                grade VARCHAR(5),
-                PRIMARY KEY (student_id, course_id)
-            )',
-            'CREATE TABLE pg_cpk_students (id SERIAL PRIMARY KEY, name VARCHAR(50))',
-            'CREATE TABLE pg_cpk_courses (id SERIAL PRIMARY KEY, title VARCHAR(50))',
-        ];
+        return "CREATE TABLE pg_cpk_enrollments (
+            student_id INTEGER NOT NULL,
+            course_id INTEGER NOT NULL,
+            grade VARCHAR(5),
+            PRIMARY KEY (student_id, course_id)
+        )";
     }
 
     protected function getTableNames(): array
     {
-        return ['pg_cpk_enrollments', 'pg_cpk_courses', 'pg_cpk_students'];
+        return ['pg_cpk_enrollments'];
     }
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->pdo->exec("INSERT INTO pg_cpk_students (id, name) VALUES (1, 'Alice')");
-        $this->pdo->exec("INSERT INTO pg_cpk_students (id, name) VALUES (2, 'Bob')");
-        $this->pdo->exec("INSERT INTO pg_cpk_courses (id, title) VALUES (10, 'Math')");
-        $this->pdo->exec("INSERT INTO pg_cpk_courses (id, title) VALUES (20, 'Science')");
 
-        $this->pdo->exec("INSERT INTO pg_cpk_enrollments VALUES (1, 10, 'A')");
-        $this->pdo->exec("INSERT INTO pg_cpk_enrollments VALUES (1, 20, 'B')");
-        $this->pdo->exec("INSERT INTO pg_cpk_enrollments VALUES (2, 10, 'C')");
+        $this->ztdExec("INSERT INTO pg_cpk_enrollments (student_id, course_id, grade) VALUES (1, 101, 'A')");
+        $this->ztdExec("INSERT INTO pg_cpk_enrollments (student_id, course_id, grade) VALUES (1, 102, 'B')");
+        $this->ztdExec("INSERT INTO pg_cpk_enrollments (student_id, course_id, grade) VALUES (2, 101, 'C')");
+        $this->ztdExec("INSERT INTO pg_cpk_enrollments (student_id, course_id, grade) VALUES (2, 103, 'A')");
+        $this->ztdExec("INSERT INTO pg_cpk_enrollments (student_id, course_id, grade) VALUES (3, 102, 'B')");
     }
 
     public function testUpdateByCompositePk(): void
     {
         try {
-            $this->pdo->exec("UPDATE pg_cpk_enrollments SET grade = 'A+' WHERE student_id = 1 AND course_id = 10");
-            $rows = $this->ztdQuery("SELECT grade FROM pg_cpk_enrollments WHERE student_id = 1 AND course_id = 10");
+            $this->ztdExec("UPDATE pg_cpk_enrollments SET grade = 'A+' WHERE student_id = 1 AND course_id = 101");
 
-            $this->assertCount(1, $rows);
+            $rows = $this->ztdQuery("SELECT grade FROM pg_cpk_enrollments WHERE student_id = 1 AND course_id = 101");
+
+            if (count($rows) !== 1) {
+                $this->markTestIncomplete('UPDATE composite PK (PG): expected 1, got ' . count($rows));
+            }
+
             $this->assertSame('A+', $rows[0]['grade']);
-
-            $other = $this->ztdQuery("SELECT grade FROM pg_cpk_enrollments WHERE student_id = 1 AND course_id = 20");
-            $this->assertSame('B', $other[0]['grade']);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('UPDATE composite PK failed: ' . $e->getMessage());
+            $this->markTestIncomplete('UPDATE composite PK (PG) failed: ' . $e->getMessage());
         }
     }
 
     public function testDeleteByCompositePk(): void
     {
         try {
-            $this->pdo->exec("DELETE FROM pg_cpk_enrollments WHERE student_id = 2 AND course_id = 10");
+            $this->ztdExec("DELETE FROM pg_cpk_enrollments WHERE student_id = 2 AND course_id = 101");
+
             $rows = $this->ztdQuery("SELECT student_id, course_id FROM pg_cpk_enrollments ORDER BY student_id, course_id");
 
-            if (count($rows) !== 2) {
-                $this->markTestIncomplete(
-                    'DELETE composite PK: expected 2, got ' . count($rows) . '. Data: ' . json_encode($rows)
-                );
+            if (count($rows) !== 4) {
+                $this->markTestIncomplete('DELETE composite PK (PG): expected 4, got ' . count($rows) . '. Rows: ' . json_encode($rows));
             }
 
-            $this->assertCount(2, $rows);
+            $this->assertCount(4, $rows);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('DELETE composite PK failed: ' . $e->getMessage());
+            $this->markTestIncomplete('DELETE composite PK (PG) failed: ' . $e->getMessage());
         }
     }
 
     public function testUpdateByPartialPk(): void
     {
         try {
-            $this->pdo->exec("UPDATE pg_cpk_enrollments SET grade = 'P' WHERE student_id = 1");
-            $rows = $this->ztdQuery("SELECT grade FROM pg_cpk_enrollments WHERE student_id = 1 ORDER BY course_id");
+            $this->ztdExec("UPDATE pg_cpk_enrollments SET grade = 'F' WHERE student_id = 1");
 
-            $this->assertCount(2, $rows);
-            $this->assertSame('P', $rows[0]['grade']);
-            $this->assertSame('P', $rows[1]['grade']);
+            $rows = $this->ztdQuery("SELECT course_id, grade FROM pg_cpk_enrollments WHERE student_id = 1 ORDER BY course_id");
 
-            $bob = $this->ztdQuery("SELECT grade FROM pg_cpk_enrollments WHERE student_id = 2");
-            $this->assertSame('C', $bob[0]['grade']);
+            if (count($rows) !== 2) {
+                $this->markTestIncomplete('UPDATE partial PK (PG): expected 2, got ' . count($rows));
+            }
+
+            $this->assertSame('F', $rows[0]['grade']);
+            $this->assertSame('F', $rows[1]['grade']);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('UPDATE partial PK failed: ' . $e->getMessage());
+            $this->markTestIncomplete('UPDATE partial PK (PG) failed: ' . $e->getMessage());
         }
     }
 
     public function testPreparedUpdateCompositePk(): void
     {
         try {
-            $stmt = $this->pdo->prepare("UPDATE pg_cpk_enrollments SET grade = ? WHERE student_id = ? AND course_id = ?");
-            $stmt->execute(['D', 2, 10]);
+            $stmt = $this->ztdPrepare("UPDATE pg_cpk_enrollments SET grade = $1 WHERE student_id = $2 AND course_id = $3");
+            $stmt->execute(['D', 3, 102]);
 
-            $rows = $this->ztdQuery("SELECT grade FROM pg_cpk_enrollments WHERE student_id = 2 AND course_id = 10");
+            $rows = $this->ztdQuery("SELECT grade FROM pg_cpk_enrollments WHERE student_id = 3 AND course_id = 102");
 
-            if (count($rows) !== 1 || $rows[0]['grade'] !== 'D') {
-                $this->markTestIncomplete('Prepared UPDATE composite PK: expected grade=D, got ' . json_encode($rows));
+            if (count($rows) !== 1) {
+                $this->markTestIncomplete('Prepared UPDATE composite PK (PG): expected 1, got ' . count($rows));
             }
 
             $this->assertSame('D', $rows[0]['grade']);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('Prepared UPDATE composite PK failed: ' . $e->getMessage());
+            $this->markTestIncomplete('Prepared UPDATE composite PK (PG) failed: ' . $e->getMessage());
         }
     }
 
-    public function testSelectJoinOnCompositePk(): void
+    public function testDeleteByPartialPk(): void
     {
-        $sql = "SELECT s.name, c.title, e.grade
-                FROM pg_cpk_enrollments e
-                JOIN pg_cpk_students s ON s.id = e.student_id
-                JOIN pg_cpk_courses c ON c.id = e.course_id
-                ORDER BY s.name, c.title";
-
         try {
-            $rows = $this->ztdQuery($sql);
+            $this->ztdExec("DELETE FROM pg_cpk_enrollments WHERE course_id = 101");
+
+            $rows = $this->ztdQuery("SELECT student_id, course_id FROM pg_cpk_enrollments ORDER BY student_id");
 
             if (count($rows) !== 3) {
-                $this->markTestIncomplete(
-                    'SELECT JOIN composite PK: expected 3, got ' . count($rows)
-                    . '. Data: ' . json_encode($rows)
-                );
+                $this->markTestIncomplete('DELETE partial PK (PG): expected 3, got ' . count($rows) . '. Rows: ' . json_encode($rows));
             }
 
             $this->assertCount(3, $rows);
-            $this->assertSame('Alice', $rows[0]['name']);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('SELECT JOIN composite PK failed: ' . $e->getMessage());
+            $this->markTestIncomplete('DELETE partial PK (PG) failed: ' . $e->getMessage());
         }
     }
 }

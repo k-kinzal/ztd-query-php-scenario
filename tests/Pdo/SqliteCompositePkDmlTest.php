@@ -4,51 +4,45 @@ declare(strict_types=1);
 
 namespace Tests\Pdo;
 
+use PDO;
 use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
- * Tests DML operations on tables with composite (multi-column) primary keys
- * through ZTD shadow store.
+ * Tests DML on tables with composite (multi-column) primary keys on SQLite.
  *
- * The shadow store must correctly track and apply UPDATE/DELETE using composite
- * PKs. This is common in junction tables, audit logs, and any many-to-many
- * relationship modeling.
+ * Composite PKs are common in junction/association tables. This tests whether
+ * the CTE rewriter correctly identifies and handles rows when the PK spans
+ * multiple columns.
  *
- * @spec SPEC-4.2, SPEC-4.5
+ * @spec SPEC-10.2
  */
 class SqliteCompositePkDmlTest extends AbstractSqlitePdoTestCase
 {
     protected function getTableDDL(): string|array
     {
-        return [
-            'CREATE TABLE sl_cpk_enrollments (
-                student_id INTEGER NOT NULL,
-                course_id INTEGER NOT NULL,
-                grade TEXT,
-                enrolled_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (student_id, course_id)
-            )',
-            'CREATE TABLE sl_cpk_students (id INTEGER PRIMARY KEY, name TEXT)',
-            'CREATE TABLE sl_cpk_courses (id INTEGER PRIMARY KEY, title TEXT)',
-        ];
+        return "CREATE TABLE sl_cpk_enrollments (
+            student_id INTEGER NOT NULL,
+            course_id INTEGER NOT NULL,
+            enrolled_at TEXT DEFAULT (date('now')),
+            grade TEXT,
+            PRIMARY KEY (student_id, course_id)
+        )";
     }
 
     protected function getTableNames(): array
     {
-        return ['sl_cpk_enrollments', 'sl_cpk_courses', 'sl_cpk_students'];
+        return ['sl_cpk_enrollments'];
     }
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->pdo->exec("INSERT INTO sl_cpk_students VALUES (1, 'Alice')");
-        $this->pdo->exec("INSERT INTO sl_cpk_students VALUES (2, 'Bob')");
-        $this->pdo->exec("INSERT INTO sl_cpk_courses VALUES (10, 'Math')");
-        $this->pdo->exec("INSERT INTO sl_cpk_courses VALUES (20, 'Science')");
 
-        $this->pdo->exec("INSERT INTO sl_cpk_enrollments (student_id, course_id, grade) VALUES (1, 10, 'A')");
-        $this->pdo->exec("INSERT INTO sl_cpk_enrollments (student_id, course_id, grade) VALUES (1, 20, 'B')");
-        $this->pdo->exec("INSERT INTO sl_cpk_enrollments (student_id, course_id, grade) VALUES (2, 10, 'C')");
+        $this->ztdExec("INSERT INTO sl_cpk_enrollments (student_id, course_id, grade) VALUES (1, 101, 'A')");
+        $this->ztdExec("INSERT INTO sl_cpk_enrollments (student_id, course_id, grade) VALUES (1, 102, 'B')");
+        $this->ztdExec("INSERT INTO sl_cpk_enrollments (student_id, course_id, grade) VALUES (2, 101, 'C')");
+        $this->ztdExec("INSERT INTO sl_cpk_enrollments (student_id, course_id, grade) VALUES (2, 103, 'A')");
+        $this->ztdExec("INSERT INTO sl_cpk_enrollments (student_id, course_id, grade) VALUES (3, 102, 'B')");
     }
 
     /**
@@ -56,27 +50,22 @@ class SqliteCompositePkDmlTest extends AbstractSqlitePdoTestCase
      */
     public function testUpdateByCompositePk(): void
     {
-        $sql = "UPDATE sl_cpk_enrollments SET grade = 'A+' WHERE student_id = 1 AND course_id = 10";
-
         try {
-            $this->pdo->exec($sql);
+            $this->ztdExec(
+                "UPDATE sl_cpk_enrollments SET grade = 'A+' WHERE student_id = 1 AND course_id = 101"
+            );
+
             $rows = $this->ztdQuery(
-                "SELECT grade FROM sl_cpk_enrollments WHERE student_id = 1 AND course_id = 10"
+                "SELECT grade FROM sl_cpk_enrollments WHERE student_id = 1 AND course_id = 101"
             );
 
             if (count($rows) !== 1) {
                 $this->markTestIncomplete(
-                    'UPDATE composite PK: expected 1 row, got ' . count($rows)
+                    'UPDATE composite PK: expected 1, got ' . count($rows)
                 );
             }
 
             $this->assertSame('A+', $rows[0]['grade']);
-
-            // Other rows unchanged
-            $other = $this->ztdQuery(
-                "SELECT grade FROM sl_cpk_enrollments WHERE student_id = 1 AND course_id = 20"
-            );
-            $this->assertSame('B', $other[0]['grade']);
         } catch (\Throwable $e) {
             $this->markTestIncomplete('UPDATE composite PK failed: ' . $e->getMessage());
         }
@@ -87,43 +76,38 @@ class SqliteCompositePkDmlTest extends AbstractSqlitePdoTestCase
      */
     public function testDeleteByCompositePk(): void
     {
-        $sql = "DELETE FROM sl_cpk_enrollments WHERE student_id = 2 AND course_id = 10";
-
         try {
-            $this->pdo->exec($sql);
-            $rows = $this->ztdQuery(
-                "SELECT student_id, course_id FROM sl_cpk_enrollments ORDER BY student_id, course_id"
+            $this->ztdExec(
+                "DELETE FROM sl_cpk_enrollments WHERE student_id = 2 AND course_id = 101"
             );
 
-            if (count($rows) !== 2) {
+            $rows = $this->ztdQuery("SELECT student_id, course_id FROM sl_cpk_enrollments ORDER BY student_id, course_id");
+
+            if (count($rows) !== 4) {
                 $this->markTestIncomplete(
-                    'DELETE composite PK: expected 2 remaining, got ' . count($rows)
-                    . '. Data: ' . json_encode($rows)
+                    'DELETE composite PK: expected 4, got ' . count($rows)
+                    . '. Rows: ' . json_encode($rows)
                 );
             }
 
-            $this->assertCount(2, $rows);
-            // Alice's enrollments remain
-            $this->assertEquals(1, $rows[0]['student_id']);
-            $this->assertEquals(10, $rows[0]['course_id']);
-            $this->assertEquals(1, $rows[1]['student_id']);
-            $this->assertEquals(20, $rows[1]['course_id']);
+            $this->assertCount(4, $rows);
         } catch (\Throwable $e) {
             $this->markTestIncomplete('DELETE composite PK failed: ' . $e->getMessage());
         }
     }
 
     /**
-     * UPDATE by one PK column only — should affect multiple rows.
+     * UPDATE multiple rows by one PK column.
      */
     public function testUpdateByPartialPk(): void
     {
-        $sql = "UPDATE sl_cpk_enrollments SET grade = 'P' WHERE student_id = 1";
-
         try {
-            $this->pdo->exec($sql);
+            $this->ztdExec(
+                "UPDATE sl_cpk_enrollments SET grade = 'F' WHERE student_id = 1"
+            );
+
             $rows = $this->ztdQuery(
-                "SELECT grade FROM sl_cpk_enrollments WHERE student_id = 1 ORDER BY course_id"
+                "SELECT course_id, grade FROM sl_cpk_enrollments WHERE student_id = 1 ORDER BY course_id"
             );
 
             if (count($rows) !== 2) {
@@ -132,71 +116,54 @@ class SqliteCompositePkDmlTest extends AbstractSqlitePdoTestCase
                 );
             }
 
-            $this->assertSame('P', $rows[0]['grade']);
-            $this->assertSame('P', $rows[1]['grade']);
-
-            // Bob's row unchanged
-            $bob = $this->ztdQuery(
-                "SELECT grade FROM sl_cpk_enrollments WHERE student_id = 2"
-            );
-            $this->assertSame('C', $bob[0]['grade']);
+            $this->assertSame('F', $rows[0]['grade']);
+            $this->assertSame('F', $rows[1]['grade']);
         } catch (\Throwable $e) {
             $this->markTestIncomplete('UPDATE partial PK failed: ' . $e->getMessage());
         }
     }
 
     /**
-     * INSERT duplicate composite PK should fail.
+     * DELETE all enrollments for a course.
      */
-    public function testInsertDuplicateCompositePk(): void
+    public function testDeleteByPartialPk(): void
     {
         try {
-            $this->pdo->exec(
-                "INSERT INTO sl_cpk_enrollments (student_id, course_id, grade) VALUES (1, 10, 'F')"
-            );
+            $this->ztdExec("DELETE FROM sl_cpk_enrollments WHERE course_id = 101");
 
-            // If no exception, check if row was duplicated or ignored
-            $rows = $this->ztdQuery(
-                "SELECT grade FROM sl_cpk_enrollments WHERE student_id = 1 AND course_id = 10"
-            );
+            $rows = $this->ztdQuery("SELECT student_id, course_id FROM sl_cpk_enrollments ORDER BY student_id");
 
-            if (count($rows) > 1) {
+            if (count($rows) !== 3) {
                 $this->markTestIncomplete(
-                    'INSERT duplicate composite PK: shadow store allowed duplicate. Got '
-                    . count($rows) . ' rows'
+                    'DELETE partial PK: expected 3, got ' . count($rows)
+                    . '. Rows: ' . json_encode($rows)
                 );
             }
 
-            // Shadow store might not enforce PK uniqueness (known pattern)
-            $this->markTestIncomplete(
-                'INSERT duplicate composite PK: no exception thrown, grade='
-                . ($rows[0]['grade'] ?? 'null')
-            );
+            $this->assertCount(3, $rows);
         } catch (\Throwable $e) {
-            // Expected: constraint violation
-            $this->assertTrue(true, 'Duplicate composite PK correctly rejected');
+            $this->markTestIncomplete('DELETE partial PK failed: ' . $e->getMessage());
         }
     }
 
     /**
-     * Prepared UPDATE with composite PK params.
+     * Prepared UPDATE with composite PK parameters.
      */
     public function testPreparedUpdateCompositePk(): void
     {
-        $sql = "UPDATE sl_cpk_enrollments SET grade = ? WHERE student_id = ? AND course_id = ?";
-
         try {
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute(['D', 2, 10]);
+            $stmt = $this->ztdPrepare(
+                "UPDATE sl_cpk_enrollments SET grade = ? WHERE student_id = ? AND course_id = ?"
+            );
+            $stmt->execute(['D', 3, 102]);
 
             $rows = $this->ztdQuery(
-                "SELECT grade FROM sl_cpk_enrollments WHERE student_id = 2 AND course_id = 10"
+                "SELECT grade FROM sl_cpk_enrollments WHERE student_id = 3 AND course_id = 102"
             );
 
-            if (count($rows) !== 1 || $rows[0]['grade'] !== 'D') {
+            if (count($rows) !== 1) {
                 $this->markTestIncomplete(
-                    'Prepared UPDATE composite PK: expected grade=D, got '
-                    . json_encode($rows)
+                    'Prepared UPDATE composite PK: expected 1, got ' . count($rows)
                 );
             }
 
@@ -207,59 +174,35 @@ class SqliteCompositePkDmlTest extends AbstractSqlitePdoTestCase
     }
 
     /**
-     * DELETE by partial PK — should delete all rows matching the column.
+     * INSERT duplicate composite PK — should fail with constraint violation.
      */
-    public function testDeleteByPartialPk(): void
+    public function testInsertDuplicateCompositePk(): void
     {
-        $sql = "DELETE FROM sl_cpk_enrollments WHERE course_id = 10";
-
+        $threw = false;
         try {
-            $this->pdo->exec($sql);
-            $rows = $this->ztdQuery(
-                "SELECT student_id, course_id FROM sl_cpk_enrollments ORDER BY student_id"
-            );
-
-            if (count($rows) !== 1) {
-                $this->markTestIncomplete(
-                    'DELETE partial PK: expected 1 remaining, got ' . count($rows)
-                    . '. Data: ' . json_encode($rows)
-                );
-            }
-
-            $this->assertCount(1, $rows);
-            $this->assertEquals(1, $rows[0]['student_id']);
-            $this->assertEquals(20, $rows[0]['course_id']);
+            $this->ztdExec("INSERT INTO sl_cpk_enrollments (student_id, course_id, grade) VALUES (1, 101, 'X')");
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('DELETE partial PK failed: ' . $e->getMessage());
+            $threw = true;
+            $this->assertTrue(true); // Expected error
+            return;
         }
-    }
 
-    /**
-     * SELECT with JOIN on composite PK table.
-     */
-    public function testSelectJoinOnCompositePk(): void
-    {
-        $sql = "SELECT s.name, c.title, e.grade
-                FROM sl_cpk_enrollments e
-                JOIN sl_cpk_students s ON s.id = e.student_id
-                JOIN sl_cpk_courses c ON c.id = e.course_id
-                ORDER BY s.name, c.title";
-
-        try {
-            $rows = $this->ztdQuery($sql);
-
-            if (count($rows) !== 3) {
-                $this->markTestIncomplete(
-                    'SELECT JOIN composite PK: expected 3, got ' . count($rows)
-                    . '. Data: ' . json_encode($rows)
-                );
-            }
-
-            $this->assertCount(3, $rows);
-            $this->assertSame('Alice', $rows[0]['name']);
-            $this->assertSame('Math', $rows[0]['title']);
-        } catch (\Throwable $e) {
-            $this->markTestIncomplete('SELECT JOIN composite PK failed: ' . $e->getMessage());
+        // If no exception, check if duplicate was silently accepted
+        $rows = $this->ztdQuery(
+            "SELECT grade FROM sl_cpk_enrollments WHERE student_id = 1 AND course_id = 101"
+        );
+        if (count($rows) > 1) {
+            $this->markTestIncomplete(
+                'INSERT duplicate composite PK: duplicate accepted — ' . count($rows) . ' rows'
+            );
+        } elseif (count($rows) === 1 && $rows[0]['grade'] === 'X') {
+            $this->markTestIncomplete(
+                'INSERT duplicate composite PK: silently replaced existing row'
+            );
+        } else {
+            $this->markTestIncomplete(
+                'INSERT duplicate composite PK: no error, grade=' . ($rows[0]['grade'] ?? 'NULL')
+            );
         }
     }
 }

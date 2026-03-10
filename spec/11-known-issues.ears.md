@@ -1361,3 +1361,27 @@ Root cause appears to be that the CTE rewriter doesn't correctly track `$N` para
 **Tests:** `Pdo/SqliteExplainThroughZtdTest`, `Pdo/MysqlExplainThroughZtdTest`
 
 Read-only diagnostic statements (EXPLAIN, EXPLAIN QUERY PLAN, DESCRIBE, SHOW CREATE TABLE) are blocked with "ZTD Write Protection: Statement type not supported SQL statement." These statements should be passed through to the physical database since they are purely read-only and do not modify data.
+
+## SPEC-11.CTE-DML `[Issue #109]` User-written CTEs in DML (INSERT, DELETE) broken on all platforms
+**Status:** Known Issue
+**Platforms:** SQLite-PDO, MySQL-PDO, MySQLi, PostgreSQL-PDO
+**Related specs:** [SPEC-3.3](03-read-operations.ears.md), [SPEC-4.1a](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteCteDrivenDmlTest`, `Pdo/MysqlCteDrivenDmlTest`, `Pdo/PostgresCteDrivenDmlTest`, `Mysqli/CteDrivenDmlTest`, `Pdo/SqliteRecursiveCteDmlTest`, `Pdo/MysqlRecursiveCteDmlTest`, `Pdo/PostgresRecursiveCteDmlTest`, `Mysqli/RecursiveCteDmlTest`
+
+`WITH cte AS (...) INSERT INTO target SELECT FROM cte` and `WITH cte AS (...) DELETE FROM target WHERE id IN (SELECT id FROM cte)` fail on all platforms. The CTE rewriter does not handle user-written CTEs combined with DML. Errors vary by platform: SQLite reports "no such table" (user CTE stripped), MySQL-PDO reports "Missing shadow mutation" (misdetected), MySQLi reports syntax errors, PostgreSQL reports syntax errors. `WITH RECURSIVE ... INSERT/DELETE` exhibits the same failure. Multiple user CTEs driving DML also fail.
+
+## SPEC-11.CTE-NAME-COLLISION `[Issue #110]` CTE name collision when user CTE matches physical table name
+**Status:** Known Issue
+**Platforms:** SQLite-PDO, MySQL-PDO, MySQLi, PostgreSQL-PDO
+**Related specs:** [SPEC-3.3](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteCteNameCollisionTest`, `Pdo/MysqlCteNameCollisionTest`, `Pdo/PostgresCteNameCollisionTest`, `Mysqli/CteNameCollisionTest`
+
+When a user writes `WITH tablename AS (SELECT ... FROM tablename WHERE ...) SELECT FROM tablename`, the CTE rewriter also creates a CTE named `tablename`, producing a duplicate. SQLite: "duplicate WITH table name". MySQL/MySQLi: "Not unique table/alias". PostgreSQL: "WITH query name specified more than once" (3 patterns) or returns 0 rows (mixed CTE pattern). This is a common pattern — users often write `WITH orders AS (SELECT ... FROM orders WHERE status = 'pending') ...`.
+
+## SPEC-11.MULTI-UNION-DERIVED `[Issue #111]` 3+ UNION ALL branches in derived table return empty
+**Status:** Known Issue
+**Platforms:** SQLite-PDO, MySQL-PDO, MySQLi (NOT PostgreSQL-PDO)
+**Related specs:** [SPEC-3.3a](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteMultiUnionDerivedTest`, `Pdo/MysqlMultiUnionDerivedTest`, `Mysqli/MultiUnionDerivedTest`, `Pdo/PostgresMultiUnionDerivedTest`
+
+`SELECT ... FROM (SELECT ... UNION ALL SELECT ... UNION ALL SELECT ...) sub` returns 0 rows on SQLite, MySQL, and MySQLi. PostgreSQL handles this correctly. The CTE rewriter does not rewrite table references in all UNION branches of a derived table. `WHERE ... IN (SELECT ... UNION SELECT ...)` subqueries work correctly. Prepared statement variant also returns empty.

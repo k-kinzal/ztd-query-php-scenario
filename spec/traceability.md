@@ -41,11 +41,11 @@ Maps SPEC-IDs to test classes and verified versions.
 | SPEC-3.1 | `Scenarios/BasicCrudScenario` (all), `*CursorPaginationTest`, `*SoftDeletePatternTest`, `*DecimalPrecisionTest`, `*OffsetPaginationTest`, `*TypeRoundtripTest`, `*EagerLoadingPatternTest` | V | V | V | V | V |
 | SPEC-3.2 | `Scenarios/PreparedStatementScenario` (all), `*PreparedStatementTest`, `Mysqli/StatementReusePatternTest`, `*CursorPaginationTest`, `*OptimisticLockingTest`, `*PreparedInListTest`, `*OffsetPaginationTest` | V | V | V | V | V |
 | SPEC-3.3 | `Scenarios/JoinAndSubqueryScenario` (all), `*ComplexQueryTest`, `*AdvancedQueryPatternsTest`, `*SubqueryPositionsTest`, `*DateTimeFunctionsTest`, `Pdo/SqliteNestedCaseExpressionTest`, `*MultiAliasJoinTest`, `*SubqueryNestingTest` | V | V | V | V | V |
-| SPEC-3.3a | `*DerivedTableAndViewTest`, `*SubqueryNestingTest` | V | V | V | V | K |
+| SPEC-3.3a | `*DerivedTableAndViewTest`, `*SubqueryNestingTest`, `*SubqueryInExpressionTest`, `*MultiUnionDerivedTest` | V | V | V | V | K |
 | SPEC-3.3b | `*ViewThroughZtdTest` | V | V | V | V | K |
 | SPEC-3.3c | `*RecursiveCteAndRightJoinTest` | V | V | V | V | K |
 | SPEC-3.3d | `*ExceptIntersectTest`, `*SetOperationsAndFunctionsTest` | V | V | V | V | P |
-| SPEC-3.3e | `*CteDmlTest` | V | V | V | V | K |
+| SPEC-3.3e | `*CteDmlTest`, `*CteDrivenDmlTest`, `*RecursiveCteDmlTest`, `*CteNameCollisionTest` | V | V | V | V | K |
 | SPEC-3.3f | `*FullTextSearchTest` | K | K | K | K | K |
 | SPEC-3.3g | `*StoredProcedureTest`, `Pdo/PostgresStoredFunctionTest` | V | V | P | — | V |
 | SPEC-3.4 | `*FetchMethodsTest`, `*FetchModesTest`, `*FetchModeAdvancedTest` | V | V | V | V | V |

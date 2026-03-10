@@ -2187,3 +2187,52 @@ COUNT(DISTINCT) and AVG(DISTINCT) in correlated UPDATE SET subqueries work on My
 **Tests:** `Pdo/PostgresDeleteUsingTest`
 
 PostgreSQL DELETE...USING (multi-table DELETE syntax) works through ZTD shadow store: simple USING join, USING with additional WHERE condition, USING on shadow-inserted data, and prepared DELETE USING with `?` placeholders all work correctly. **Known issue:** Prepared DELETE USING with `$N` parameters does not apply the delete (extends Issue #106).
+
+## SPEC-10.2.270 SELECT DISTINCT ON in DML context (PostgreSQL)
+**Status:** Verified (with known issues in DML subqueries)
+**Platforms:** PostgreSQL-PDO
+**Tests:** `Pdo/PostgresDistinctOnDmlTest`
+
+PostgreSQL `DISTINCT ON` (get first row per group) works correctly through the ZTD shadow store for plain SELECT and INSERT...SELECT: SELECT DISTINCT ON (sensor_id) ... ORDER BY sensor_id, reading_time DESC returns correct latest-per-group results on shadow data. INSERT...SELECT DISTINCT ON materializes correctly. **Known issues:** (1) DELETE WHERE NOT IN (SELECT DISTINCT ON ...) produces syntax error — CTE rewriter truncates ORDER BY [Issue #132]; (2) UPDATE WHERE id IN (SELECT DISTINCT ON ...) produces syntax error [Issue #132]; (3) Prepared DISTINCT ON with $N param returns empty (extends Issue #106).
+
+## SPEC-10.2.271 SELECT FOR UPDATE / FOR SHARE locking clauses
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SelectForUpdateTest`, `Pdo/MysqlSelectForUpdateTest`, `Pdo/PostgresSelectForUpdateTest`, `Pdo/SqliteSelectForUpdateTest`
+
+Locking clauses (FOR UPDATE, FOR SHARE) work correctly through the ZTD shadow store on MySQL and PostgreSQL: rows inserted via ZTD are visible through SELECT FOR UPDATE, SELECT FOR SHARE, and within transactions. PostgreSQL-specific variants FOR NO KEY UPDATE and FOR KEY SHARE also work. The CTE rewriter preserves the locking clause when rewriting SELECT queries. Full pessimistic-locking workflow (SELECT FOR UPDATE → UPDATE → COMMIT) works correctly. On SQLite (which does not support FOR UPDATE), the clause is silently accepted and returns correct results — SQLite ignores the locking hint.
+
+## SPEC-10.2.272 INTERSECT/EXCEPT in DML subqueries
+**Status:** Verified (with known issues on MySQL and PostgreSQL UPDATE)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/IntersectExceptDmlTest`, `Pdo/MysqlIntersectExceptDmlTest`, `Pdo/PostgresIntersectExceptDmlTest`, `Pdo/SqliteIntersectExceptDmlTest`
+
+Set operations (INTERSECT, EXCEPT) in DML context: DELETE WHERE IN (... INTERSECT ...) and UPDATE WHERE IN (... EXCEPT ...) work on MySQL and SQLite. INSERT...SELECT INTERSECT/EXCEPT works on PostgreSQL and SQLite. **Known issues:** (1) MySQL INSERT...SELECT INTERSECT/EXCEPT rejected as "multi-statement SQL" — extends Issue #14 [extends Issue #14]; (2) PostgreSQL UPDATE WHERE IN (EXCEPT subquery) produces syntax error [Issue #134]; (3) Physical isolation verified — set operation DML does not affect underlying tables.
+
+## SPEC-10.2.273 Aggregate FILTER clause in DML
+**Status:** Verified (with known issues)
+**Platforms:** PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/PostgresAggregateFilterDmlTest`, `Pdo/SqliteAggregateFilterDmlTest`
+
+SQL standard FILTER clause on aggregates: basic SELECT with FILTER works on both PostgreSQL and SQLite — COUNT(*) FILTER (WHERE ...) and multiple FILTER aggregates in one query return correct results on shadow data. DELETE WHERE with FILTER subquery works. **Known issues:** (1) INSERT...SELECT with FILTER loses column alias [Issue #131]; (2) UPDATE SET with FILTER subquery produces syntax error [Issue #131]; (3) Prepared SELECT with FILTER and $N returns empty on PostgreSQL (extends Issue #106).
+
+## SPEC-10.2.274 Conditional upsert (ON CONFLICT DO UPDATE WHERE)
+**Status:** Verified (with known issues)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ConditionalUpsertTest`, `Pdo/MysqlConditionalUpsertTest`, `Pdo/PostgresConditionalUpsertTest`, `Pdo/SqliteConditionalUpsertTest`
+
+Conditional upsert behavior: basic ON DUPLICATE KEY UPDATE (MySQL) and ON CONFLICT DO UPDATE (PostgreSQL/SQLite) work for unconditional updates. The WHERE clause on DO UPDATE is ignored — updates happen unconditionally [extends Issue #30]. MySQL IF()/VALUES() conditional expressions in ON DUPLICATE KEY UPDATE evaluate to 0 instead of the conditional value [Issue #133]. Prepared upsert inserts duplicate PK rows on MySQL-PDO (extends Issue #17) and SQLite (extends Issue #41).
+
+## SPEC-10.2.275 UPDATE/DELETE with ORDER BY LIMIT (MySQL)
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO
+**Tests:** `Mysqli/UpdateOrderByLimitTest`, `Pdo/MysqlUpdateOrderByLimitTest`
+
+MySQL-specific UPDATE/DELETE with ORDER BY and LIMIT clauses are completely non-functional through the shadow store. UPDATE ... ORDER BY ... LIMIT N does not update any rows; DELETE ... ORDER BY ... LIMIT N does not delete any rows. The CTE rewriter does not preserve ORDER BY and LIMIT on DML statements. This is a common MySQL pattern for queue processing, batch operations, and partial updates [Issue #130].
+
+## SPEC-10.2.276 Writable CTEs (DML inside WITH clause)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/PostgresMultiCteDmlTest`, `Pdo/SqliteMultiCteDmlTest`
+
+PostgreSQL writable CTEs (WITH ... AS (DELETE/UPDATE RETURNING *) ...) fail: CTE name is not recognized in outer query ("relation does not exist"). Multi-writable CTEs return empty results. SQLite correctly rejects writable CTEs (not supported by the engine) with clear error messages. Data integrity is preserved after failed writable CTE attempts on SQLite [extends Issue #28].

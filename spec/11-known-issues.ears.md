@@ -1645,3 +1645,112 @@ Tests: `Pdo/PostgresSubstrReplaceDmlTest`. Related to Issue #108 (REPLACE/concat
 Additionally, `UPDATE SET stock = MAX(stock, CAST(price AS INTEGER), ?)` with 3 arguments evaluates incorrectly — it stores the parameter value (150) instead of the correct MAX(200, 15, 150) = 200. The shadow store appears to substitute the parameter for the entire MAX expression.
 
 Related to Issue #95 (nested function WHERE with prepared params), Issue #80 (NULLIF with prepared parameter), Issue #125 (COALESCE with multiple params).
+
+## SPEC-11.UPDATE-DELETE-ORDER-BY-LIMIT `[Issue #130]` UPDATE/DELETE with ORDER BY LIMIT is a no-op (MySQL)
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Mysqli/UpdateOrderByLimitTest`, `Pdo/MysqlUpdateOrderByLimitTest`
+
+`UPDATE t SET status = 'processing' ORDER BY priority DESC LIMIT 3` does NOT update any rows in the shadow store. All rows remain unchanged. Similarly, `DELETE FROM t ORDER BY priority ASC LIMIT 2` does NOT delete any rows. The CTE rewriter does not support ORDER BY and LIMIT clauses on UPDATE/DELETE statements.
+
+This is a very common MySQL pattern for queue processing (claim top-N items by priority). All four tested variants fail:
+- UPDATE ... ORDER BY ... LIMIT N — no rows updated
+- DELETE ... ORDER BY ... LIMIT N — no rows deleted
+- Prepared UPDATE ... ORDER BY ... LIMIT ? — no rows updated (PDO also gives syntax error with quoted LIMIT value)
+- UPDATE LIMIT on shadow-inserted data — no rows updated
+
+## SPEC-11.INSERT-SELECT-INTERSECT-EXCEPT `[extends Issue #14]` INSERT...SELECT with INTERSECT/EXCEPT rejected as multi-statement (MySQL)
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Mysqli/IntersectExceptDmlTest`, `Pdo/MysqlIntersectExceptDmlTest`
+
+`INSERT INTO result SELECT item FROM a INTERSECT SELECT item FROM b` throws "ZTD Write Protection: Multi-statement SQL statement." The SQL parser treats the INTERSECT/EXCEPT keyword as a statement separator, so the statement is rejected before execution. This also affects INSERT...SELECT EXCEPT and prepared INSERT...SELECT INTERSECT variants. Extends Issue #14 (EXCEPT/INTERSECT treated as multi-statement) into the INSERT...SELECT DML context.
+
+DELETE and UPDATE with WHERE IN (INTERSECT/EXCEPT subquery) work on MySQL because the set operations are inside a subquery rather than at the top level.
+
+## SPEC-11.UPSERT-IF-VALUES-ZERO `[Issue #133]` ON DUPLICATE KEY UPDATE with IF()/VALUES() conditional evaluates to 0 (MySQL)
+**Status:** Known Issue
+**Platforms:** MySQLi, MySQL-PDO
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Mysqli/ConditionalUpsertTest`, `Pdo/MysqlConditionalUpsertTest`
+
+`INSERT INTO t ... ON DUPLICATE KEY UPDATE price = IF(VALUES(version) > version, VALUES(price), price)` stores 0.0 instead of the conditional value. The IF() function combined with VALUES() references evaluates incorrectly in the shadow store — the conditional expression is not preserved, and the result collapses to 0.
+
+This also affects the price-guard pattern: `UPDATE price = IF(VALUES(price) > price, VALUES(price), price)` stores 0.0 instead of preserving the old price. The shadow store appears to lose both the VALUES() reference and the existing column value inside IF() expressions.
+
+Extends Issue #16 (self-referencing expression loses value) into the IF()/conditional context.
+
+## SPEC-11.CONDITIONAL-UPSERT-WHERE-IGNORED `[extends Issue #30]` ON CONFLICT DO UPDATE WHERE clause is ignored (PostgreSQL, SQLite)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO, SQLite-PDO
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresConditionalUpsertTest`, `Pdo/SqliteConditionalUpsertTest`
+
+Conditional upsert with `ON CONFLICT (id) DO UPDATE SET ... WHERE condition` ignores the WHERE clause entirely. The update is applied unconditionally regardless of whether the WHERE condition matches.
+
+Specific failures:
+- `WHERE products.version < EXCLUDED.version`: updates even when existing version is higher
+- `WHERE EXCLUDED.price > products.price`: updates even when new price is lower
+- The EXCLUDED pseudo-table references in WHERE are not evaluated
+
+This is a critical pattern for optimistic concurrency control (only update if the incoming version is newer). On SQLite, the prepared variant also inserts duplicate PK rows (extends Issue #41).
+
+Extends upstream Issue #30 (ON CONFLICT DO UPDATE WHERE clause ignored).
+
+## SPEC-11.FILTER-CLAUSE-DML `[Issue #131]` Aggregate FILTER clause broken in DML context (PostgreSQL, SQLite)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO, SQLite-PDO
+**Related specs:** [SPEC-3.2](03-read-operations.ears.md), [SPEC-4.1](04-write-operations.ears.md), [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresAggregateFilterDmlTest`, `Pdo/SqliteAggregateFilterDmlTest`
+
+The SQL standard FILTER clause on aggregates (`COUNT(*) FILTER (WHERE status = 'shipped')`) fails in DML contexts through the CTE shadow store:
+
+1. **INSERT...SELECT with FILTER**: `INSERT INTO summary SELECT customer_id, COUNT(*) FILTER (WHERE ...) AS shipped_count FROM orders GROUP BY customer_id` fails with "no such column: shipped_count" (both PostgreSQL and SQLite). The CTE rewriter drops the column alias from FILTER aggregate expressions.
+
+2. **UPDATE SET with FILTER subquery**: Correlated `UPDATE SET shipped = (SELECT COUNT(*) FILTER (WHERE ...) FROM orders WHERE ...)` produces syntax error on both platforms — "near FROM: syntax error" (SQLite), "syntax error at or near )" (PostgreSQL).
+
+3. **Prepared SELECT with FILTER and $N**: Returns 0 rows on PostgreSQL (extends Issue #106/$N param handling).
+
+Basic SELECT with FILTER clause works correctly (non-DML context). The issue is specific to how the CTE rewriter handles FILTER expressions inside INSERT...SELECT and correlated UPDATE subqueries.
+
+## SPEC-11.DISTINCT-ON-DML `[Issue #132]` DISTINCT ON in DML subqueries broken (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresDistinctOnDmlTest`
+
+PostgreSQL's `DISTINCT ON` works correctly in plain SELECT queries through the shadow store, but fails when used inside DML subqueries:
+
+1. **DELETE WHERE NOT IN (SELECT DISTINCT ON ...)**: Produces "syntax error at end of input" — the CTE rewriter truncates the ORDER BY clause required by DISTINCT ON.
+
+2. **UPDATE WHERE id IN (SELECT DISTINCT ON ...)**: Produces "syntax error at or near )" — the CTE rewriter breaks the subquery structure.
+
+3. **Prepared DISTINCT ON with $N param**: Returns 0 rows — extends the general $N parameter handling issue (Issue #106).
+
+`SELECT DISTINCT ON` itself (non-DML), `INSERT...SELECT DISTINCT ON`, and non-prepared DELETE/UPDATE with DISTINCT ON in WHERE (without NOT IN wrapping) work correctly. The issue is specific to the CTE rewriter's handling of DISTINCT ON inside subquery expressions used in DML WHERE clauses.
+
+## SPEC-11.WRITABLE-CTE `[extends Issue #28]` Writable CTEs (DML inside WITH clause) not supported (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-3.3e](03-read-operations.ears.md), [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresMultiCteDmlTest`
+
+PostgreSQL writable CTEs (`WITH deleted AS (DELETE FROM t RETURNING *) INSERT INTO audit_log SELECT * FROM deleted`) fail with "relation 'deleted' does not exist". The CTE rewriter processes the DML statement inside the WITH clause in a way that prevents the CTE name from being referenced in the outer INSERT.
+
+Specific failures:
+- `WITH deleted AS (DELETE ... RETURNING *) INSERT INTO ...` — undefined relation
+- `WITH updated AS (UPDATE ... RETURNING *) INSERT INTO ...` — undefined relation
+- Multiple writable CTEs in one statement — returns 0 rows
+- Prepared writable CTE — "parameter was not defined"
+
+This is a widely-used PostgreSQL pattern for atomic DML-then-audit workflows. Extends upstream Issue #28 (CTE-based DML not supported).
+
+## SPEC-11.UPDATE-IN-SET-OPERATION `[Issue #134]` UPDATE WHERE IN (set operation subquery) syntax error (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresIntersectExceptDmlTest`
+
+`UPDATE t SET item = UPPER(item) WHERE item IN (SELECT item FROM a EXCEPT SELECT item FROM b)` produces "syntax error at or near )" on PostgreSQL. The CTE rewriter does not correctly handle EXCEPT/INTERSECT inside WHERE IN subqueries for UPDATE statements. DELETE with WHERE IN (INTERSECT/EXCEPT) works on PostgreSQL; only UPDATE is broken.

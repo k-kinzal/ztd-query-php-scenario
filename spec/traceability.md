@@ -535,6 +535,22 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.268 | `Pdo/SqliteNamedParamDmlTest`, `Pdo/MysqlNamedParamDmlTest`, `Pdo/PostgresNamedParamDmlTest` | — | V | V | V | PDO named params (:name style) all pass on all platforms |
 | SPEC-10.2.269 | `Pdo/SqliteSubqueryInValuesDmlTest` | — | — | — | V | Subquery in INSERT VALUES: scalar MAX, COUNT, multi-subquery all pass |
 | SPEC-10.2.270 | `Pdo/SqliteForeignKeyCascadeTest` | — | — | — | V | FK CASCADE: basic pass; ON DELETE CASCADE not applied in shadow (by-design SPEC-8.1) |
+| SPEC-11.FK-CASCADE-SHADOW | `Mysqli/FkCascadeShadowTest`, `Pdo/MysqlFkCascadeShadowTest`, `Pdo/PostgresFkCascadeShadowTest`, `Pdo/SqliteFkCascadeShadowTest` | K | K | K | K | FK CASCADE DELETE/UPDATE not reflected in shadow store (#126) |
+| SPEC-11.FK-INSERT-PARSE | `Pdo/MysqlFkInsertParseTest` | — | K | — | — | INSERT without column list on FK table miscount (#127) |
+| SPEC-11.PG-IN-CLAUSE-DOLLAR-DML | `Pdo/PostgresBatchInClauseDmlTest`, `Pdo/PostgresSubstrReplaceDmlTest` | — | — | K | — | PG: prepared DML with IN ($N) is no-op; string funcs with $N fail (#128) |
+| SPEC-11.SCALAR-FUNC-PREPARED-DELETE | `Pdo/SqliteGreatestLeastDmlTest` | — | — | — | K | DELETE WHERE MIN(a,b) < ? deletes all rows (#129) |
+| SPEC-11.UPDATE-DELETE-ORDER-BY-LIMIT | `Mysqli/UpdateOrderByLimitTest`, `Pdo/MysqlUpdateOrderByLimitTest` | K | K | — | — | UPDATE/DELETE ORDER BY LIMIT is no-op (#130) |
+| SPEC-11.FILTER-CLAUSE-DML | `Pdo/PostgresAggregateFilterDmlTest`, `Pdo/SqliteAggregateFilterDmlTest` | — | — | K | K | FILTER clause: INSERT loses alias; UPDATE subquery syntax error (#131) |
+| SPEC-11.DISTINCT-ON-DML | `Pdo/PostgresDistinctOnDmlTest` | — | — | K | — | DELETE/UPDATE with DISTINCT ON subquery syntax error (#132) |
+| SPEC-11.UPSERT-IF-VALUES-ZERO | `Mysqli/ConditionalUpsertTest`, `Pdo/MysqlConditionalUpsertTest` | K | K | — | — | ON DUPLICATE KEY UPDATE IF()/VALUES() evaluates to 0 (#133) |
+| SPEC-11.UPDATE-IN-SET-OPERATION | `Pdo/PostgresIntersectExceptDmlTest` | — | — | K | — | UPDATE WHERE IN (EXCEPT) syntax error (#134) |
+| SPEC-10.2.271 | `Mysqli/SelectForUpdateTest`, `Pdo/MysqlSelectForUpdateTest`, `Pdo/PostgresSelectForUpdateTest`, `Pdo/SqliteSelectForUpdateTest` | V | V | V | V | SELECT FOR UPDATE/SHARE: locking clauses preserved by CTE rewriter on all platforms |
+| SPEC-10.2.272 | `Mysqli/IntersectExceptDmlTest`, `Pdo/MysqlIntersectExceptDmlTest`, `Pdo/PostgresIntersectExceptDmlTest`, `Pdo/SqliteIntersectExceptDmlTest` | K | K | P | V | INTERSECT/EXCEPT DML: SL all pass; PG UPDATE fails; MySQL INSERT multi-stmt (extends #14) |
+| SPEC-10.2.273 | `Pdo/PostgresAggregateFilterDmlTest`, `Pdo/SqliteAggregateFilterDmlTest` | — | — | K | K | Aggregate FILTER: SELECT works; INSERT/UPDATE fail (#131) |
+| SPEC-10.2.274 | `Mysqli/ConditionalUpsertTest`, `Pdo/MysqlConditionalUpsertTest`, `Pdo/PostgresConditionalUpsertTest`, `Pdo/SqliteConditionalUpsertTest` | K | K | K | K | Conditional upsert WHERE ignored; IF(VALUES()) → 0 (#133, extends #30) |
+| SPEC-10.2.275 | `Mysqli/UpdateOrderByLimitTest`, `Pdo/MysqlUpdateOrderByLimitTest` | K | K | — | — | UPDATE/DELETE ORDER BY LIMIT no-op on MySQL (#130) |
+| SPEC-10.2.276 | `Pdo/PostgresMultiCteDmlTest`, `Pdo/SqliteMultiCteDmlTest` | — | — | K | K | Writable CTEs: PG "relation not found"; SL correctly rejects (extends #28) |
+| SPEC-10.2.270-new | `Pdo/PostgresDistinctOnDmlTest` | — | — | P | — | DISTINCT ON: SELECT/INSERT pass; DELETE/UPDATE subquery fails (#132) |
 
 ## Legend
 

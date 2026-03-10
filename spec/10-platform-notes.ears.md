@@ -2669,7 +2669,14 @@ The CTE rewriter converts shadow values to SQL literals via PHP's `(string)$val`
 
 MySQL 8.0.19 introduced `INSERT INTO t VALUES (...) AS new ON DUPLICATE KEY UPDATE col = new.col` to replace the deprecated `VALUES()` function (warnings in MySQL 8.2+). The row alias syntax is parsed without error, but the ON DUPLICATE KEY UPDATE clause is silently ignored when `new.col` references are used — the shadow store keeps old values. Tested patterns: no-conflict INSERT (works), conflict with `new.col` reference (fails — old value retained), multi-column update (fails), expression with `new.col` (fails), deprecated `VALUES()` positive control (works). Root cause: PhpMyAdmin SQL parser v5.11.x does not recognize the `AS` alias after VALUES in INSERT statements; `new.col` references are not resolved in UpsertMutation. Filed as Issue #152.
 
-## SPEC-10.2.334 ON DUPLICATE KEY UPDATE / ON CONFLICT DO UPDATE does not trigger on non-PK UNIQUE constraints
+## SPEC-10.2.334 Column DEFAULT values NULL in shadow store when INSERT omits columns
+**Status:** Confirms [Issue #21] on all tested platforms
+**Platforms:** MySQLi (fails), SQLite-PDO (fails)
+**Tests:** `Mysqli/DefaultColumnValueTest`, `Pdo/SqliteDefaultColumnValueTest`
+
+When INSERT specifies only a subset of columns (`INSERT INTO t (name) VALUES ('x')` where `status DEFAULT 'active'`, `priority DEFAULT 0`, `created_at DEFAULT CURRENT_TIMESTAMP` are omitted), the shadow store stores NULL for all omitted columns. Affects: string defaults ('active' → NULL), integer defaults (0 → NULL), expression defaults (CURRENT_TIMESTAMP → NULL), WHERE filtering on default columns (returns empty because NULL ≠ 'active'). The InsertTransformer generates `SELECT 'x' AS name` without the omitted columns, so the shadow never receives default values. Confirms Issue #21 on both MySQL and SQLite.
+
+## SPEC-10.2.335 ON DUPLICATE KEY UPDATE / ON CONFLICT DO UPDATE does not trigger on non-PK UNIQUE constraints
 **Status:** Confirms new [Issue #153] on MySQL and PostgreSQL
 **Platforms:** MySQLi (fails), PostgreSQL-PDO (fails)
 **Tests:** `Mysqli/UpsertNonPkUniqueTest`, `Pdo/PostgresUpsertNonPkUniqueTest`

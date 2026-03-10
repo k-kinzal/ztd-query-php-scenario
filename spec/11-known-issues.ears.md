@@ -2108,3 +2108,33 @@ Querying a child partition table directly (`SELECT FROM partition_child_table`) 
 `DO $$ BEGIN ... END $$` anonymous PL/pgSQL blocks are blocked by ZTD Write Protection as an unsupported statement type. All DO block patterns fail: simple DML, conditional logic, loops, and multi-statement blocks. DML executed via DO blocks would bypass the shadow store anyway (server-side execution), but the blocking prevents even passthrough execution.
 
 **Impact:** DO blocks are commonly used by migration tools (Doctrine, Flyway), ORMs for conditional DDL, and administrative scripts. Applications that use DO blocks for data migrations or conditional operations will need to disable ZTD or use alternative approaches.
+
+## SPEC-11.MERGE-BLOCKED `[Issue #162]` MERGE statement blocked by Write Protection
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-6.1](06-unsupported-sql.ears.md)
+**Tests:** `Pdo/PostgresMergeStatementTest`
+
+PostgreSQL 15+ `MERGE INTO ... USING ... WHEN MATCHED/NOT MATCHED` is blocked by ZTD Write Protection as an unsupported statement type. All MERGE variants fail: upsert from source table, conditional update, WHEN MATCHED THEN DELETE, MERGE with inline VALUES source, prepared MERGE with $N params, and combined INSERT/UPDATE/DELETE actions. The CTE rewriter does not recognize MERGE as a statement type.
+
+**Impact:** MERGE is a SQL standard feature (ISO SQL:2008) used for upsert workflows, data synchronization, ETL pipelines, and batch data loading with conflict handling. Applications targeting PostgreSQL 15+ that use MERGE must disable ZTD for these operations. MERGE is increasingly adopted as it provides a cleaner alternative to INSERT...ON CONFLICT for complex conditional logic.
+
+## SPEC-11.COPY-SHADOW `[Issue #163]` COPY bypasses shadow store on PostgreSQL
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-6.1](06-unsupported-sql.ears.md)
+**Tests:** `Pdo/PostgresCopyStatementTest`
+
+PostgreSQL COPY has three distinct failure modes: (1) `pgsqlCopyToArray()` bypasses ZTD and reads the physical table, returning empty results; (2) `pgsqlCopyFromArray()` bypasses ZTD and loads data into the physical table, invisible to shadow queries; (3) raw `COPY TO/FROM` via `exec()` is blocked by Write Protection. The pgsqlCopy* methods operate at the libpq level and are not intercepted by the ZTD PDO wrapper.
+
+**Impact:** COPY is PostgreSQL's primary bulk data transfer mechanism used for ETL pipelines, data migration, CSV import/export, and pg_dump operations. The silent bypass of pgsqlCopy methods is particularly dangerous: users get no error but COPY TO exports empty data and COPY FROM data is invisible to queries. Applications using COPY must disable ZTD.
+
+## SPEC-11.LOAD-DATA-BLOCKED `[Issue #164]` LOAD DATA blocked by Write Protection on MySQL
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
+**Related specs:** [SPEC-6.1](06-unsupported-sql.ears.md)
+**Tests:** `Pdo/MysqlLoadDataTest`, `Mysqli/LoadDataTest`
+
+`LOAD DATA LOCAL INFILE` is blocked by ZTD Write Protection on both PDO and MySQLi adapters. All variants fail: LOAD DATA LOCAL INFILE, LOAD DATA ... REPLACE, LOAD DATA ... IGNORE. Prior shadow DML state is preserved after a failed LOAD DATA attempt.
+
+**Impact:** LOAD DATA INFILE is MySQL's primary bulk data loading mechanism, significantly faster than row-by-row INSERT. Used for CSV/TSV imports, ETL pipelines, data migration, and batch loading. Applications that use LOAD DATA must disable ZTD.

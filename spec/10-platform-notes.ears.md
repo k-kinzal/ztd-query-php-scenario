@@ -2857,3 +2857,59 @@ Querying a child partition table directly (`SELECT FROM pg_prt_logs_2024`) retur
 **Tests:** `Pdo/SqliteAggregateAfterFullDeleteTest`
 
 `DELETE FROM table` (no WHERE clause) is not tracked by the shadow store. `COUNT(*)` returns the pre-delete count, `MAX/SUM` return pre-delete values, `GROUP BY` returns pre-delete groups, and re-INSERT after full DELETE shows both old and new rows. However, `DELETE FROM table WHERE 1=1` and `DELETE FROM table WHERE id > 0` ARE correctly tracked. The shadow store only intercepts DELETE statements that have a WHERE clause. `EXISTS (SELECT 1 FROM table)` incorrectly returns true after `DELETE FROM table`.
+
+## SPEC-10.2.361 PostgreSQL: MERGE statement blocked by Write Protection
+**Status:** Confirms [Issue #162] on PostgreSQL
+**Platforms:** PostgreSQL-PDO (fails)
+**Tests:** `Pdo/PostgresMergeStatementTest`
+
+PostgreSQL 15+ `MERGE INTO ... USING ... WHEN MATCHED THEN UPDATE/DELETE WHEN NOT MATCHED THEN INSERT` is blocked by "ZTD Write Protection: Statement type not supported SQL statement." All MERGE variants fail: basic upsert from source table, conditional update (WHEN MATCHED AND condition), WHEN MATCHED THEN DELETE, MERGE with inline VALUES source, prepared MERGE with $N params, and MERGE with all three actions combined. The CTE rewriter does not recognize MERGE as a supported statement type.
+
+## SPEC-10.2.362 PostgreSQL: COPY bypasses shadow store or blocked
+**Status:** Confirms [Issue #163] on PostgreSQL
+**Platforms:** PostgreSQL-PDO (fails)
+**Tests:** `Pdo/PostgresCopyStatementTest`
+
+PostgreSQL COPY has three distinct failure modes through ZTD: (1) `pgsqlCopyToArray()` bypasses ZTD entirely and reads the physical table, returning empty results since ZTD mode keeps physical tables empty; (2) `pgsqlCopyFromArray()` bypasses ZTD and loads data into the physical table, making it invisible to subsequent shadow queries; (3) raw `COPY TO STDOUT` and `COPY FROM STDIN` via `exec()` are blocked by Write Protection. After shadow DML changes, COPY TO and SELECT disagree on table state. The silent bypass of pgsqlCopy methods is particularly dangerous since users get no error indication.
+
+## SPEC-10.2.363 MySQL: LOAD DATA blocked by Write Protection
+**Status:** Confirms [Issue #164] on MySQL
+**Platforms:** MySQLi (fails), MySQL-PDO (fails)
+**Tests:** `Pdo/MysqlLoadDataTest`, `Mysqli/LoadDataTest`
+
+`LOAD DATA LOCAL INFILE` is blocked by "ZTD Write Protection: Statement type not supported SQL statement." on both PDO and MySQLi adapters. All LOAD DATA variants fail: basic LOAD DATA LOCAL INFILE, LOAD DATA ... REPLACE, LOAD DATA ... IGNORE. Prior shadow DML state is preserved after a failed LOAD DATA attempt. Tested on MySQL 8.0.
+
+## SPEC-10.2.364 SQLite: UPDATE FROM syntax error through CTE rewriter
+**Status:** Confirms [Issue #72] on SQLite
+**Platforms:** SQLite-PDO (fails)
+**Tests:** `Pdo/SqliteUpdateFromValuesTest`
+
+SQLite 3.33+ `UPDATE table SET col = expr FROM other_table AS alias WHERE ...` fails with 'near "AS": syntax error' through the CTE rewriter. All UPDATE FROM patterns fail: UPDATE FROM subquery with aggregation, UPDATE FROM inline VALUES, UPDATE FROM where both tables have shadow DML, prepared UPDATE FROM with ? params, and sequential UPDATE FROM + DELETE. The same SQL works correctly on raw PDO (confirmed on SQLite 3.51.1). The CTE rewriter generates invalid SQL when transforming UPDATE FROM statements on SQLite.
+
+## SPEC-10.2.365 PostgreSQL: UPDATE FROM VALUES works; prepared $N variant fails
+**Status:** Partially Verified on PostgreSQL (extends [Issue #106])
+**Platforms:** PostgreSQL-PDO (7 pass, 1 fail)
+**Tests:** `Pdo/PostgresUpdateFromValuesTest`
+
+`UPDATE t SET col = v.new_col FROM (VALUES (...), (...)) AS v(id, new_col) WHERE t.id = v.id` works correctly through the CTE rewriter for: basic batch update, multiple SET columns, expression-based SET (accumulate), UPDATE after prior shadow INSERT, type-cast VALUES, DELETE USING VALUES, and large batch (50 rows). However, **prepared** UPDATE FROM VALUES with `$N` params (`$1::int, $2::numeric` inside VALUES) fails silently — the UPDATE is a no-op and the original value is retained. This extends Issue #106 ($N parameter handling).
+
+## SPEC-10.2.366 PostgreSQL: SELECT INTO and CREATE TABLE AS SELECT work correctly
+**Status:** Verified on PostgreSQL
+**Platforms:** PostgreSQL-PDO (all pass)
+**Tests:** `Pdo/PostgresSelectIntoTest`
+
+`SELECT ... INTO new_table FROM source`, `SELECT INTO TEMPORARY`, and `CREATE TABLE new_table AS SELECT ... FROM source` all work correctly through ZTD. Shadow DML changes (INSERT, UPDATE, DELETE) are correctly reflected in the new table. Aggregation queries in SELECT INTO also produce correct results from shadow-modified data. The new table is accessible for subsequent queries through the shadow store.
+
+## SPEC-10.2.367 MySQL: UPDATE JOIN with inline subquery confirms identifier-too-long error
+**Status:** Confirms [Issue #104]/[Issue #115] on MySQL
+**Platforms:** MySQLi (fails), MySQL-PDO (fails)
+**Tests:** `Pdo/MysqlUpdateJoinValuesTest`, `Mysqli/UpdateJoinValuesTest`
+
+`UPDATE t INNER JOIN (SELECT ... UNION ALL SELECT ...) AS v ON t.id = v.id SET t.col = v.col` fails with MySQL error 1059 "Identifier name '(SELECT ...)' is too long". The CTE rewriter treats the derived table subquery text as a table identifier/name. All UPDATE JOIN with inline subquery patterns fail: UNION ALL batch, multiple columns, accumulate expression, UPDATE after INSERT. Prepared UPDATE JOIN also fails with parameter count mismatch. However, **DELETE JOIN with inline subquery works correctly** on both PDO and MySQLi.
+
+## SPEC-10.2.368 MySQL: DELETE JOIN with inline subquery works correctly
+**Status:** Verified on MySQL
+**Platforms:** MySQLi (pass), MySQL-PDO (pass)
+**Tests:** `Pdo/MysqlUpdateJoinValuesTest`, `Mysqli/UpdateJoinValuesTest`
+
+`DELETE p FROM table AS p INNER JOIN (SELECT id UNION ALL SELECT id) AS v ON p.id = v.id` works correctly on both MySQL-PDO and MySQLi. This contrasts with UPDATE JOIN (SPEC-10.2.367) which fails — the CTE rewriter handles DELETE JOIN derived tables differently from UPDATE JOIN derived tables.

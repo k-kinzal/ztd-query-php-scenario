@@ -567,6 +567,14 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.342 | `Pdo/SqlitePreparedBeforeInsertVisibilityTest`, `Pdo/SqliteConcurrentPreparedStmtTest` | — | — | — | K | Prepared SELECT CTE baked at prepare() time: all patterns fail (extends #87) |
 | SPEC-10.2.343 | `Pdo/SqliteDeleteWithLimitTest` | — | — | — | V | DELETE ORDER BY LIMIT: works correctly on SQLite (MySQL #130 no-op) |
 | SPEC-10.2.344 | `Pdo/SqliteHavingWithoutGroupByTest` | — | — | — | P | HAVING without GROUP BY: non-prepared works, prepared fails (extends #22) |
+| SPEC-10.2.361 | `Pdo/PostgresMergeStatementTest` | — | — | K | — | MERGE INTO blocked by Write Protection on PG 15+ (#162) |
+| SPEC-10.2.362 | `Pdo/PostgresCopyStatementTest` | — | — | K | — | COPY bypasses shadow store / blocked by Write Protection (#163) |
+| SPEC-10.2.363 | `Pdo/MysqlLoadDataTest`, `Mysqli/LoadDataTest` | K | K | — | — | LOAD DATA blocked by Write Protection (#164) |
+| SPEC-10.2.364 | `Pdo/SqliteUpdateFromValuesTest` | — | — | — | K | SQLite UPDATE FROM syntax error through CTE rewriter (confirms #72) |
+| SPEC-10.2.365 | `Pdo/PostgresUpdateFromValuesTest` | — | — | P | — | UPDATE FROM VALUES works; prepared $N variant no-op (extends #106) |
+| SPEC-10.2.366 | `Pdo/PostgresSelectIntoTest` | — | — | V | — | SELECT INTO / CTAS correctly reflects shadow DML |
+| SPEC-10.2.367 | `Pdo/MysqlUpdateJoinValuesTest`, `Mysqli/UpdateJoinValuesTest` | K | K | — | — | UPDATE JOIN with inline subquery: identifier too long (confirms #104/#115) |
+| SPEC-10.2.368 | `Pdo/MysqlUpdateJoinValuesTest`, `Mysqli/UpdateJoinValuesTest` | V | V | — | — | DELETE JOIN with inline subquery works correctly |
 
 ## Legend
 

@@ -2969,3 +2969,69 @@ Multi-level chained CTEs — `WITH cte1 AS (...), cte2 AS (SELECT FROM cte1) SEL
 **Tests:** `Pdo/PostgresWindowIgnoreNullsTest`, `Pdo/SqliteWindowIgnoreNullsTest`
 
 `FIRST_VALUE(col) IGNORE NULLS OVER (...)` and `RESPECT NULLS` syntax produces syntax errors on both PostgreSQL (versions < 17) and SQLite. PostgreSQL added IGNORE NULLS support in version 17; SQLite does not support this syntax. Not a ZTD issue — platform limitation. Verification on PostgreSQL 17+ with ZTD pending.
+
+## SPEC-10.2.377 ON CONFLICT with partial index WHERE clause inserts duplicate instead of upserting
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (fails)
+**Tests:** `Pdo/PostgresPartialIndexUpsertTest`
+
+`INSERT INTO t (...) VALUES (...) ON CONFLICT (col) WHERE condition DO UPDATE SET ...` targeting a partial unique index inserts a duplicate row instead of triggering the upsert. The shadow store does not evaluate the partial index WHERE predicate, so ON CONFLICT never fires. All partial index variants fail: DO UPDATE (inserts duplicate, original unchanged), DO NOTHING (inserts duplicate), EXCLUDED expressions (inserts duplicate), and prepared $N variants (inserts row with NULL values). `INSERT INTO t (email, status) VALUES ('alice@test.com', 'inactive')` correctly inserts (not covered by the partial index), but the same email with `status = 'active'` inserts a second active row instead of updating.
+
+## SPEC-10.2.378 Domain types work for INSERT and aggregate but fail for UPDATE and DELETE
+**Status:** Partially Verified
+**Platforms:** PostgreSQL-PDO (4 pass, 5 fail)
+**Tests:** `Pdo/PostgresDomainTypeDmlTest`
+
+Tables using PostgreSQL domain types (`CREATE DOMAIN email AS VARCHAR(255) CHECK (...)`, `CREATE DOMAIN positive_int AS INT CHECK (VALUE > 0)`) exhibit multiple failures through ZTD. INSERT with valid domain values works, and aggregate queries (AVG, MIN, MAX) return correct results. However: (1) INSERT with **invalid** domain values is **silently accepted** — domain CHECK constraints are bypassed by the shadow store; (2) UPDATE SET on domain-typed columns does not persist (old value retained); (3) UPDATE with out-of-range domain values does not persist or throw; (4) DELETE with domain column conditions does not delete rows (all rows remain); (5) prepared INSERT with `$N` params returns 0 rows. The constraint bypass is a data integrity concern.
+
+## SPEC-10.2.379 LATERAL in DELETE USING and UPDATE FROM silently ignored
+**Status:** Known Issue (extends [SPEC-11.PG-LATERAL])
+**Platforms:** PostgreSQL-PDO (fails)
+**Tests:** `Pdo/PostgresLateralDmlTest`
+
+`DELETE FROM t USING other, LATERAL (SELECT ... FROM t WHERE ...) sub WHERE ...` and `UPDATE t SET ... FROM LATERAL (SELECT ... FROM t WHERE ...) sub WHERE ...` silently do nothing — no rows are deleted or updated. The LATERAL subquery reads from the physical table (empty in ZTD mode), so the join condition finds no matches. Also affects DELETE with LATERAL + LIMIT (top-N per group deletion), prepared UPDATE FROM LATERAL with `$N` params, and DELETE WHERE IN (SELECT FROM ... LATERAL). Workaround: use correlated subqueries instead of LATERAL (confirmed working).
+
+## SPEC-10.2.380 INSERT...SELECT FROM generate_series() type casting broken
+**Status:** Known Issue (extends [SPEC-11.PG-GENERATE-SERIES])
+**Platforms:** PostgreSQL-PDO (fails)
+**Tests:** `Pdo/PostgresInsertGenerateSeriesTest`
+
+`INSERT INTO t (val, label) SELECT n, 'item_' || n FROM generate_series(1, 10) AS n` fails with "operator does not exist: text || integer" or produces type-cast errors. The CTE rewriter changes the generate_series column type to text in the shadow CTE, causing type mismatches in expressions and aggregates (e.g., `SUM(val)` fails with "function sum(text) does not exist"). Basic INSERT from integer generate_series without expressions may work, but any expression referencing the series value fails. Date-based generate_series also fails. Prepared INSERT FROM generate_series with `$N` params produces 0 rows.
+
+## SPEC-10.2.381 VALUES expression in DML subquery: type mismatch on PostgreSQL, silent no-op on SQLite/MySQL
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (errors), MySQL-PDO (silent no-op), MySQLi (silent no-op), SQLite-PDO (silent no-op)
+**Tests:** `Pdo/PostgresValuesExpressionDmlTest`, `Pdo/MysqlValuesExpressionDmlTest`, `Pdo/SqliteValuesExpressionDmlTest`, `Mysqli/ValuesExpressionDmlTest`
+
+DML with VALUES as a table source in subqueries fails on all platforms. On PostgreSQL, `DELETE FROM t WHERE id IN (SELECT v.id FROM (VALUES (1), (3)) AS v(id))` fails with "operator does not exist: text = integer" — the CTE rewriter casts the id column to text, breaking the integer comparison. On MySQL and MySQLi, `DELETE FROM t WHERE id IN (SELECT v.id FROM (SELECT 1 AS id UNION ALL SELECT 3) AS v)` silently deletes no rows and returns all ids as NULL. On SQLite, `DELETE FROM t WHERE id IN (SELECT column1 FROM (VALUES (1), (3)))` also deletes no rows with ids returned as NULL. UPDATE variants show the same behavior: PostgreSQL type errors, MySQL/SQLite silent no-ops. INSERT...SELECT FROM VALUES works on PostgreSQL (with explicit type casts) but produces 0 rows on SQLite/MySQL.
+
+## SPEC-10.2.382 CTE inside subquery of DML: syntax errors or silent no-op
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (errors/partial), MySQL-PDO (partial), MySQLi (partial), SQLite-PDO (partial)
+**Tests:** `Pdo/PostgresCteInSubqueryDmlTest`, `Pdo/MysqlCteInSubqueryDmlTest`, `Pdo/SqliteCteInSubqueryDmlTest`, `Mysqli/CteInSubqueryDmlTest`
+
+DML with a CTE (WITH clause) nested inside a subquery has mixed results:
+
+- **INSERT FROM nested CTE** works on MySQL (PDO and MySQLi) for basic cases. On PostgreSQL, it partially works (2 pass) but the nested CTE doesn't see prior DML on the source table. On SQLite, basic case works but after-DML variant fails.
+- **DELETE WHERE IN (nested CTE)** fails on all platforms. On PostgreSQL, it generates "syntax error at end of input" — the CTE rewriter truncates the SQL. On MySQL/MySQLi/SQLite, the DELETE silently deletes no rows.
+- **UPDATE WHERE IN (nested CTE)** fails on all platforms. No rows are updated; the nested CTE's table references are not rewritten.
+- **Prepared variants** with bound parameters fail on all platforms — return 0 rows.
+- **UPDATE SET = (scalar nested CTE)** on PostgreSQL generates "syntax error at or near AS" — the CTE rewriter adds spurious column aliases.
+
+## SPEC-10.2.383 INSERT...SELECT GROUP BY HAVING: basic works, prior DML not reflected
+**Status:** Partially Verified
+**Platforms:** MySQL-PDO (3 pass, 1 fail), MySQLi (2 pass, 1 fail), PostgreSQL-PDO (2 pass, 3 fail), SQLite-PDO (2 pass, 2 fail)
+**Tests:** `Pdo/PostgresInsertSelectGroupByHavingTest`, `Pdo/MysqlInsertSelectGroupByHavingTest`, `Pdo/SqliteInsertSelectGroupByHavingTest`, `Mysqli/InsertSelectGroupByHavingTest`
+
+`INSERT INTO summary SELECT region, SUM(amount), COUNT(*) FROM sales GROUP BY region HAVING SUM(amount) > N` works for basic cases on all platforms, and HAVING with COUNT(DISTINCT) also works. However:
+
+- **MySQL/MySQLi:** Prior DELETE on the source table is not visible — INSERT...SELECT GROUP BY after DELETE still includes deleted rows (e.g., 3 regions instead of expected 2). Aggregate values for non-deleted rows are correct.
+- **PostgreSQL:** Aggregate values (SUM, COUNT) in the INSERT target are 0/incorrect even though the correct number of GROUP BY groups is produced. Prepared $N variants with GROUP BY HAVING return 0 rows.
+- **SQLite:** After prior DML, INSERT...SELECT GROUP BY produces null aggregate columns. Prepared variants return 0 rows.
+
+## SPEC-10.2.384 RETURNING clause in DML chain: confirms existing known issues
+**Status:** Confirms [Issue #32], [Issue #53], [Issue #121]
+**Platforms:** PostgreSQL-PDO (fails), SQLite-PDO (fails)
+**Tests:** `Pdo/PostgresReturningChainDmlTest`, `Pdo/SqliteReturningChainDmlTest`
+
+INSERT/UPDATE/DELETE RETURNING used for chaining DML operations confirms Issues #32, #53, #121: On PostgreSQL, INSERT RETURNING returns no rows (fetchAll returns empty array), UPDATE RETURNING returns 0 rows, DELETE RETURNING returns 0 rows. On SQLite, INSERT RETURNING returns no rows, UPDATE/DELETE RETURNING produces "syntax error near RETURNING". The pattern of using RETURNING to capture the generated id for child INSERT, or DELETE RETURNING for audit logging, cannot be used through ZTD.

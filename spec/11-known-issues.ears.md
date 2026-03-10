@@ -2177,3 +2177,49 @@ DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal
 `UPDATE table SET col = (SELECT aggregate FROM table WHERE ...)` fails with "table name specified more than once" on PostgreSQL. The CTE rewriter injects a CTE for the UPDATE target table, and the subquery's reference to the same table creates a duplicate alias conflict. Related to Issue #74 (self-referencing UPDATE) but triggered by a SET subquery rather than a WHERE subquery.
 
 **Impact:** Self-referencing UPDATE with aggregate subquery is a common pattern for normalizing data (e.g., setting values to the group average/median). Workaround: compute the aggregate in a separate query first.
+
+## SPEC-11.PARTIAL-INDEX-UPSERT `[Issue #169]` ON CONFLICT with partial index WHERE clause inserts duplicate
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md), [SPEC-10.2.377](10-platform-notes.ears.md)
+**Tests:** `Pdo/PostgresPartialIndexUpsertTest`
+
+`INSERT INTO t (...) VALUES (...) ON CONFLICT (email) WHERE status = 'active' DO UPDATE SET login_count = login_count + 1` inserts a duplicate row instead of triggering the upsert when targeting a partial unique index (`CREATE UNIQUE INDEX ... ON t (email) WHERE status = 'active'`). The shadow store does not evaluate the partial index WHERE predicate, so the conflict condition is never matched. All partial index variants affected: DO UPDATE (inserts duplicate), DO NOTHING (inserts duplicate), EXCLUDED expressions (inserts duplicate), prepared $N variants (inserts row with NULL column values). Non-partial index upsert (Issue #153) is a separate issue — this specifically affects the `WHERE` predicate in ON CONFLICT target specification.
+
+**Impact:** Partial indexes are widely used in production PostgreSQL schemas for conditional uniqueness (e.g., "one active email per user", "unique slug per published article", "one pending request per customer"). Applications using partial index upsert patterns must disable ZTD for these operations.
+
+## SPEC-11.DOMAIN-TYPE-DML `[Issue #170]` Domain-typed columns: UPDATE/DELETE fail through shadow store
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.378](10-platform-notes.ears.md)
+**Tests:** `Pdo/PostgresDomainTypeDmlTest`
+
+Tables using PostgreSQL domain types (`CREATE DOMAIN`) exhibit multiple failures through ZTD: (1) INSERT with **invalid** domain values is **silently accepted** — domain CHECK constraints are bypassed by the shadow store (no exception thrown, invalid data visible in queries); (2) `UPDATE SET satisfaction = 99.99 WHERE email = 'alice@example.com'` does not persist — the old value (85.50) is retained; (3) UPDATE with out-of-range values also doesn't persist (no error, no change); (4) `DELETE FROM t WHERE satisfaction < 80` does not remove any rows; (5) Prepared INSERT with `$N` parameters returns 0 rows. INSERT with valid values works, and aggregate queries (AVG, MIN, MAX) return correct results. The constraint bypass is a data integrity concern — applications relying on domain types for input validation may silently accept invalid data through ZTD.
+
+**Impact:** Domain types are used in PostgreSQL schemas for semantic typing and constraint enforcement (email validation, positive numbers, percentage ranges, currency amounts). Applications with domain-typed columns cannot rely on UPDATE or DELETE through ZTD. Workaround: use base types (VARCHAR, INT, NUMERIC) instead of domains when ZTD is enabled.
+
+## SPEC-11.VALUES-DML-SUBQUERY `[Issue #171]` VALUES expression in DML subquery fails on all platforms
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (type errors), MySQL-PDO (silent no-op), MySQLi (silent no-op), SQLite-PDO (silent no-op)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-10.2.381](10-platform-notes.ears.md)
+**Tests:** `Pdo/PostgresValuesExpressionDmlTest`, `Pdo/MysqlValuesExpressionDmlTest`, `Pdo/SqliteValuesExpressionDmlTest`, `Mysqli/ValuesExpressionDmlTest`
+
+DELETE and UPDATE with VALUES as a table source in subqueries fail on all platforms. On PostgreSQL, `DELETE FROM t WHERE id IN (SELECT v.id FROM (VALUES (1), (3)) AS v(id))` fails with "operator does not exist: text = integer" — the CTE rewriter casts id columns to text, breaking integer comparisons. On MySQL/MySQLi, equivalent UNION ALL syntax (`SELECT 1 AS id UNION ALL SELECT 3`) silently deletes nothing — ids in the result come back as NULL. On SQLite, VALUES syntax also silently fails with NULL ids. UPDATE JOIN with derived VALUES on MySQL produces "Identifier name too long" (confirming Issue #104/#115 for this pattern). INSERT...SELECT FROM VALUES works on PostgreSQL but not on MySQL/SQLite.
+
+**Impact:** VALUES as a table expression is a standard SQL pattern for batch operations — batch delete by id list, batch update from a values list, and batch lookup. Applications using `DELETE WHERE id IN (VALUES ...)` or `UPDATE FROM (VALUES ...)` must use alternative approaches through ZTD. Workaround: loop individual DELETE/UPDATE statements, or use temporary tables.
+
+## SPEC-11.NESTED-CTE-DML `[Issue #172]` CTE inside subquery of DML generates syntax errors or silent no-ops
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (syntax errors / partial), MySQL-PDO (partial), MySQLi (partial), SQLite-PDO (partial)
+**Related specs:** [SPEC-3.3e](03-read-operations.ears.md), [SPEC-10.2.382](10-platform-notes.ears.md)
+**Tests:** `Pdo/PostgresCteInSubqueryDmlTest`, `Pdo/MysqlCteInSubqueryDmlTest`, `Pdo/SqliteCteInSubqueryDmlTest`, `Mysqli/CteInSubqueryDmlTest`
+
+DML statements with a CTE (WITH clause) nested inside a subquery have mixed results across platforms:
+
+- **INSERT FROM (WITH cte AS (...) SELECT FROM cte)** works on MySQL (PDO/MySQLi) for basic cases, partially works on PostgreSQL/SQLite but doesn't see prior DML changes on the source table.
+- **DELETE WHERE IN (WITH cte AS (...) SELECT FROM cte)** fails on all platforms: PostgreSQL generates "syntax error at end of input" (CTE rewriter truncates SQL), MySQL/MySQLi/SQLite silently delete nothing.
+- **UPDATE WHERE IN (WITH cte AS (...) SELECT FROM cte)** fails on all platforms: no rows updated.
+- **UPDATE SET = (WITH cte AS (...) SELECT ... FROM cte)** on PostgreSQL generates "syntax error at or near AS" from spurious column aliases.
+- Prepared variants with bound parameters return 0 rows on all platforms.
+
+**Impact:** Nested CTEs in DML subqueries are used for complex conditional operations — deleting lowest-ranked items per group, updating based on windowed rankings, etc. Applications using this pattern must restructure as two-step operations (SELECT with CTE first, then DML with the results).

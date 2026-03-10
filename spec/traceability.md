@@ -583,6 +583,14 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.374 | `Pdo/PostgresWindowExcludeClauseTest`, `Pdo/SqliteWindowExcludeClauseTest` | — | — | V | V | Window EXCLUDE clause works through shadow store |
 | SPEC-10.2.375 | `*ChainedCteShadowTest` | V | V | K | V | Chained CTEs: MySQL/SQLite work, PG empty (extends #4) |
 | SPEC-10.2.376 | `Pdo/PostgresWindowIgnoreNullsTest`, `Pdo/SqliteWindowIgnoreNullsTest` | — | — | — | — | IGNORE NULLS: platform limitation (PG 17+ / SQLite N/A) |
+| SPEC-10.2.377 | `Pdo/PostgresPartialIndexUpsertTest` | — | — | K | — | ON CONFLICT partial index: inserts duplicate instead of upsert (#169) |
+| SPEC-10.2.378 | `Pdo/PostgresDomainTypeDmlTest` | — | — | P | — | Domain types: INSERT/agg work, UPDATE/DELETE fail (#170) |
+| SPEC-10.2.379 | `Pdo/PostgresLateralDmlTest` | — | — | K | — | LATERAL in DELETE USING / UPDATE FROM silently ignored (extends PG-LATERAL) |
+| SPEC-10.2.380 | `Pdo/PostgresInsertGenerateSeriesTest` | — | — | K | — | INSERT from generate_series: type casting broken (extends PG-GENERATE-SERIES) |
+| SPEC-10.2.381 | `*ValuesExpressionDmlTest` | K | K | K | K | VALUES in DML subquery: type error (PG) or silent no-op (MySQL/SQLite) |
+| SPEC-10.2.382 | `*CteInSubqueryDmlTest` | P | P | P | P | Nested CTE in DML subquery: syntax errors or silent no-op |
+| SPEC-10.2.383 | `*InsertSelectGroupByHavingTest` | P | P | P | P | INSERT...SELECT GROUP BY HAVING: basic works, prior DML not reflected |
+| SPEC-10.2.384 | `*ReturningChainDmlTest` | — | — | K | K | RETURNING chain DML: confirms #32/#53/#121 |
 
 ## Legend
 

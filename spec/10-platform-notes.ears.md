@@ -2370,3 +2370,19 @@ PostgreSQL: Simple single-column `UPDATE SET price = COALESCE(price, 0.00)` work
 Three equivalent anti-join patterns (LEFT JOIN IS NULL, NOT EXISTS, NOT IN) all return correct and identical results on SQLite — find unmatched rows, with additional filters, with prepared params, and DELETE using anti-join.
 
 **Known issues:** On MySQL, LEFT JOIN IS NULL and NOT EXISTS return ALL rows (condition ignored), NOT IN returns EMPTY set. On PostgreSQL, all patterns fail with type mismatch (text = integer). DELETE with anti-join also broken on both platforms [Issue #143].
+
+## SPEC-10.2.294 DELETE with EXISTS/NOT EXISTS subquery
+**Status:** Verified (SQLite); Known Issue (MySQL, PostgreSQL — extends [Issue #143])
+**Platforms:** SQLite-PDO (works), MySQL-PDO (broken), PostgreSQL-PDO (broken)
+**Tests:** `Pdo/SqliteDeleteExistsTest`, `Pdo/MysqlDeleteExistsSubqueryTest`, `Pdo/PostgresDeleteExistsSubqueryTest`
+
+DELETE WHERE EXISTS (correlated subquery), DELETE WHERE NOT EXISTS, DELETE WHERE IN (subquery), and chained DELETE patterns all work correctly on SQLite.
+
+On MySQL, DELETE WHERE EXISTS has no effect, DELETE WHERE NOT EXISTS has no effect, DELETE WHERE IN (subquery) has no effect, and even simple `DELETE WHERE status = 'pending'` on the same multi-table test fails. On PostgreSQL, all variants fail with type mismatch error. These extend [Issue #143].
+
+## SPEC-10.2.295 DELETE all rows and rebuild pattern
+**Status:** Verified
+**Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/MysqlDeleteAllRebuildTest`, `Pdo/PostgresDeleteAllRebuildTest`, `Pdo/SqliteDeleteAllAndRebuildTest`
+
+Full table clear + repopulation pattern works correctly on all platforms: DELETE WHERE 1=1 (delete all), DELETE without WHERE, delete-all then re-INSERT with new data, delete + re-INSERT with same PKs (data replaced), and multiple rebuild cycles (3 cycles of delete-all + insert). The shadow store correctly tracks the sequential delete/insert operations and returns only the latest data.

@@ -1341,6 +1341,20 @@ This affects all variants: single param, multiple params, expression in SET with
 
 Root cause appears to be that the CTE rewriter doesn't correctly track `$N` parameter positions across all SQL statement types, not just UPDATE...FROM.
 
+**Extended scope (2026-03-10, cont.):**
+- **3-table JOIN DELETE with $1:** `DELETE WHERE id IN (SELECT ... JOIN ... WHERE category = $1)` doesn't filter (all rows remain). Exec variant works. Tests: `Pdo/PostgresThreeTableJoinDmlTest`.
+- **Chained EXISTS with $1:** `DELETE WHERE EXISTS(...) AND NOT EXISTS(... status = $1)` deletes wrong rows. Exec variant works. Tests: `Pdo/PostgresDeleteChainedExistsTest`.
+- **UPDATE SET REPLACE($1, $2):** `SET code = REPLACE(code, $1, $2)` stores NULL values instead of replaced string. Tests: `Pdo/PostgresStringFunctionDmlTest`. [Issue #108]
+- **UPDATE SET concatenation with $1:** `SET label = label || $1` doesn't apply the concatenation (value unchanged). Tests: `Pdo/PostgresStringFunctionDmlTest`. [Issue #108]
+
+## SPEC-11.PG-STRING-FUNC-PARAMS `[Issue #108]` UPDATE SET with string functions and $N params produces NULL
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-10.2.257](10-platform-notes.ears.md)
+**Tests:** `Pdo/PostgresStringFunctionDmlTest`
+
+`UPDATE SET col = REPLACE(col, $1, $2)` with `$N` prepared parameters stores NULL in all affected columns instead of the expected replaced string. `UPDATE SET col = col || $1` with a `$N` parameter silently fails — the concatenation does not apply and the value remains unchanged. Non-prepared variants with literal values work correctly. MySQL handles all variants correctly. Extends the `$N` parameter handling issues documented in Issues #61, #106.
+
 ## SPEC-11.EXPLAIN-BLOCKED `[Issue #107]` EXPLAIN, DESCRIBE, SHOW blocked by ZTD Write Protection
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (likely)

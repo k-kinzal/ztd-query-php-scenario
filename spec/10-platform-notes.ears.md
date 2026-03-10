@@ -2068,3 +2068,66 @@ Sequential DML chains where each operation references data from the previous: IN
 **Tests:** `Pdo/SqliteInsertSelectPartialColumnListTest`, `Pdo/MysqlInsertSelectPartialColumnListTest`, `Pdo/PostgresInsertSelectPartialColumnListTest`
 
 INSERT...SELECT with explicit column list omitting AUTOINCREMENT/SERIAL PK (`INSERT INTO t (col1, col2) SELECT ...`) produces rows with all-NULL values on SQLite and PostgreSQL. MySQL works correctly. This extends Issue #20 beyond computed columns — even simple column references produce NULLs when the INSERT column list doesn't include all table columns. INSERT...SELECT * (matching schemas, no column list) works on SQLite but is blocked on MySQL/PostgreSQL with "Cannot determine columns SQL statement" (extends Issue #40 to PostgreSQL).
+
+## SPEC-10.2.253 Three-table JOIN in DML (DELETE and UPDATE with subquery)
+**Status:** Partial
+**Platforms:** SQLite-PDO (partial), MySQL-PDO (pending), PostgreSQL-PDO (pending), MySQLi (pending)
+**Tests:** `Pdo/SqliteThreeTableJoinDmlTest`, `Pdo/MysqlThreeTableJoinDmlTest`, `Pdo/PostgresThreeTableJoinDmlTest`, `Mysqli/ThreeTableJoinDmlTest`
+
+Three-table JOIN SELECT works correctly on all platforms. DELETE with 3-table JOIN subquery (no GROUP BY HAVING) works correctly on all platforms via exec. Prepared DELETE with category param works on MySQL (PDO and MySQLi) and SQLite, but **fails on PostgreSQL** — `$1` parameter in a subquery WHERE clause inside DELETE does not filter rows (extends Issue #106 to 3-table JOIN context). UPDATE with 3-table JOIN subquery containing GROUP BY HAVING fails on SQLite with "incomplete input" and on PostgreSQL with syntax error; **works on MySQL** (both PDO and MySQLi). Prepared UPDATE with HAVING param also works on MySQL but fails on SQLite/PostgreSQL.
+
+## SPEC-10.2.254 DELETE with chained EXISTS and NOT EXISTS conditions
+**Status:** Verified (SQLite), pending (MySQL, PostgreSQL)
+**Platforms:** SQLite-PDO (pass), MySQL-PDO (pending), PostgreSQL-PDO (pending)
+**Tests:** `Pdo/SqliteDeleteChainedExistsTest`, `Pdo/MysqlDeleteChainedExistsTest`, `Pdo/PostgresDeleteChainedExistsTest`
+
+DELETE with multiple correlated EXISTS / NOT EXISTS conditions referencing different shadow tables works correctly on SQLite and MySQL (exec and prepared). On PostgreSQL, the exec variant works, but the **prepared variant with `$1` fails** — `NOT EXISTS (... status = $1)` does not correctly bind the parameter, causing incorrect rows to be deleted (extends Issue #106 to chained EXISTS pattern). Tested: EXISTS + NOT EXISTS combined, double NOT EXISTS, EXISTS on shadow-inserted data.
+
+## SPEC-10.2.255 COALESCE in DML operations
+**Status:** Verified (SQLite exec), partial (SQLite prepared)
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteCoalesceInDmlTest`
+
+COALESCE in UPDATE SET (literal and multi-column) works correctly on SQLite. Prepared UPDATE with COALESCE and bound default parameter works. Nested COALESCE (`COALESCE(discount, price, ?)`) works correctly with prepared params. However, DELETE WHERE with COALESCE and prepared params is affected by SQLite + PDO type affinity: `execute([0, 50])` sends values as strings, causing string comparison instead of numeric, which affects all comparison operators with `?` params on SQLite. This is a PDO behavior, not a ZTD issue. Workaround: use `bindValue()` with `PDO::PARAM_INT`.
+
+## SPEC-10.2.256 CASE expression in INSERT VALUES
+**Status:** Verified (exec), partial (prepared with params)
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteCaseInInsertValuesTest`
+
+CASE expressions in direct INSERT VALUES work correctly on SQLite for literal conditions (exec path): simple CASE, multi-branch CASE, multi-row INSERT with CASE per row, and nested CASE. Prepared INSERT with CASE and `?` params is affected by SQLite type affinity: `CASE WHEN ? > 75` where `?` is bound as string '60' evaluates to true because SQLite TEXT > INTEGER type ordering. This is raw PDO behavior (confirmed independently), not ZTD-specific.
+
+## SPEC-10.2.257 String functions in DML operations
+**Status:** Verified (SQLite)
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteStringFunctionDmlTest`
+
+String functions in UPDATE SET work correctly on SQLite and MySQL: REPLACE(), UPPER(), LOWER(), TRIM(), concatenation (|| on SQLite, CONCAT on MySQL), SUBSTR()/LEFT() with prepared params. Prepared UPDATE with REPLACE and bound search/replacement params works on SQLite and MySQL. On **PostgreSQL**, non-prepared variants (UPPER, LOWER, POSITION, ||) work, but prepared variants with `$N` params fail: `REPLACE(col, $1, $2)` stores NULL values; `col || $1` doesn't apply concatenation. [Issue #108] DELETE WHERE with LENGTH()/LOCATE() and prepared params works on SQLite and MySQL; SQLite DELETE with `LENGTH(col) > ?` is affected by type affinity (SPEC-10.2.255).
+
+## SPEC-10.2.258 NULL parameter binding in DML
+**Status:** Verified (SQLite)
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteNullParamDmlTest`
+
+NULL parameter handling works correctly on SQLite: prepared INSERT with `PDO::PARAM_NULL`, UPDATE SET column to NULL via prepared statement, mixed NULL/non-NULL params in multi-column UPDATE, DELETE WHERE IS NULL, SELECT IS NULL on shadow-updated data, and DELETE IS NOT NULL with additional param. All correctly handled by the CTE rewriter.
+
+## SPEC-10.2.259 Self-referencing DELETE and UPDATE (same table subquery, no GROUP BY)
+**Status:** Verified (SQLite)
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteSelfReferencingDeleteInTest`
+
+Self-referencing DML without GROUP BY HAVING works correctly on SQLite: DELETE WHERE IN (SELECT parent_id FROM same_table), DELETE WHERE priority > (SELECT AVG(priority) FROM same_table), prepared self-ref DELETE with status param, UPDATE with self-referencing scalar subquery, and self-ref DELETE on shadow-inserted data. All variants produce correct results. This contrasts with GROUP BY HAVING variants which fail with "incomplete input".
+
+## SPEC-10.2.260 DELETE with multiple subquery conditions (IN + NOT IN + scalar)
+**Status:** Verified (SQLite)
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteDeleteWithMultipleSubqueryConditionsTest`
+
+DELETE combining multiple subquery patterns in one WHERE clause works correctly on SQLite: IN + NOT IN subqueries, scalar subquery comparison (price > SELECT AVG), prepared DELETE with multiple subquery conditions and bound param, and EXISTS + scalar subquery combined. The CTE rewriter correctly handles diverse subquery types in a single statement.
+
+## SPEC-10.2.261 UPDATE SET with multiple non-correlated aggregate subqueries
+**Status:** Verified (SQLite)
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteUpdateWithSubqueryInMultipleSetsTest`
+
+UPDATE with multiple non-correlated aggregate subqueries in SET works on SQLite when all subqueries reference the **same** table: `SET min=(SELECT MIN...), max=(SELECT MAX...), avg=(SELECT AVG...)`. Also works: subquery arithmetic in SET, subqueries reflecting shadow data, prepared variant with WHERE param, and CASE with COUNT subquery in SET. This contrasts with correlated subqueries (containing FROM...WHERE) which fail with "near FROM: syntax error" on SQLite. On PostgreSQL, even non-correlated subqueries fail with "must appear in GROUP BY" when subqueries reference **different** tables (confirmed via PostgresMultiCorrelatedSetUpdateTest::testNonCorrelatedMultiSubquerySet). The distinction is: same-table non-correlated subqueries work everywhere; cross-table non-correlated subqueries fail on PostgreSQL (extends Issue #61).

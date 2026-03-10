@@ -508,6 +508,16 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.250 | `Pdo/SqliteDeleteWithAggregatedInSubqueryTest`, `Pdo/MysqlDeleteWithAggregatedInSubqueryTest`, `Pdo/PostgresDeleteWithAggregatedInSubqueryTest` | — | V | P | K | DELETE IN (GROUP BY HAVING): MySQL pass, SQLite incomplete input, PG $1 fails (#106) |
 | SPEC-10.2.251 | `Pdo/SqliteSequentialDmlSubqueryVisibilityTest`, `Pdo/MysqlSequentialDmlSubqueryVisibilityTest`, `Pdo/PostgresSequentialDmlSubqueryVisibilityTest` | — | P | P | P | Sequential DML chain: basic pass, cross-table JOIN fails (#20/#49/#51/#61) |
 | SPEC-10.2.252 | `Pdo/SqliteInsertSelectPartialColumnListTest`, `Pdo/MysqlInsertSelectPartialColumnListTest`, `Pdo/PostgresInsertSelectPartialColumnListTest` | — | V | K | K | Partial column INSERT SELECT: MySQL pass, SQLite/PG NULL columns (extends #20) |
+| SPEC-10.2.253 | `Pdo/SqliteThreeTableJoinDmlTest`, `Pdo/MysqlThreeTableJoinDmlTest`, `Pdo/PostgresThreeTableJoinDmlTest`, `Mysqli/ThreeTableJoinDmlTest` | V | V | P | P | 3-table JOIN: MySQL all pass; PG exec pass/$1 fails; SL exec pass/HAVING fails |
+| SPEC-10.2.254 | `Pdo/SqliteDeleteChainedExistsTest`, `Pdo/MysqlDeleteChainedExistsTest`, `Pdo/PostgresDeleteChainedExistsTest` | — | V | P | V | Chained EXISTS DELETE: MySQL/SQLite pass; PG exec pass/$1 fails (#106) |
+| SPEC-10.2.255 | `Pdo/SqliteCoalesceInDmlTest` | — | — | — | V | COALESCE in DML: exec pass, prepared DELETE affected by PDO type affinity |
+| SPEC-10.2.256 | `Pdo/SqliteCaseInInsertValuesTest` | — | — | — | V | CASE in INSERT VALUES: exec pass, prepared affected by SQLite type affinity |
+| SPEC-10.2.257 | `Pdo/SqliteStringFunctionDmlTest`, `Pdo/MysqlStringFunctionDmlTest`, `Pdo/PostgresStringFunctionDmlTest` | — | V | K | V | String functions: MySQL/SQLite pass; PG $N params store NULL (#108) |
+| SPEC-10.2.258 | `Pdo/SqliteNullParamDmlTest` | — | — | — | V | NULL param binding: INSERT/UPDATE/DELETE all work correctly |
+| SPEC-10.2.259 | `Pdo/SqliteSelfReferencingDeleteInTest` | — | — | — | V | Self-ref DELETE/UPDATE (no GROUP BY): all pass |
+| SPEC-10.2.260 | `Pdo/SqliteDeleteWithMultipleSubqueryConditionsTest` | — | — | — | V | Multi-subquery DELETE (IN+NOT IN+scalar+EXISTS): all pass |
+| SPEC-10.2.261 | `Pdo/SqliteUpdateWithSubqueryInMultipleSetsTest` | — | — | — | V | Non-correlated multi-aggregate SET: all pass (contrasts correlated variants) |
+| SPEC-10.2.262 | `Pdo/MysqlMultiCorrelatedSetUpdateTest`, `Pdo/PostgresMultiCorrelatedSetUpdateTest`, `Mysqli/MultiCorrelatedSetUpdateTest` | V | V | K | K | Multi-correlated SET: MySQL all pass; PG GROUP BY error (all variants incl. non-correlated); SL syntax error |
 
 ## Legend
 

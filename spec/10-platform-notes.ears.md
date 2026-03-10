@@ -2668,3 +2668,10 @@ The CTE rewriter converts shadow values to SQL literals via PHP's `(string)$val`
 **Tests:** `Mysqli/UpsertRowAliasSyntaxTest`, `Pdo/MysqlUpsertRowAliasSyntaxTest`
 
 MySQL 8.0.19 introduced `INSERT INTO t VALUES (...) AS new ON DUPLICATE KEY UPDATE col = new.col` to replace the deprecated `VALUES()` function (warnings in MySQL 8.2+). The row alias syntax is parsed without error, but the ON DUPLICATE KEY UPDATE clause is silently ignored when `new.col` references are used — the shadow store keeps old values. Tested patterns: no-conflict INSERT (works), conflict with `new.col` reference (fails — old value retained), multi-column update (fails), expression with `new.col` (fails), deprecated `VALUES()` positive control (works). Root cause: PhpMyAdmin SQL parser v5.11.x does not recognize the `AS` alias after VALUES in INSERT statements; `new.col` references are not resolved in UpsertMutation. Filed as Issue #152.
+
+## SPEC-10.2.334 ON DUPLICATE KEY UPDATE / ON CONFLICT DO UPDATE does not trigger on non-PK UNIQUE constraints
+**Status:** Confirms new [Issue #153] on MySQL and PostgreSQL
+**Platforms:** MySQLi (fails), PostgreSQL-PDO (fails)
+**Tests:** `Mysqli/UpsertNonPkUniqueTest`, `Pdo/PostgresUpsertNonPkUniqueTest`
+
+When a table has AUTO_INCREMENT PK and a separate UNIQUE constraint (e.g., `UNIQUE email`), and the IODKU/ON CONFLICT conflict is on the UNIQUE column (not the PK), the shadow store inserts a duplicate row instead of updating the existing one. Tested patterns: PK conflict IODKU (works — positive control), non-PK UNIQUE email conflict (fails — creates duplicate row, count goes from 2 to 3), multi-row IODKU with mixed conflicts (fails — extra row inserted), self-referencing expression on UNIQUE conflict (fails — original value not incremented). Root cause: UpsertMutation receives only `primaryKeys` from the mutation resolver; `matchesPrimaryKey()` does not check UNIQUE constraints. Related to Issue #91 (INSERT IGNORE non-PK UNIQUE) but with different impact: IODKU should UPDATE, not skip or duplicate. Filed as Issue #153.

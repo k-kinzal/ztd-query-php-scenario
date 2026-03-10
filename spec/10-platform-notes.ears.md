@@ -2435,3 +2435,33 @@ This is distinct from Issue #142 (CASE expression + WHERE filtering). Here the C
 Re-preparing different SQL on the same `$stmt` variable: INSERT→SELECT, SELECT→UPDATE→SELECT, DELETE→SELECT, cross-table, rapid re-prepare, and same-SQL re-prepare all work correctly on all platforms.
 
 **Known issue [Issue #146]:** A specific re-prepare sequence fails on all PDO platforms: when a prepared UPDATE is followed by a re-prepared parameterless SELECT, the UPDATE is not reflected. The SELECT returns pre-UPDATE data. MySQLi handles this correctly. Pattern: `prepare(INSERT,3p)→prepare(SELECT,1p)→prepare(UPDATE,2p)→prepare(SELECT,0p)` — the final SELECT shows stale data.
+
+## SPEC-10.2.301 Scalar subquery in INSERT VALUES clause
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/SubqueryInValuesTest`, `Pdo/MysqlSubqueryInValuesTest`, `Pdo/PostgresSubqueryInValuesTest`, `Pdo/SqliteSubqueryInValuesTest`
+
+`INSERT INTO t VALUES ((SELECT MAX(id) FROM t) + 1, 'name')` works correctly on all platforms. Scalar subqueries in VALUES clauses are properly resolved from the shadow store. Tested patterns: MAX(id) + 1 (custom sequence), COUNT(*) (cross-table count), SUM with WHERE, subquery after shadow INSERT (sees shadow data), and prepared INSERT with subquery and params.
+
+## SPEC-10.2.302 Implicit boolean WHERE in DML
+**Status:** Partially Verified; Known Issue (PostgreSQL — [extends Issue #6])
+**Platforms:** MySQLi (works), MySQL-PDO (works), SQLite-PDO (works), PostgreSQL-PDO (fails)
+**Tests:** `Mysqli/BooleanWhereInDmlTest`, `Pdo/MysqlBooleanWhereInDmlTest`, `Pdo/PostgresBooleanWhereInDmlTest`, `Pdo/SqliteBooleanWhereInDmlTest`
+
+`DELETE FROM t WHERE active` (implicit boolean, no comparison operator) works correctly on MySQL (TINYINT) and SQLite (INTEGER). `WHERE NOT active`, `WHERE active AND score < N`, and prepared variants all work.
+
+On PostgreSQL, ALL operations on tables with BOOLEAN columns fail with `invalid input syntax for type boolean: ""` because the CTE VALUES clause generates `CAST('' AS BOOLEAN)` for `false` values. This extends Issue #6 to cover DML operations and implicit boolean WHERE.
+
+## SPEC-10.2.303 Correlated aggregate subquery in UPDATE SET
+**Status:** Partially Verified; Known Issue ([Issue #147])
+**Platforms:** MySQLi (works), MySQL-PDO (works), PostgreSQL-PDO (fails), SQLite-PDO (fails)
+**Tests:** `Mysqli/CorrelatedAggregateUpdateTest`, `Pdo/MysqlCorrelatedAggregateUpdateTest`, `Pdo/PostgresCorrelatedAggregateUpdateTest`, `Pdo/SqliteCorrelatedAggregateUpdateTest`
+
+`UPDATE customers SET total = (SELECT SUM(amount) FROM orders WHERE orders.customer_id = customers.id)` works on MySQL (both adapters). On SQLite: "near FROM: syntax error". On PostgreSQL: "column must appear in GROUP BY clause". Multiple correlated subqueries, correlated with WHERE clause, and correlated after shadow INSERT all fail on SQLite/PostgreSQL.
+
+## SPEC-10.2.304 Date/time interval arithmetic in UPDATE SET
+**Status:** Partially Verified; Known Issue (MySQL — [Issue #148])
+**Platforms:** SQLite-PDO (works), PostgreSQL-PDO (works), MySQLi (partial), MySQL-PDO (partial)
+**Tests:** `Mysqli/IntervalArithmeticDmlTest`, `Pdo/MysqlIntervalArithmeticDmlTest`, `Pdo/PostgresIntervalArithmeticDmlTest`, `Pdo/SqliteIntervalArithmeticDmlTest`
+
+SQLite `datetime(col, '+30 days')` and PostgreSQL `col + INTERVAL '30 days'` work correctly in UPDATE SET. MySQL `col + INTERVAL 30 DAY` produces syntax error (CTE rewriter treats INTERVAL as column expression). MySQL `DATE_ADD(col, INTERVAL 7 DAY)` works as workaround. Date comparisons in WHERE work on all platforms. String formatting functions (`strftime`, `to_char`, `DATE_FORMAT`, `CONCAT`) in UPDATE SET work on all platforms.

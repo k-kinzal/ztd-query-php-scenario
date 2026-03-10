@@ -554,6 +554,10 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.298 | `Pdo/MysqlNullifInDmlTest`, `Pdo/PostgresNullifInDmlTest`, `Pdo/SqliteNullifInDmlTest`, `Mysqli/NullifInDmlTest` | V | V | P | P | NULLIF in DML: MySQL/MySQLi all pass; SL/PG prepared param + INSERT...SELECT broken (extends #80, #83) |
 | SPEC-10.2.299 | `Pdo/MysqlBatchCaseUpdateByIdTest`, `Pdo/PostgresBatchCaseUpdateByIdTest`, `Pdo/SqliteBatchCaseUpdateByIdTest`, `Mysqli/BatchCaseUpdateByIdTest` | V | V | V | V | Batch CASE UPDATE by id (ORM pattern): all pass on all platforms |
 | SPEC-10.2.300 | `Pdo/MysqlPreparedRePrepareTest`, `Pdo/PostgresPreparedRePrepareTest`, `Pdo/SqlitePreparedRePrepareTest`, `Mysqli/PreparedRePrepareTest` | V | P | P | P | Prepared re-prepare: MySQLi all pass; PDO UPDATE→paramless SELECT stale (#146) |
+| SPEC-10.2.301 | `Mysqli/SubqueryInValuesTest`, `Pdo/MysqlSubqueryInValuesTest`, `Pdo/PostgresSubqueryInValuesTest`, `Pdo/SqliteSubqueryInValuesTest` | V | V | V | V | Scalar subquery in INSERT VALUES: all pass on all platforms |
+| SPEC-10.2.302 | `Mysqli/BooleanWhereInDmlTest`, `Pdo/MysqlBooleanWhereInDmlTest`, `Pdo/PostgresBooleanWhereInDmlTest`, `Pdo/SqliteBooleanWhereInDmlTest` | V | V | K | V | Implicit boolean WHERE DML: MySQL/SQLite pass; PG BOOLEAN CAST fails (extends #6) |
+| SPEC-10.2.303 | `Mysqli/CorrelatedAggregateUpdateTest`, `Pdo/MysqlCorrelatedAggregateUpdateTest`, `Pdo/PostgresCorrelatedAggregateUpdateTest`, `Pdo/SqliteCorrelatedAggregateUpdateTest` | V | V | K | K | Correlated aggregate UPDATE SET: MySQL passes; PG GROUP BY error; SL syntax error (#147) |
+| SPEC-10.2.304 | `Mysqli/IntervalArithmeticDmlTest`, `Pdo/MysqlIntervalArithmeticDmlTest`, `Pdo/PostgresIntervalArithmeticDmlTest`, `Pdo/SqliteIntervalArithmeticDmlTest` | P | P | V | V | Interval in UPDATE SET: PG/SL pass; MySQL INTERVAL syntax error, DATE_ADD works (#148) |
 
 ## Legend
 

@@ -1962,3 +1962,64 @@ Other re-prepare patterns work correctly: INSERT→SELECT, SELECT→UPDATE→SEL
 This is a PDO-adapter-specific issue, suggesting the shadow store's prepared statement tracking/cache handles `ZtdPdoStatement` lifecycle differently from MySQLi's `ZtdMysqli::prepare()`.
 
 **Impact:** This pattern is common in real applications that reuse a `$stmt` variable for sequential database operations. The silent data loss (UPDATE appears to succeed but has no effect on subsequent reads) makes this particularly dangerous.
+
+## SPEC-11.CORRELATED-AGGREGATE-UPDATE `[Issue #147]` UPDATE SET with correlated aggregate subquery from another table broken (SQLite, PostgreSQL)
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed); MySQLi and MySQL-PDO NOT affected
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-3.3](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteCorrelatedAggregateUpdateTest`, `Pdo/PostgresCorrelatedAggregateUpdateTest`, `Pdo/MysqlCorrelatedAggregateUpdateTest`, `Mysqli/CorrelatedAggregateUpdateTest`
+
+`UPDATE customers SET order_total = (SELECT COALESCE(SUM(amount), 0) FROM orders WHERE orders.customer_id = customers.id)` fails on SQLite and PostgreSQL through the CTE shadow store:
+
+- **SQLite**: `near "FROM": syntax error` — the CTE rewriter generates invalid SQL when UPDATE SET contains a correlated subquery referencing another table. All variants fail: SUM, COUNT, multiple correlated subqueries in one SET, correlated with WHERE clause, correlated after shadow INSERT.
+
+- **PostgreSQL**: `column "customers.id" must appear in the GROUP BY clause or be used in an aggregate function` — the CTE rewriter injects the outer table's column references into the correlated subquery's SELECT list alongside the aggregate, which PostgreSQL correctly rejects. The rewriter treats the scalar subquery as if it were a top-level SELECT with GROUP BY requirements.
+
+- **MySQL (MySQLi, PDO)**: All variants work correctly — correlated SUM, COUNT, multiple subqueries, with WHERE, and after shadow INSERT all produce correct results.
+
+This is a very common denormalization pattern used in:
+- Order total aggregation (`UPDATE customers SET total = (SELECT SUM(amount) FROM orders ...)`)
+- Count caching (`UPDATE posts SET comment_count = (SELECT COUNT(*) FROM comments ...)`)
+- Statistics refresh (`UPDATE products SET avg_rating = (SELECT AVG(rating) FROM reviews ...)`)
+
+The workaround is to SELECT the aggregate values first, then UPDATE each row individually by explicit ID, or use MySQL which handles this correctly.
+
+## SPEC-11.MYSQL-INTERVAL-UPDATE-SET `[Issue #148]` MySQL: INTERVAL in UPDATE SET produces syntax error
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed); PostgreSQL-PDO and SQLite-PDO NOT affected
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Mysqli/IntervalArithmeticDmlTest`, `Pdo/MysqlIntervalArithmeticDmlTest`, `Pdo/PostgresIntervalArithmeticDmlTest`, `Pdo/SqliteIntervalArithmeticDmlTest`
+
+`UPDATE tasks SET due_at = created_at + INTERVAL 30 DAY` produces a MySQL syntax error on both MySQLi and MySQL-PDO. The CTE rewriter misinterprets the `INTERVAL 30 DAY` expression in the SET clause — it generates `INTERVAL 30 DAY AS \`due_at\`` as if `DAY` were a column name, then appends an alias, producing invalid SQL.
+
+- `created_at + INTERVAL 30 DAY` in UPDATE SET → syntax error
+- `DATE_ADD(created_at, INTERVAL 7 DAY)` in UPDATE SET → works correctly
+- `INTERVAL` in DELETE WHERE comparison → works correctly
+- Date comparison without INTERVAL in UPDATE WHERE → works correctly
+- `DATE_FORMAT()` and `CONCAT()` in UPDATE SET → work correctly
+
+The root cause is similar to Issue #119 (CAST AS keyword confusion) — the CTE rewriter confuses `INTERVAL ... DAY` with a column expression that needs aliasing.
+
+PostgreSQL `INTERVAL '30 days'` and SQLite `datetime(col, '+30 days')` both work correctly in UPDATE SET.
+
+**Workaround:** Use `DATE_ADD(col, INTERVAL N DAY)` instead of `col + INTERVAL N DAY` on MySQL.
+
+## SPEC-11.PG-BOOLEAN-DML `[extends Issue #6]` PostgreSQL: BOOLEAN columns break ALL DML operations (not just SELECT)
+**Status:** Known Issue (severity extension)
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md), [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresBooleanWhereInDmlTest`
+
+Extends Issue #6 (PostgreSQL BOOLEAN false casting). The original report documents that `false` BOOLEAN values are cast as empty strings (`CAST('' AS BOOLEAN)`), causing SELECT failures. Testing reveals the impact is much broader:
+
+- **ALL SELECT** operations on tables with BOOLEAN columns fail if any row has `false`: `invalid input syntax for type boolean: ""`
+- **ALL UPDATE** operations fail with the same error
+- **ALL DELETE** operations fail with the same error
+- **Prepared statements** with BOOLEAN conditions also fail
+- **Implicit boolean WHERE** (`WHERE active`, `WHERE NOT active`) fails
+
+The CTE VALUES clause generates `CAST('' AS BOOLEAN)` for `false` values, which PostgreSQL rejects. This makes any table with a BOOLEAN column containing a `false` value completely unusable through ZTD.
+
+The same patterns work correctly on MySQL (TINYINT boolean) and SQLite (INTEGER boolean).
+
+**Impact:** BOOLEAN is one of PostgreSQL's most commonly used types. Applications with active/enabled/visible flags are completely broken on PostgreSQL.

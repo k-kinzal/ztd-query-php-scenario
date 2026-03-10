@@ -525,6 +525,17 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.265 | `Pdo/SqliteLikeParamDmlTest` | — | — | — | V | LIKE with prepared wildcard params: all pass on SQLite |
 | SPEC-10.2.266 | `Pdo/SqliteInsertSelectUnionAdvancedTest`, `Pdo/MysqlInsertSelectUnionAdvancedTest`, `Pdo/PostgresInsertSelectUnionAdvancedTest`, `Mysqli/InsertSelectUnionAdvancedTest` | K | K | V | P | Advanced INSERT UNION: PG all pass; MySQL multi-stmt error; SL triple fails (extends #103) |
 
+| SPEC-11.SAVEPOINT-BLOCKED | `Pdo/SqliteSavepointTest`, `Pdo/MysqlSavepointTest`, `Pdo/PostgresSavepointTest`, `Mysqli/SavepointTest` | K | K | K | K | SAVEPOINT/RELEASE/ROLLBACK TO blocked (MY/Mi/SL) or shadow ignores (PG) (#120) |
+| SPEC-11.SQLITE-RETURNING | `Pdo/SqliteReturningClauseTest` | — | — | — | K | INSERT returns empty; UPDATE/DELETE syntax error; extends #32/#53 (#121) |
+| SPEC-11.TEMP-TABLE-DML | `Pdo/SqliteTempTableDmlTest` | — | — | — | K | CREATE TEMP works; subsequent DML blocked by Write Protection (#122) |
+| SPEC-11.VIEW-EMPTY | `Pdo/SqliteViewDmlTest`, `Pdo/MysqlViewDmlTest`, `Pdo/PostgresViewDmlTest` | — | K | K | K | All view SELECT types return 0 rows after shadow DML on all platforms (#123) |
+| SPEC-11.GENERATED-COL-NULL | `Pdo/SqliteGeneratedColumnTest`, `Pdo/MysqlGeneratedColumnTest`, `Pdo/PostgresGeneratedColumnTest`, `Mysqli/GeneratedColumnTest` | K | K | K | K | Generated columns NULL in shadow; WHERE/DELETE on generated col ineffective (#124) |
+| SPEC-11.COALESCE-MULTI-PARAM | `Pdo/SqliteCoalesceInDmlTest` | — | — | — | K | Prepared DELETE COALESCE(col,?) < ? deletes all rows (#125) |
+| SPEC-10.2.267 | `Pdo/SqliteDateTimeDmlTest`, `Pdo/MysqlDateTimeDmlTest`, `Pdo/PostgresDateTimeDmlTest` | — | V | P | V | Date/time DML: SET/WHERE work; PG TO_CHAR type error in shadow; INSERT SELECT func → NULL (#83) |
+| SPEC-10.2.268 | `Pdo/SqliteNamedParamDmlTest`, `Pdo/MysqlNamedParamDmlTest`, `Pdo/PostgresNamedParamDmlTest` | — | V | V | V | PDO named params (:name style) all pass on all platforms |
+| SPEC-10.2.269 | `Pdo/SqliteSubqueryInValuesDmlTest` | — | — | — | V | Subquery in INSERT VALUES: scalar MAX, COUNT, multi-subquery all pass |
+| SPEC-10.2.270 | `Pdo/SqliteForeignKeyCascadeTest` | — | — | — | V | FK CASCADE: basic pass; ON DELETE CASCADE not applied in shadow (by-design SPEC-8.1) |
+
 ## Legend
 
 - `*FooTest` = shorthand for all platform variants (e.g., `Mysqli/FooTest`, `Pdo/MysqlFooTest`, `Pdo/PostgresFooTest`, `Pdo/SqliteFooTest`)

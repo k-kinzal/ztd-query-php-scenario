@@ -1504,3 +1504,84 @@ Prepared `UPDATE` and `DELETE` statements using `WHERE col BETWEEN ? AND ?` with
 - **UPDATE SET with CAST subquery** (SQLite, PostgreSQL, MySQL): Syntax errors or 0 values depending on platform
 - Non-CAST expressions in the same positions work correctly
 - Related to Issue #33 (PostgreSQL array types with CAST) — same root cause of AS keyword confusion
+
+## SPEC-11.SAVEPOINT-BLOCKED `[Issue #120]` SAVEPOINT / RELEASE / ROLLBACK TO not supported
+**Status:** Known Issue
+**Platforms:** All platforms
+**Related specs:** [SPEC-4.8](04-write-operations.ears.md), [SPEC-6.1](06-unsupported-sql.ears.md)
+**Tests:** `Pdo/SqliteSavepointTest`, `Pdo/MysqlSavepointTest`, `Pdo/PostgresSavepointTest`, `Mysqli/SavepointTest`
+
+SAVEPOINT, RELEASE SAVEPOINT, and ROLLBACK TO SAVEPOINT are not supported. This breaks ORM nested transaction support (Doctrine, Eloquent).
+
+- **MySQL (PDO, MySQLi):** All three statements throw `ZtdPdoException` / `ZtdMysqliException` with "ZTD Write Protection: Empty or unparseable SQL statement"
+- **PostgreSQL (PDO):** SAVEPOINT and RELEASE pass through without error, but ROLLBACK TO SAVEPOINT does NOT undo shadow store changes. After `ROLLBACK TO sp1`, rows inserted after the savepoint remain visible — shadow data is corrupted.
+- **SQLite (PDO):** All three statements throw `ZtdPdoException` with "ZTD Write Protection: Statement type not supported SQL statement"
+- Workaround: use `disableZtd()` before savepoint operations and `enableZtd()` after, but this breaks shadow isolation
+
+## SPEC-11.SQLITE-RETURNING `[Issue #121]` SQLite RETURNING clause broken
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md), [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteReturningClauseTest`
+
+Extends Issues #32 and #53 (PostgreSQL RETURNING) to SQLite. The RETURNING clause does not work through ZTD on SQLite:
+
+- **INSERT ... RETURNING:** Returns 0 rows (no error). The INSERT succeeds in shadow but RETURNING result set is empty.
+- **UPDATE ... RETURNING:** Throws "near RETURNING: syntax error" — CTE rewriter generates invalid SQL
+- **DELETE ... RETURNING:** Same syntax error
+- **Prepared INSERT ... RETURNING:** Returns 0 rows
+- **Multi-row INSERT ... RETURNING:** Returns 0 rows
+- Workaround: use a separate SELECT after DML
+
+## SPEC-11.TEMP-TABLE-DML `[Issue #122]` DML on temporary tables blocked by ZTD Write Protection
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), likely all platforms
+**Related specs:** [SPEC-5.1](05-ddl-operations.ears.md), [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteTempTableDmlTest`
+
+After `CREATE TEMPORARY TABLE`, subsequent DML operations on the temp table throw "ZTD Write Protection: Statement type not supported SQL statement." The initial CREATE + INSERT INTO SELECT from another table succeeds, but UPDATE, DELETE, and INSERT from temp table into permanent table fail.
+
+- `CREATE TEMP TABLE` + `INSERT INTO staging SELECT * FROM source` works
+- `UPDATE staging SET ...` fails
+- `DELETE FROM staging WHERE ...` fails
+- `INSERT INTO permanent SELECT * FROM staging` fails
+- `SELECT ... FROM source JOIN staging ON ...` fails
+
+## SPEC-11.VIEW-EMPTY `[Issue #123]` SELECT from views returns empty results after shadow DML
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-3.3b](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteViewDmlTest`
+
+Extends SPEC-11.VIEW-JOIN-SHADOW: not only JOINs with views, but ALL view query types return 0 rows after shadow DML on the base table. The CTE rewriter does not resolve view definitions to their underlying tables.
+
+- Simple `SELECT * FROM view` returns 0 rows
+- `SELECT ... FROM view WHERE ...` returns 0 rows
+- Prepared `SELECT ... FROM view WHERE col > ?` returns 0 rows
+- Aggregate views (`SELECT dept, COUNT(*) GROUP BY dept`) return 0 rows
+- `SELECT ... FROM view JOIN table ON ...` returns 0 rows (already in SPEC-11.VIEW-JOIN-SHADOW)
+- Workaround: query the underlying table directly instead of through views
+
+## SPEC-11.GENERATED-COL-NULL `[Issue #124]` Generated columns return NULL in shadow store
+**Status:** Known Issue
+**Platforms:** All platforms
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md), [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteGeneratedColumnTest`, `Pdo/MysqlGeneratedColumnTest`, `Pdo/PostgresGeneratedColumnTest`, `Mysqli/GeneratedColumnTest`
+
+Tables with `GENERATED ALWAYS AS (expression) STORED` columns return NULL for the generated column values in shadow store queries. The shadow CTE does not compute generated column expressions.
+
+- **All platforms:** Generated column values are NULL after INSERT
+- **WHERE on generated column:** Returns 0 rows (comparing against NULL)
+- **DELETE WHERE generated column:** Has no effect (condition never matches NULL)
+- **UPDATE base columns:** Generated column remains NULL (not recomputed)
+- **PostgreSQL GENERATED ALWAYS AS IDENTITY:** Shadow store does not track auto-generated sequence values
+- **PostgreSQL SUM on generated column:** Fails with type error ("function sum(text) does not exist")
+- Non-generated columns in the same table work correctly
+
+## SPEC-11.COALESCE-MULTI-PARAM-DELETE `[Issue #125]` Prepared DELETE with COALESCE and multiple ? params deletes all rows
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteCoalesceInDmlTest`
+
+Prepared DELETE with COALESCE containing a `?` parameter and a second `?` in the comparison deletes all rows instead of only matching rows. `DELETE FROM t WHERE COALESCE(price, ?) < ?` with params `[0.00, 15.00]` deletes all 4 rows instead of the expected 3. Related to Issue #80 (NULLIF with prepared parameter) — same class of issue with function expressions and multiple parameters.

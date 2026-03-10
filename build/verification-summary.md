@@ -12,7 +12,7 @@
 
 Note: PostgreSQL, MySQL, MySQLi counts approximate — full recount in progress.
 
-## New scenarios added (this session — 2026-03-10 continued)
+## New scenarios added (2026-03-10 session 2)
 
 - **RETURNING clause** (SQLite, PostgreSQL): INSERT/UPDATE/DELETE ... RETURNING through ZTD. Confirmed broken on both platforms (Issue #121 for SQLite, extends #32/#53 for PostgreSQL).
 - **Savepoints** (all platforms): SAVEPOINT / RELEASE / ROLLBACK TO SAVEPOINT. Blocked by ZTD Write Protection on MySQL/MySQLi/SQLite; passes through but doesn't undo shadow on PostgreSQL (Issue #120).
@@ -25,7 +25,7 @@ Note: PostgreSQL, MySQL, MySQLi counts approximate — full recount in progress.
 - **Foreign key CASCADE** (SQLite): ON DELETE CASCADE, ON UPDATE CASCADE. CASCADE does NOT propagate in shadow store (by-design per SPEC-8.1).
 - **Subquery in INSERT VALUES** (SQLite): Scalar subqueries in VALUES clause. Most work correctly.
 
-## New upstream issues filed (this session — 2026-03-10 continued): Issues #120–#125
+## New upstream issues filed (2026-03-10 session 2): Issues #120–#125, #156–#161
 
 - **#120**: SAVEPOINT / RELEASE / ROLLBACK TO not supported (all platforms) — ORM nested transactions broken
 - **#121**: SQLite RETURNING clause — INSERT returns empty, UPDATE/DELETE throw syntax error
@@ -33,8 +33,26 @@ Note: PostgreSQL, MySQL, MySQLi counts approximate — full recount in progress.
 - **#123**: SELECT from views returns empty results after shadow DML (all platforms)
 - **#124**: Generated columns (GENERATED ALWAYS AS) return NULL in shadow store (all platforms)
 - **#125**: Prepared DELETE with COALESCE and multiple ? params deletes all rows (SQLite)
+- **#156**: STRICT tables blocked — "Cannot determine columns" (SQLite)
+- **#157**: ATTACH DATABASE blocked + schema-qualified main.table returns empty (SQLite)
+- **#158**: MySQL PARTITION clause in SELECT returns all rows instead of partition subset
+- **#159**: PostgreSQL child partition table queries return empty
+- **#160**: TABLESAMPLE broken — "can only be applied to tables" (PostgreSQL)
+- **#161**: DO $$ anonymous blocks blocked as unsupported (PostgreSQL)
 
-**Total upstream issues:** 125 (all open)
+**Total upstream issues:** 161 (all open)
+
+## New scenarios added (2026-03-10 session 3)
+
+- **WITHOUT ROWID tables** (SQLite): All CRUD, prepared statements, JOINs, and aggregates work correctly. No issues.
+- **STRICT tables** (SQLite): ALL DML blocked — "Cannot determine columns" (Issue #156).
+- **ATTACH DATABASE** (SQLite): Blocked as unsupported. Schema-qualified `main.table` returns empty (Issue #157, extends #24).
+- **Partitioned tables** (MySQL): Regular DML works. `PARTITION(p)` clause returns all rows instead of partition subset (Issue #158).
+- **Partitioned tables** (PostgreSQL): Parent DML works. Child partition queries return empty. Aggregate with EXTRACT on partitioned table returns 0 groups (Issue #159).
+- **TABLESAMPLE** (PostgreSQL): All variants fail — CTE is not a physical table (Issue #160).
+- **DO $$ blocks** (PostgreSQL): All blocked as unsupported statement type (Issue #161).
+- **Window functions in derived tables** (SQLite): Confirms Issue #13 — all return 0 rows.
+- **Aggregates after full DELETE** (SQLite): Confirms Issue #7 — `DELETE FROM t` (no WHERE) not tracked; `DELETE FROM t WHERE 1=1` works.
 
 ## Confirmed working behavior
 
@@ -46,6 +64,8 @@ Note: PostgreSQL, MySQL, MySQLi counts approximate — full recount in progress.
 - Multi-column COALESCE UPDATE works correctly
 - FK basic relationship queries (JOIN parent + child) work correctly
 - Subquery in INSERT VALUES (scalar MAX, COUNT, multiple subqueries) works correctly on SQLite
+- WITHOUT ROWID tables work correctly on SQLite (all CRUD, JOINs, aggregates, prepared stmts)
+- Partitioned tables — regular DML (without PARTITION clause) works on MySQL and PostgreSQL
 
 ## PHP Version Matrix (SQLite-PDO, local)
 
@@ -67,7 +87,7 @@ Note: PostgreSQL, MySQL, MySQLi counts approximate — full recount in progress.
 |----------|-------------|-------------------|
 | SPEC-mapped test files | 1090+ | 0 |
 | SPEC IDs covered | 99+ | — |
-| Known issues documented | 125 | — |
+| Known issues documented | 161 | — |
 | Unmapped (workflow/scale) | — | 0 |
 
 ## Infrastructure

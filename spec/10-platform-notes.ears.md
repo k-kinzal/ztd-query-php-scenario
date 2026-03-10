@@ -2794,3 +2794,66 @@ Row value comparisons `(year, month) > (2024, 3)`, `(a, b, c) IN ((1,2,3), (4,5,
 **Tests:** `Pdo/SqliteFkCascadeVisibilityTest`
 
 When PRAGMA foreign_keys = ON, foreign key cascade operations are not reflected in the shadow store. ON DELETE CASCADE: deleting a parent row does not remove child rows from shadow (all children remain visible). Multi-level CASCADE (grandparent → parent → child): only the directly deleted row is removed. ON DELETE SET NULL: child rows retain the original FK value instead of being set to NULL. ON UPDATE CASCADE: child FK columns are not updated when parent PK changes. All four cascade types are invisible to the shadow store.
+
+## SPEC-10.2.352 WITHOUT ROWID tables work correctly through shadow store
+**Status:** Verified (works correctly)
+**Platforms:** SQLite-PDO (passes)
+**Tests:** `Pdo/SqliteWithoutRowidTest`
+
+WITHOUT ROWID tables (text PK, composite PK, REAL-weight edges) work correctly through the CTE shadow store. INSERT, UPDATE, DELETE, prepared statements, JOINs between two WITHOUT ROWID tables, and aggregate queries all produce correct results after DML modifications. The shadow store does not depend on SQLite's implicit rowid — it tracks rows by their declared PRIMARY KEY.
+
+## SPEC-10.2.353 STRICT tables blocked by Write Protection — cannot determine columns
+**Status:** Confirms [Issue #156] on SQLite
+**Platforms:** SQLite-PDO (fails)
+**Tests:** `Pdo/SqliteStrictTableTest`
+
+SQLite STRICT tables (3.37+) fail with "ZTD Write Protection: Cannot determine columns SQL statement" on ALL DML operations (INSERT, UPDATE, DELETE, prepared statements). The ZTD schema reflection cannot parse column metadata from STRICT table definitions. STRICT + WITHOUT ROWID combination also fails. No DML is possible on STRICT tables through ZTD. This affects any application using SQLite's type-enforced tables.
+
+## SPEC-10.2.354 ATTACH DATABASE blocked; schema-qualified main.table returns empty
+**Status:** Confirms [Issue #157] on SQLite; extends [Issue #24]
+**Platforms:** SQLite-PDO (fails)
+**Tests:** `Pdo/SqliteAttachDatabaseDmlTest`
+
+`ATTACH ':memory:' AS db2` is blocked by "ZTD Write Protection: Statement type not supported." All subsequent operations on attached databases fail. Schema-qualified `main.table_name` references in SELECT return 0 rows — the CTE rewriter does not recognize `main.` prefix as matching the shadow table. Cross-database INSERT...SELECT and DML on attached tables are blocked. This extends Issue #24 (PostgreSQL schema-qualified `public.table`) to SQLite.
+
+## SPEC-10.2.355 MySQL PARTITION clause in SELECT returns all rows instead of partition subset
+**Status:** Confirms [Issue #158] on MySQL
+**Platforms:** MySQLi (fails), MySQL-PDO (fails)
+**Tests:** `Pdo/MysqlPartitionedTableTest`, `Mysqli/PartitionedTableTest`
+
+`SELECT ... FROM table PARTITION (p2024)` returns rows from ALL partitions instead of only the specified partition. The CTE rewriter replaces the table reference with a CTE alias, discarding the `PARTITION(...)` filter. Regular DML (INSERT, UPDATE, DELETE, SELECT without PARTITION clause) works correctly on partitioned tables with explicit PKs. Only the explicit PARTITION clause is broken.
+
+## SPEC-10.2.356 PostgreSQL: direct query on child partition returns empty
+**Status:** Confirms [Issue #159] on PostgreSQL
+**Platforms:** PostgreSQL-PDO (fails)
+**Tests:** `Pdo/PostgresPartitionedTableTest`
+
+Querying a child partition table directly (`SELECT FROM pg_prt_logs_2024`) returns 0 rows. DML is tracked on the parent partitioned table, not on individual child partitions. Regular DML on the parent table works correctly (INSERT, UPDATE, DELETE, SELECT, LIST partition). Aggregate with `EXTRACT(YEAR FROM ...)` on a partitioned table after DML returns 0 groups — possibly related to CTE type casting of DATE columns to text.
+
+## SPEC-10.2.357 PostgreSQL: TABLESAMPLE broken through CTE shadow store
+**Status:** Confirms [Issue #160] on PostgreSQL
+**Platforms:** PostgreSQL-PDO (fails)
+**Tests:** `Pdo/PostgresTablesampleTest`
+
+`TABLESAMPLE SYSTEM(n)`, `TABLESAMPLE BERNOULLI(n)`, and `TABLESAMPLE ... REPEATABLE(seed)` all fail with "TABLESAMPLE clause can only be applied to tables and materialized views." The CTE rewriter replaces the table reference with a CTE alias, and CTEs are not physical tables. Workaround: disable ZTD for TABLESAMPLE queries.
+
+## SPEC-10.2.358 PostgreSQL: DO $$ anonymous blocks blocked as unsupported
+**Status:** Confirms [Issue #161] on PostgreSQL
+**Platforms:** PostgreSQL-PDO (fails)
+**Tests:** `Pdo/PostgresDoBlockTest`
+
+`DO $$ BEGIN ... END $$` anonymous PL/pgSQL blocks are blocked by "ZTD Write Protection: Statement type not supported." All DO block patterns fail: simple INSERT, conditional logic, loops, DELETE+INSERT. DML inside DO blocks bypasses ZTD entirely. Regular DML before and after a DO block is also blocked if the DO block is encountered. This affects migration scripts and administrative operations that use DO blocks.
+
+## SPEC-10.2.359 Window functions in derived table subqueries return empty on SQLite
+**Status:** Confirms [Issue #13] (extended) on SQLite
+**Platforms:** SQLite-PDO (fails)
+**Tests:** `Pdo/SqliteWindowInSubqueryAfterDmlTest`
+
+`SELECT ... FROM (SELECT ..., ROW_NUMBER() OVER (...) FROM table) sub WHERE rn <= N` returns 0 rows on SQLite after DML. All window function patterns in derived tables fail: top-N per group (ROW_NUMBER), running totals (SUM OVER), DENSE_RANK filter, LAG/LEAD change detection, and prepared statements with window subqueries. This extends Issue #13 (derived table subqueries) — the CTE rewriter does not rewrite table references inside derived table subqueries on SQLite, so the inner query reads from the empty physical table.
+
+## SPEC-10.2.360 Aggregate after full DELETE (no WHERE) returns stale data
+**Status:** Confirms [Issue #7] (extended scope) on SQLite
+**Platforms:** SQLite-PDO (fails)
+**Tests:** `Pdo/SqliteAggregateAfterFullDeleteTest`
+
+`DELETE FROM table` (no WHERE clause) is not tracked by the shadow store. `COUNT(*)` returns the pre-delete count, `MAX/SUM` return pre-delete values, `GROUP BY` returns pre-delete groups, and re-INSERT after full DELETE shows both old and new rows. However, `DELETE FROM table WHERE 1=1` and `DELETE FROM table WHERE id > 0` ARE correctly tracked. The shadow store only intercepts DELETE statements that have a WHERE clause. `EXISTS (SELECT 1 FROM table)` incorrectly returns true after `DELETE FROM table`.

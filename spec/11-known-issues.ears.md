@@ -2048,3 +2048,63 @@ SQLite's `INDEXED BY idx_name` and `NOT INDEXED` query hints produce `General er
 **Tests:** `Pdo/SqliteTypeofPreservationTest`
 
 `typeof(int_col)` returns `'text'` instead of `'integer'`, and `typeof(real_col)` returns `'text'` instead of `'real'`. The CTE shadow store embeds all non-NULL values as text string literals, losing SQLite's type affinity. `typeof(NULL)` correctly returns `'null'`. Arithmetic expressions still produce correct types due to SQLite's coercion (`typeof(int_col + 5)` = `'integer'`), but direct `typeof()` on raw column values is wrong. Affects `GROUP BY typeof()` grouping and any type-dispatch logic.
+
+## SPEC-11.STRICT-TABLE `[Issue #156]` STRICT tables blocked by Write Protection
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md), [SPEC-5.1](05-ddl-operations.ears.md)
+**Tests:** `Pdo/SqliteStrictTableTest`
+
+SQLite STRICT tables (introduced in SQLite 3.37, 2021-11-27) fail with "ZTD Write Protection: Cannot determine columns SQL statement" on all DML operations. The ZTD schema reflection mechanism cannot parse column metadata from STRICT table DDL. This blocks INSERT, UPDATE, DELETE, and prepared statements entirely. STRICT + WITHOUT ROWID combination also fails. Regular WITHOUT ROWID tables (without STRICT) work correctly.
+
+**Impact:** STRICT tables enforce column types at the database level and are recommended for data integrity. Applications using STRICT mode cannot use ZTD at all. This affects any SQLite application that uses `CREATE TABLE ... STRICT` for type safety.
+
+## SPEC-11.ATTACH-DATABASE `[Issue #157]` ATTACH DATABASE and schema-qualified table names broken on SQLite
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed)
+**Related specs:** [SPEC-6.1](06-unsupported-sql.ears.md)
+**Tests:** `Pdo/SqliteAttachDatabaseDmlTest`
+
+`ATTACH DATABASE` is blocked by ZTD Write Protection as an unsupported statement type. Schema-qualified table references (`main.table_name`) return 0 rows from the shadow store — the CTE rewriter does not recognize the `main.` prefix as matching the shadow table for the unqualified name. Cross-database queries, INSERT...SELECT between databases, and DML on attached database tables are all blocked.
+
+**Impact:** ATTACH DATABASE is commonly used for data migration between SQLite databases, partitioning large datasets across files, and using temporary working databases. Applications that use schema-qualified table references (e.g., ORM-generated queries that prefix `main.`) will silently return empty results.
+
+## SPEC-11.PARTITION-CLAUSE `[Issue #158]` MySQL PARTITION clause returns all rows instead of partition subset
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/MysqlPartitionedTableTest`, `Mysqli/PartitionedTableTest`
+
+`SELECT ... FROM table PARTITION (partition_name)` returns rows from all partitions instead of only the specified partition. The CTE rewriter discards the `PARTITION(...)` hint when replacing the table reference with a CTE alias. Regular DML on partitioned tables (without explicit PARTITION clause) works correctly.
+
+**Impact:** The PARTITION clause is used for targeted queries on specific date ranges or tenant subsets in large partitioned tables. Applications relying on partition pruning via explicit PARTITION clause will get incorrect (too many) results.
+
+## SPEC-11.CHILD-PARTITION `[Issue #159]` PostgreSQL child partition table queries return empty
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/PostgresPartitionedTableTest`
+
+Querying a child partition table directly (`SELECT FROM partition_child_table`) returns 0 rows after DML on the parent table. The shadow store tracks DML on the parent partitioned table only, not on individual child partitions. Regular DML on the parent table works correctly. Aggregate queries with EXTRACT() on partitioned tables may also return empty results.
+
+**Impact:** PostgreSQL applications that query child partitions directly (common for time-series data access like `SELECT FROM events_2024`) will see empty results. Parent table queries work correctly.
+
+## SPEC-11.TABLESAMPLE `[Issue #160]` PostgreSQL TABLESAMPLE broken through CTE shadow store
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-6.1](06-unsupported-sql.ears.md)
+**Tests:** `Pdo/PostgresTablesampleTest`
+
+`TABLESAMPLE SYSTEM(n)`, `TABLESAMPLE BERNOULLI(n)`, and `TABLESAMPLE ... REPEATABLE(seed)` all fail with "TABLESAMPLE clause can only be applied to tables and materialized views." The CTE rewriter replaces the table reference with a CTE alias, and PostgreSQL does not allow TABLESAMPLE on CTEs. Workaround: disable ZTD for TABLESAMPLE queries.
+
+**Impact:** TABLESAMPLE is used for statistical sampling, data analysis, and testing with large datasets. Applications using TABLESAMPLE for approximate queries must disable ZTD.
+
+## SPEC-11.DO-BLOCK `[Issue #161]` PostgreSQL DO $$ anonymous blocks blocked
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-6.1](06-unsupported-sql.ears.md)
+**Tests:** `Pdo/PostgresDoBlockTest`
+
+`DO $$ BEGIN ... END $$` anonymous PL/pgSQL blocks are blocked by ZTD Write Protection as an unsupported statement type. All DO block patterns fail: simple DML, conditional logic, loops, and multi-statement blocks. DML executed via DO blocks would bypass the shadow store anyway (server-side execution), but the blocking prevents even passthrough execution.
+
+**Impact:** DO blocks are commonly used by migration tools (Doctrine, Flyway), ORMs for conditional DDL, and administrative scripts. Applications that use DO blocks for data migrations or conditional operations will need to disable ZTD or use alternative approaches.

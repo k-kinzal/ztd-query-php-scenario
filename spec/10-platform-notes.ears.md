@@ -2598,3 +2598,17 @@ Stress tests for the CTE rewriter: table name appearing as a string literal valu
 **Tests:** `Mysqli/PreparedHavingAfterDmlTest`, `Pdo/PostgresPreparedHavingAfterDmlTest`, `Pdo/SqlitePreparedHavingAfterDmlTest`
 
 `SELECT category, COUNT(*) FROM t GROUP BY category HAVING COUNT(*) > ?` with prepared parameter. MySQL and PostgreSQL handle this correctly. SQLite returns empty result set (Issue #22). Non-prepared HAVING (with literal value) works on SQLite. Combined WHERE+HAVING with two prepared params also fails on SQLite but works on MySQL and PostgreSQL. Note: Issue #22 originally documented failure on both SQLite AND PostgreSQL; current testing shows PostgreSQL now handles prepared HAVING correctly — Issue #22 may have been partially fixed.
+
+## SPEC-10.2.324 DML edge cases (INSERT+UPDATE+DELETE same row, chained increments, aggregates on empty)
+**Status:** Verified
+**Platforms:** MySQLi, SQLite-PDO
+**Tests:** `Mysqli/DmlEdgeCaseBehaviorTest`, `Pdo/SqliteDmlEdgeCaseBehaviorTest`
+
+Shadow store consistency under sequential mutation stress. Verified: UPDATE/DELETE affecting 0 rows leaves shadow unchanged; INSERT→UPDATE→DELETE on same row in one session results in correct deletion; DELETE all rows then re-INSERT shows only new row; multiple UPDATEs to same column (last write wins); chained self-referencing increments (`SET qty = qty + 5` three times, 10→25); aggregate after status change reflects new grouping; UPDATE targeting a previously DELETEd row does not resurrect it; re-INSERT with same PK after DELETE shows new data. All patterns handled correctly on both platforms.
+
+## SPEC-10.2.325 Table name substring collision (order / order_item)
+**Status:** Verified
+**Platforms:** MySQLi, SQLite-PDO
+**Tests:** `Mysqli/TableNameSubstringCollisionTest`, `Pdo/SqliteTableNameSubstringCollisionTest`
+
+When one table name is a substring of another (e.g., `order` and `order_item`), the CTE rewriter's `stripos()` table detection could match incorrectly. Verified: JOIN after DML on both substring-named tables returns correct aggregates; UPDATE on parent table does not affect child query results; DELETE from child table does not affect parent query results; correlated subquery from child in parent SELECT works correctly; UPDATE parent SET col = (subquery from child) cross-table pattern works. The rewriter correctly disambiguates substring table names in all tested scenarios.

@@ -558,6 +558,15 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.302 | `Mysqli/BooleanWhereInDmlTest`, `Pdo/MysqlBooleanWhereInDmlTest`, `Pdo/PostgresBooleanWhereInDmlTest`, `Pdo/SqliteBooleanWhereInDmlTest` | V | V | K | V | Implicit boolean WHERE DML: MySQL/SQLite pass; PG BOOLEAN CAST fails (extends #6) |
 | SPEC-10.2.303 | `Mysqli/CorrelatedAggregateUpdateTest`, `Pdo/MysqlCorrelatedAggregateUpdateTest`, `Pdo/PostgresCorrelatedAggregateUpdateTest`, `Pdo/SqliteCorrelatedAggregateUpdateTest` | V | V | K | K | Correlated aggregate UPDATE SET: MySQL passes; PG GROUP BY error; SL syntax error (#147) |
 | SPEC-10.2.304 | `Mysqli/IntervalArithmeticDmlTest`, `Pdo/MysqlIntervalArithmeticDmlTest`, `Pdo/PostgresIntervalArithmeticDmlTest`, `Pdo/SqliteIntervalArithmeticDmlTest` | P | P | V | V | Interval in UPDATE SET: PG/SL pass; MySQL INTERVAL syntax error, DATE_ADD works (#148) |
+| SPEC-10.2.336 | `Pdo/SqliteInsertColumnOrderTest` | — | — | — | V | INSERT with non-DDL column order: correctly maps values by name |
+| SPEC-10.2.337 | `Pdo/SqliteSubqueryInValuesTest` | — | — | — | V | Subquery in INSERT VALUES: scalar, self-ref, multiple, prepared all work |
+| SPEC-10.2.338 | `Pdo/SqliteInsertSelectWithLimitTest` | — | — | — | V | INSERT...SELECT LIMIT/OFFSET: correctly restricts rows |
+| SPEC-10.2.339 | `Pdo/SqliteExpressionInValuesTest` | — | — | — | V | Computed expressions in INSERT VALUES: concat, math, func, CASE, COALESCE all work |
+| SPEC-10.2.340 | `Pdo/SqliteNaturalJoinTest` | — | — | — | V | NATURAL JOIN / NATURAL LEFT JOIN: works correctly including after DML |
+| SPEC-10.2.341 | `Pdo/SqliteUpdateMultiColumnArithmeticTest` | — | — | — | V | UPDATE SET multi-column arithmetic: add, formula, swap, chained, prepared all work |
+| SPEC-10.2.342 | `Pdo/SqlitePreparedBeforeInsertVisibilityTest`, `Pdo/SqliteConcurrentPreparedStmtTest` | — | — | — | K | Prepared SELECT CTE baked at prepare() time: all patterns fail (extends #87) |
+| SPEC-10.2.343 | `Pdo/SqliteDeleteWithLimitTest` | — | — | — | V | DELETE ORDER BY LIMIT: works correctly on SQLite (MySQL #130 no-op) |
+| SPEC-10.2.344 | `Pdo/SqliteHavingWithoutGroupByTest` | — | — | — | P | HAVING without GROUP BY: non-prepared works, prepared fails (extends #22) |
 
 ## Legend
 

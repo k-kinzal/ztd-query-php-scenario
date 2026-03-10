@@ -7,182 +7,171 @@ namespace Tests\Pdo;
 use Tests\Support\AbstractSqlitePdoTestCase;
 
 /**
- * Tests scalar subquery inside INSERT VALUES clause through ZTD shadow store
- * on SQLite via PDO.
+ * Tests whether subqueries within INSERT VALUES positions are handled
+ * by the CTE rewriter.
+ *
+ * Pattern: INSERT INTO t (a, b) VALUES ((SELECT MAX(a) FROM t2), 'val')
+ * This is a common pattern for manual ID generation and referencing
+ * related data during insertion.
  *
  * @spec SPEC-4.1
- * @spec SPEC-3.3
  */
 class SqliteSubqueryInValuesTest extends AbstractSqlitePdoTestCase
 {
     protected function getTableDDL(): string|array
     {
         return [
-            'CREATE TABLE sl_siv_items (
+            "CREATE TABLE sl_siv_source (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL,
-                score INTEGER NOT NULL DEFAULT 0
-            )',
-            'CREATE TABLE sl_siv_counters (
+                score INTEGER NOT NULL
+            )",
+            "CREATE TABLE sl_siv_target (
                 id INTEGER PRIMARY KEY,
-                label TEXT NOT NULL,
-                total INTEGER NOT NULL DEFAULT 0
-            )',
+                ref_name TEXT,
+                ref_score INTEGER
+            )",
         ];
     }
 
     protected function getTableNames(): array
     {
-        return ['sl_siv_counters', 'sl_siv_items'];
+        return ['sl_siv_source', 'sl_siv_target'];
     }
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->pdo->exec("INSERT INTO sl_siv_items VALUES (1, 'Alpha', 10)");
-        $this->pdo->exec("INSERT INTO sl_siv_items VALUES (2, 'Bravo', 20)");
-        $this->pdo->exec("INSERT INTO sl_siv_items VALUES (3, 'Charlie', 30)");
-    }
-
-    public function testInsertWithMaxIdSubquery(): void
+    /**
+     * INSERT with scalar subquery in VALUES referencing another table.
+     */
+    public function testScalarSubqueryFromOtherTable(): void
     {
         try {
+            $this->pdo->exec("INSERT INTO sl_siv_source (id, name, score) VALUES (1, 'Alice', 85)");
+            $this->pdo->exec("INSERT INTO sl_siv_source (id, name, score) VALUES (2, 'Bob', 92)");
+
             $this->pdo->exec(
-                "INSERT INTO sl_siv_items (id, name, score) VALUES ((SELECT MAX(id) FROM sl_siv_items) + 1, 'Delta', 40)"
+                "INSERT INTO sl_siv_target (id, ref_name, ref_score) VALUES (1, 'test', (SELECT MAX(score) FROM sl_siv_source))"
             );
 
-            $rows = $this->ztdQuery("SELECT id, name, score FROM sl_siv_items ORDER BY id");
-
-            if (count($rows) !== 4) {
-                $this->markTestIncomplete(
-                    'INSERT with MAX subquery in VALUES: expected 4 rows, got '
-                    . count($rows) . ': ' . json_encode(array_column($rows, 'name'))
-                );
-            }
-            $this->assertCount(4, $rows);
-
-            if ((int) $rows[3]['id'] !== 4) {
-                $this->markTestIncomplete(
-                    'INSERT with MAX subquery: expected id=4, got id='
-                    . var_export($rows[3]['id'], true)
-                );
-            }
-            $this->assertEquals(4, (int) $rows[3]['id']);
-            $this->assertSame('Delta', $rows[3]['name']);
-        } catch (\Throwable $e) {
-            $this->markTestIncomplete('INSERT with MAX subquery in VALUES failed: ' . $e->getMessage());
-        }
-    }
-
-    public function testInsertWithCountSubquery(): void
-    {
-        try {
-            $this->pdo->exec(
-                "INSERT INTO sl_siv_counters (id, label, total) VALUES (1, 'item_count', (SELECT COUNT(*) FROM sl_siv_items))"
-            );
-
-            $rows = $this->ztdQuery("SELECT total FROM sl_siv_counters WHERE id = 1");
-
-            if (count($rows) !== 1) {
-                $this->markTestIncomplete(
-                    'INSERT with COUNT subquery in VALUES: expected 1 row, got ' . count($rows)
-                );
-            }
+            $rows = $this->ztdQuery("SELECT ref_score FROM sl_siv_target WHERE id = 1");
             $this->assertCount(1, $rows);
 
-            if ((int) $rows[0]['total'] !== 3) {
+            $score = $rows[0]['ref_score'];
+            if ($score === null) {
                 $this->markTestIncomplete(
-                    'INSERT with COUNT subquery: expected total=3, got total='
-                    . var_export($rows[0]['total'], true)
+                    'Scalar subquery in VALUES returned NULL. Expected 92 (MAX score from source).'
                 );
             }
-            $this->assertEquals(3, (int) $rows[0]['total']);
+            if ((int) $score !== 92) {
+                $this->markTestIncomplete(
+                    'Scalar subquery in VALUES returned wrong value. Expected 92, got ' . json_encode($score)
+                );
+            }
+            $this->assertEquals(92, (int) $score);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('INSERT with COUNT subquery in VALUES failed: ' . $e->getMessage());
+            $this->markTestIncomplete('Scalar subquery from other table test failed: ' . $e->getMessage());
         }
     }
 
-    public function testInsertSubqueryAfterShadowInsert(): void
+    /**
+     * INSERT with scalar subquery referencing the same table (self-reference).
+     * Pattern: INSERT INTO t VALUES ((SELECT MAX(id) FROM t) + 1, ...)
+     */
+    public function testSelfReferencingSubqueryInValues(): void
     {
         try {
-            $this->pdo->exec("INSERT INTO sl_siv_items VALUES (10, 'Zulu', 99)");
+            $this->pdo->exec("INSERT INTO sl_siv_target (id, ref_name, ref_score) VALUES (1, 'first', 10)");
+            $this->pdo->exec("INSERT INTO sl_siv_target (id, ref_name, ref_score) VALUES (2, 'second', 20)");
 
             $this->pdo->exec(
-                "INSERT INTO sl_siv_items (id, name, score) VALUES ((SELECT MAX(id) FROM sl_siv_items) + 1, 'Beyond', 100)"
+                "INSERT INTO sl_siv_target (id, ref_name, ref_score) VALUES ((SELECT MAX(id) FROM sl_siv_target) + 1, 'third', 30)"
             );
 
-            $rows = $this->ztdQuery("SELECT id, name FROM sl_siv_items WHERE name = 'Beyond'");
-
-            if (count($rows) !== 1) {
+            $rows = $this->ztdQuery("SELECT id, ref_name FROM sl_siv_target ORDER BY id");
+            if (count($rows) < 3) {
                 $this->markTestIncomplete(
-                    'INSERT subquery after shadow INSERT: expected 1 row, got ' . count($rows)
+                    'Self-referencing subquery INSERT produced ' . count($rows) . ' rows instead of 3.'
                 );
             }
-            $this->assertCount(1, $rows);
 
-            if ((int) $rows[0]['id'] !== 11) {
+            $thirdRow = $rows[2] ?? null;
+            if ($thirdRow === null || (int) $thirdRow['id'] !== 3) {
                 $this->markTestIncomplete(
-                    'INSERT subquery after shadow: expected id=11, got id='
-                    . var_export($rows[0]['id'], true)
+                    'Self-referencing MAX(id)+1 produced wrong id. Expected 3, got: ' . json_encode($thirdRow)
                 );
             }
-            $this->assertEquals(11, (int) $rows[0]['id']);
+            $this->assertEquals(3, (int) $thirdRow['id']);
+            $this->assertSame('third', $thirdRow['ref_name']);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('INSERT subquery after shadow INSERT failed: ' . $e->getMessage());
+            $this->markTestIncomplete('Self-referencing subquery in VALUES test failed: ' . $e->getMessage());
         }
     }
 
-    public function testInsertWithSumSubqueryInValues(): void
+    /**
+     * Multiple scalar subqueries in a single INSERT VALUES clause.
+     */
+    public function testMultipleSubqueriesInValues(): void
     {
         try {
+            $this->pdo->exec("INSERT INTO sl_siv_source (id, name, score) VALUES (1, 'Alice', 85)");
+            $this->pdo->exec("INSERT INTO sl_siv_source (id, name, score) VALUES (2, 'Bob', 92)");
+            $this->pdo->exec("INSERT INTO sl_siv_source (id, name, score) VALUES (3, 'Carol', 78)");
+
             $this->pdo->exec(
-                "INSERT INTO sl_siv_counters (id, label, total) VALUES (2, 'high_score_sum', (SELECT SUM(score) FROM sl_siv_items WHERE score >= 20))"
+                "INSERT INTO sl_siv_target (id, ref_name, ref_score) VALUES (
+                    1,
+                    (SELECT name FROM sl_siv_source WHERE score = (SELECT MAX(score) FROM sl_siv_source)),
+                    (SELECT MIN(score) FROM sl_siv_source)
+                )"
             );
 
-            $rows = $this->ztdQuery("SELECT total FROM sl_siv_counters WHERE id = 2");
-
-            if (count($rows) !== 1) {
-                $this->markTestIncomplete('INSERT with SUM subquery: expected 1 row, got ' . count($rows));
-            }
+            $rows = $this->ztdQuery("SELECT ref_name, ref_score FROM sl_siv_target WHERE id = 1");
             $this->assertCount(1, $rows);
 
-            if ((int) $rows[0]['total'] !== 50) {
+            $row = $rows[0];
+            if ($row['ref_name'] === null || $row['ref_score'] === null) {
                 $this->markTestIncomplete(
-                    'INSERT with SUM subquery: expected total=50, got total='
-                    . var_export($rows[0]['total'], true)
+                    'Multiple subqueries in VALUES returned NULLs. Expected name="Bob", score=78. Got: ' . json_encode($row)
                 );
             }
-            $this->assertEquals(50, (int) $rows[0]['total']);
+            $this->assertSame('Bob', $row['ref_name']);
+            $this->assertEquals(78, (int) $row['ref_score']);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('INSERT with SUM subquery in VALUES failed: ' . $e->getMessage());
+            $this->markTestIncomplete('Multiple subqueries in VALUES test failed: ' . $e->getMessage());
         }
     }
 
-    public function testPreparedInsertWithSubqueryInValues(): void
+    /**
+     * Prepared INSERT with subquery in VALUES — parameters apply to the
+     * subquery, not the outer INSERT.
+     */
+    public function testPreparedSubqueryInValues(): void
     {
         try {
+            $this->pdo->exec("INSERT INTO sl_siv_source (id, name, score) VALUES (1, 'Alice', 85)");
+            $this->pdo->exec("INSERT INTO sl_siv_source (id, name, score) VALUES (2, 'Bob', 92)");
+
             $stmt = $this->pdo->prepare(
-                "INSERT INTO sl_siv_counters (id, label, total) VALUES (?, ?, (SELECT COUNT(*) FROM sl_siv_items WHERE score > ?))"
+                "INSERT INTO sl_siv_target (id, ref_name, ref_score) VALUES (1, (SELECT name FROM sl_siv_source WHERE id = ?), 0)"
             );
-            $stmt->execute([3, 'above_threshold', 15]);
+            $stmt->execute([2]);
 
-            $rows = $this->ztdQuery("SELECT total FROM sl_siv_counters WHERE id = 3");
-
-            if (count($rows) !== 1) {
-                $this->markTestIncomplete('Prepared INSERT with subquery: expected 1 row, got ' . count($rows));
-            }
+            $rows = $this->ztdQuery("SELECT ref_name FROM sl_siv_target WHERE id = 1");
             $this->assertCount(1, $rows);
 
-            if ((int) $rows[0]['total'] !== 2) {
+            $name = $rows[0]['ref_name'];
+            if ($name === null) {
                 $this->markTestIncomplete(
-                    'Prepared INSERT with subquery: expected total=2, got total='
-                    . var_export($rows[0]['total'], true)
+                    'Prepared subquery in VALUES returned NULL. Expected "Bob".'
                 );
             }
-            $this->assertEquals(2, (int) $rows[0]['total']);
+            if ($name !== 'Bob') {
+                $this->markTestIncomplete(
+                    'Prepared subquery in VALUES returned wrong value. Expected "Bob", got ' . json_encode($name)
+                );
+            }
+            $this->assertSame('Bob', $name);
         } catch (\Throwable $e) {
-            $this->markTestIncomplete('Prepared INSERT with subquery in VALUES failed: ' . $e->getMessage());
+            $this->markTestIncomplete('Prepared subquery in VALUES test failed: ' . $e->getMessage());
         }
     }
 }

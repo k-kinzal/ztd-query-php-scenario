@@ -115,6 +115,8 @@ PDO prepared REPLACE INTO and INSERT ... ON CONFLICT DO UPDATE do NOT update exi
 
 On SQLite, HAVING with bound parameters returns empty results. HAVING with literal values works. MySQL works correctly. PostgreSQL also returns empty for complex multi-table HAVING with `$N` params (e.g., `HAVING SUM(amount) >= $2` with JOINs), extending this issue beyond SQLite-only. Also affects INSERT...SELECT with GROUP BY HAVING and prepared params — returns 0 rows on SQLite.
 
+**Extended scope (2026-03-10):** Also affects HAVING without GROUP BY (SQL standard: entire result as one group). `SELECT SUM(amount) FROM t WHERE status = ? HAVING SUM(amount) > ?` returns 0 rows on SQLite with `?` params. Non-prepared variant works correctly. Tests: `Pdo/SqliteHavingWithoutGroupByTest`.
+
 ## SPEC-11.MYSQL-BACKSLASH `[Issue #5]` Backslash corruption in MySQL shadow store
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
@@ -1027,6 +1029,8 @@ When a prepared SELECT statement is re-executed after intervening DML operations
 Fresh `query()` calls correctly reflect mutations. Only re-executed prepared SELECT statements are affected. The issue occurs regardless of whether `closeCursor()` is called between executions. DML prepared re-execution (INSERT/UPDATE/DELETE) is not affected.
 
 Root cause: The CTE-rewritten SQL is baked into the inner PDO prepared statement at first `execute()` time. On subsequent `execute()` calls, the shadow store CTE data is not regenerated.
+
+**Extended scope (2026-03-10):** The issue is broader than re-execution: the CTE SQL is actually generated at `prepare()` time, not at first `execute()` time. This means even the FIRST `execute()` of a prepared SELECT cannot see data inserted AFTER `prepare()`. Tested patterns on SQLite: prepare SELECT then `exec()` INSERT → first execute returns 0 rows; prepare both INSERT+SELECT then execute INSERT then SELECT → 0 rows; prepare COUNT, execute (0), INSERT ×3, re-execute → still 0; cross-table prepare-all-then-execute → JOIN returns 0 rows. The workaround is to call `prepare()` only AFTER all shadow store mutations are complete, or use `query()` for all reads. This is a high-severity issue for applications that prepare statements at startup or in repository constructors. Tests: `Pdo/SqlitePreparedBeforeInsertVisibilityTest`, `Pdo/SqliteConcurrentPreparedStmtTest`.
 
 Workaround: Use `query()` instead of re-executing a prepared SELECT, or prepare a new statement for each execution after DML mutations.
 

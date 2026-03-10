@@ -2682,3 +2682,66 @@ When INSERT specifies only a subset of columns (`INSERT INTO t (name) VALUES ('x
 **Tests:** `Mysqli/UpsertNonPkUniqueTest`, `Pdo/PostgresUpsertNonPkUniqueTest`
 
 When a table has AUTO_INCREMENT PK and a separate UNIQUE constraint (e.g., `UNIQUE email`), and the IODKU/ON CONFLICT conflict is on the UNIQUE column (not the PK), the shadow store inserts a duplicate row instead of updating the existing one. Tested patterns: PK conflict IODKU (works — positive control), non-PK UNIQUE email conflict (fails — creates duplicate row, count goes from 2 to 3), multi-row IODKU with mixed conflicts (fails — extra row inserted), self-referencing expression on UNIQUE conflict (fails — original value not incremented). Root cause: UpsertMutation receives only `primaryKeys` from the mutation resolver; `matchesPrimaryKey()` does not check UNIQUE constraints. Related to Issue #91 (INSERT IGNORE non-PK UNIQUE) but with different impact: IODKU should UPDATE, not skip or duplicate. Filed as Issue #153.
+
+## SPEC-10.2.336 INSERT with column list in non-DDL order correctly maps values
+**Status:** Verified (works correctly)
+**Platforms:** SQLite-PDO (passes)
+**Tests:** `Pdo/SqliteInsertColumnOrderTest`
+
+When INSERT specifies columns in an order different from the DDL definition (e.g., `INSERT INTO t (stock, price, category, name, id) VALUES (...)` where DDL is `id, name, category, price, stock`), the shadow store correctly maps values to columns by name. Verified patterns: reverse order, partial columns in non-DDL order, multiple INSERTs with varying orders, prepared INSERT with non-DDL order, UPDATE after non-DDL-ordered INSERT.
+
+## SPEC-10.2.337 Subquery in INSERT VALUES clause works correctly
+**Status:** Verified (works correctly)
+**Platforms:** SQLite-PDO (passes)
+**Tests:** `Pdo/SqliteSubqueryInValuesTest`
+
+Scalar subqueries in INSERT VALUES positions work correctly through the CTE shadow store: `INSERT INTO t VALUES (1, 'x', (SELECT MAX(score) FROM other))`. Verified patterns: subquery referencing another table, self-referencing subquery (`(SELECT MAX(id) FROM t) + 1`), multiple subqueries in a single INSERT, prepared INSERT with subquery containing a `?` parameter.
+
+## SPEC-10.2.338 INSERT...SELECT with LIMIT/OFFSET correctly restricts rows
+**Status:** Verified (works correctly)
+**Platforms:** SQLite-PDO (passes)
+**Tests:** `Pdo/SqliteInsertSelectWithLimitTest`
+
+`INSERT INTO archive SELECT ... FROM source ORDER BY col LIMIT N OFFSET M` correctly inserts only the specified subset of rows. Verified patterns: LIMIT only, LIMIT+OFFSET, WHERE+LIMIT combined, prepared INSERT...SELECT with LIMIT parameter.
+
+## SPEC-10.2.339 Computed expressions in INSERT VALUES clause work correctly
+**Status:** Verified (works correctly)
+**Platforms:** SQLite-PDO (passes)
+**Tests:** `Pdo/SqliteExpressionInValuesTest`
+
+Expressions computed in INSERT VALUES positions (string concatenation, arithmetic, function calls, CASE, COALESCE/NULLIF, multi-row with expressions) are evaluated correctly through the CTE shadow store.
+
+## SPEC-10.2.340 NATURAL JOIN works correctly
+**Status:** Verified (works correctly)
+**Platforms:** SQLite-PDO (passes)
+**Tests:** `Pdo/SqliteNaturalJoinTest`
+
+`NATURAL JOIN` and `NATURAL LEFT JOIN` work correctly through the CTE shadow store. The rewriter handles implicit join conditions (matching column names) correctly. Verified patterns: basic NATURAL JOIN, NATURAL LEFT JOIN with unmatched rows, prepared NATURAL JOIN with WHERE params, NATURAL JOIN after shadow DML (INSERT + UPDATE).
+
+## SPEC-10.2.341 UPDATE SET multi-column arithmetic works correctly
+**Status:** Verified (works correctly)
+**Platforms:** SQLite-PDO (passes)
+**Tests:** `Pdo/SqliteUpdateMultiColumnArithmeticTest`
+
+UPDATE SET with expressions referencing multiple columns works correctly on SQLite: `SET balance = balance + bonus`, `SET total = balance * 1.05 + bonus`, `SET a = a - 50, b = b + 10`, column swap `SET a = b, b = a`, chained UPDATEs, and prepared multi-column UPDATE with params. Note: column swap (Issue #141) is confirmed broken on MySQLi but works on SQLite-PDO.
+
+## SPEC-10.2.342 Prepared SELECT CTE baked at prepare() time, not execute() time
+**Status:** Confirms [Issue #87] (extended scope) on SQLite
+**Platforms:** SQLite-PDO (fails)
+**Tests:** `Pdo/SqlitePreparedBeforeInsertVisibilityTest`, `Pdo/SqliteConcurrentPreparedStmtTest`
+
+The CTE-rewritten SQL for a prepared SELECT is generated at `prepare()` time, not at `execute()` time. Any shadow store mutations (INSERT, UPDATE, DELETE) that occur after `prepare()` are invisible to the prepared SELECT — even on its FIRST execution. This broadens Issue #87 (originally described as CTE baked at first execute()): the CTE is baked at prepare() time. All 5 tested patterns fail: prepare SELECT then exec INSERT, prepare both SELECT+INSERT then execute INSERT then SELECT, prepare SELECT→execute→INSERT→re-execute (stale), prepare COUNT→execute→INSERT×3→re-execute (stale), cross-table prepare-all-then-execute. The workaround is to call `prepare()` after all DML mutations, or use `query()` instead of prepared SELECT. Cross-table JOINs are also affected.
+
+## SPEC-10.2.343 DELETE with ORDER BY LIMIT works correctly on SQLite
+**Status:** Verified (works correctly)
+**Platforms:** SQLite-PDO (passes)
+**Tests:** `Pdo/SqliteDeleteWithLimitTest`
+
+DELETE with WHERE+LIMIT, ORDER BY+LIMIT, prepared LIMIT parameter, and shadow-only data all work correctly on SQLite. This contrasts with Issue #130 (UPDATE/DELETE ORDER BY LIMIT is a no-op on MySQL).
+
+## SPEC-10.2.344 HAVING without GROUP BY — non-prepared works, prepared fails
+**Status:** Confirms [Issue #22] (extended scope) on SQLite
+**Platforms:** SQLite-PDO (prepared fails, non-prepared works)
+**Tests:** `Pdo/SqliteHavingWithoutGroupByTest`
+
+SQL standard HAVING without GROUP BY (entire result as one group) works correctly for non-prepared queries. Prepared `SELECT SUM(amount) FROM t WHERE status = ? HAVING SUM(amount) > ?` returns 0 rows — the HAVING with `?` parameter is not evaluated. This extends Issue #22 (HAVING with prepared params) to the HAVING-without-GROUP-BY context.

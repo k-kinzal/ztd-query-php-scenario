@@ -2138,3 +2138,42 @@ PostgreSQL COPY has three distinct failure modes: (1) `pgsqlCopyToArray()` bypas
 `LOAD DATA LOCAL INFILE` is blocked by ZTD Write Protection on both PDO and MySQLi adapters. All variants fail: LOAD DATA LOCAL INFILE, LOAD DATA ... REPLACE, LOAD DATA ... IGNORE. Prior shadow DML state is preserved after a failed LOAD DATA attempt.
 
 **Impact:** LOAD DATA INFILE is MySQL's primary bulk data loading mechanism, significantly faster than row-by-row INSERT. Used for CSV/TSV imports, ETL pipelines, data migration, and batch loading. Applications that use LOAD DATA must disable ZTD.
+
+## SPEC-11.MULTI-COLUMN-IN-DML `[Issue #165]` Multi-column IN tuple in DML silently ignored on all platforms
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlMultiColumnInDmlTest`, `Pdo/PostgresMultiColumnInDmlTest`, `Pdo/SqliteMultiColumnInDmlTest`, `Mysqli/MultiColumnInDmlTest`
+
+DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal row value constructor tuples are silently ignored on all platforms. No error is thrown, no rows are modified. Both `exec()` and prepared statement variants are affected. This differs from Issue #60 (PostgreSQL syntax error with subquery IN) — the literal-tuple form silently no-ops across all platforms. Multi-column `NOT IN` in SELECT works correctly.
+
+**Impact:** Row value constructors with literal tuples are commonly used for batch operations on composite keys, enrollment systems, schedule management, and any table without a single-column primary key. Applications using `WHERE (col1, col2) IN (...)` for DML must rewrite to single-column conditions or use alternative patterns.
+
+## SPEC-11.INSERT-SELECT-WINDOW `[Issue #166]` INSERT...SELECT with window function produces 0 rows (PostgreSQL, SQLite)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed); MySQL-PDO (works), MySQLi (works)
+**Related specs:** [SPEC-4.1a](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresInsertSelectWindowTest`, `Pdo/SqliteInsertSelectWindowTest`
+
+`INSERT INTO target SELECT col, ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) FROM source` after shadow INSERTs produces 0 rows on PostgreSQL and SQLite. The statement completes without error but the target table is empty. Affects ROW_NUMBER(), RANK(), SUM() OVER(), and prepared variants. MySQL (PDO and MySQLi) works correctly for all variants.
+
+**Impact:** INSERT...SELECT with window functions is a common pattern for generating ranked reports, numbered sequences, running totals, and partitioned analytics. Applications on PostgreSQL or SQLite cannot use this pattern with ZTD enabled. Workaround: SELECT with window function first, then INSERT the results row-by-row.
+
+## SPEC-11.PREPARED-ORDERED-SET-AGG `[Issue #167]` Prepared $N parameter in ordered-set aggregate returns wrong value
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Tests:** `Pdo/PostgresOrderedSetAggregateTest`
+
+`PERCENTILE_CONT($1::double precision) WITHIN GROUP (ORDER BY salary)` returns 0 instead of the correct interpolated value when the fraction is bound via a `$N` prepared parameter. Non-prepared ordered-set aggregates (PERCENTILE_CONT, PERCENTILE_DISC, MODE) work correctly through the shadow store.
+
+**Impact:** Applications using parameterized percentile calculations (e.g., user-selectable quartiles) will get wrong results. Workaround: interpolate the fraction directly into the SQL string.
+
+## SPEC-11.UPDATE-SAME-TABLE-SUBQUERY `[Issue #168]` UPDATE SET with subquery on same table causes duplicate alias
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresOrderedSetAggregateTest`
+
+`UPDATE table SET col = (SELECT aggregate FROM table WHERE ...)` fails with "table name specified more than once" on PostgreSQL. The CTE rewriter injects a CTE for the UPDATE target table, and the subquery's reference to the same table creates a duplicate alias conflict. Related to Issue #74 (self-referencing UPDATE) but triggered by a SET subquery rather than a WHERE subquery.
+
+**Impact:** Self-referencing UPDATE with aggregate subquery is a common pattern for normalizing data (e.g., setting values to the group average/median). Workaround: compute the aggregate in a separate query first.

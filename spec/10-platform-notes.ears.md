@@ -2913,3 +2913,59 @@ SQLite 3.33+ `UPDATE table SET col = expr FROM other_table AS alias WHERE ...` f
 **Tests:** `Pdo/MysqlUpdateJoinValuesTest`, `Mysqli/UpdateJoinValuesTest`
 
 `DELETE p FROM table AS p INNER JOIN (SELECT id UNION ALL SELECT id) AS v ON p.id = v.id` works correctly on both MySQL-PDO and MySQLi. This contrasts with UPDATE JOIN (SPEC-10.2.367) which fails — the CTE rewriter handles DELETE JOIN derived tables differently from UPDATE JOIN derived tables.
+
+## SPEC-10.2.369 Multi-column IN tuple in DML silently ignored
+**Status:** Known Issue
+**Platforms:** MySQLi (fails), MySQL-PDO (fails), PostgreSQL-PDO (fails), SQLite-PDO (fails)
+**Tests:** `Pdo/MysqlMultiColumnInDmlTest`, `Pdo/PostgresMultiColumnInDmlTest`, `Pdo/SqliteMultiColumnInDmlTest`, `Mysqli/MultiColumnInDmlTest`
+
+DELETE and UPDATE with row value constructor `WHERE (col1, col2) IN ((val1, val2), ...)` using literal tuples are silently ignored on all platforms. No error is thrown, no rows are modified. Prepared variants with `(?, ?)` and `($1, $2)` are also silently ignored. This differs from [Issue #60](11-known-issues.ears.md) which covers `(col1, col2) IN (SELECT ...)` producing a syntax error on PostgreSQL — the literal-tuple form fails silently on all platforms. Multi-column `NOT IN` in SELECT works correctly.
+
+## SPEC-10.2.370 INSERT...SELECT with window function produces 0 rows (PostgreSQL, SQLite)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (fails), SQLite-PDO (fails); MySQL-PDO (pass), MySQLi (pass)
+**Tests:** `Pdo/PostgresInsertSelectWindowTest`, `Pdo/MysqlInsertSelectWindowTest`, `Pdo/SqliteInsertSelectWindowTest`, `Mysqli/InsertSelectWindowTest`
+
+`INSERT INTO target SELECT col, ROW_NUMBER() OVER (...) FROM source` after shadow INSERTs produces 0 rows on PostgreSQL and SQLite. The statement completes without error but the target table is empty. MySQL (PDO and MySQLi) handles this correctly. Affects ROW_NUMBER(), RANK(), SUM() OVER(), and prepared variants. Contradicts [Issue #115](11-known-issues.ears.md) note that INSERT...SELECT with window works on all platforms.
+
+## SPEC-10.2.371 Ordered-set aggregates (WITHIN GROUP) work through shadow store
+**Status:** Verified
+**Platforms:** PostgreSQL-PDO (pass)
+**Tests:** `Pdo/PostgresOrderedSetAggregateTest`
+
+PostgreSQL ordered-set aggregate functions — `PERCENTILE_CONT(fraction) WITHIN GROUP (ORDER BY col)`, `PERCENTILE_DISC(fraction) WITHIN GROUP (ORDER BY col)`, and `MODE() WITHIN GROUP (ORDER BY col)` — work correctly through the CTE shadow store via `exec()`. Multiple ordered-set aggregates in a single SELECT, and aggregates after UPDATE mutations, produce correct results. Non-prepared usage verified.
+
+## SPEC-10.2.372 Prepared $N parameter in ordered-set aggregate returns wrong value
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (fails)
+**Tests:** `Pdo/PostgresOrderedSetAggregateTest`
+
+`PERCENTILE_CONT($1::double precision) WITHIN GROUP (ORDER BY col)` with a `$N` prepared parameter returns 0 instead of the correct interpolated value. Non-prepared ordered-set aggregates work correctly (SPEC-10.2.371). The CTE rewriter may not correctly bind parameters inside the WITHIN GROUP aggregate expression.
+
+## SPEC-10.2.373 UPDATE SET subquery on same table causes duplicate alias (PostgreSQL)
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO (fails)
+**Tests:** `Pdo/PostgresOrderedSetAggregateTest`
+
+`UPDATE table SET col = (SELECT aggregate FROM table WHERE ...)` fails with "table name specified more than once" on PostgreSQL. The CTE rewriter injects a CTE for the UPDATE target table, conflicting with the subquery's reference to the same table. Relates to [Issue #74](11-known-issues.ears.md) (self-referencing UPDATE) but triggered by a SET subquery pattern.
+
+## SPEC-10.2.374 Window EXCLUDE clause works through shadow store
+**Status:** Verified
+**Platforms:** PostgreSQL-PDO (pass), SQLite-PDO (pass)
+**Tests:** `Pdo/PostgresWindowExcludeClauseTest`, `Pdo/SqliteWindowExcludeClauseTest`
+
+Window frame EXCLUDE variants — `EXCLUDE CURRENT ROW`, `EXCLUDE GROUP`, `EXCLUDE TIES` — work correctly through the CTE shadow store on both PostgreSQL and SQLite. Running sum, sliding average, full-frame sum with exclusions, and EXCLUDE after UPDATE mutations all produce correct results. INSERT with window EXCLUDE in subquery also works.
+
+## SPEC-10.2.375 Chained CTEs work on MySQL and SQLite but return empty on PostgreSQL
+**Status:** Platform-specific
+**Platforms:** MySQL-PDO (pass), MySQLi (pass), SQLite-PDO (pass); PostgreSQL-PDO (fails)
+**Tests:** `Pdo/MysqlChainedCteShadowTest`, `Pdo/PostgresChainedCteShadowTest`, `Pdo/SqliteChainedCteShadowTest`, `Mysqli/ChainedCteShadowTest`
+
+Multi-level chained CTEs — `WITH cte1 AS (...), cte2 AS (SELECT FROM cte1) SELECT FROM cte2` — correctly see shadow data on MySQL (PDO and MySQLi) and SQLite. On PostgreSQL, all chained CTE queries return 0 rows. This extends [Issue #4](11-known-issues.ears.md): the CTE rewriter on PostgreSQL does not inject shadow data into user-written CTEs, affecting two-level chains, three-level chains, aggregate-to-filter chains, and CTE-to-table JOINs inside CTEs.
+
+## SPEC-10.2.376 IGNORE NULLS / RESPECT NULLS in window functions
+**Status:** Platform Limitation
+**Platforms:** PostgreSQL-PDO (requires PG 17+), SQLite-PDO (not supported)
+**Tests:** `Pdo/PostgresWindowIgnoreNullsTest`, `Pdo/SqliteWindowIgnoreNullsTest`
+
+`FIRST_VALUE(col) IGNORE NULLS OVER (...)` and `RESPECT NULLS` syntax produces syntax errors on both PostgreSQL (versions < 17) and SQLite. PostgreSQL added IGNORE NULLS support in version 17; SQLite does not support this syntax. Not a ZTD issue — platform limitation. Verification on PostgreSQL 17+ with ZTD pending.

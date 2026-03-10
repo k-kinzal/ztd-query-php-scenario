@@ -575,6 +575,14 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.366 | `Pdo/PostgresSelectIntoTest` | — | — | V | — | SELECT INTO / CTAS correctly reflects shadow DML |
 | SPEC-10.2.367 | `Pdo/MysqlUpdateJoinValuesTest`, `Mysqli/UpdateJoinValuesTest` | K | K | — | — | UPDATE JOIN with inline subquery: identifier too long (confirms #104/#115) |
 | SPEC-10.2.368 | `Pdo/MysqlUpdateJoinValuesTest`, `Mysqli/UpdateJoinValuesTest` | V | V | — | — | DELETE JOIN with inline subquery works correctly |
+| SPEC-10.2.369 | `*MultiColumnInDmlTest` | K | K | K | K | Multi-column IN tuple in DML silently ignored (#165) |
+| SPEC-10.2.370 | `*InsertSelectWindowTest` | V | V | K | K | INSERT...SELECT with window: MySQL works, PG/SQLite 0 rows (#166) |
+| SPEC-10.2.371 | `Pdo/PostgresOrderedSetAggregateTest` | — | — | V | — | Ordered-set aggregates (WITHIN GROUP) work through shadow |
+| SPEC-10.2.372 | `Pdo/PostgresOrderedSetAggregateTest` | — | — | K | — | Prepared $N in ordered-set aggregate returns 0 (#167) |
+| SPEC-10.2.373 | `Pdo/PostgresOrderedSetAggregateTest` | — | — | K | — | UPDATE SET subquery same table: duplicate alias (#168) |
+| SPEC-10.2.374 | `Pdo/PostgresWindowExcludeClauseTest`, `Pdo/SqliteWindowExcludeClauseTest` | — | — | V | V | Window EXCLUDE clause works through shadow store |
+| SPEC-10.2.375 | `*ChainedCteShadowTest` | V | V | K | V | Chained CTEs: MySQL/SQLite work, PG empty (extends #4) |
+| SPEC-10.2.376 | `Pdo/PostgresWindowIgnoreNullsTest`, `Pdo/SqliteWindowIgnoreNullsTest` | — | — | — | — | IGNORE NULLS: platform limitation (PG 17+ / SQLite N/A) |
 
 ## Legend
 

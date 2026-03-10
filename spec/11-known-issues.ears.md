@@ -1585,3 +1585,63 @@ Tables with `GENERATED ALWAYS AS (expression) STORED` columns return NULL for th
 **Tests:** `Pdo/SqliteCoalesceInDmlTest`
 
 Prepared DELETE with COALESCE containing a `?` parameter and a second `?` in the comparison deletes all rows instead of only matching rows. `DELETE FROM t WHERE COALESCE(price, ?) < ?` with params `[0.00, 15.00]` deletes all 4 rows instead of the expected 3. Related to Issue #80 (NULLIF with prepared parameter) — same class of issue with function expressions and multiple parameters.
+
+## SPEC-11.FK-CASCADE-SHADOW `[Issue #126]` FK CASCADE not enforced in shadow store
+**Status:** Known Issue
+**Platforms:** MySQL-PDO, MySQLi, PostgreSQL-PDO, SQLite-PDO
+**Related specs:** [SPEC-4.3](04-write-operations.ears.md), [SPEC-8.1](08-constraints.ears.md)
+**Tests:** `Pdo/MysqlFkCascadeShadowTest`, `Pdo/PostgresFkCascadeShadowTest`, `Pdo/SqliteFkCascadeShadowTest`, `Mysqli/FkCascadeShadowTest`
+
+The ZTD shadow store does not enforce FOREIGN KEY constraints or propagate CASCADE effects:
+- **ON DELETE CASCADE:** Deleting a parent row does NOT cascade-delete child rows in the shadow store. Child rows remain as orphans.
+- **ON UPDATE CASCADE:** Updating a parent PK does NOT cascade-update child FK references. Children still reference the old PK value.
+- **FK constraint enforcement:** INSERT with a non-existent FK reference succeeds silently — the shadow store does not validate referential integrity.
+- **Multi-level cascades:** Grandchild rows are unaffected when a grandparent is deleted.
+
+This affects any application relying on FK cascades for data consistency. After deleting a parent row, SELECT queries via ZTD return orphaned child rows with dangling FK references. LEFT JOIN queries show NULL in the parent columns for these orphans.
+
+## SPEC-11.FK-INSERT-PARSE `[Issue #127]` INSERT without column list on FK table fails (MySQL)
+**Status:** Known Issue
+**Platforms:** MySQL-PDO, MySQLi
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlFkInsertParseTest`
+
+On MySQL, `INSERT INTO t VALUES (...)` on a table defined with FOREIGN KEY constraints throws `RuntimeException: Insert values count does not match column count`. The InsertTransformer's SQL parser counts the `FOREIGN KEY (col) REFERENCES ...` clause as an additional column. Workaround: always use explicit column lists `INSERT INTO t (col1, col2, ...) VALUES (...)`.
+
+This also affects tables with `AUTO_INCREMENT` combined with FOREIGN KEY constraints. Tables with INDEX or KEY declarations in the CREATE TABLE may trigger the same miscount.
+
+## SPEC-11.PG-IN-CLAUSE-DOLLAR-DML `[Issue #128]` PostgreSQL: prepared DML with IN ($N, ...) is a no-op
+**Status:** Known Issue
+**Platforms:** PostgreSQL-PDO
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/PostgresBatchInClauseDmlTest`
+
+Prepared DELETE and UPDATE with `$N` parameters inside IN clauses are completely broken on PostgreSQL:
+- `DELETE FROM t WHERE id IN ($1, $2, $3, $4, $5)` does NOT delete any rows.
+- `UPDATE t SET status = $1 WHERE id IN ($2, $3, $4) AND category = $5` does NOT update any rows.
+- `DELETE FROM t WHERE id NOT IN ($1, $2, $3)` does NOT delete any rows.
+- `UPDATE t SET priority = priority + $1 WHERE id IN ($2, ..., $9)` with 9 params is a no-op.
+- Two IN clauses in the same statement (`WHERE cat IN ($1, $2) AND priority IN ($3, $4, $5)`) also fail.
+
+The same operations work correctly on MySQL (with `?` placeholders) and SQLite. Related to Issue #106 (PostgreSQL $N params in UPDATE FROM) — the $N parameter binding in the CTE rewriter appears to fail for IN clause expressions.
+
+**Extended scope (2026-03-10):** PostgreSQL prepared statements with `$N` params also fail for string functions in SET and WHERE clauses:
+- `UPDATE SET code = REPLACE(code, $1, $2)` stores NULL instead of the replaced string.
+- `SELECT SUBSTRING(code FROM $1 FOR $2)` returns NULL columns.
+- `DELETE WHERE SUBSTRING(code FROM $1 FOR $2) = $3` does NOT delete matching rows.
+- `UPDATE WHERE POSITION($2 IN code) > 0` is a no-op.
+- `UPDATE SET description = REPLACE(description, $1, $2) WHERE id = $3` does not apply.
+- `SELECT WHERE REPLACE(code, $1, $2) = $3` returns 0 rows.
+Tests: `Pdo/PostgresSubstrReplaceDmlTest`. Related to Issue #108 (REPLACE/concatenation with $N params in SET).
+
+## SPEC-11.SCALAR-FUNC-PREPARED-DELETE `[Issue #129]` Prepared DELETE with scalar function in WHERE deletes all rows (SQLite)
+**Status:** Known Issue
+**Platforms:** SQLite-PDO
+**Related specs:** [SPEC-4.3](04-write-operations.ears.md)
+**Tests:** `Pdo/SqliteGreatestLeastDmlTest`
+
+`DELETE FROM t WHERE MIN(price, stock) < ?` with a bound parameter deletes ALL rows instead of only those matching the condition. Of 4 rows where only 1 has `MIN(price, stock) < 20`, the DELETE removes all 4. The CTE rewriter loses the parameter binding for scalar MIN/MAX when used in DELETE WHERE clauses.
+
+Additionally, `UPDATE SET stock = MAX(stock, CAST(price AS INTEGER), ?)` with 3 arguments evaluates incorrectly — it stores the parameter value (150) instead of the correct MAX(200, 15, 150) = 200. The shadow store appears to substitute the parameter for the entire MAX expression.
+
+Related to Issue #95 (nested function WHERE with prepared params), Issue #80 (NULLIF with prepared parameter), Issue #125 (COALESCE with multiple params).

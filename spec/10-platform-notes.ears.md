@@ -2612,3 +2612,31 @@ Shadow store consistency under sequential mutation stress. Verified: UPDATE/DELE
 **Tests:** `Mysqli/TableNameSubstringCollisionTest`, `Pdo/SqliteTableNameSubstringCollisionTest`
 
 When one table name is a substring of another (e.g., `order` and `order_item`), the CTE rewriter's `stripos()` table detection could match incorrectly. Verified: JOIN after DML on both substring-named tables returns correct aggregates; UPDATE on parent table does not affect child query results; DELETE from child table does not affect parent query results; correlated subquery from child in parent SELECT works correctly; UPDATE parent SET col = (subquery from child) cross-table pattern works. The rewriter correctly disambiguates substring table names in all tested scenarios.
+
+## SPEC-10.2.326 Backslash characters in CTE shadow values
+**Status:** Confirms [Issue #5] on MySQL; SQLite not affected
+**Platforms:** MySQLi (fails), SQLite-PDO (passes)
+**Tests:** `Mysqli/BackslashInShadowValueTest`, `Pdo/SqliteBackslashInShadowValueTest`
+
+The CTE rewriter's `quoteValue()` method only escapes single quotes (`'` → `''`) but does NOT escape backslashes. In MySQL, backslash is an escape character in string literals. Results: `C:\Users\test` → `\U` becomes `U`, `\t` becomes tab (data corruption); `line1\nline2` → `\n` becomes actual newline; `endslash\` → `\'` causes SQL syntax error (string doesn't terminate); `\\` → collapses to single `\`. SQLite is unaffected because it does not use backslash escaping. Confirmed Issue #5 through non-prepared statement path.
+
+## SPEC-10.2.327 INSERT...SELECT from shadow-modified source table
+**Status:** Verified on MySQL; Partially Verified on SQLite (self-copy fails, confirms Issue #135)
+**Platforms:** MySQLi (works), SQLite-PDO (cross-table works, same-table fails)
+**Tests:** `Mysqli/InsertSelectFromShadowTest`, `Pdo/SqliteInsertSelectFromShadowTest`
+
+`INSERT INTO dest SELECT ... FROM source` where source has shadow modifications. MySQL handles all patterns: shadow-inserted rows visible in SELECT, deleted rows excluded, updated values reflected, same-table self-copy (INSERT INTO t SELECT ... FROM t), aggregate on destination. SQLite handles cross-table INSERT...SELECT correctly but fails on same-table self-copy (INSERT...SELECT from same table returns 0 copied rows — confirms Issue #135).
+
+## SPEC-10.2.328 Transaction ROLLBACK does not undo shadow store mutations
+**Status:** Confirms new [Issue #149] on all platforms
+**Platforms:** MySQLi (fails), SQLite-PDO (fails)
+**Tests:** `Mysqli/TransactionRollbackShadowTest`, `Pdo/SqliteTransactionRollbackShadowTest`
+
+`beginTransaction()` / `begin_transaction()`, `commit()`, and `rollBack()` / `rollback()` on ZtdPdo and ZtdMysqli are pass-through to the underlying connection and do not interact with the shadow store. Shadow mutations from INSERT, UPDATE, and DELETE survive ROLLBACK: rolled-back INSERTs remain visible, rolled-back UPDATEs persist, rolled-back DELETEs stay applied. Committed transactions work correctly (positive control passes). Mixed scenario (commit first, rollback second) shows rolled-back mutations from the second transaction persisting alongside correctly committed first transaction data. Filed as Issue #149.
+
+## SPEC-10.2.329 Empty string, special values, and edge-case data types in CTE shadow
+**Status:** Verified
+**Platforms:** MySQLi, SQLite-PDO
+**Tests:** `Mysqli/EmptyStringAndSpecialValueTest`, `Pdo/SqliteEmptyStringAndSpecialValueTest`
+
+CTE rewriter correctly preserves: empty strings (not confused with NULL), string `'0'` (not treated as falsy), DECIMAL precision (e.g., 123456.7890), negative integers (INT_MIN), multi-byte UTF-8 emoji characters, WHERE filtering on empty string columns, and strings containing single quotes (O'Brien). All patterns pass on both platforms.

@@ -551,6 +551,9 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.275 | `Mysqli/UpdateOrderByLimitTest`, `Pdo/MysqlUpdateOrderByLimitTest` | K | K | — | — | UPDATE/DELETE ORDER BY LIMIT no-op on MySQL (#130) |
 | SPEC-10.2.276 | `Pdo/PostgresMultiCteDmlTest`, `Pdo/SqliteMultiCteDmlTest` | — | — | K | K | Writable CTEs: PG "relation not found"; SL correctly rejects (extends #28) |
 | SPEC-10.2.270-new | `Pdo/PostgresDistinctOnDmlTest` | — | — | P | — | DISTINCT ON: SELECT/INSERT pass; DELETE/UPDATE subquery fails (#132) |
+| SPEC-10.2.298 | `Pdo/MysqlNullifInDmlTest`, `Pdo/PostgresNullifInDmlTest`, `Pdo/SqliteNullifInDmlTest`, `Mysqli/NullifInDmlTest` | V | V | P | P | NULLIF in DML: MySQL/MySQLi all pass; SL/PG prepared param + INSERT...SELECT broken (extends #80, #83) |
+| SPEC-10.2.299 | `Pdo/MysqlBatchCaseUpdateByIdTest`, `Pdo/PostgresBatchCaseUpdateByIdTest`, `Pdo/SqliteBatchCaseUpdateByIdTest`, `Mysqli/BatchCaseUpdateByIdTest` | V | V | V | V | Batch CASE UPDATE by id (ORM pattern): all pass on all platforms |
+| SPEC-10.2.300 | `Pdo/MysqlPreparedRePrepareTest`, `Pdo/PostgresPreparedRePrepareTest`, `Pdo/SqlitePreparedRePrepareTest`, `Mysqli/PreparedRePrepareTest` | V | P | P | P | Prepared re-prepare: MySQLi all pass; PDO UPDATE→paramless SELECT stale (#146) |
 
 ## Legend
 

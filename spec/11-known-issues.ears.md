@@ -1939,3 +1939,26 @@ When INSERT omits the AUTO_INCREMENT (MySQL) or SERIAL (PostgreSQL) PK column, t
 **Workaround:** Always specify explicit PK values in INSERT statements: `INSERT INTO users (id, name) VALUES (1, 'Alice')` instead of `INSERT INTO users (name) VALUES ('Alice')`.
 
 **Impact:** Virtually every real application uses AUTO_INCREMENT/SERIAL PKs and omits the PK in INSERT. This makes the shadow store unusable for typical INSERT→UPDATE/DELETE/JOIN workflows unless explicit PKs are used.
+
+## SPEC-11.PREPARED-REPREPARE-STALE `[Issue #146]` Prepared UPDATE not visible after re-prepare sequence (all PDO platforms)
+**Status:** Known Issue
+**Platforms:** MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed); MySQLi NOT affected
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md), [SPEC-3.2](03-read-operations.ears.md)
+**Tests:** `Pdo/MysqlPreparedRePrepareTest`, `Pdo/PostgresPreparedRePrepareTest`, `Pdo/SqlitePreparedRePrepareTest`, `Mysqli/PreparedRePrepareTest`
+
+When multiple prepared statements are created on the same `$stmt` variable in sequence (re-prepare pattern), a specific sequence causes the shadow store to return stale data:
+
+1. `$stmt = prepare("INSERT INTO t VALUES (?, ?, ?)")` → execute — works
+2. `$stmt = prepare("SELECT name FROM t WHERE id = ?")` → execute — works, sees INSERT
+3. `$stmt = prepare("UPDATE t SET name = ? WHERE id = ?")` → execute — **not applied**
+4. `$stmt = prepare("SELECT name FROM t WHERE id = 4")` → execute (0 params) — returns pre-UPDATE value
+
+The UPDATE is silently not reflected. The prepared SELECT with no parameters returns stale data (original 'Dave' instead of updated 'David').
+
+Other re-prepare patterns work correctly: INSERT→SELECT, SELECT→UPDATE→SELECT (with params), DELETE→SELECT, cross-table, rapid successive re-prepares, and same-SQL re-prepare after mutation all behave as expected.
+
+**MySQLi is NOT affected** — all re-prepare patterns work correctly via `$this->mysqli->prepare()`.
+
+This is a PDO-adapter-specific issue, suggesting the shadow store's prepared statement tracking/cache handles `ZtdPdoStatement` lifecycle differently from MySQLi's `ZtdMysqli::prepare()`.
+
+**Impact:** This pattern is common in real applications that reuse a `$stmt` variable for sequential database operations. The silent data loss (UPDATE appears to succeed but has no effect on subsequent reads) makes this particularly dangerous.

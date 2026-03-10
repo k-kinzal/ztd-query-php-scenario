@@ -2402,3 +2402,36 @@ On MySQL, DELETE WHERE EXISTS has no effect, DELETE WHERE NOT EXISTS has no effe
 **Tests:** `Pdo/MysqlDeleteAllRebuildTest`, `Pdo/PostgresDeleteAllRebuildTest`, `Pdo/SqliteDeleteAllAndRebuildTest`
 
 Full table clear + repopulation pattern works correctly on all platforms: DELETE WHERE 1=1 (delete all), DELETE without WHERE, delete-all then re-INSERT with new data, delete + re-INSERT with same PKs (data replaced), and multiple rebuild cycles (3 cycles of delete-all + insert). The shadow store correctly tracks the sequential delete/insert operations and returns only the latest data.
+
+## SPEC-10.2.298 NULLIF in DML operations
+**Status:** Verified (MySQL, MySQLi); Partially Verified (SQLite, PostgreSQL — extends [Issue #80], [Issue #83])
+**Platforms:** MySQL-PDO (works), MySQLi (works), SQLite-PDO (partial), PostgreSQL-PDO (partial)
+**Tests:** `Pdo/MysqlNullifInDmlTest`, `Pdo/PostgresNullifInDmlTest`, `Pdo/SqliteNullifInDmlTest`, `Mysqli/NullifInDmlTest`
+
+NULLIF in UPDATE SET, DELETE WHERE, and INSERT...SELECT:
+
+- **UPDATE SET NULLIF(col, literal)** — works on all platforms. `SET discount_price = NULLIF(discount_price, price)` correctly nullifies matching values.
+- **UPDATE SET NULLIF with WHERE clause** — works on all platforms (distinct from CASE+WHERE Issue #142).
+- **Multiple NULLIF in single SET** — works on all platforms.
+- **DELETE WHERE NULLIF IS NULL / IS NOT NULL** — works on all platforms including prepared variants.
+- **Prepared UPDATE SET NULLIF(col, ?)** — works on MySQL PDO, MySQLi. **Broken on SQLite** [extends Issue #80]: param not evaluated, column keeps original value.
+- **Prepared UPDATE SET NULLIF(col, $1)** — **Broken on PostgreSQL** [extends Issue #80]: dollar-sign param not evaluated.
+- **INSERT...SELECT with NULLIF** — works on MySQL PDO. **Broken on SQLite and PostgreSQL** [extends Issue #83]: NULLIF expression returns 0.0 instead of correct computed value.
+
+## SPEC-10.2.299 Batch CASE UPDATE by id (ORM pattern)
+**Status:** Verified
+**Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO, MySQLi
+**Tests:** `Pdo/MysqlBatchCaseUpdateByIdTest`, `Pdo/PostgresBatchCaseUpdateByIdTest`, `Pdo/SqliteBatchCaseUpdateByIdTest`, `Mysqli/BatchCaseUpdateByIdTest`
+
+The standard ORM batch update pattern `UPDATE SET col = CASE WHEN id = 1 THEN 'a' WHEN id = 2 THEN 'b' ELSE col END WHERE id IN (1, 2)` works correctly on all platforms: single-column routing, multi-column routing, prepared with params, without WHERE clause (ELSE fallback), arithmetic in CASE branches (`score + 90`, `score * 5`), and sequential batch updates.
+
+This is distinct from Issue #142 (CASE expression + WHERE filtering). Here the CASE routes different literal values to different rows by PK, not conditional logic on data columns.
+
+## SPEC-10.2.300 Prepared statement re-prepare (variable reuse)
+**Status:** Partially Verified; Known Issue (PDO — [Issue #146])
+**Platforms:** MySQLi (works), MySQL-PDO (partial), PostgreSQL-PDO (partial), SQLite-PDO (partial)
+**Tests:** `Pdo/MysqlPreparedRePrepareTest`, `Pdo/PostgresPreparedRePrepareTest`, `Pdo/SqlitePreparedRePrepareTest`, `Mysqli/PreparedRePrepareTest`
+
+Re-preparing different SQL on the same `$stmt` variable: INSERT→SELECT, SELECT→UPDATE→SELECT, DELETE→SELECT, cross-table, rapid re-prepare, and same-SQL re-prepare all work correctly on all platforms.
+
+**Known issue [Issue #146]:** A specific re-prepare sequence fails on all PDO platforms: when a prepared UPDATE is followed by a re-prepared parameterless SELECT, the UPDATE is not reflected. The SELECT returns pre-UPDATE data. MySQLi handles this correctly. Pattern: `prepare(INSERT,3p)→prepare(SELECT,1p)→prepare(UPDATE,2p)→prepare(SELECT,0p)` — the final SELECT shows stale data.

@@ -2661,3 +2661,10 @@ ZTD transforms UPDATE to SELECT and returns `count($rows)` as affected_rows/rowC
 **Tests:** `Pdo/SqliteFloatPrecisionInShadowTest`, `Mysqli/FloatPrecisionInShadowTest`, `Pdo/PostgresFloatPrecisionInShadowTest`
 
 The CTE rewriter converts shadow values to SQL literals via PHP's `(string)$val` cast, which uses `precision=14` by default (14 significant digits). SQLite PDO returns REAL column values as native PHP floats, so the round-trip float→string→CTE loses digits beyond 14. Examples: `2.718281828459045` (16 sig digits) becomes `2.718281828459` (13 sig digits after decimal); `0.30000000000000004` (IEEE 754 representation of 0.1+0.2) becomes `0.3` (different float value). MySQL and PostgreSQL are unaffected because their PHP drivers return DOUBLE values as strings, preserving all original digits through the shadow store. Filed as Issue #151.
+
+## SPEC-10.2.333 MySQL 8.0.19+ INSERT...AS row alias syntax silently ignored in ON DUPLICATE KEY UPDATE
+**Status:** Confirms new [Issue #152] on MySQL
+**Platforms:** MySQLi (fails), MySQL-PDO (fails)
+**Tests:** `Mysqli/UpsertRowAliasSyntaxTest`, `Pdo/MysqlUpsertRowAliasSyntaxTest`
+
+MySQL 8.0.19 introduced `INSERT INTO t VALUES (...) AS new ON DUPLICATE KEY UPDATE col = new.col` to replace the deprecated `VALUES()` function (warnings in MySQL 8.2+). The row alias syntax is parsed without error, but the ON DUPLICATE KEY UPDATE clause is silently ignored when `new.col` references are used — the shadow store keeps old values. Tested patterns: no-conflict INSERT (works), conflict with `new.col` reference (fails — old value retained), multi-column update (fails), expression with `new.col` (fails), deprecated `VALUES()` positive control (works). Root cause: PhpMyAdmin SQL parser v5.11.x does not recognize the `AS` alias after VALUES in INSERT statements; `new.col` references are not resolved in UpsertMutation. Filed as Issue #152.

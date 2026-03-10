@@ -2371,6 +2371,22 @@ Three equivalent anti-join patterns (LEFT JOIN IS NULL, NOT EXISTS, NOT IN) all 
 
 **Known issues:** On MySQL, LEFT JOIN IS NULL and NOT EXISTS return ALL rows (condition ignored), NOT IN returns EMPTY set. On PostgreSQL, all patterns fail with type mismatch (text = integer). DELETE with anti-join also broken on both platforms [Issue #143].
 
+## SPEC-10.2.296 AUTO_INCREMENT / SERIAL PK in shadow store
+**Status:** Known Issue (Critical) [Issue #145]
+**Platforms:** MySQL-PDO, MySQLi, PostgreSQL-PDO (all broken)
+**Tests:** `Pdo/MysqlAutoIncrementShadowTest`, `Pdo/PostgresSerialShadowTest`, `Mysqli/AutoIncrementShadowTest`
+
+When INSERT omits the AUTO_INCREMENT (MySQL) or SERIAL (PostgreSQL) PK column, the shadow store stores NULL for the PK. All subsequent operations that reference the PK by value fail: WHERE id = N matches nothing, JOIN returns 0 rows, UPDATE/DELETE by id has no effect. This is the root cause of many PostgreSQL `text = integer` type errors.
+
+**Workaround:** Specify explicit PK values in all INSERT statements. All existing passing tests that use AUTO_INCREMENT/SERIAL use explicit id values.
+
+## SPEC-10.2.297 Multi-mutation complex query patterns
+**Status:** Verified (PostgreSQL with INTEGER PK); Known Issue (MySQL with AUTO_INCREMENT [Issue #145])
+**Platforms:** PostgreSQL-PDO (works with INTEGER PK), MySQL-PDO (broken with AUTO_INCREMENT)
+**Tests:** `Pdo/MysqlMultiMutationComplexQueryTest`, `Pdo/PostgresMultiMutationComplexQueryTest`
+
+Multi-step mutation workflows (INSERT + UPDATE + DELETE) followed by complex queries (GROUP BY HAVING, JOIN, correlated subquery, prepared BETWEEN) work correctly on PostgreSQL when tables use INTEGER PRIMARY KEY. On MySQL with AUTO_INCREMENT, all mutation + query patterns fail because the shadow-generated PKs are NULL [Issue #145]. Simple prepared SELECT without PK references passes on MySQL.
+
 ## SPEC-10.2.294 DELETE with EXISTS/NOT EXISTS subquery
 **Status:** Verified (SQLite); Known Issue (MySQL, PostgreSQL — extends [Issue #143])
 **Platforms:** SQLite-PDO (works), MySQL-PDO (broken), PostgreSQL-PDO (broken)

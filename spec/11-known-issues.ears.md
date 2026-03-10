@@ -1920,3 +1920,22 @@ Several COALESCE evaluation bugs on PostgreSQL:
 Simple single-column `UPDATE SET price = COALESCE(price, 0.00)` works. MySQL handles all COALESCE patterns correctly.
 
 On PostgreSQL, prepared variants also fail with `operator does not exist: text = integer` (SERIAL PK type mismatch, same root cause as many PostgreSQL issues).
+
+## SPEC-11.AUTO-INCREMENT-NULL `[Issue #145]` AUTO_INCREMENT / SERIAL PK values are NULL in shadow store (all platforms)
+**Status:** Known Issue (Critical)
+**Platforms:** MySQL PDO (confirmed), MySQLi (confirmed), PostgreSQL PDO (confirmed)
+**Related specs:** [SPEC-4.1](04-write-operations.ears.md), [SPEC-3.1](03-read-operations.ears.md)
+**Tests:** `Pdo/MysqlAutoIncrementShadowTest`, `Pdo/PostgresSerialShadowTest`, `Mysqli/AutoIncrementShadowTest`
+
+When INSERT omits the AUTO_INCREMENT (MySQL) or SERIAL (PostgreSQL) PK column, the shadow store assigns NULL to the PK instead of generating an auto-incrementing value. This means:
+
+1. `SELECT id, name FROM users` → id is NULL for all shadow-inserted rows
+2. `WHERE id = N` matches nothing (because id is NULL)
+3. `JOIN ON a.id = b.fk` returns 0 rows (NULL never equals anything)
+4. `UPDATE/DELETE WHERE id = N` has no effect
+
+**Root cause for many PostgreSQL issues:** The `operator does not exist: text = integer` errors seen across many PostgreSQL test failures (Issues #137, #143, #144, and others) are caused by these NULL SERIAL PKs being cast as text in the CTE rewriter output.
+
+**Workaround:** Always specify explicit PK values in INSERT statements: `INSERT INTO users (id, name) VALUES (1, 'Alice')` instead of `INSERT INTO users (name) VALUES ('Alice')`.
+
+**Impact:** Virtually every real application uses AUTO_INCREMENT/SERIAL PKs and omits the PK in INSERT. This makes the shadow store unusable for typical INSERT→UPDATE/DELETE/JOIN workflows unless explicit PKs are used.

@@ -29,6 +29,8 @@ On PostgreSQL, DELETE in Exception mode throws `RuntimeException` rather than `Z
 
 On SQLite, `INSERT ... ON CONFLICT DO NOTHING` inserts both rows (shadow store does not enforce PK constraints). Use `INSERT OR IGNORE` instead. PostgreSQL handles this correctly.
 
+**Extended scope (2026-03-10):** The same issue affects multi-row INSERT with ON CONFLICT DO NOTHING: `INSERT INTO t VALUES (...), (...) ON CONFLICT(id) DO NOTHING` inserts all rows including duplicates. Prepared multi-row INSERT with ON CONFLICT also inserts duplicate PK rows. Tests: `Pdo/SqliteMultiRowUpsertTest`.
+
 ## SPEC-11.MYSQL-INSERT-SELECT-STAR `[Issue #40]` INSERT ... SELECT * (MySQL)
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
@@ -1385,3 +1387,44 @@ When a user writes `WITH tablename AS (SELECT ... FROM tablename WHERE ...) SELE
 **Tests:** `Pdo/SqliteMultiUnionDerivedTest`, `Pdo/MysqlMultiUnionDerivedTest`, `Mysqli/MultiUnionDerivedTest`, `Pdo/PostgresMultiUnionDerivedTest`
 
 `SELECT ... FROM (SELECT ... UNION ALL SELECT ... UNION ALL SELECT ...) sub` returns 0 rows on SQLite, MySQL, and MySQLi. PostgreSQL handles this correctly. The CTE rewriter does not rewrite table references in all UNION branches of a derived table. `WHERE ... IN (SELECT ... UNION SELECT ...)` subqueries work correctly. Prepared statement variant also returns empty.
+
+## SPEC-11.UPSERT-ACCUMULATE `[Issue #112]` Upsert self-referencing accumulate expression evaluates to 0
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), SQLite-PDO (confirmed)
+**Related specs:** [SPEC-4.2a](04-write-operations.ears.md)
+**Tests:** `Mysqli/MultiRowUpsertTest`, `Pdo/MysqlMultiRowUpsertTest`, `Pdo/SqliteMultiRowUpsertTest`
+
+Upsert with a self-referencing accumulate expression in the SET clause evaluates the existing column value to 0 instead of the actual current value. The shadow store does not properly resolve table-qualified column references that refer to the row being updated.
+
+- **MySQL**: `INSERT INTO t VALUES (1, 'x', 5) ON DUPLICATE KEY UPDATE qty = t.qty + VALUES(qty)` — sets qty=0 instead of qty=105 (original 100 + 5)
+- **SQLite**: `INSERT INTO t VALUES (1, 'x', 5) ON CONFLICT(id) DO UPDATE SET qty = t.qty + excluded.qty` — sets qty=0 instead of qty=105
+- Multi-row variants also affected: all conflicting rows get qty=0+excluded instead of existing+excluded
+- Simple `VALUES(col)` / `excluded.col` references without self-reference work correctly
+- `ON DUPLICATE KEY UPDATE price = VALUES(price)` (direct replacement, no self-reference) works correctly
+
+## SPEC-11.PREPARED-JSON-FUNC-COMPARE `[Issue #113]` Prepared SELECT with JSON function + comparison operator returns empty
+**Status:** Known Issue
+**Platforms:** SQLite-PDO (confirmed), MySQL-PDO (confirmed)
+**Related specs:** [SPEC-3.2](03-read-operations.ears.md)
+**Tests:** `Pdo/SqliteJsonDmlTest`, `Pdo/MysqlJsonDmlTest`
+
+Prepared SELECT with a JSON extraction function followed by a comparison operator (`>`, `<`, `>=`, `<=`) and a `?` parameter returns 0 rows, even when matching rows exist.
+
+- **SQLite**: `SELECT name FROM t WHERE json_extract(meta, '$.weight') > ?` with param `[8]` → 0 rows (expected 2)
+- **MySQL**: `SELECT name FROM t WHERE JSON_EXTRACT(meta, '$.weight') > ?` with param `[8]` → 0 rows (expected 2)
+- Non-prepared variants (`query()`) with literal values work correctly
+- String equality with JSON function (`json_extract(meta, '$.type') = ?`) works correctly
+- Related to Issue #95 (nested function WHERE with prepared params) but this affects single (non-nested) function calls with comparison operators
+
+## SPEC-11.UPSERT-JSON-FUNC-SET `[Issue #114]` Upsert SET with JSON function call produces invalid JSON or syntax error
+**Status:** Known Issue
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed)
+**Related specs:** [SPEC-4.2a](04-write-operations.ears.md)
+**Tests:** `Mysqli/JsonDmlTest`, `Pdo/MysqlJsonDmlTest`, `Pdo/PostgresJsonDmlTest`
+
+INSERT with upsert clause containing a JSON function call (JSON_SET, jsonb_set) in the ON DUPLICATE/ON CONFLICT SET expression fails on all tested platforms. The CTE rewriter CASTs the function call as a literal string value in the shadow CTE VALUES, producing invalid JSON.
+
+- **MySQL (MySQLi, PDO)**: `ON DUPLICATE KEY UPDATE meta = JSON_SET(meta, '$.color', 'purple')` → "Invalid JSON text in argument 1 to function cast_as_json"
+- **PostgreSQL**: `ON CONFLICT DO UPDATE SET meta = jsonb_set(pg_jdml_items.meta, '{color}', '"purple"')` → "invalid input syntax for type json... Token 'jsonb_set' is invalid"
+- Non-upsert UPDATE with JSON_SET/jsonb_set works correctly on all platforms
+- Related to Issue #105 (upsert with subquery in SET) — same class of issue where complex expressions in upsert SET are not handled by the CTE rewriter

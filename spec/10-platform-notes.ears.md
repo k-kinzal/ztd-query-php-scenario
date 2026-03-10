@@ -2131,3 +2131,31 @@ DELETE combining multiple subquery patterns in one WHERE clause works correctly 
 **Tests:** `Pdo/SqliteUpdateWithSubqueryInMultipleSetsTest`
 
 UPDATE with multiple non-correlated aggregate subqueries in SET works on SQLite when all subqueries reference the **same** table: `SET min=(SELECT MIN...), max=(SELECT MAX...), avg=(SELECT AVG...)`. Also works: subquery arithmetic in SET, subqueries reflecting shadow data, prepared variant with WHERE param, and CASE with COUNT subquery in SET. This contrasts with correlated subqueries (containing FROM...WHERE) which fail with "near FROM: syntax error" on SQLite. On PostgreSQL, even non-correlated subqueries fail with "must appear in GROUP BY" when subqueries reference **different** tables (confirmed via PostgresMultiCorrelatedSetUpdateTest::testNonCorrelatedMultiSubquerySet). The distinction is: same-table non-correlated subqueries work everywhere; cross-table non-correlated subqueries fail on PostgreSQL (extends Issue #61).
+
+## SPEC-10.2.262 JSON column DML operations (UPDATE SET, DELETE WHERE)
+**Status:** Verified (with known issues for upsert and prepared comparison)
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/JsonDmlTest`, `Pdo/MysqlJsonDmlTest`, `Pdo/PostgresJsonDmlTest`, `Pdo/SqliteJsonDmlTest`
+
+JSON DML operations work correctly through the CTE shadow store: UPDATE SET using JSON_SET/json_set/jsonb_set to modify fields, DELETE with JSON_EXTRACT/json_extract/->> in WHERE to filter by JSON values, combined UPDATE SET+WHERE with JSON functions, UPDATE with JSON_REMOVE/json_remove to remove keys, INSERT with json_object() in VALUES, UPDATE with JSONB || merge operator (PostgreSQL), DELETE with @> containment operator (PostgreSQL). Prepared UPDATE with JSON function + params works. **Known issues:** (1) Prepared SELECT with JSON function followed by comparison operator (> ?) returns empty — Issue #113; (2) Upsert SET with JSON function call (JSON_SET/jsonb_set in ON DUPLICATE/ON CONFLICT) produces invalid JSON — Issue #114.
+
+## SPEC-10.2.263 Composite (multi-column) primary key DML
+**Status:** Verified
+**Platforms:** SQLite-PDO, PostgreSQL-PDO
+**Tests:** `Pdo/SqliteCompositePkDmlTest`, `Pdo/PostgresCompositePkDmlTest`
+
+Tables with composite primary keys (e.g., `PRIMARY KEY (student_id, course_id)`) work correctly through the ZTD shadow store: UPDATE by full composite PK, UPDATE by partial PK (one column — affects multiple rows), DELETE by full composite PK, DELETE by partial PK, prepared UPDATE with composite PK params, and SELECT with three-table JOIN on composite PK table. The shadow store correctly tracks and applies DML for multi-column PKs. Verified on SQLite and PostgreSQL.
+
+## SPEC-10.2.264 INSERT with SQL function calls in VALUES
+**Status:** Verified
+**Platforms:** SQLite-PDO
+**Tests:** `Pdo/SqliteInsertFunctionValuesTest`
+
+INSERT with function calls as value expressions works correctly through the CTE shadow store on SQLite: CURRENT_TIMESTAMP, datetime('now'), arithmetic expressions (2+3*4), COALESCE(NULL, value), CASE WHEN expression, UPPER/LOWER string functions, nested functions (LENGTH(REPLACE(...))), subquery in VALUES ((SELECT MAX(...))), and prepared INSERT mixing function calls with ? params. All patterns insert correctly and the values are retrievable via shadow SELECT.
+
+## SPEC-10.2.265 Multi-row INSERT and multi-row upsert
+**Status:** Verified (with known issues)
+**Platforms:** MySQLi, MySQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/MultiRowUpsertTest`, `Pdo/MysqlMultiRowUpsertTest`, `Pdo/SqliteMultiRowUpsertTest`
+
+Multi-row INSERT (no conflict) works correctly on all platforms. Multi-row INSERT ON DUPLICATE KEY UPDATE with VALUES() references (direct replacement) works correctly on MySQL. Prepared multi-row INSERT ON DUPLICATE KEY UPDATE works correctly on MySQL. Multi-row INSERT IGNORE works correctly on MySQL. **Known issues:** (1) Multi-row upsert with self-referencing accumulate expression (table.qty + VALUES(qty)) evaluates to 0 — Issue #112; (2) SQLite multi-row ON CONFLICT DO NOTHING inserts duplicate PK rows — extends Issue #41; (3) SQLite prepared multi-row ON CONFLICT DO UPDATE inserts duplicates — extends Issue #41.

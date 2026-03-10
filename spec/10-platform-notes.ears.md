@@ -2528,3 +2528,73 @@ UPDATE SET with UPPER(), LOWER(), TRIM(), LEFT(), SUBSTRING()/SUBSTR() string fu
 **Tests:** `Mysqli/UpdateSetCrossTableSubqueryTest`, `Pdo/MysqlUpdateSetCrossTableSubqueryTest`, `Pdo/PostgresUpdateSetCrossTableSubqueryTest`, `Pdo/SqliteUpdateSetCrossTableSubqueryTest`
 
 `UPDATE customers SET total = (SELECT COUNT(*) FROM orders WHERE orders.cust_id = customers.id)` — the denormalization pattern with a DIFFERENT table in the subquery. MySQL handles this correctly for COUNT, SUM/COALESCE, subquery after shadow INSERT, subquery after shadow DELETE, and sequential multi-column updates. PostgreSQL produces "column must appear in GROUP BY" error. SQLite produces "near FROM: syntax error". This extends Issue #147 to confirm cross-table correlated subqueries in UPDATE SET fail on SQLite and PostgreSQL. Sequential updates on the same row work on all platforms.
+
+## SPEC-10.2.314 UNION / UNION ALL SELECT after shadow DML
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/UnionSelectAfterDmlTest`, `Pdo/MysqlUnionSelectAfterDmlTest`, `Pdo/PostgresUnionSelectAfterDmlTest`, `Pdo/SqliteUnionSelectAfterDmlTest`
+
+`SELECT ... UNION ALL SELECT ...` and `SELECT ... UNION SELECT ...` correctly see shadow mutations in both branches. Tested after INSERT, UPDATE, and DELETE. Also verified UNION across two different shadow-modified tables and UNION DISTINCT deduplication. The CTE rewriter injects shadow CTEs into all branches on all platforms.
+
+## SPEC-10.2.315 Conditional aggregates (SUM/COUNT of CASE WHEN) after DML
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/ConditionalAggregateAfterDmlTest`, `Pdo/MysqlConditionalAggregateAfterDmlTest`, `Pdo/PostgresConditionalAggregateAfterDmlTest`, `Pdo/SqliteConditionalAggregateAfterDmlTest`
+
+`SUM(CASE WHEN status='x' THEN amount ELSE 0 END)` and `COUNT(CASE WHEN status='x' THEN 1 END)` work correctly after INSERT, UPDATE, DELETE, and with GROUP BY on all platforms. PostgreSQL FILTER clause (`COUNT(*) FILTER (WHERE ...)`) also works.
+
+## SPEC-10.2.316 LEFT JOIN reading from shadow-modified tables
+**Status:** Verified
+**Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/LeftJoinAfterDmlTest`, `Pdo/MysqlLeftJoinAfterDmlTest`, `Pdo/PostgresLeftJoinAfterDmlTest`, `Pdo/SqliteLeftJoinAfterDmlTest`
+
+LEFT JOIN with GROUP BY and COUNT/SUM aggregates correctly reflects shadow mutations on both sides of the join. Tested: INSERT into right table (new dept with 0 employees), INSERT into left table (new employee joins existing dept), DELETE from left table (dept becomes empty), UPDATE changing join key (employee moves departments), DML on both tables simultaneously, and NULL foreign key (employee without department). All platforms handle these patterns correctly.
+
+## SPEC-10.2.317 User-written CTE (WITH ... AS) with shadow data
+**Status:** Partially Verified; confirms [Issue #4]
+**Platforms:** MySQLi (works), MySQL-PDO (works), PostgreSQL-PDO (fails), SQLite-PDO (works)
+**Tests:** `Mysqli/UserCteWithShadowTest`, `Pdo/MysqlUserCteWithShadowTest`, `Pdo/PostgresUserCteWithShadowTest`, `Pdo/SqliteUserCteWithShadowTest`
+
+`WITH cte AS (SELECT ... FROM shadow_table) SELECT ... FROM cte` — user-written CTEs correctly see shadow data on MySQL (MySQLi and PDO) and SQLite. On PostgreSQL, all user CTE variants return empty result sets (Issue #4). Tested simple CTE, chained CTEs (CTE referencing another CTE), multiple CTEs from different shadow tables, and CTE after DELETE. MySQL and SQLite handle all variants correctly.
+
+## SPEC-10.2.318 String concatenation operator (||) in DML
+**Status:** Verified
+**Platforms:** PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Pdo/PostgresStringConcatDmlTest`, `Pdo/SqliteStringConcatDmlTest`
+
+`UPDATE SET display_name = first_name || ' ' || last_name` and `SELECT first_name || ' ' || last_name AS full_name` work correctly through the shadow store on both PostgreSQL and SQLite. The `||` operator does not confuse the CTE rewriter's SQL parser. Also verified: `||` with UPPER/LOWER functions, `||` in WHERE clause, `||` building computed values like email addresses.
+
+## SPEC-10.2.319 Prepared statement with UNION after DML
+**Status:** Verified
+**Platforms:** MySQLi, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/PreparedUnionAfterDmlTest`, `Pdo/PostgresPreparedUnionAfterDmlTest`, `Pdo/SqlitePreparedUnionAfterDmlTest`
+
+Prepared statements with `?` parameters spanning UNION ALL / UNION branches correctly see shadow data on all tested platforms. Parameters bind correctly across branch boundaries. Tested after INSERT, UPDATE, and DELETE.
+
+## SPEC-10.2.320 CTE rewriter edge cases (table name in string, comments, NULLs)
+**Status:** Verified
+**Platforms:** MySQLi, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/CteRewriterEdgeCaseTest`, `Pdo/SqliteCteRewriterEdgeCaseTest`, `Pdo/PostgresCteRewriterEdgeCaseTest`
+
+Stress tests for the CTE rewriter: table name appearing as a string literal value in another table's data, SQL comments containing the keyword "WITH", inline comments between SELECT and FROM, string literals containing SQL keywords and table names, NULL values in shadow data (type inference), NULL in first row then non-NULL in later rows, multiple sequential mutations followed by complex aggregate+subquery query, and cross-table queries where one table stores the other's name as data. All patterns handled correctly.
+
+## SPEC-10.2.321 INSERT with subquery in VALUES clause
+**Status:** Verified
+**Platforms:** MySQLi, PostgreSQL-PDO, SQLite-PDO
+**Tests:** `Mysqli/InsertSubqueryInValuesTest`, `Pdo/PostgresInsertSubqueryInValuesTest`, `Pdo/SqliteInsertSubqueryInValuesChainTest`
+
+`INSERT INTO t VALUES ((SELECT MAX(col)+1 FROM t), ...)` — subquery in VALUES reading from same or different shadow-modified table. Verified: subquery from different table, MAX+1 pattern from same table, chained INSERTs where second subquery sees first shadow INSERT, and COUNT subquery. All patterns work correctly.
+
+## SPEC-10.2.322 Window functions (COUNT OVER, ROW_NUMBER, RANK, SUM OVER PARTITION) after DML
+**Status:** Verified
+**Platforms:** MySQLi, SQLite-PDO
+**Tests:** `Mysqli/WindowFunctionAfterDmlTest`, `Pdo/SqliteWindowFunctionAfterDmlTest`
+
+`COUNT(*) OVER()` for pagination total, `ROW_NUMBER() OVER(ORDER BY ...)`, `SUM() OVER(PARTITION BY ...)` for running totals, and `RANK() OVER()` all correctly reflect shadow mutations. Window function with LIMIT/OFFSET (pagination pattern) also works. Tested after INSERT, UPDATE, and DELETE.
+
+## SPEC-10.2.323 Prepared HAVING with parameters after DML
+**Status:** Partially Verified; confirms [Issue #22] on SQLite only
+**Platforms:** MySQLi (works), MySQL-PDO (works via MySQLi test), PostgreSQL-PDO (works), SQLite-PDO (fails)
+**Tests:** `Mysqli/PreparedHavingAfterDmlTest`, `Pdo/PostgresPreparedHavingAfterDmlTest`, `Pdo/SqlitePreparedHavingAfterDmlTest`
+
+`SELECT category, COUNT(*) FROM t GROUP BY category HAVING COUNT(*) > ?` with prepared parameter. MySQL and PostgreSQL handle this correctly. SQLite returns empty result set (Issue #22). Non-prepared HAVING (with literal value) works on SQLite. Combined WHERE+HAVING with two prepared params also fails on SQLite but works on MySQL and PostgreSQL. Note: Issue #22 originally documented failure on both SQLite AND PostgreSQL; current testing shows PostgreSQL now handles prepared HAVING correctly — Issue #22 may have been partially fixed.

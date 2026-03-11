@@ -1,8 +1,70 @@
 # 13. Type Mappings
 
-> This section defines the expected PHP type (`gettype()`) of values returned by `PDO::FETCH_ASSOC` for each SQL column type. ZTD rewrites queries using CTEs with `CAST()` expressions, which may produce different column metadata than physical table queries. Any difference between ZTD-enabled and ZTD-disabled results is a potential user-visible bug.
+> This section defines the type conversion behavior at every stage of the data lifecycle: PHP value → PDO bind → DB storage → PDO fetch → PHP value. ZTD changes this pipeline by interposing a shadow store, which alters both the write path and the read path.
 >
 > **Status: All entries in this section are UNTESTED.** The tables below define what needs to be verified, not what has been verified.
+
+## SPEC-13.0 Type Conversion Pipeline
+
+### Physical DB (ZTD disabled)
+
+```
+Write: PHP value → bindValue()/bindParam()/exec()
+       → PDO applies PARAM_* type hint
+       → DB receives value via text or binary protocol
+       → DB applies implicit type coercion on INSERT (e.g., string '42' → int 42 for INT column)
+       → Value stored in physical table with column's native type
+
+Read:  DB reads from physical table
+       → DB returns value via text or binary protocol
+       → PDO driver (mysqlnd) maps column metadata to PHP type
+       → ATTR_STRINGIFY_FETCHES / ATTR_ORACLE_NULLS post-processing
+       → PHP receives value
+```
+
+### Shadow Store (ZTD enabled)
+
+```
+Write: PHP value → bindValue()/bindParam()/exec()
+       → ZTD intercepts the write
+       → ZTD executes the INSERT/UPDATE against CTE-rewritten SQL
+       → DB returns the result set of what was written
+       → ZTD stores the returned values in ShadowStore (PHP array<string, mixed>)
+       → NO physical write occurs
+       → NO DB-level implicit type coercion on storage
+
+Read:  ZTD builds CTE: WITH t AS (SELECT CAST('42' AS SIGNED) AS col ...)
+       → DB evaluates CAST() expressions
+       → DB returns CTE-derived result via text or binary protocol
+       → PDO driver maps CTE column metadata to PHP type
+       → ATTR_STRINGIFY_FETCHES / ATTR_ORACLE_NULLS post-processing
+       → PHP receives value
+```
+
+### Key Differences
+
+| Stage | Physical DB | ZTD Shadow Store |
+|-------|-------------|------------------|
+| Write coercion | DB coerces on INSERT (e.g., `'42'` → `42` in INT column) | No coercion — stored as-is in PHP array |
+| Storage type | Column's declared type | PHP mixed (whatever the DB returned) |
+| Read source | Physical table column with native metadata | CTE `CAST()` expression — metadata depends on CAST target type |
+| Column metadata | Table's column definition | CTE-derived, may differ from physical |
+| PHP type on fetch | Based on physical column metadata + PDO config | Based on CTE/CAST metadata + PDO config |
+
+### Implicit Type Coercion Examples (Physical DB)
+
+The DB applies implicit coercion on INSERT. These coercions do NOT happen under ZTD because no physical INSERT occurs:
+
+| Column Type | Input Value | MySQL Physical Result | ZTD Shadow Result |
+|-------------|-------------|----------------------|-------------------|
+| INT | `'42'` (string) | Stored as `42` | Stored as `'42'` in PHP array, then `CAST('42' AS SIGNED)` on read |
+| INT | `'hello'` (string) | Stored as `0` (with warning) | Stored as `'hello'`, then `CAST('hello' AS SIGNED)` = `0` on read |
+| INT | `3.14` (float) | Stored as `3` (truncated) | Stored as `3.14`, then `CAST(3.14 AS SIGNED)` = `3` on read |
+| VARCHAR | `42` (int) | Stored as `'42'` | Stored as `42` (int in PHP array), then `CAST(42 AS CHAR)` on read |
+| DECIMAL(10,2) | `'99.999'` | Stored as `100.00` (rounded) | Stored as `'99.999'`, then `CAST('99.999' AS DECIMAL(10,2))` on read |
+| BOOLEAN | `'yes'` | Stored as `0` | Untested |
+
+**Note:** Whether the CAST-based coercion in ZTD matches the implicit INSERT coercion in the physical DB has NOT been verified for any of these cases.
 
 ## SPEC-13.1 MySQL Type Mappings
 

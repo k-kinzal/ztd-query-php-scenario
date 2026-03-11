@@ -50,3 +50,17 @@ The spec lists MySQL 5.6–9.1 as a supported version range (spec/00-index.ears.
 - Determine whether ztd-query-php has a fallback mechanism for pre-8.0 MySQL, or whether the stated version range is incorrect.
 - If no fallback exists, this is a candidate for an upstream issue report.
 - Update the spec to reflect the actual supported range.
+
+## Testing coverage gap: only PostgreSQL 16 verified out of declared 14–18 range
+
+The spec declares PostgreSQL 14–18 as the supported range, but every `Tested versions` entry in the spec lists only PostgreSQL 16. No spec entry references PostgreSQL 14, 15, 17, or 18 as actually tested.
+
+The same gap exists for MySQL — all spec entries say "MySQL 8.0" despite the declared 5.6–9.1 range, and for PHP — most entries say "PHP 8.3" despite the declared 8.1–8.5 range.
+
+### To verify
+
+- Run the basic CRUD scenario against PostgreSQL 14, 15, 17, and 18.
+- Run the basic CRUD scenario against MySQL 5.6, 5.7, 8.4, and 9.1.
+- Run the basic CRUD scenario against PHP 8.1, 8.2, 8.4, and 8.5.
+- Record any version-specific failures and document them in the spec.
+- If a version within the declared range does not work, report upstream and narrow the spec's stated range.

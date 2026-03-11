@@ -8,6 +8,36 @@
 
 On MySQL via `ZtdPdo::fromPdo()`, PostgreSQL, and SQLite, UPDATE on unreflected tables throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of passing through. The `unknownSchemaBehavior` setting does not take effect for UPDATE operations on these platforms. On MySQL via `fromPdo()`, behavior depends on operation history — if no prior shadow operations touched the table, Passthrough works; after a shadow INSERT, it fails.
 
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.UNKNOWN-EXCEPTION `[Issue #39]` Unknown schema UPDATE (Exception mode)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO, SQLite-PDO
@@ -15,12 +45,52 @@ On MySQL via `ZtdPdo::fromPdo()`, PostgreSQL, and SQLite, UPDATE on unreflected 
 
 On PostgreSQL and SQLite, UPDATE throws `RuntimeException` ("UPDATE simulation requires primary keys") instead of `ZtdPdoException` ("Unknown table"). Exception type and message differ from MySQL.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.UNKNOWN-DELETE `[Issue #39]` Unknown schema DELETE inconsistency
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO, SQLite-PDO
 **Related specs:** [SPEC-7.1](07-unknown-schema.ears.md)
 
 On PostgreSQL, DELETE in Exception mode throws `RuntimeException` rather than `ZtdPdoException`. On SQLite, same behavior.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.SQLITE-ON-CONFLICT `[Issue #41]` INSERT ... ON CONFLICT DO NOTHING (SQLite)
 **Status:** Known Issue
@@ -31,12 +101,32 @@ On SQLite, `INSERT ... ON CONFLICT DO NOTHING` inserts both rows (shadow store d
 
 **Extended scope (2026-03-10):** The same issue affects multi-row INSERT with ON CONFLICT DO NOTHING: `INSERT INTO t VALUES (...), (...) ON CONFLICT(id) DO NOTHING` inserts all rows including duplicates. Prepared multi-row INSERT with ON CONFLICT also inserts duplicate PK rows. Tests: `Pdo/SqliteMultiRowUpsertTest`.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.MYSQL-INSERT-SELECT-STAR `[Issue #40]` INSERT ... SELECT * (MySQL)
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
 **Related specs:** [SPEC-4.1a](04-write-operations.ears.md)
 
 On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` because the InsertTransformer counts `SELECT *` as 1 column. Workaround: use explicit column lists. SQLite and PostgreSQL work correctly.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.PG-CTE `[Issue #4]` User-written CTEs (PostgreSQL)
 **Status:** Known Issue (By-Design)
@@ -46,12 +136,32 @@ On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` because the 
 
 On PostgreSQL, table references inside user CTEs are NOT rewritten — the inner CTE reads from the physical table, returning 0 rows. MySQL and SQLite work correctly.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PG-SCHEMA-QUALIFIED `[Issue #24]` Schema-qualified table names (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
 **Tests:** `Pdo/PostgresSchemaQualifiedTest`
 
 INSERT/UPDATE/DELETE with `public.tablename` work. SELECT returns empty (CTE rewriter doesn't recognize schema-qualified names). Workaround: use unqualified table names in SELECT.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.EXECUTE-QUERY-UPSERT `[Issue #42]` execute_query vs prepare+bind_param for UPSERT/REPLACE (MySQLi)
 **Status:** Known Issue
@@ -61,6 +171,16 @@ INSERT/UPDATE/DELETE with `public.tablename` work. SELECT returns empty (CTE rew
 
 MySQLi `execute_query()` does NOT update/replace existing rows for UPSERT and REPLACE. `prepare()` + `bind_param()` + `execute()` works correctly. The array-param `execute()` path differs from the `bind_param()` path.
 
+#### Verification Matrix — MySQL (MySQLi)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.MYSQL-MULTI-TABLE-DELETE `[Issue #26]` Multi-target DELETE (MySQL)
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
@@ -68,6 +188,16 @@ MySQLi `execute_query()` does NOT update/replace existing rows for UPSERT and RE
 **Tests:** `Mysqli/MultiTableDeleteTest`, `Pdo/MysqlMultiTableDeleteTest`
 
 Multi-target DELETE (`DELETE t1, t2 FROM ...`) only deletes from the first table. Single-target DELETE with JOIN works correctly.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.SQLITE-ALTER-RENAME `[Issue #27]` ALTER TABLE RENAME TO (SQLite)
 **Status:** Known Issue
@@ -77,6 +207,16 @@ Multi-target DELETE (`DELETE t1, t2 FROM ...`) only deletes from the first table
 
 ALTER TABLE RENAME TO drops shadow data without creating new entry. ZTD-inserted data is permanently lost.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-TRUNCATE-MULTI `[Issue #29]` PostgreSQL multi-table TRUNCATE
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -85,12 +225,32 @@ ALTER TABLE RENAME TO drops shadow data without creating new entry. ZTD-inserted
 
 `TRUNCATE table1, table2` only truncates the first table. Workaround: separate TRUNCATE per table.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PG-RETURNING `[Issue #32]` PostgreSQL RETURNING clause
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
 **Tests:** `Pdo/PostgresReturningClauseTest`
 
 INSERT/UPDATE/DELETE RETURNING clause is not supported. CTE rewriter does not preserve RETURNING. Workaround: separate SELECT after DML.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.PDO-PREPARED-INSERT `[Issue #23]` PDO prepared INSERT cannot be updated/deleted
 **Status:** Known Issue
@@ -100,6 +260,36 @@ INSERT/UPDATE/DELETE RETURNING clause is not supported. CTE rewriter does not pr
 
 On PDO, rows inserted via `prepare()` + `execute()` cannot be subsequently updated or deleted. MySQLi is NOT affected. Use `exec()` for INSERT when subsequent UPDATE/DELETE is needed.
 
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PDO-UPSERT `[Issue #17]` Upsert via PDO prepared statements
 **Status:** Known Issue
 **Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
@@ -107,6 +297,36 @@ On PDO, rows inserted via `prepare()` + `execute()` cannot be subsequently updat
 **Tests:** `Pdo/MysqlPreparedUpsertTest`, `Pdo/PostgresPreparedUpsertTest`, `Pdo/SqlitePreparedUpsertTest`
 
 PDO prepared REPLACE INTO and INSERT ... ON CONFLICT DO UPDATE do NOT update existing rows. Use `exec()` instead.
+
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.SQLITE-HAVING-PARAMS `[Issue #22]` HAVING with prepared params (SQLite, PostgreSQL)
 **Status:** Known Issue
@@ -117,12 +337,42 @@ On SQLite, HAVING with bound parameters returns empty results. HAVING with liter
 
 **Extended scope (2026-03-10):** Also affects HAVING without GROUP BY (SQL standard: entire result as one group). `SELECT SUM(amount) FROM t WHERE status = ? HAVING SUM(amount) > ?` returns 0 rows on SQLite with `?` params. Non-prepared variant works correctly. Tests: `Pdo/SqliteHavingWithoutGroupByTest`.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.MYSQL-BACKSLASH `[Issue #5]` Backslash corruption in MySQL shadow store
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
 **Tests:** `Mysqli/BackslashCorruptionTest`, `Pdo/MysqlBackslashCorruptionTest`
 
 Backslash characters are corrupted in shadow store: `\t` → tab, `\n` → newline, etc. CTE rewriter embeds values without escaping backslashes. SQLite and PostgreSQL not affected.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.PG-BOOLEAN-FALSE `[Issue #6]` PostgreSQL BOOLEAN false casting
 **Status:** Known Issue
@@ -131,12 +381,32 @@ Backslash characters are corrupted in shadow store: `\t` → tab, `\n` → newli
 
 Inserting `false` into BOOLEAN column via prepared statement succeeds, but SELECT fails (CTE generates `CAST('' AS BOOLEAN)`). `true` works correctly.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PG-BIGINT `[Issue #6]` PostgreSQL BIGINT overflow
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
 **Tests:** `Pdo/PostgresTypeEdgeCaseTest`
 
 Large integers (> 2^31) in BIGINT columns fail on SELECT (CTE generates `CAST(value AS integer)` instead of `bigint`). MySQL and SQLite handle BIGINT correctly.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.SQLITE-DELETE-NO-WHERE `[Issue #7]` DELETE without WHERE clause (SQLite)
 **Status:** Known Issue
@@ -146,6 +416,16 @@ Large integers (> 2^31) in BIGINT columns fail on SELECT (CTE generates `CAST(va
 
 `DELETE FROM table` without WHERE is silently ignored on SQLite. Workaround: `DELETE FROM table WHERE 1=1`.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.MYSQL-EXCEPT-INTERSECT `[Issue #14]` EXCEPT/INTERSECT on MySQL
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
@@ -154,12 +434,32 @@ Large integers (> 2^31) in BIGINT columns fail on SELECT (CTE generates `CAST(va
 
 EXCEPT and INTERSECT throw `UnsupportedSqlException` on MySQL. The CTE rewriter misparses them as multi-statement queries. Workaround: NOT IN / IN subqueries.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PG-EXTRACT `[Issue #15]` PostgreSQL EXTRACT on shadow dates
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
 **Tests:** `Pdo/PostgresDateTimeFunctionsTest`
 
 `EXTRACT(YEAR FROM date_column)` returns 0 for shadow-stored dates. Workaround: use `TO_CHAR(date_col, 'YYYY')`.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.UPSERT-SELF-REF `[Issue #16]` ON DUPLICATE KEY UPDATE self-referencing expression
 **Status:** Known Issue
@@ -168,12 +468,52 @@ EXCEPT and INTERSECT throw `UnsupportedSqlException` on MySQL. The CTE rewriter 
 
 `INSERT ... ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)` loses original row's value. Simple replacement (`stock = VALUES(stock)`) works.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.INSERT-DEFAULT `[Issue #31]` INSERT with DEFAULT keyword
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
 **Tests:** `Mysqli/InsertDefaultValuesTest`, `Pdo/MysqlInsertDefaultValuesTest`, `Pdo/PostgresInsertDefaultValuesTest`, `Pdo/SqliteInsertDefaultValuesTest`
 
 `INSERT INTO t (col) VALUES (DEFAULT)` and `INSERT INTO t DEFAULT VALUES` both fail under ZTD. The InsertTransformer converts to SELECT expressions where DEFAULT is invalid. Workaround: supply values explicitly.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PG-ARRAY-TYPE `[Issue #33]` PostgreSQL array types broken
 **Status:** Known Issue
@@ -182,11 +522,51 @@ EXCEPT and INTERSECT throw `UnsupportedSqlException` on MySQL. The CTE rewriter 
 
 INSERT with INTEGER[] array values succeeds, but SELECT fails (CastRenderer emits base type without array suffix). TEXT[] is unaffected. ARRAY constructor syntax causes column count errors.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.BINARY-DATA `[Issue #19]` BLOB/BINARY data with binary bytes
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
 
 Inserting binary data (null bytes, high-byte values) via prepared statements succeeds, but SELECT fails (CTE rewriter embeds binary bytes as string literals). Text-only BLOB payloads work. Workaround: base64 encode or disable ZTD.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PG-QUOTE-ESCAPE `[Issue #25]` Doubled single-quote escaping (PostgreSQL)
 **Status:** Known Issue
@@ -195,6 +575,16 @@ Inserting binary data (null bytes, high-byte values) via prepared statements suc
 
 PostgreSQL PgSqlParser's regex doesn't handle `''` escaping, causing incorrect WHERE clause extraction. Workaround: use prepared statements.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.SQLITE-CTAS `[Issue #36]` CREATE TABLE AS SELECT (SQLite)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO
@@ -202,6 +592,16 @@ PostgreSQL PgSqlParser's regex doesn't handle `''` escaping, causing incorrect W
 **Tests:** `Pdo/SqliteCtasEmptyResultTest`
 
 SELECT immediately after CTAS fails with "no such table". After INSERT, original CTAS data is lost.
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.INSERT-SELECT-COMPUTED `[Issue #20]` INSERT...SELECT with computed columns (SQLite/PostgreSQL)
 **Status:** Known Issue
@@ -213,6 +613,26 @@ Computed columns and aggregated values become NULL when using INSERT...SELECT on
 
 **Extended scope (2026-03-10):** The NULL column issue is broader than computed/aggregated columns. INSERT...SELECT with an explicit partial column list (`INSERT INTO t (col1, col2) SELECT ...`) that omits columns with defaults (AUTOINCREMENT/SERIAL PKs, nullable columns) produces all-NULL values even for simple column references on SQLite and PostgreSQL. This affects common patterns like `INSERT INTO log_table (ref_id, name, action) SELECT id, name, 'imported' FROM source_table`. MySQL handles this correctly. Tests: `Pdo/SqliteInsertSelectPartialColumnListTest`, `Pdo/PostgresInsertSelectPartialColumnListTest`.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.MYSQL-COMMA-UPDATE `[Issue #44]` MySQL comma-syntax multi-table UPDATE
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
@@ -220,11 +640,51 @@ Computed columns and aggregated values become NULL when using INSERT...SELECT on
 
 `UPDATE t1, t2 SET ... WHERE ...` is partially supported. Prefer JOIN syntax.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.UPDATE-SUBQUERY-SET `[Issue #10]` UPDATE SET col = (subquery) platform differences
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO, SQLite-PDO (fails); MySQLi, MySQL-PDO (works)
 
 Non-correlated scalar subqueries in UPDATE SET work on MySQL and SQLite but fail on PostgreSQL. Correlated subqueries in SET fail on SQLite.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.FULLTEXT `[Issue #43]` Full-text search not supported through ZTD
 **Status:** Known Issue
@@ -234,6 +694,36 @@ Non-correlated scalar subqueries in UPDATE SET work on MySQL and SQLite but fail
 
 Full-text search queries (MATCH...AGAINST on MySQL, tsvector/tsquery on PostgreSQL, FTS5 MATCH on SQLite) fail through ZTD CTE rewriting. On MySQL, the CTE-derived table does not carry FULLTEXT indexes, causing error 1214. On SQLite, FTS5 virtual table references are not recognized by the CTE rewriter. On PostgreSQL, tsvector column types are not correctly reproduced in CTE casts. Workaround: disable ZTD for full-text search queries.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-PREPARED-FUNCTION `[Issue #45]` PostgreSQL prepared statement with UDF in WHERE
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -241,6 +731,16 @@ Full-text search queries (MATCH...AGAINST on MySQL, tsvector/tsquery on PostgreS
 **Tests:** `Pdo/PostgresStoredFunctionTest`
 
 On PostgreSQL, prepared statements with user-defined functions in WHERE clauses may return incorrect (empty) results, despite the same query working correctly via `query()`. The `$1` placeholder parameter combined with a UDF call in the WHERE condition does not filter correctly through the CTE-rewritten query.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.UPDATE-FROM `[Issue #72]` UPDATE ... FROM syntax not supported (SQLite)
 **Status:** Known Issue
@@ -254,6 +754,16 @@ On PostgreSQL, prepared statements with user-defined functions in WHERE clauses 
 
 The shadow store is not corrupted by the failure. Workaround: use `WHERE id IN (SELECT ...)` subqueries instead of UPDATE FROM joins.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-LATERAL `[Issue #71]` LATERAL subqueries return empty (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -266,6 +776,16 @@ Workarounds:
 - Use correlated subqueries in the SELECT list: `SELECT (SELECT SUM(x) FROM t WHERE t.fk = u.id) FROM u`.
 - Use regular JOINs with GROUP BY subqueries: `JOIN (SELECT fk, SUM(x) FROM t WHERE 1=1 GROUP BY fk) sub ON sub.fk = u.id`.
 - For top-N per group, use window functions: `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...) = 1`.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.BARE-SUBQUERY-REWRITE `[Issue #73]` Bare subquery table references not rewritten (SQLite)
 **Status:** Known Issue
@@ -289,6 +809,16 @@ Workarounds:
 - For user CTEs: add `WHERE 1=1` to the CTE definition, or use GROUP BY.
 - For percentage/ratio calculations: use CROSS JOIN with derived table instead of scalar subquery.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.UPDATE-AGGREGATE-SUBQUERY `[Issue #9]` UPDATE with aggregate subquery in WHERE
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
@@ -310,6 +840,16 @@ SELECT customer_id FROM orders WHERE status = 'completed' GROUP BY customer_id H
 -- Step 2: UPDATE by explicit list
 UPDATE customers SET tier = 'gold' WHERE id IN (1, 3, 7);
 ```
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.DERIVED-TABLE-PREPARED `[Issue #13]` Prepared statements with derived tables return empty
 **Status:** Known Issue
@@ -333,6 +873,36 @@ WHERE username = ?
 Workarounds:
 - Use correlated subqueries instead of derived tables: `SELECT p.username, p.score, (SELECT COUNT(DISTINCT p2.score) FROM players p2 WHERE p2.score > p.score) + 1 AS player_rank FROM players p WHERE p.username = ?`.
 - Use `query()` with escaped parameters instead of `prepare()`.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.CTE-JOIN-BACK `[Issue #52]` User CTE joined back to original table returns empty
 **Status:** Known Issue
@@ -363,6 +933,16 @@ JOIN (SELECT region, SUM(amount) AS region_total FROM sales GROUP BY region HAVI
 ON s.region = r.region;
 ```
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.CORRELATED-UPDATE-SET `[Issue #51]` Correlated scalar subquery in UPDATE SET clause
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO, SQLite-PDO (confirmed); MySQLi, MySQL-PDO (works correctly)
@@ -385,6 +965,36 @@ UPDATE departments SET avg_salary = 87500.00 WHERE id = 1;
 UPDATE departments SET avg_salary = 57500.00 WHERE id = 2;
 ```
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.CHECK-COLUMN-NAME `[Issue #70]` Column names containing "check" cause INSERT failures
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), MySQLi, MySQL-PDO, PostgreSQL-PDO (likely affected)
@@ -396,6 +1006,36 @@ Workarounds:
 - Use explicit column lists in INSERT: `INSERT INTO table (col1, col2, ...) VALUES (...)`.
 - Rename columns to avoid the `check` substring: use `arrival_date` / `departure_date` instead of `check_in` / `check_out`.
 - Quote column names in DDL with double quotes (SQLite confirmed).
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.UNION-ALL-DERIVED `[Issue #13]` UNION ALL in derived table returns empty
 **Status:** Known Issue
@@ -425,6 +1065,36 @@ LEFT JOIN (SELECT bin_id, SUM(qty) AS total_in FROM inbound GROUP BY bin_id) i O
 LEFT JOIN (SELECT bin_id, SUM(qty) AS total_out FROM outbound GROUP BY bin_id) o ON o.bin_id = b.id;
 ```
 
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.WINDOW-DERIVED `[Issue #13]` Window function in derived table returns empty
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
@@ -450,6 +1120,36 @@ JOIN reps r ON r.id = d.rep_id
 WHERE d.amount = (SELECT MAX(d2.amount) FROM deals d2 WHERE d2.rep_id = d.rep_id);
 ```
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.CASE-WHERE-PARAMS `[Issue #75]` CASE-as-boolean in WHERE with prepared params returns wrong count
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
@@ -472,6 +1172,36 @@ ORDER BY w.priority, w.id;
 
 -- Workaround: expand CASE conditions into explicit OR/AND logic in the application layer.
 ```
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PG-SELF-REF-UPDATE `[Issue #74]` Self-referencing UPDATE WHERE IN/subquery (PostgreSQL)
 **Status:** Known Issue
@@ -506,6 +1236,36 @@ SELECT id FROM products WHERE category = 'electronics';
 UPDATE products SET status = 'featured' WHERE id IN (1, 2);
 ```
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.EXCEPTION-WRAPPING `[Issue #2]` RuntimeException instead of DatabaseException
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
@@ -514,6 +1274,36 @@ UPDATE products SET status = 'featured' WHERE id IN (1, 2);
 
 When UPDATE or DELETE targets a table whose schema was not reflected at adapter construction time, `ShadowStore` throws a raw `RuntimeException` instead of `DatabaseException`. The adapter-specific exception wrapping (`ZtdMysqli::query()` catches `DatabaseException`, `ZtdPdo::exec()` catches `DatabaseException`) does not catch `RuntimeException`, so it propagates unwrapped to user code. Users cannot rely on catching the adapter-specific exception type.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.SELF-REF-UPDATE-HAVING `[Issue #11]` Self-referencing UPDATE with GROUP BY HAVING
 **Status:** Known Issue
 **Platforms:** MySQL-PDO, MySQLi (incorrect results); SQLite-PDO (syntax error); PostgreSQL-PDO (ambiguous column)
@@ -521,12 +1311,72 @@ When UPDATE or DELETE targets a table whose schema was not reflected at adapter 
 
 `UPDATE table SET col = val WHERE col IN (SELECT col FROM same_table GROUP BY col HAVING AGG(col) > N)` incorrectly updates ALL rows on MySQL instead of only the rows matching the HAVING condition. The CTE rewriter mishandles the self-referencing subquery with GROUP BY HAVING. On SQLite, the same query fails with "incomplete input". On PostgreSQL, it fails with "column reference is ambiguous".
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.RECURSIVE-CTE-SHADOW `[Issue #12]` WITH RECURSIVE + shadow table
 **Status:** Known Issue
 **Platforms:** MySQL-PDO, MySQLi (syntax error); SQLite-PDO (empty results); PostgreSQL-PDO (empty results)
 **Tests:** `Pdo/MysqlRecursiveCteAndRightJoinTest`, `Pdo/PostgresRecursiveCteAndRightJoinTest`, `Pdo/SqliteRecursiveCteAndRightJoinTest`
 
 The CTE rewriter prepends its own `WITH` clause before the user's `WITH RECURSIVE`, producing invalid SQL on MySQL (`WITH ztd_shadow AS (...), RECURSIVE cat_tree AS (...)`). On SQLite and PostgreSQL, the query executes but table references inside the recursive CTE are not rewritten, causing the recursive part to read from the physical table (empty) and return 0 rows.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.CTE-DML `[Issue #28]` CTE-based DML not supported
 **Status:** Known Issue (Feature Gap)
@@ -536,6 +1386,36 @@ The CTE rewriter prepends its own `WITH` clause before the user's `WITH RECURSIV
 
 CTE-based DML statements (`WITH ... INSERT`, `WITH ... UPDATE`, `WITH ... DELETE`) are not supported on any platform. On MySQL, the mutation resolver receives a `WithStatement` instead of an `InsertStatement`/`UpdateStatement`/`DeleteStatement`. On SQLite, CTE name collisions occur. On PostgreSQL, invalid SQL is produced. Workaround: rewrite as standard DML with subqueries.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-CONFLICT-WHERE `[Issue #30]` ON CONFLICT DO UPDATE WHERE clause ignored
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -544,6 +1424,16 @@ CTE-based DML statements (`WITH ... INSERT`, `WITH ... UPDATE`, `WITH ... DELETE
 
 PostgreSQL conditional upserts with `ON CONFLICT DO UPDATE ... WHERE condition` have the WHERE clause stripped by `PgSqlParser::extractOnConflictUpdateColumns()`. The `UpsertMutation` always updates conflicting rows regardless of the WHERE condition. This produces incorrect results — rows are updated when they should be left unchanged because the WHERE condition was not met.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PG-CTAS-TEXT `[Issue #37]` CTAS column types default to TEXT (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -551,6 +1441,16 @@ PostgreSQL conditional upserts with `ON CONFLICT DO UPDATE ... WHERE condition` 
 **Tests:** `Pdo/PostgresCtasTest`
 
 When `CREATE TABLE AS SELECT` creates a shadow table on PostgreSQL, all column types default to TEXT (via `ColumnType::unknown()`). Subsequent queries with integer comparisons fail with "operator does not exist: text = integer". The fix would be to infer column types from the source table schema. Workaround: use explicit `CAST` or string comparisons in WHERE clauses.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.INSERT-SELECT-CASE `[Issue #76]` INSERT...SELECT with CASE expression produces 0 rows (SQLite)
 **Status:** Known Issue
@@ -572,6 +1472,16 @@ FROM employee e;
 ```
 
 Workaround: query the source data first via SELECT, compute values in application code, then INSERT explicit rows.
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PG-UPDATE-SET-FROM-KEYWORD `[Issue #47]` UPDATE SET with FROM-syntax functions (PostgreSQL)
 **Status:** Known Issue
@@ -605,6 +1515,16 @@ UPDATE items SET name = TRIM(name) WHERE id = 1;
 UPDATE items SET code = SUBSTR(code, 1, 3) WHERE id = 1;
 ```
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PG-JSONB-QUESTION-MARK `[Issue #48]` JSONB ? / ?| / ?& operators conflict with parameter placeholder
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -632,6 +1552,16 @@ SELECT name FROM docs WHERE jsonb_exists_any(meta, array['reviewed', 'priority']
 SELECT name FROM docs WHERE jsonb_exists_all(meta, array['author', 'reviewed']);
 ```
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.SQLITE-MULTI-COL-SET-OP `[Issue #50]` Multi-column INTERSECT/EXCEPT returns empty results on SQLite
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
@@ -639,6 +1569,16 @@ SELECT name FROM docs WHERE jsonb_exists_all(meta, array['author', 'reviewed']);
 **Tests:** `Pdo/SqliteSetOperationTest::testIntersectMultiColumnReturnsEmptyOnSqlite`, `Pdo/SqliteMultiColumnExceptTest`
 
 Single-column INTERSECT and EXCEPT work correctly on SQLite through the CTE shadow store, but multi-column variants return 0 rows instead of the expected results. For example, `SELECT department, skill FROM employees INTERSECT SELECT department, skill FROM contractors` returns empty when it should return 3 matching (department, skill) pairs. Both INTERSECT and EXCEPT are affected when the projection includes multiple non-PK columns. PostgreSQL handles these correctly.
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.UPDATE-SET-CORRELATED-SUBQUERY `[Issue #51]` UPDATE with subquery in SET clause produces errors
 **Status:** Known Issue
@@ -659,6 +1599,36 @@ UPDATE statements with subqueries in the SET clause fail through the CTE rewrite
 
 Self-referencing scalar subqueries in SET (e.g., `SET price = (SELECT MAX(price) FROM same_table WHERE ...)`) also fail with different errors per platform. UPDATE with subqueries in WHERE clause works correctly on all platforms. DELETE with correlated subqueries also works correctly on all platforms.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.USER-CTE-CONFLICT `[Issue #52]` User-defined CTEs silently return empty results
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (all CTE patterns), SQLite-PDO (multiple CTEs JOINed)
@@ -667,6 +1637,26 @@ Self-referencing scalar subqueries in SET (e.g., `SET price = (SELECT MAX(price)
 
 Queries containing user-defined CTEs (`WITH ... AS (...)`) silently return 0 rows through the CTE shadow store. On PostgreSQL, ALL user CTE patterns return empty — simple CTEs, multiple CTEs, CTEs referencing other CTEs, and CTEs with prepared statements. On SQLite, simple CTEs and CTE-referencing-CTE patterns work, but multiple CTEs JOINed together return 0 rows. The CTE rewriter adds its own WITH clauses, and these appear to conflict with or shadow user-defined CTEs. This is a high-severity silent data loss bug.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-RETURNING `[Issue #53]` PostgreSQL RETURNING clause silently drops result set
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -674,6 +1664,16 @@ Queries containing user-defined CTEs (`WITH ... AS (...)`) silently return 0 row
 **Tests:** `Pdo/PostgresReturningClauseTest`
 
 INSERT/UPDATE/DELETE with RETURNING clause silently return 0 rows through the CTE shadow store. The mutations themselves succeed (shadow store is updated correctly), but the RETURNING result set is always empty. Affects: `RETURNING *`, `RETURNING col1, col2`, prepared statements with RETURNING, and all three mutation types (INSERT, UPDATE, DELETE). This is a high-severity silent data loss bug — users relying on RETURNING for auto-generated IDs or confirmation data will get no data and no error.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.INSERT-SELECT-JOIN `[Issue #49]` INSERT...SELECT with multi-table JOIN produces incorrect results
 **Status:** Known Issue
@@ -699,6 +1699,36 @@ GROUP BY c.id, c.name, c.region;
 -- No known workaround for correct aggregate values on PostgreSQL/SQLite
 ```
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.ALTER-ADD-COL-STALE-SCHEMA `[Issue #54]` ALTER TABLE ADD COLUMN: schema cache not invalidated
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), MySQL-PDO (partial)
@@ -710,6 +1740,26 @@ After `ALTER TABLE ADD COLUMN`, the CTE rewriter's schema cache is not invalidat
 On MySQL-PDO, INSERT/UPDATE/SELECT with the new column all work, but pre-existing shadow rows do not receive the DEFAULT value for the new column (they get 0/NULL instead).
 
 Queries using only original columns continue to work correctly after ADD COLUMN on all platforms.
+
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PDO-REPLACE-PREPARED `[Issue #55]` REPLACE/INSERT OR REPLACE via PDO prepared statement creates duplicate PK rows
 **Status:** Known Issue
@@ -726,6 +1776,26 @@ REPLACE INTO (MySQL) and INSERT OR REPLACE (SQLite) via PDO prepared statements 
 
 Related: Issue #42 (MySQLi execute_query REPLACE), Issue #17 (PDO prepared upsert).
 
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-GENERATE-SERIES `[Issue #56]` PostgreSQL generate_series() LEFT JOIN with shadow table returns empty
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -737,6 +1807,16 @@ When `generate_series()` with column alias (e.g., `AS d(day)`) is LEFT JOINed wi
 Integer `generate_series()` in a derived table (`(SELECT generate_series(1,5) AS n) AS gs`) LEFT JOINed with shadow table **does work** — only the `AS alias(col)` form is affected.
 
 Related: Issue #13 (derived tables not rewritten), SPEC-11.PG-LATERAL (LATERAL inner references not rewritten).
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.PG-IS-NOT-DISTINCT-FROM `[Issue #57]` PostgreSQL IS NOT DISTINCT FROM between columns returns empty
 **Status:** Known Issue
@@ -753,6 +1833,16 @@ Related: Issue #13 (derived tables not rewritten), SPEC-11.PG-LATERAL (LATERAL i
 | `WHERE a IS NOT DISTINCT FROM b` | **Bug**: returns empty when both NULL |
 | `WHERE a IS NOT DISTINCT FROM expr::TYPE` | **Bug**: returns empty when both NULL |
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.SQLITE-DELETE-HAVING `[Issue #58]` SQLite DELETE with IN (subquery GROUP BY HAVING) produces incomplete SQL
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
@@ -762,6 +1852,16 @@ Related: Issue #13 (derived tables not rewritten), SPEC-11.PG-LATERAL (LATERAL i
 On SQLite, `DELETE FROM t WHERE id IN (SELECT ... GROUP BY ... HAVING ...)` throws "SQLSTATE[HY000]: General error: 1 incomplete input". The CTE rewriter generates truncated/incomplete SQL when processing DELETE with a subquery containing GROUP BY and HAVING clauses. Also affects `DELETE ... WHERE NOT EXISTS (SELECT ... GROUP BY ... HAVING ...)`.
 
 Related: Issue #9 (UPDATE with IN subquery GROUP BY HAVING), Issue #22 (HAVING with prepared params).
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.MYSQL-DELETE-SELF-HAVING `[Issue #59]` MySQL self-referencing DELETE with IN (subquery GROUP BY HAVING) deletes all rows
 **Status:** Known Issue
@@ -773,6 +1873,16 @@ When DELETE references the same table in both the target and the IN subquery wit
 
 Related: Issue #11 (UPDATE self-referencing with GROUP BY HAVING).
 
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PG-ROW-VALUE-DML `[Issue #60]` Row value constructor in UPDATE/DELETE WHERE produces syntax error
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed); MySQL-PDO, MySQLi, SQLite-PDO (works correctly)
@@ -780,6 +1890,36 @@ Related: Issue #11 (UPDATE self-referencing with GROUP BY HAVING).
 **Tests:** `Pdo/PostgresRowValueInSubqueryTest`
 
 `UPDATE table SET col = val WHERE (col1, col2, col3) IN (SELECT ...)` and `DELETE FROM table WHERE (col1, col2) IN (SELECT ...)` produce a syntax error on PostgreSQL through the CTE rewriter. SELECT with the same row value pattern works correctly. MySQL (both PDO and MySQLi) and SQLite handle row value constructors in UPDATE/DELETE WHERE correctly.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PG-CASE-SET-PREPARED `[Issue #61]` UPDATE SET CASE with prepared $N params is silently a no-op
 **Status:** Known Issue
@@ -793,6 +1933,36 @@ However, when the CASE expression contains correlated subqueries (EXISTS or scal
 
 Related: Issue #47 (TRIM/SUBSTRING FROM in SET), Issue #51 (correlated subquery in SET).
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-FILTER-PREPARED `[Issue #62]` Aggregate FILTER (WHERE col = $N) returns wrong results
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -802,6 +1972,16 @@ Related: Issue #47 (TRIM/SUBSTRING FROM in SET), Issue #51 (correlated subquery 
 Aggregate FILTER clauses work correctly via `query()`, but when `prepare()` is used with `$N` parameters inside the FILTER condition — `SUM(revenue) FILTER (WHERE event_type = $1)` — the filtered aggregate returns 0/NULL. The parameter inside FILTER is either not bound or bound to the wrong position.
 
 Related: Issue #22 (HAVING with prepared params), Issue #45 (UDF in WHERE with prepared params).
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.PG-USING-PREPARED `[Issue #63]` JOIN USING with $N WHERE parameter returns empty
 **Status:** Known Issue
@@ -815,6 +1995,36 @@ Workaround: Use `JOIN ... ON t1.col = t2.col` instead of `USING (col)`.
 
 Related: Issue #22 (HAVING with prepared params), Issue #62 (FILTER with prepared params).
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.SQLITE-UPSERT-SELFREF `[Issue #64]` ON CONFLICT DO UPDATE self-referencing expression loses value (SQLite)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed); MySQL has same class of bug (Issue #16)
@@ -827,6 +2037,16 @@ This is the SQLite counterpart of MySQL Issue #16 (`ON DUPLICATE KEY UPDATE stoc
 
 Workaround: Perform the read and update as separate operations.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.UPDATE-PK-GHOST `[Issue #65]` UPDATE SET <pk_column> creates ghost row
 **Status:** Known Issue
 **Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
@@ -834,6 +2054,36 @@ Workaround: Perform the read and update as separate operations.
 **Tests:** `Pdo/SqliteUpdatePrimaryKeyValueTest`, `Pdo/MysqlUpdatePrimaryKeyValueTest`, `Pdo/PostgresUpdatePrimaryKeyValueTest`
 
 When `UPDATE SET id = new_value WHERE id = old_value` changes a primary key column, the shadow store creates a new row with the new PK but does not remove the old row. This results in ghost data: both old and new PK rows exist, `COUNT(*)` is inflated, and subsequent DELETE by new PK cannot clean up the ghost. Affects integer PKs, text PKs, and composite PK member changes.
+
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PG-NOPK-JOIN `[Issue #66]` PostgreSQL: JOIN involving no-PK table fails
 **Status:** Known Issue
@@ -843,6 +2093,16 @@ When `UPDATE SET id = new_value WHERE id = old_value` changes a primary key colu
 
 On PostgreSQL, JOIN between a table without a primary key and a table with a primary key fails with "ZTD Write Protection: Cannot determine columns SQL statement". The same JOIN works on MySQL and SQLite. INSERT and SELECT on no-PK tables work on all platforms.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.SQLITE-STRING-LITERAL `[Issue #67]` SQLite: CTE rewriter replaces table references in string literals
 **Status:** Known Issue
 **Platforms:** SQLite-PDO
@@ -851,6 +2111,16 @@ On PostgreSQL, JOIN between a table without a primary key and a table with a pri
 
 On SQLite, when a SQL string literal contains `FROM <tablename>` or `JOIN <tablename>` (case-insensitive), the CTE rewriter incorrectly treats it as a SQL clause and rewrites the table reference. This causes queries to silently return 0 rows. MySQL and PostgreSQL are not affected.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-DOLLAR-INSERT `[Issue #68]` PostgreSQL: INSERT with $N params stores NULL values
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -858,6 +2128,16 @@ On SQLite, when a SQL string literal contains `FROM <tablename>` or `JOIN <table
 **Tests:** `Pdo/PostgresUnicodeAndSpecialCharsTest`
 
 On PostgreSQL, INSERT via prepared statement using `$N` parameter syntax (PostgreSQL's native numbered placeholders) stores NULL for all column values in the shadow store. The row is created but all data is lost. Using `?` placeholders works correctly.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.SQL-COMMENT-DML `[Issue #69]` SQL block comments break DML statement parsing
 **Status:** Known Issue
@@ -888,6 +2168,36 @@ The most dangerous failure is SQLite DELETE with comment between FROM and table 
 
 Workaround: strip all SQL comments before passing queries to ZTD.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.DERIVED-TABLE-ALIAS-COLLISION `[Issue #13]` Derived table aliased with existing table name returns empty
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
@@ -909,6 +2219,16 @@ ORDER BY tac_items.name
 
 Workaround: use aliases that do not match any table name in the schema.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.LAST-INSERT-ID `[Issue #77]` PDO::lastInsertId() returns '0' after shadow INSERT
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (likely all PDO platforms)
@@ -919,6 +2239,16 @@ Workaround: use aliases that do not match any table name in the schema.
 
 Affects: exec INSERT, prepared INSERT, explicit PK INSERT. The shadow store tracks the inserted row internally but does not propagate the ID to `lastInsertId()`.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.MULTI-STATEMENT `[Issue #78]` Multi-statement SQL throws undocumented error
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (likely all platforms)
@@ -926,6 +2256,16 @@ Affects: exec INSERT, prepared INSERT, explicit PK INSERT. The shadow store trac
 **Tests:** `Pdo/SqliteMultiStatementExecTest`
 
 Executing multiple SQL statements separated by semicolons in a single `exec()` call throws `ZTD Write Protection: Multi-statement SQL statement`. While this may be intentional, the limitation is undocumented and the error message does not suggest a workaround. Native `PDO::exec()` supports multi-statement execution on SQLite.
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.DML-TABLE-ALIAS `[Issue #79]` SQLite: Table alias in UPDATE/DELETE causes "no such column" error
 **Status:** Known Issue
@@ -935,6 +2275,16 @@ Executing multiple SQL statements separated by semicolons in a single `exec()` c
 
 On SQLite, UPDATE and DELETE statements with table aliases (`UPDATE t AS alias SET ... WHERE alias.col = ...` or `DELETE FROM t AS alias WHERE alias.col = ...`) fail with "no such column: alias.col". The CTE rewriter wraps the table in a CTE but does not preserve the alias, so alias-qualified column references become unresolvable. This syntax is supported natively by SQLite (3.33+) and is commonly emitted by ORMs. MySQL and PostgreSQL are not affected. Workaround: use unqualified column names (`WHERE col = ...` instead of `WHERE alias.col = ...`).
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.NULLIF-PREPARED-PARAM `[Issue #80]` NULLIF with prepared parameter returns wrong results
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), likely MySQL-PDO, PostgreSQL-PDO
@@ -942,6 +2292,36 @@ On SQLite, UPDATE and DELETE statements with table aliases (`UPDATE t AS alias S
 **Tests:** `Pdo/SqliteCoalesceWithParamsTest`, `Pdo/MysqlNullifWithParamsTest`, `Pdo/PostgresNullifWithParamsTest`
 
 `NULLIF(column, ?)` with a prepared parameter returns incorrect results. For example, `SELECT name FROM t WHERE NULLIF(score, ?) IS NULL` with param `100` should match rows where `score = 100` (NULLIF returns NULL) AND rows where `score IS NULL`. Through ZTD, only the `score IS NULL` rows are returned — the parameter inside NULLIF is not properly evaluated, so `NULLIF(100, 100)` does not return NULL as expected. The same query via `query()` (without parameters) works correctly. This is related to but distinct from Issue #75 (CASE in WHERE with params).
+
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.VIEW-JOIN-SHADOW `View JOIN with shadow table produces inconsistent results
 **Status:** Known Limitation
@@ -951,6 +2331,16 @@ On SQLite, UPDATE and DELETE statements with table aliases (`UPDATE t AS alias S
 
 When a query JOINs a view with a shadow-modified table, the results are inconsistent: the view reads physical data while the joined table reads shadow data. For example, after shadow-inserting a row into the base table, a `SELECT ... FROM view JOIN table` does not include the shadow-inserted row in the join result. After shadow-deleting a row, the deleted row still appears in the join because the view sees the physical (undeleted) row. This is a consequence of views not being CTE-rewritten, but the JOIN inconsistency may silently produce incorrect results in applications that combine views with DML-modified tables.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.JSON-TABLE-FUNCTION `[Issue #81]` SQLite: json_each()/json_tree() table-valued functions return empty results
 **Status:** Known Issue
 **Platforms:** SQLite-PDO
@@ -958,6 +2348,16 @@ When a query JOINs a view with a shadow-modified table, the results are inconsis
 **Tests:** `Pdo/SqliteJsonTableFunctionTest`
 
 SQLite table-valued functions `json_each()` and `json_tree()` return zero rows when used on shadow-stored data. These functions appear in the FROM clause like tables (e.g., `FROM products p, json_each(p.tags) j`) but the CTE rewriter does not handle them. All query patterns are affected: SELECT, JOIN, WHERE filter, aggregation, and prepared statements. This is distinct from #13 (derived tables) — table-valued functions have different syntax from subqueries.
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.LINE-COMMENT-DML `[Issue #82]` Line comments (--) break CTE rewriter for UPDATE and SELECT
 **Status:** Known Issue
@@ -967,6 +2367,26 @@ SQLite table-valued functions `json_each()` and `json_tree()` return zero rows w
 
 SQL line comments (`--`) break the CTE rewriter in two cases: (1) a line comment immediately before UPDATE causes "Cannot resolve UPDATE target SQL statement" error; (2) a line comment containing SQL keywords like `SELECT`, `FROM`, `DELETE` causes the following actual query to return 0 rows. Line comments before SELECT, INSERT, and DELETE, and between clauses, work correctly. Related to #69 (block comments break parser) but affects `--` syntax rather than `/* */`.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.INSERT-SELECT-LITERAL-NULLS `[Issue #83]` INSERT...SELECT with literal values stores NULLs (SQLite/PostgreSQL)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO, PostgreSQL-PDO (MySQL not affected)
@@ -975,6 +2395,26 @@ SQL line comments (`--`) break the CTE rewriter in two cases: (1) a line comment
 
 `INSERT INTO t (cols) SELECT literal_values WHERE [NOT] EXISTS (...)` stores NULLs instead of the intended values on SQLite and PostgreSQL. This breaks the common portable conditional-insert pattern. Consequences: (1) NOT EXISTS checks fail to find the "existing" row because the stored value is NULL; (2) sequential conditional inserts create duplicates; (3) cross-table conditional inserts store NULLs. MySQL works correctly. Related to #20 (INSERT...SELECT with computed columns produces NULLs).
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-FORMAT-UPDATE-SET `[Issue #84]` PostgreSQL: format() in UPDATE SET produces NULL
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -982,6 +2422,16 @@ SQL line comments (`--`) break the CTE rewriter in two cases: (1) a line comment
 **Tests:** `Pdo/PostgresFormatFunctionTest`
 
 PostgreSQL's `format()` function works correctly in SELECT, WHERE, and prepared-statement contexts, but produces NULL when used in `UPDATE SET`. For example, `UPDATE users SET code = format('USR-%s', first_name) WHERE code IS NULL` sets `code` to NULL instead of the expected formatted string. This is distinct from #47 (which is about FROM keyword in TRIM/SUBSTRING/EXTRACT syntax) and similar to the pattern in #61 (CASE in UPDATE SET).
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.PG-DOLLAR-SELECT `[Issue #85]` PostgreSQL: SELECT with $N prepared params returns empty results
 **Status:** Known Issue
@@ -1002,6 +2452,16 @@ This broadens the scope of known $N param issues (#62 FILTER, #63 JOIN USING, #6
 
 Workaround: Use `?` placeholders instead of `$N` on PostgreSQL.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.KEYWORD-TABLE-NAME `[Issue #86]` Table names "select" and "values" break CTE rewriter
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), likely MySQL-PDO, PostgreSQL-PDO
@@ -1018,6 +2478,36 @@ Both keywords that fail are used in INSERT statement parsing (`SELECT` for INSER
 
 Workaround: Rename tables to avoid `select` and `values` as table names, or disable ZTD for queries referencing these tables.
 
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PREPARED-SELECT-REEXECUTE-STALE `[Issue #87]` Prepared SELECT re-execution returns stale shadow data
 **Status:** Known Issue
 **Platforms:** SQLite-PDO, MySQL-PDO, PostgreSQL-PDO, MySQLi (all confirmed)
@@ -1033,6 +2523,36 @@ Root cause: The CTE-rewritten SQL is baked into the inner PDO prepared statement
 **Extended scope (2026-03-10):** The issue is broader than re-execution: the CTE SQL is actually generated at `prepare()` time, not at first `execute()` time. This means even the FIRST `execute()` of a prepared SELECT cannot see data inserted AFTER `prepare()`. Tested patterns on SQLite: prepare SELECT then `exec()` INSERT → first execute returns 0 rows; prepare both INSERT+SELECT then execute INSERT then SELECT → 0 rows; prepare COUNT, execute (0), INSERT ×3, re-execute → still 0; cross-table prepare-all-then-execute → JOIN returns 0 rows. The workaround is to call `prepare()` only AFTER all shadow store mutations are complete, or use `query()` for all reads. This is a high-severity issue for applications that prepare statements at startup or in repository constructors. Tests: `Pdo/SqlitePreparedBeforeInsertVisibilityTest`, `Pdo/SqliteConcurrentPreparedStmtTest`.
 
 Workaround: Use `query()` instead of re-executing a prepared SELECT, or prepare a new statement for each execution after DML mutations.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PG-DOLLAR-QUOTING `[Issue #88]` Dollar-quoted strings break CTE rewriter (PostgreSQL)
 **Status:** Known Issue
@@ -1053,6 +2573,16 @@ Root cause: The `stripStringLiterals` method in the CTE rewriter does not handle
 
 Workaround: Use standard single-quoted strings with doubled single-quote escaping (`''`) instead of dollar-quoting.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PG-ESCAPE-STRING `[Issue #89]` E-string escape syntax breaks CTE rewriter (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -1072,6 +2602,16 @@ Root cause: The CTE rewriter's string literal stripping does not account for the
 
 Workaround: Use standard single-quoted strings with PostgreSQL's default `standard_conforming_strings = on` setting, or use prepared statement parameters instead of E-string literals.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PG-BIT-TYPE `[Issue #90]` BIT type values corrupted in shadow store (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -1090,6 +2630,16 @@ Root cause: The CTE shadow store's CAST logic likely maps BIT types to INTEGER o
 
 Workaround: Store BIT values as TEXT and cast at query time, or avoid BIT columns with ZTD enabled.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.INSERT-IGNORE-UNIQUE `[Issue #91]` INSERT IGNORE / ON CONFLICT DO NOTHING does not enforce non-PK UNIQUE constraints
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
@@ -1106,6 +2656,36 @@ INSERT IGNORE (MySQL), INSERT OR IGNORE (SQLite), and INSERT...ON CONFLICT (col)
 
 Workaround: Check for existing rows via SELECT before inserting, or use a different deduplication strategy at the application level.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.ENUM-ORDERING `[Issue #92]` MySQL ENUM column type loses internal index ordering in CTE shadow store
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed)
@@ -1121,6 +2701,16 @@ Additional failures:
 
 Workaround: Use an integer column with application-level mapping instead of ENUM, or add an explicit sort column.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.HEX-LITERAL-UPDATE `[Issue #93]` X'...' hex literal in UPDATE SET parsed as column name
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (likely affected)
@@ -1131,6 +2721,16 @@ The CTE rewriter's SQL parser treats `X'...'` hex literal syntax in UPDATE SET c
 
 Workaround: Use `0x...` prefix syntax instead of `X'...'`, or use prepared statements with binary parameters.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.UPDATE-WHERE-ORDER-DESC-LIMIT `[Issue #94]` UPDATE WHERE + ORDER BY DESC + LIMIT updates wrong row
 **Status:** Known Issue
 **Platforms:** MySQL-PDO (confirmed), MySQLi (likely affected)
@@ -1140,6 +2740,16 @@ Workaround: Use `0x...` prefix syntax instead of `X'...'`, or use prepared state
 `UPDATE ... SET ... WHERE ... ORDER BY col DESC LIMIT 1` does not respect the DESC ordering. Instead of updating the row with the highest value (as DESC ordering specifies), it updates a row from the start of the natural table order. Basic DELETE/UPDATE with ORDER BY LIMIT (without WHERE+DESC combination) works correctly.
 
 Workaround: Query the target row ID first via SELECT with ORDER BY DESC LIMIT, then UPDATE by explicit ID.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.SQLITE-NESTED-FUNC-PARAMS `[Issue #95]` SQLite: Nested function WHERE expressions with prepared params return empty
 **Status:** Known Issue
@@ -1160,6 +2770,36 @@ Non-nested function patterns and single-nesting without params work correctly.
 
 Related: Issue #22 (HAVING with prepared params), Issue #75 (CASE with prepared params), Issue #80 (NULLIF with prepared param).
 
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.MYSQL-CASE-WHERE-DML `[Issue #96]` MySQL: DELETE/UPDATE with CASE in WHERE matches ALL rows
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
@@ -1173,6 +2813,16 @@ On MySQL (both MySQLi and PDO adapters), DELETE and UPDATE statements with a CAS
 - `SELECT * FROM t WHERE CASE WHEN score > 80 THEN 1 ELSE 0 END = 1` — works correctly (returns only matching rows)
 
 PostgreSQL and SQLite are NOT affected. Native MySQL (without ZTD) handles CASE in WHERE correctly for all operations.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.INSERT-DEFAULT-VALUES `[Issue #97]` INSERT DEFAULT VALUES / INSERT () VALUES () not supported
 **Status:** Known Issue
@@ -1190,6 +2840,36 @@ Additionally, on MySQL the `DEFAULT` keyword in VALUES (`INSERT INTO t (col) VAL
 
 These are standard SQL patterns used by ORMs when inserting rows where all columns have defaults.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.CASE-EXISTS-WHERE-MULTISTATEMENT `[Issue #98]` MySQL: SELECT with CASE WHEN EXISTS in WHERE misdetected as multi-statement
 **Status:** Known Issue
 **Platforms:** MySQL-PDO, MySQLi
@@ -1201,6 +2881,16 @@ On MySQL (PDO and MySQLi), a SELECT with `CASE WHEN EXISTS (subquery) THEN ... E
 - `SELECT u.id FROM users u WHERE CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.id) THEN 1 ELSE 0 END = 1` → multi-statement error
 - The same `CASE WHEN EXISTS` pattern works correctly in the SELECT list on all platforms.
 - PostgreSQL and SQLite are NOT affected.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.INSERT-SELECT-DISTINCT `[Issue #99]` INSERT...SELECT DISTINCT ignores DISTINCT keyword
 **Status:** Known Issue
@@ -1216,6 +2906,36 @@ On MySQL (PDO and MySQLi), a SELECT with `CASE WHEN EXISTS (subquery) THEN ... E
 - The same issue affects `INSERT...SELECT DISTINCT ... WHERE` and `INSERT...SELECT DISTINCT ON (...)` (PostgreSQL)
 - Workaround: use `GROUP BY` instead of `DISTINCT`
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-CROSS-TABLE-SUBQUERY-DML `[Issue #100]` PostgreSQL: UPDATE/DELETE with IN(subquery on different table) syntax error
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -1228,6 +2948,16 @@ On PostgreSQL, UPDATE or DELETE with `WHERE col IN (SELECT ... FROM other_table)
 - Also affects `= ANY (SELECT ... FROM other_table)` in UPDATE WHERE clause
 - MySQL and SQLite handle these patterns correctly
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.SQLITE-PREPARED-DELETE-EXPR-WHERE `[Issue #101]` SQLite: Prepared DELETE with arithmetic expression in WHERE deletes all rows
 **Status:** Known Issue
 **Platforms:** SQLite-PDO
@@ -1235,6 +2965,16 @@ On PostgreSQL, UPDATE or DELETE with `WHERE col IN (SELECT ... FROM other_table)
 **Tests:** `Pdo/SqlitePreparedExpressionDmlTest`
 
 On SQLite, a prepared DELETE with an arithmetic expression in WHERE (e.g., `DELETE FROM t WHERE price * quantity < ?`) deletes ALL rows instead of only matching ones. The prepared parameter combined with the arithmetic expression causes the WHERE condition to match every row.
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.DERIVED-TABLE-JOIN `[Issue #102]` Derived table with multi-table JOIN returns empty
 **Status:** Known Issue
@@ -1267,6 +3007,36 @@ ORDER BY total DESC;
 
 Non-derived-table patterns with JOINs work correctly on all platforms: top-level JOINs, three-table JOIN chains, self-JOINs, CROSS JOINs, JOINs with aggregates and HAVING. Only the derived table wrapper causes the issue.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.INSERT-SELECT-JOIN-ALIAS `[Issue #49]` INSERT...SELECT with JOIN produces errors or NULL columns
 **Status:** Known Issue (extended)
 **Platforms:** MySQLi (error), MySQL-PDO (error), PostgreSQL-PDO (NULL columns), SQLite-PDO (NULL columns)
@@ -1274,6 +3044,36 @@ Non-derived-table patterns with JOINs work correctly on all platforms: top-level
 **Tests:** `Mysqli/MultiTableDmlPatternsTest`, `Pdo/MysqlMultiTableDmlPatternsTest`, `Pdo/PostgresMultiTableDmlPatternsTest`, `Pdo/SqliteMultiTableDmlPatternsTest`
 
 `INSERT INTO t SELECT ... FROM t1 JOIN t2 ON ... WHERE t2.col = value` fails across all platforms. On MySQL, the InsertTransformer cannot resolve column references from JOINed table aliases (`Unknown column 'w.active' in 'where clause'`). On PostgreSQL and SQLite, 0 rows are inserted. This confirms and extends SPEC-11.INSERT-SELECT-JOIN [Issue #49] with a different JOIN pattern (inventory + warehouse lookup).
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.MYSQL-INSERT-SELECT-UNION `[Issue #103]` MySQL: INSERT...SELECT with UNION/UNION ALL rejected as multi-statement
 **Status:** Known Issue
@@ -1287,6 +3087,16 @@ Non-derived-table patterns with JOINs work correctly on all platforms: top-level
 - **PostgreSQL**: Works correctly — all rows inserted, shadow store updated
 - Related to Issue #14 (EXCEPT/INTERSECT as multi-statement) — same parser limitation
 - Workaround: perform separate `INSERT...SELECT` statements for each source table
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.MYSQL-UPDATE-JOIN-DERIVED `[Issue #104]` MySQL: UPDATE JOIN with derived table treats subquery as identifier
 **Status:** Known Issue
@@ -1318,6 +3128,16 @@ UPDATE summary SET
     item_count = (SELECT COUNT(*) FROM products WHERE category = summary.category);
 ```
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.UPSERT-SUBQUERY-SET `[Issue #105]` UPSERT with subquery in SET evaluates incorrectly (all platforms)
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
@@ -1331,6 +3151,36 @@ INSERT with upsert clause (ON DUPLICATE KEY UPDATE on MySQL, ON CONFLICT DO UPDA
 - **All prepared**: parameter count/index mismatch — MySQL: "number of bound variables does not match number of tokens", PostgreSQL: "supplies N parameters, requires N-1", SQLite: "column index out of range"
 
 UPSERT with simple expressions (VALUES/EXCLUDED, col + 1, literals) works correctly. Only subqueries in the SET expression are affected. New row inserts (no conflict path) work correctly.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PG-UPDATE-FROM-PREPARED `[Issue #106]` PostgreSQL: UPDATE...FROM with $N prepared params does not apply
 **Status:** Known Issue
@@ -1359,6 +3209,16 @@ Root cause appears to be that the CTE rewriter doesn't correctly track `$N` para
 - **DELETE WHERE (a,b) = ($1, $2):** Row value constructor with `$N` params doesn't delete (all rows remain). `?` placeholders work correctly. Tests: `Pdo/PostgresRowValueConstructorDmlTest`.
 - **INSERT...SELECT HAVING SUM(qty) > $1:** Returns 0 rows (no data inserted). `?` placeholder also returns 0 rows on SQLite. Tests: `Pdo/PostgresUpdateDistinctSubqueryTest`.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PG-STRING-FUNC-PARAMS `[Issue #108]` UPDATE SET with string functions and $N params produces NULL
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -1367,12 +3227,52 @@ Root cause appears to be that the CTE rewriter doesn't correctly track `$N` para
 
 `UPDATE SET col = REPLACE(col, $1, $2)` with `$N` prepared parameters stores NULL in all affected columns instead of the expected replaced string. `UPDATE SET col = col || $1` with a `$N` parameter silently fails — the concatenation does not apply and the value remains unchanged. Non-prepared variants with literal values work correctly. MySQL handles all variants correctly. Extends the `$N` parameter handling issues documented in Issues #61, #106.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.EXPLAIN-BLOCKED `[Issue #107]` EXPLAIN, DESCRIBE, SHOW blocked by ZTD Write Protection
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (likely)
 **Tests:** `Pdo/SqliteExplainThroughZtdTest`, `Pdo/MysqlExplainThroughZtdTest`
 
 Read-only diagnostic statements (EXPLAIN, EXPLAIN QUERY PLAN, DESCRIBE, SHOW CREATE TABLE) are blocked with "ZTD Write Protection: Statement type not supported SQL statement." These statements should be passed through to the physical database since they are purely read-only and do not modify data.
+
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.CTE-DML `[Issue #109]` User-written CTEs in DML (INSERT, DELETE) broken on all platforms
 **Status:** Known Issue
@@ -1382,6 +3282,36 @@ Read-only diagnostic statements (EXPLAIN, EXPLAIN QUERY PLAN, DESCRIBE, SHOW CRE
 
 `WITH cte AS (...) INSERT INTO target SELECT FROM cte` and `WITH cte AS (...) DELETE FROM target WHERE id IN (SELECT id FROM cte)` fail on all platforms. The CTE rewriter does not handle user-written CTEs combined with DML. Errors vary by platform: SQLite reports "no such table" (user CTE stripped), MySQL-PDO reports "Missing shadow mutation" (misdetected), MySQLi reports syntax errors, PostgreSQL reports syntax errors. `WITH RECURSIVE ... INSERT/DELETE` exhibits the same failure. Multiple user CTEs driving DML also fail.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.CTE-NAME-COLLISION `[Issue #110]` CTE name collision when user CTE matches physical table name
 **Status:** Known Issue
 **Platforms:** SQLite-PDO, MySQL-PDO, MySQLi, PostgreSQL-PDO
@@ -1390,6 +3320,36 @@ Read-only diagnostic statements (EXPLAIN, EXPLAIN QUERY PLAN, DESCRIBE, SHOW CRE
 
 When a user writes `WITH tablename AS (SELECT ... FROM tablename WHERE ...) SELECT FROM tablename`, the CTE rewriter also creates a CTE named `tablename`, producing a duplicate. SQLite: "duplicate WITH table name". MySQL/MySQLi: "Not unique table/alias". PostgreSQL: "WITH query name specified more than once" (3 patterns) or returns 0 rows (mixed CTE pattern). This is a common pattern — users often write `WITH orders AS (SELECT ... FROM orders WHERE status = 'pending') ...`.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.MULTI-UNION-DERIVED `[Issue #111]` 3+ UNION ALL branches in derived table return empty
 **Status:** Known Issue
 **Platforms:** SQLite-PDO, MySQL-PDO, MySQLi (NOT PostgreSQL-PDO)
@@ -1397,6 +3357,36 @@ When a user writes `WITH tablename AS (SELECT ... FROM tablename WHERE ...) SELE
 **Tests:** `Pdo/SqliteMultiUnionDerivedTest`, `Pdo/MysqlMultiUnionDerivedTest`, `Mysqli/MultiUnionDerivedTest`, `Pdo/PostgresMultiUnionDerivedTest`
 
 `SELECT ... FROM (SELECT ... UNION ALL SELECT ... UNION ALL SELECT ...) sub` returns 0 rows on SQLite, MySQL, and MySQLi. PostgreSQL handles this correctly. The CTE rewriter does not rewrite table references in all UNION branches of a derived table. `WHERE ... IN (SELECT ... UNION SELECT ...)` subqueries work correctly. Prepared statement variant also returns empty.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.UPSERT-ACCUMULATE `[Issue #112]` Upsert self-referencing accumulate expression evaluates to 0
 **Status:** Known Issue
@@ -1412,6 +3402,26 @@ Upsert with a self-referencing accumulate expression in the SET clause evaluates
 - Simple `VALUES(col)` / `excluded.col` references without self-reference work correctly
 - `ON DUPLICATE KEY UPDATE price = VALUES(price)` (direct replacement, no self-reference) works correctly
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PREPARED-JSON-FUNC-COMPARE `[Issue #113]` Prepared SELECT with JSON function + comparison operator returns empty
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), MySQL-PDO (confirmed)
@@ -1426,6 +3436,26 @@ Prepared SELECT with a JSON extraction function followed by a comparison operato
 - String equality with JSON function (`json_extract(meta, '$.type') = ?`) works correctly
 - Related to Issue #95 (nested function WHERE with prepared params) but this affects single (non-nested) function calls with comparison operators
 
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.UPSERT-JSON-FUNC-SET `[Issue #114]` Upsert SET with JSON function call produces invalid JSON or syntax error
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed)
@@ -1438,6 +3468,26 @@ INSERT with upsert clause containing a JSON function call (JSON_SET, jsonb_set) 
 - **PostgreSQL**: `ON CONFLICT DO UPDATE SET meta = jsonb_set(pg_jdml_items.meta, '{color}', '"purple"')` → "invalid input syntax for type json... Token 'jsonb_set' is invalid"
 - Non-upsert UPDATE with JSON_SET/jsonb_set works correctly on all platforms
 - Related to Issue #105 (upsert with subquery in SET) — same class of issue where complex expressions in upsert SET are not handled by the CTE rewriter
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.WINDOW-FUNC-DML `[Issue #115]` Window function in DML subquery breaks CTE rewriter
 **Status:** Known Issue
@@ -1454,6 +3504,36 @@ DML statements containing window functions (ROW_NUMBER, DENSE_RANK, RANK) in sub
 - INSERT...SELECT with window function (RANK() OVER ...) works correctly on all platforms
 - Non-DML SELECT with window functions works correctly on all platforms
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-ROW-VALUE-UPDATE `[Issue #116]` Row value constructor in UPDATE WHERE produces syntax error (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -1467,6 +3547,16 @@ DML statements containing window functions (ROW_NUMBER, DENSE_RANK, RANK) in sub
 - Prepared DELETE WHERE (a,b) = ($1, $2) with `$N` params also fails on PostgreSQL (Issue #106)
 - Prepared DELETE WHERE (a,b) = (?, ?) with `?` params works correctly on PostgreSQL
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.INSERT-SELECT-HAVING `[Issue #117]` INSERT...SELECT with GROUP BY HAVING produces "no such column" error
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed)
@@ -1479,6 +3569,26 @@ DML statements containing window functions (ROW_NUMBER, DENSE_RANK, RANK) in sub
 - Prepared INSERT...SELECT HAVING with `?` param returns 0 rows on SQLite (related to Issue #22)
 - Prepared INSERT...SELECT HAVING with `$N` param returns 0 rows on PostgreSQL (related to Issue #106)
 - Related to Issue #20 (INSERT...SELECT with computed columns/aggregation)
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PREPARED-BETWEEN-DML `[Issue #118]` Prepared BETWEEN in DML (UPDATE/DELETE) has no effect
 **Status:** Known Issue
@@ -1495,6 +3605,26 @@ Prepared `UPDATE` and `DELETE` statements using `WHERE col BETWEEN ? AND ?` with
 - Combining BETWEEN with additional `AND` conditions also fails: `WHERE price BETWEEN ? AND ? AND stock < ?`
 - Non-prepared `BETWEEN` with literal values (via `exec()`) works correctly on all platforms
 - The CTE rewriter likely confuses the `AND` inside `BETWEEN ? AND ?` with a logical `AND` operator
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.CAST-IN-DML `[Issue #119]` CAST expression in DML produces wrong values or is ignored
 **Status:** Known Issue
@@ -1539,6 +3669,16 @@ Extends Issues #32 and #53 (PostgreSQL RETURNING) to SQLite. The RETURNING claus
 - **Multi-row INSERT ... RETURNING:** Returns 0 rows
 - Workaround: use a separate SELECT after DML
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.TEMP-TABLE-DML `[Issue #122]` DML on temporary tables blocked by ZTD Write Protection
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), likely all platforms
@@ -1552,6 +3692,16 @@ After `CREATE TEMPORARY TABLE`, subsequent DML operations on the temp table thro
 - `DELETE FROM staging WHERE ...` fails
 - `INSERT INTO permanent SELECT * FROM staging` fails
 - `SELECT ... FROM source JOIN staging ON ...` fails
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.VIEW-EMPTY `[Issue #123]` SELECT from views returns empty results after shadow DML
 **Status:** Known Issue
@@ -1567,6 +3717,36 @@ Extends SPEC-11.VIEW-JOIN-SHADOW: not only JOINs with views, but ALL view query 
 - Aggregate views (`SELECT dept, COUNT(*) GROUP BY dept`) return 0 rows
 - `SELECT ... FROM view JOIN table ON ...` returns 0 rows (already in SPEC-11.VIEW-JOIN-SHADOW)
 - Workaround: query the underlying table directly instead of through views
+
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.GENERATED-COL-NULL `[Issue #124]` Generated columns return NULL in shadow store
 **Status:** Known Issue
@@ -1592,6 +3772,16 @@ Tables with `GENERATED ALWAYS AS (expression) STORED` columns return NULL for th
 
 Prepared DELETE with COALESCE containing a `?` parameter and a second `?` in the comparison deletes all rows instead of only matching rows. `DELETE FROM t WHERE COALESCE(price, ?) < ?` with params `[0.00, 15.00]` deletes all 4 rows instead of the expected 3. Related to Issue #80 (NULLIF with prepared parameter) — same class of issue with function expressions and multiple parameters.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.FK-CASCADE-SHADOW `[Issue #126]` FK CASCADE not enforced in shadow store
 **Status:** Known Issue
 **Platforms:** MySQL-PDO, MySQLi, PostgreSQL-PDO, SQLite-PDO
@@ -1609,6 +3799,36 @@ The ZTD shadow store does not enforce FOREIGN KEY constraints or propagate CASCA
 
 This affects any application relying on FK cascades for data consistency. After deleting a parent row, SELECT queries via ZTD return orphaned child rows with dangling FK references. LEFT JOIN queries show NULL in the parent columns for these orphans.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.FK-INSERT-PARSE `[Issue #127]` INSERT without column list on FK table fails (MySQL)
 **Status:** Known Issue
 **Platforms:** MySQL-PDO, MySQLi
@@ -1618,6 +3838,16 @@ This affects any application relying on FK cascades for data consistency. After 
 On MySQL, `INSERT INTO t VALUES (...)` on a table defined with FOREIGN KEY constraints throws `RuntimeException: Insert values count does not match column count`. The InsertTransformer's SQL parser counts the `FOREIGN KEY (col) REFERENCES ...` clause as an additional column. Workaround: always use explicit column lists `INSERT INTO t (col1, col2, ...) VALUES (...)`.
 
 This also affects tables with `AUTO_INCREMENT` combined with FOREIGN KEY constraints. Tables with INDEX or KEY declarations in the CREATE TABLE may trigger the same miscount.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.PG-IN-CLAUSE-DOLLAR-DML `[Issue #128]` PostgreSQL: prepared DML with IN ($N, ...) is a no-op
 **Status:** Known Issue
@@ -1643,6 +3873,16 @@ The same operations work correctly on MySQL (with `?` placeholders) and SQLite. 
 - `SELECT WHERE REPLACE(code, $1, $2) = $3` returns 0 rows.
 Tests: `Pdo/PostgresSubstrReplaceDmlTest`. Related to Issue #108 (REPLACE/concatenation with $N params in SET).
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.SCALAR-FUNC-PREPARED-DELETE `[Issue #129]` Prepared DELETE with scalar function in WHERE deletes all rows (SQLite)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO
@@ -1654,6 +3894,16 @@ Tests: `Pdo/PostgresSubstrReplaceDmlTest`. Related to Issue #108 (REPLACE/concat
 Additionally, `UPDATE SET stock = MAX(stock, CAST(price AS INTEGER), ?)` with 3 arguments evaluates incorrectly — it stores the parameter value (150) instead of the correct MAX(200, 15, 150) = 200. The shadow store appears to substitute the parameter for the entire MAX expression.
 
 Related to Issue #95 (nested function WHERE with prepared params), Issue #80 (NULLIF with prepared parameter), Issue #125 (COALESCE with multiple params).
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.UPDATE-DELETE-ORDER-BY-LIMIT `[Issue #130]` UPDATE/DELETE with ORDER BY LIMIT is a no-op (MySQL)
 **Status:** Known Issue
@@ -1669,6 +3919,16 @@ This is a very common MySQL pattern for queue processing (claim top-N items by p
 - Prepared UPDATE ... ORDER BY ... LIMIT ? — no rows updated (PDO also gives syntax error with quoted LIMIT value)
 - UPDATE LIMIT on shadow-inserted data — no rows updated
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.INSERT-SELECT-INTERSECT-EXCEPT `[extends Issue #14]` INSERT...SELECT with INTERSECT/EXCEPT rejected as multi-statement (MySQL)
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO
@@ -1678,6 +3938,16 @@ This is a very common MySQL pattern for queue processing (claim top-N items by p
 `INSERT INTO result SELECT item FROM a INTERSECT SELECT item FROM b` throws "ZTD Write Protection: Multi-statement SQL statement." The SQL parser treats the INTERSECT/EXCEPT keyword as a statement separator, so the statement is rejected before execution. This also affects INSERT...SELECT EXCEPT and prepared INSERT...SELECT INTERSECT variants. Extends Issue #14 (EXCEPT/INTERSECT treated as multi-statement) into the INSERT...SELECT DML context.
 
 DELETE and UPDATE with WHERE IN (INTERSECT/EXCEPT subquery) work on MySQL because the set operations are inside a subquery rather than at the top level.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.UPSERT-IF-VALUES-ZERO `[Issue #133]` ON DUPLICATE KEY UPDATE with IF()/VALUES() conditional evaluates to 0 (MySQL)
 **Status:** Known Issue
@@ -1690,6 +3960,16 @@ DELETE and UPDATE with WHERE IN (INTERSECT/EXCEPT subquery) work on MySQL becaus
 This also affects the price-guard pattern: `UPDATE price = IF(VALUES(price) > price, VALUES(price), price)` stores 0.0 instead of preserving the old price. The shadow store appears to lose both the VALUES() reference and the existing column value inside IF() expressions.
 
 Extends Issue #16 (self-referencing expression loses value) into the IF()/conditional context.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.CONDITIONAL-UPSERT-WHERE-IGNORED `[extends Issue #30]` ON CONFLICT DO UPDATE WHERE clause is ignored (PostgreSQL, SQLite)
 **Status:** Known Issue
@@ -1708,6 +3988,26 @@ This is a critical pattern for optimistic concurrency control (only update if th
 
 Extends upstream Issue #30 (ON CONFLICT DO UPDATE WHERE clause ignored).
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.FILTER-CLAUSE-DML `[Issue #131]` Aggregate FILTER clause broken in DML context (PostgreSQL, SQLite)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO, SQLite-PDO
@@ -1723,6 +4023,26 @@ The SQL standard FILTER clause on aggregates (`COUNT(*) FILTER (WHERE status = '
 3. **Prepared SELECT with FILTER and $N**: Returns 0 rows on PostgreSQL (extends Issue #106/$N param handling).
 
 Basic SELECT with FILTER clause works correctly (non-DML context). The issue is specific to how the CTE rewriter handles FILTER expressions inside INSERT...SELECT and correlated UPDATE subqueries.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.DISTINCT-ON-DML `[Issue #132]` DISTINCT ON in DML subqueries broken (PostgreSQL)
 **Status:** Known Issue
@@ -1740,6 +4060,16 @@ PostgreSQL's `DISTINCT ON` works correctly in plain SELECT queries through the s
 
 `SELECT DISTINCT ON` itself (non-DML), `INSERT...SELECT DISTINCT ON`, and non-prepared DELETE/UPDATE with DISTINCT ON in WHERE (without NOT IN wrapping) work correctly. The issue is specific to the CTE rewriter's handling of DISTINCT ON inside subquery expressions used in DML WHERE clauses.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.WRITABLE-CTE `[extends Issue #28]` Writable CTEs (DML inside WITH clause) not supported (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -1756,6 +4086,16 @@ Specific failures:
 
 This is a widely-used PostgreSQL pattern for atomic DML-then-audit workflows. Extends upstream Issue #28 (CTE-based DML not supported).
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.UPDATE-IN-SET-OPERATION `[Issue #134]` UPDATE WHERE IN (set operation subquery) syntax error (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO
@@ -1763,6 +4103,16 @@ This is a widely-used PostgreSQL pattern for atomic DML-then-audit workflows. Ex
 **Tests:** `Pdo/PostgresIntersectExceptDmlTest`
 
 `UPDATE t SET item = UPPER(item) WHERE item IN (SELECT item FROM a EXCEPT SELECT item FROM b)` produces "syntax error at or near )" on PostgreSQL. The CTE rewriter does not correctly handle EXCEPT/INTERSECT inside WHERE IN subqueries for UPDATE statements. DELETE with WHERE IN (INTERSECT/EXCEPT) works on PostgreSQL; only UPDATE is broken.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.INSERT-SELECT-SELF-JOIN `[Issue #135]` INSERT...SELECT with self-join fails (all platforms)
 **Status:** Known Issue
@@ -1781,6 +4131,36 @@ The equivalent `SELECT a.id, b.id FROM source a JOIN source b ON ...` without IN
 Related to Issue #49 (INSERT...SELECT with multi-table JOIN) but with distinct behavior: self-join produces 0 rows on PostgreSQL/SQLite instead of rows with NULLs.
 
 This is a common pattern for detecting overlapping records, finding duplicates, and hierarchical data queries.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.REGEX-OPERATOR-DML `[Issue #136]` REGEXP / RLIKE / ~ / ~* / SIMILAR TO in UPDATE/DELETE WHERE ignored
 **Status:** Known Issue
@@ -1808,6 +4188,36 @@ This is a high-severity silent data consistency bug: applications relying on reg
 
 Workaround: query matching IDs first via SELECT with REGEXP/~, then UPDATE/DELETE by explicit ID list.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.EXISTS-IN-SELECT-LIST `[Issue #137]` EXISTS subquery in SELECT list broken (all platforms)
 **Status:** Known Issue
 **Platforms:** MySQLi (likely), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (works correctly)
@@ -1826,6 +4236,36 @@ This affects a very common application pattern: flagging rows based on related t
 
 Related: SPEC-11.BARE-SUBQUERY-REWRITE [Issue #73] (bare subqueries not rewritten on SQLite) — but this issue is distinct: EXISTS in SELECT list fails on MySQL and PostgreSQL while working on SQLite.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PG-DELETE-IS-NULL `[Issue #138]` DELETE WHERE column IS NULL does not delete (PostgreSQL)
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -1837,6 +4277,16 @@ Related: SPEC-11.BARE-SUBQUERY-REWRITE [Issue #73] (bare subqueries not rewritte
 This is distinct from Issue #7 (SQLite DELETE without WHERE) — this specifically affects `IS NULL` conditions in DELETE WHERE on PostgreSQL. The CTE rewriter likely fails to match rows where the column value is NULL during DELETE row filtering.
 
 Workaround: query IDs of NULL-priority rows first via SELECT, then DELETE by explicit ID list.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.MYSQL-BACKTICK-DML `[Issue #139]` Backtick-quoted identifiers break UPDATE/DELETE (MySQL)
 **Status:** Known Issue
@@ -1856,6 +4306,16 @@ SQLite double-quoted identifiers (`"table"`, `"column"`) work correctly. Postgre
 
 This affects applications that consistently quote identifiers, as recommended by many coding standards and ORMs. MySQL's backtick quoting is the most common pattern.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.DECIMAL-ARITHMETIC-UPDATE `[Issue #140]` UPDATE SET with DECIMAL multiplication preserves old value (MySQLi)
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed)
@@ -1865,6 +4325,16 @@ This affects applications that consistently quote identifiers, as recommended by
 `UPDATE t SET dec_val = dec_val * 1.075 WHERE label = 'price'` does not compute the multiplication. The value remains 100.5 instead of becoming 108.0375. The shadow store does not evaluate the arithmetic expression `col * literal` correctly for DECIMAL columns.
 
 This may be related to a broader issue with DECIMAL type handling in the shadow store, or with self-referencing arithmetic expressions in UPDATE SET.
+
+#### Verification Matrix — MySQL (MySQLi)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.COLUMN-SWAP-UPDATE `[Issue #141]` UPDATE SET a=b, b=a returns 0 rows (MySQLi)
 **Status:** Known Issue
@@ -1879,6 +4349,16 @@ This may be related to a broader issue with DECIMAL type handling in the shadow 
 - `SET col_a = CONCAT(col_a, '-', col_b), col_b = UPPER(col_a)` — SELECT returns 0 rows
 
 This may indicate that the shadow store's UPDATE resolver fails when column references in the SET clause form a dependency cycle.
+
+#### Verification Matrix — MySQL (MySQLi)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.CASE-IN-SET-WITH-WHERE `[Issue #142]` CASE expression in UPDATE SET not evaluated when WHERE clause is present (all platforms)
 **Status:** Known Issue
@@ -1895,6 +4375,16 @@ Additionally, arithmetic expressions within CASE branches in SET are not compute
 `SET balance = CASE WHEN balance >= 10000 THEN balance * 1.05 ELSE balance END` → balance stays at original value
 
 This is distinct from Issue #96 (CASE in WHERE clause matches ALL rows). Here the CASE is in SET, not WHERE.
+
+#### Verification Matrix — MySQL (MySQLi)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.ANTI-JOIN-PATTERNS `[Issue #143]` Anti-join query patterns return wrong results (MySQL, MySQLi, PostgreSQL)
 **Status:** Known Issue
@@ -1913,6 +4403,16 @@ On PostgreSQL, all three patterns fail with `operator does not exist: text = int
 DELETE with anti-join patterns (e.g., `DELETE FROM t WHERE id NOT IN (SELECT ...)`) also has no effect.
 
 These are extremely common application patterns (find orphaned records, find inactive users, delete stale data). Related to Issue #137 (EXISTS in SELECT list) but distinct: these involve WHERE-clause anti-join filtering, not SELECT-list boolean expressions.
+
+#### Verification Matrix — MySQL (MySQLi)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.PG-COALESCE-DML `[Issue #144]` Multi-column COALESCE in UPDATE SET and nested COALESCE produce wrong results (PostgreSQL)
 **Status:** Known Issue
@@ -1949,6 +4449,16 @@ When INSERT omits the AUTO_INCREMENT (MySQL) or SERIAL (PostgreSQL) PK column, t
 
 **Impact:** Virtually every real application uses AUTO_INCREMENT/SERIAL PKs and omits the PK in INSERT. This makes the shadow store unusable for typical INSERT→UPDATE/DELETE/JOIN workflows unless explicit PKs are used.
 
+#### Verification Matrix — MySQL (MySQLi)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PREPARED-REPREPARE-STALE `[Issue #146]` Prepared UPDATE not visible after re-prepare sequence (all PDO platforms)
 **Status:** Known Issue
 **Platforms:** MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed); MySQLi NOT affected
@@ -1972,6 +4482,36 @@ This is a PDO-adapter-specific issue, suggesting the shadow store's prepared sta
 
 **Impact:** This pattern is common in real applications that reuse a `$stmt` variable for sequential database operations. The silent data loss (UPDATE appears to succeed but has no effect on subsequent reads) makes this particularly dangerous.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.CORRELATED-AGGREGATE-UPDATE `[Issue #147]` UPDATE SET with correlated aggregate subquery from another table broken (SQLite, PostgreSQL)
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed), PostgreSQL-PDO (confirmed); MySQLi and MySQL-PDO NOT affected
@@ -1993,6 +4533,36 @@ This is a very common denormalization pattern used in:
 
 The workaround is to SELECT the aggregate values first, then UPDATE each row individually by explicit ID, or use MySQL which handles this correctly.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.MYSQL-INTERVAL-UPDATE-SET `[Issue #148]` MySQL: INTERVAL in UPDATE SET produces syntax error
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed); PostgreSQL-PDO and SQLite-PDO NOT affected
@@ -2012,6 +4582,36 @@ The root cause is similar to Issue #119 (CAST AS keyword confusion) — the CTE 
 PostgreSQL `INTERVAL '30 days'` and SQLite `datetime(col, '+30 days')` both work correctly in UPDATE SET.
 
 **Workaround:** Use `DATE_ADD(col, INTERVAL N DAY)` instead of `col + INTERVAL N DAY` on MySQL.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PG-BOOLEAN-DML `[extends Issue #6]` PostgreSQL: BOOLEAN columns break ALL DML operations (not just SELECT)
 **Status:** Known Issue (severity extension)
@@ -2033,6 +4633,16 @@ The same patterns work correctly on MySQL (TINYINT boolean) and SQLite (INTEGER 
 
 **Impact:** BOOLEAN is one of PostgreSQL's most commonly used types. Applications with active/enabled/visible flags are completely broken on PostgreSQL.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.INDEXED-BY `[Issue #154]` INDEXED BY / NOT INDEXED hints produce error through CTE shadow store
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
@@ -2041,6 +4651,16 @@ The same patterns work correctly on MySQL (TINYINT boolean) and SQLite (INTEGER 
 
 SQLite's `INDEXED BY idx_name` and `NOT INDEXED` query hints produce `General error: 1 no such index` when the CTE rewriter wraps the table reference. The CTE does not carry the original table's indexes, making these hints invalid. Affects SELECT, UPDATE, and DELETE with INDEXED BY. NOT INDEXED also fails (CTE has no table to scan). Workaround: remove INDEXED BY hints when using ZTD.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.TYPEOF `[Issue #155]` typeof() returns wrong storage class for shadow store data
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
@@ -2048,6 +4668,16 @@ SQLite's `INDEXED BY idx_name` and `NOT INDEXED` query hints produce `General er
 **Tests:** `Pdo/SqliteTypeofPreservationTest`
 
 `typeof(int_col)` returns `'text'` instead of `'integer'`, and `typeof(real_col)` returns `'text'` instead of `'real'`. The CTE shadow store embeds all non-NULL values as text string literals, losing SQLite's type affinity. `typeof(NULL)` correctly returns `'null'`. Arithmetic expressions still produce correct types due to SQLite's coercion (`typeof(int_col + 5)` = `'integer'`), but direct `typeof()` on raw column values is wrong. Affects `GROUP BY typeof()` grouping and any type-dispatch logic.
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.STRICT-TABLE `[Issue #156]` STRICT tables blocked by Write Protection
 **Status:** Known Issue
@@ -2059,6 +4689,16 @@ SQLite STRICT tables (introduced in SQLite 3.37, 2021-11-27) fail with "ZTD Writ
 
 **Impact:** STRICT tables enforce column types at the database level and are recommended for data integrity. Applications using STRICT mode cannot use ZTD at all. This affects any SQLite application that uses `CREATE TABLE ... STRICT` for type safety.
 
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.ATTACH-DATABASE `[Issue #157]` ATTACH DATABASE and schema-qualified table names broken on SQLite
 **Status:** Known Issue
 **Platforms:** SQLite-PDO (confirmed)
@@ -2068,6 +4708,16 @@ SQLite STRICT tables (introduced in SQLite 3.37, 2021-11-27) fail with "ZTD Writ
 `ATTACH DATABASE` is blocked by ZTD Write Protection as an unsupported statement type. Schema-qualified table references (`main.table_name`) return 0 rows from the shadow store — the CTE rewriter does not recognize the `main.` prefix as matching the shadow table for the unqualified name. Cross-database queries, INSERT...SELECT between databases, and DML on attached database tables are all blocked.
 
 **Impact:** ATTACH DATABASE is commonly used for data migration between SQLite databases, partitioning large datasets across files, and using temporary working databases. Applications that use schema-qualified table references (e.g., ORM-generated queries that prefix `main.`) will silently return empty results.
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.PARTITION-CLAUSE `[Issue #158]` MySQL PARTITION clause returns all rows instead of partition subset
 **Status:** Known Issue
@@ -2079,6 +4729,16 @@ SQLite STRICT tables (introduced in SQLite 3.37, 2021-11-27) fail with "ZTD Writ
 
 **Impact:** The PARTITION clause is used for targeted queries on specific date ranges or tenant subsets in large partitioned tables. Applications relying on partition pruning via explicit PARTITION clause will get incorrect (too many) results.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.CHILD-PARTITION `[Issue #159]` PostgreSQL child partition table queries return empty
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -2088,6 +4748,16 @@ SQLite STRICT tables (introduced in SQLite 3.37, 2021-11-27) fail with "ZTD Writ
 Querying a child partition table directly (`SELECT FROM partition_child_table`) returns 0 rows after DML on the parent table. The shadow store tracks DML on the parent partitioned table only, not on individual child partitions. Regular DML on the parent table works correctly. Aggregate queries with EXTRACT() on partitioned tables may also return empty results.
 
 **Impact:** PostgreSQL applications that query child partitions directly (common for time-series data access like `SELECT FROM events_2024`) will see empty results. Parent table queries work correctly.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.TABLESAMPLE `[Issue #160]` PostgreSQL TABLESAMPLE broken through CTE shadow store
 **Status:** Known Issue
@@ -2099,6 +4769,16 @@ Querying a child partition table directly (`SELECT FROM partition_child_table`) 
 
 **Impact:** TABLESAMPLE is used for statistical sampling, data analysis, and testing with large datasets. Applications using TABLESAMPLE for approximate queries must disable ZTD.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.DO-BLOCK `[Issue #161]` PostgreSQL DO $$ anonymous blocks blocked
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -2108,6 +4788,16 @@ Querying a child partition table directly (`SELECT FROM partition_child_table`) 
 `DO $$ BEGIN ... END $$` anonymous PL/pgSQL blocks are blocked by ZTD Write Protection as an unsupported statement type. All DO block patterns fail: simple DML, conditional logic, loops, and multi-statement blocks. DML executed via DO blocks would bypass the shadow store anyway (server-side execution), but the blocking prevents even passthrough execution.
 
 **Impact:** DO blocks are commonly used by migration tools (Doctrine, Flyway), ORMs for conditional DDL, and administrative scripts. Applications that use DO blocks for data migrations or conditional operations will need to disable ZTD or use alternative approaches.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.MERGE-BLOCKED `[Issue #162]` MERGE statement blocked by Write Protection
 **Status:** Known Issue
@@ -2119,6 +4809,16 @@ PostgreSQL 15+ `MERGE INTO ... USING ... WHEN MATCHED/NOT MATCHED` is blocked by
 
 **Impact:** MERGE is a SQL standard feature (ISO SQL:2008) used for upsert workflows, data synchronization, ETL pipelines, and batch data loading with conflict handling. Applications targeting PostgreSQL 15+ that use MERGE must disable ZTD for these operations. MERGE is increasingly adopted as it provides a cleaner alternative to INSERT...ON CONFLICT for complex conditional logic.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.COPY-SHADOW `[Issue #163]` COPY bypasses shadow store on PostgreSQL
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -2128,6 +4828,16 @@ PostgreSQL 15+ `MERGE INTO ... USING ... WHEN MATCHED/NOT MATCHED` is blocked by
 PostgreSQL COPY has three distinct failure modes: (1) `pgsqlCopyToArray()` bypasses ZTD and reads the physical table, returning empty results; (2) `pgsqlCopyFromArray()` bypasses ZTD and loads data into the physical table, invisible to shadow queries; (3) raw `COPY TO/FROM` via `exec()` is blocked by Write Protection. The pgsqlCopy* methods operate at the libpq level and are not intercepted by the ZTD PDO wrapper.
 
 **Impact:** COPY is PostgreSQL's primary bulk data transfer mechanism used for ETL pipelines, data migration, CSV import/export, and pg_dump operations. The silent bypass of pgsqlCopy methods is particularly dangerous: users get no error but COPY TO exports empty data and COPY FROM data is invisible to queries. Applications using COPY must disable ZTD.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.LOAD-DATA-BLOCKED `[Issue #164]` LOAD DATA blocked by Write Protection on MySQL
 **Status:** Known Issue
@@ -2139,6 +4849,16 @@ PostgreSQL COPY has three distinct failure modes: (1) `pgsqlCopyToArray()` bypas
 
 **Impact:** LOAD DATA INFILE is MySQL's primary bulk data loading mechanism, significantly faster than row-by-row INSERT. Used for CSV/TSV imports, ETL pipelines, data migration, and batch loading. Applications that use LOAD DATA must disable ZTD.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.MULTI-COLUMN-IN-DML `[Issue #165]` Multi-column IN tuple in DML silently ignored on all platforms
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
@@ -2148,6 +4868,36 @@ PostgreSQL COPY has three distinct failure modes: (1) `pgsqlCopyToArray()` bypas
 DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal row value constructor tuples are silently ignored on all platforms. No error is thrown, no rows are modified. Both `exec()` and prepared statement variants are affected. This differs from Issue #60 (PostgreSQL syntax error with subquery IN) — the literal-tuple form silently no-ops across all platforms. Multi-column `NOT IN` in SELECT works correctly.
 
 **Impact:** Row value constructors with literal tuples are commonly used for batch operations on composite keys, enrollment systems, schedule management, and any table without a single-column primary key. Applications using `WHERE (col1, col2) IN (...)` for DML must rewrite to single-column conditions or use alternative patterns.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.INSERT-SELECT-WINDOW `[Issue #166]` INSERT...SELECT with window function produces 0 rows (PostgreSQL, SQLite)
 **Status:** Known Issue
@@ -2159,6 +4909,36 @@ DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal
 
 **Impact:** INSERT...SELECT with window functions is a common pattern for generating ranked reports, numbered sequences, running totals, and partitioned analytics. Applications on PostgreSQL or SQLite cannot use this pattern with ZTD enabled. Workaround: SELECT with window function first, then INSERT the results row-by-row.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.PREPARED-ORDERED-SET-AGG `[Issue #167]` Prepared $N parameter in ordered-set aggregate returns wrong value
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -2167,6 +4947,16 @@ DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal
 `PERCENTILE_CONT($1::double precision) WITHIN GROUP (ORDER BY salary)` returns 0 instead of the correct interpolated value when the fraction is bound via a `$N` prepared parameter. Non-prepared ordered-set aggregates (PERCENTILE_CONT, PERCENTILE_DISC, MODE) work correctly through the shadow store.
 
 **Impact:** Applications using parameterized percentile calculations (e.g., user-selectable quartiles) will get wrong results. Workaround: interpolate the fraction directly into the SQL string.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.UPDATE-SAME-TABLE-SUBQUERY `[Issue #168]` UPDATE SET with subquery on same table causes duplicate alias
 **Status:** Known Issue
@@ -2178,6 +4968,16 @@ DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal
 
 **Impact:** Self-referencing UPDATE with aggregate subquery is a common pattern for normalizing data (e.g., setting values to the group average/median). Workaround: compute the aggregate in a separate query first.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.PARTIAL-INDEX-UPSERT `[Issue #169]` ON CONFLICT with partial index WHERE clause inserts duplicate
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (confirmed)
@@ -2187,6 +4987,16 @@ DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal
 `INSERT INTO t (...) VALUES (...) ON CONFLICT (email) WHERE status = 'active' DO UPDATE SET login_count = login_count + 1` inserts a duplicate row instead of triggering the upsert when targeting a partial unique index (`CREATE UNIQUE INDEX ... ON t (email) WHERE status = 'active'`). The shadow store does not evaluate the partial index WHERE predicate, so the conflict condition is never matched. All partial index variants affected: DO UPDATE (inserts duplicate), DO NOTHING (inserts duplicate), EXCLUDED expressions (inserts duplicate), prepared $N variants (inserts row with NULL column values). Non-partial index upsert (Issue #153) is a separate issue — this specifically affects the `WHERE` predicate in ON CONFLICT target specification.
 
 **Impact:** Partial indexes are widely used in production PostgreSQL schemas for conditional uniqueness (e.g., "one active email per user", "unique slug per published article", "one pending request per customer"). Applications using partial index upsert patterns must disable ZTD for these operations.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
 
 ## SPEC-11.DOMAIN-TYPE-DML `[Issue #170]` Domain-typed columns: UPDATE/DELETE fail through shadow store
 **Status:** Known Issue
@@ -2198,6 +5008,16 @@ Tables using PostgreSQL domain types (`CREATE DOMAIN`) exhibit multiple failures
 
 **Impact:** Domain types are used in PostgreSQL schemas for semantic typing and constraint enforcement (email validation, positive numbers, percentage ranges, currency amounts). Applications with domain-typed columns cannot rely on UPDATE or DELETE through ZTD. Workaround: use base types (VARCHAR, INT, NUMERIC) instead of domains when ZTD is enabled.
 
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.VALUES-DML-SUBQUERY `[Issue #171]` VALUES expression in DML subquery fails on all platforms
 **Status:** Known Issue
 **Platforms:** PostgreSQL-PDO (type errors), MySQL-PDO (silent no-op), MySQLi (silent no-op), SQLite-PDO (silent no-op)
@@ -2207,6 +5027,36 @@ Tables using PostgreSQL domain types (`CREATE DOMAIN`) exhibit multiple failures
 DELETE and UPDATE with VALUES as a table source in subqueries fail on all platforms. On PostgreSQL, `DELETE FROM t WHERE id IN (SELECT v.id FROM (VALUES (1), (3)) AS v(id))` fails with "operator does not exist: text = integer" — the CTE rewriter casts id columns to text, breaking integer comparisons. On MySQL/MySQLi, equivalent UNION ALL syntax (`SELECT 1 AS id UNION ALL SELECT 3`) silently deletes nothing — ids in the result come back as NULL. On SQLite, VALUES syntax also silently fails with NULL ids. UPDATE JOIN with derived VALUES on MySQL produces "Identifier name too long" (confirming Issue #104/#115 for this pattern). INSERT...SELECT FROM VALUES works on PostgreSQL but not on MySQL/SQLite.
 
 **Impact:** VALUES as a table expression is a standard SQL pattern for batch operations — batch delete by id list, batch update from a values list, and batch lookup. Applications using `DELETE WHERE id IN (VALUES ...)` or `UPDATE FROM (VALUES ...)` must use alternative approaches through ZTD. Workaround: loop individual DELETE/UPDATE statements, or use temporary tables.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.NESTED-CTE-DML `[Issue #172]` CTE inside subquery of DML generates syntax errors or silent no-ops
 **Status:** Known Issue
@@ -2224,6 +5074,36 @@ DML statements with a CTE (WITH clause) nested inside a subquery have mixed resu
 
 **Impact:** Nested CTEs in DML subqueries are used for complex conditional operations — deleting lowest-ranked items per group, updating based on windowed rankings, etc. Applications using this pattern must restructure as two-step operations (SELECT with CTE first, then DML with the results).
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.RECURSIVE-CTE-DML `[Issue #173]` WITH RECURSIVE CTE broken through shadow store
 **Status:** Known Issue
 **Platforms:** MySQLi (syntax error), MySQL-PDO (syntax error), PostgreSQL-PDO (0 rows / errors), SQLite-PDO (0 rows / no values)
@@ -2233,6 +5113,36 @@ DML statements with a CTE (WITH clause) nested inside a subquery have mixed resu
 `WITH RECURSIVE` CTEs are completely broken through the ZTD shadow store. On MySQL (PDO and MySQLi), the CTE rewriter consumes the `WITH` keyword but leaves `RECURSIVE` behind, producing a syntax error. On SQLite and PostgreSQL, SELECT WITH RECURSIVE returns 0 rows. INSERT...SELECT from recursive CTE fails with "no values to project" or syntax errors. DELETE with recursive CTE in subquery works on all platforms; UPDATE with recursive CTE works on MySQL only.
 
 **Impact:** Recursive CTEs are fundamental for hierarchical data (org charts, category trees, bill of materials, threaded comments). Applications using WITH RECURSIVE must disable ZTD.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.JSON-DML-IGNORED `[Issue #174]` JSON functions in UPDATE SET and DELETE WHERE silently ignored
 **Status:** Known Issue
@@ -2244,6 +5154,36 @@ JSON function calls in UPDATE SET expressions and DELETE WHERE predicates are si
 
 **Impact:** JSON columns are increasingly common for feature flags, user preferences, dynamic attributes, configuration storage, and API caching. Applications using JSON functions in DML must disable ZTD.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.INSERT-DEFAULT-VALUES `[Issue #175]` INSERT DEFAULT VALUES blocked on all platforms
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
@@ -2253,6 +5193,36 @@ JSON function calls in UPDATE SET expressions and DELETE WHERE predicates are si
 `INSERT INTO table DEFAULT VALUES` (SQL standard) and MySQL's `INSERT INTO table () VALUES ()` are blocked. SQLite: "Insert statement has no values to project". MySQL: "Insert values count does not match column count". PostgreSQL: "ZTD Write Protection: Cannot extract INSERT values SQL statement". The shadow store requires explicit column/value lists.
 
 **Impact:** INSERT DEFAULT VALUES is used for auto-increment ID generation, queue/counter tables, ORM placeholder rows, and any table with all-default columns.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.SUBQUERY-LIMIT-DML `[Issue #176]` DELETE/UPDATE with subquery LIMIT silently ignored or syntax error
 **Status:** Known Issue
@@ -2264,6 +5234,36 @@ JSON function calls in UPDATE SET expressions and DELETE WHERE predicates are si
 
 **Impact:** Subquery with LIMIT is used for batch processing, queue consumption, pagination in DML, and top-N cleanup operations.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.IS-NULL-DML-CROSS-PLATFORM `[Issue #177]` DELETE WHERE IS NULL / UPDATE WHERE IS NOT NULL cross-platform (extends #138)
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
@@ -2273,6 +5273,36 @@ JSON function calls in UPDATE SET expressions and DELETE WHERE predicates are si
 Issue #138 reported DELETE WHERE IS NULL failure for PostgreSQL. These tests confirm the same behavior on all platforms: DELETE WHERE IS NULL, UPDATE WHERE IS NOT NULL, and prepared UPDATE SET NULL all silently fail. The CTE shadow store does not evaluate IS NULL / IS NOT NULL predicates correctly.
 
 **Impact:** NULL handling is fundamental to SQL. Affects data cleanup, batch normalization, and any DML targeting nullable columns.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.ROLLUP-INSERT-DROP `[Issue #178]` INSERT...SELECT WITH ROLLUP drops NULL grand total row (MySQL)
 **Status:** Known Issue
@@ -2284,6 +5314,16 @@ INSERT...SELECT GROUP BY WITH ROLLUP on MySQL drops the grand total (NULL region
 
 **Impact:** ROLLUP is used for materializing summary tables with subtotals in ETL pipelines and reporting dashboards.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-11.ARITHMETIC-UPDATE-SET `[Issue #179]` Arithmetic self-referencing UPDATE SET silently ignored
 **Status:** Known Issue
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
@@ -2293,6 +5333,36 @@ INSERT...SELECT GROUP BY WITH ROLLUP on MySQL drops the grand total (NULL region
 `UPDATE SET quantity = quantity + 1` and all arithmetic self-referencing expressions are silently ignored. Increment, decrement, multiplication, multi-column arithmetic, and bulk arithmetic all retain original values. The shadow store stores literal values only and cannot evaluate expressions referencing the current column value.
 
 **Impact:** Counter patterns (`views = views + 1`), inventory management (`stock = stock - 1`), pricing adjustments (`price = price * 1.1`), and any incremental update. These are among the most common UPDATE patterns in real applications.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.CASE-WHEN-UPDATE-SET `[Issue #180]` CASE WHEN in UPDATE SET silently ignored
 **Status:** Known Issue
@@ -2304,6 +5374,36 @@ INSERT...SELECT GROUP BY WITH ROLLUP on MySQL drops the grand total (NULL region
 
 **Impact:** Conditional business logic in bulk updates: status transitions, tiered pricing, batch categorization, and conditional field computation. CASE WHEN in UPDATE is one of the most common SQL patterns for batch data transformation.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.INSERT-SELECT-UNION `[Issue #181]` INSERT...SELECT UNION ALL blocked as "multi-statement" on MySQL
 **Status:** Known Issue
 **Platforms:** MySQLi (blocked), MySQL-PDO (blocked), SQLite-PDO (partial — column mapping broken), PostgreSQL-PDO (works)
@@ -2313,6 +5413,36 @@ INSERT...SELECT GROUP BY WITH ROLLUP on MySQL drops the grand total (NULL region
 On MySQL/MySQLi, `INSERT INTO t SELECT ... UNION ALL SELECT ...` is blocked with "ZTD Write Protection: Multi-statement SQL statement" — the UNION keyword is misidentified as a statement separator. On SQLite, the row count is correct but SELECT-list columns are misaligned (literal constants become NULL). PostgreSQL works correctly.
 
 **Impact:** Data consolidation from multiple source tables, ETL pipelines, data migration, and UNION-based report materialization.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-11.CORRELATED-EXISTS-DML `[Issue #182]` DELETE/UPDATE WHERE EXISTS/NOT EXISTS correlated subquery silently ignored
 **Status:** Known Issue
@@ -2324,6 +5454,36 @@ On MySQL/MySQLi, `INSERT INTO t SELECT ... UNION ALL SELECT ...` is blocked with
 
 **Impact:** Orphan record cleanup (`DELETE WHERE NOT EXISTS` to remove orders without customers), conditional multi-table operations, and FK integrity maintenance. EXISTS subqueries are a fundamental SQL pattern.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.SUBQUERY-UPDATE-SET `[Issue #183]` UPDATE SET col = (scalar subquery) broken on all platforms
 **Status:** Known Issue
 **Platforms:** MySQLi (empty value), MySQL-PDO (empty value), PostgreSQL-PDO (type error), SQLite-PDO (syntax error)
@@ -2334,6 +5494,36 @@ On MySQL/MySQLi, `INSERT INTO t SELECT ... UNION ALL SELECT ...` is blocked with
 
 **Impact:** Denormalized totals, cached aggregates, materialized computed fields, and any derived UPDATE pattern. Common in reporting, billing, and analytics applications.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-11.EXPRESSION-UPDATE-SET-SYSTEMIC `[Issue #184]` UPDATE SET with any non-literal expression silently ignored (systemic)
 **Status:** Known Issue (generalizes [Issue #174], [Issue #179], [Issue #180], [Issue #183])
 **Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed), SQLite-PDO (confirmed)
@@ -2343,3 +5533,33 @@ On MySQL/MySQLi, `INSERT INTO t SELECT ... UNION ALL SELECT ...` is blocked with
 The CTE shadow store does not evaluate ANY expression in UPDATE SET. Only simple literal assignments (`SET col = 'value'`) work. All of the following are silently ignored or produce errors: arithmetic (`col + 1`), string functions (`UPPER(col)`), CASE WHEN, COALESCE, scalar subqueries, and JSON functions. This is the root cause behind Issues #174, #179, #180, #183.
 
 **Impact:** This is the single highest-impact limitation of the shadow store. Nearly every real-world UPDATE uses some form of expression in SET. Applications must disable ZTD for any UPDATE that is not a simple literal assignment.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |

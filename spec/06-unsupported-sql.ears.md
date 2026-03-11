@@ -3,7 +3,6 @@
 ## SPEC-6.1 Default Behavior
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/UnsupportedSqlTest`, `Pdo/MysqlUnsupportedSqlTest`, `Pdo/PostgresUnsupportedSqlTest`, `Pdo/SqliteUnsupportedSqlTest`, `Pdo/UnsupportedSqlTest`
 
 If unsupported SQL is executed and `unsupportedBehavior` is `Exception` (the default), the system shall throw a `ZtdMysqliException` or `ZtdPdoException`.
@@ -14,10 +13,39 @@ If `unsupportedBehavior` is `Notice`, the system shall emit a user notice/warnin
 
 Platform-specific examples: MySQL uses `SET @var = 1`, PostgreSQL uses `SET search_path TO public`, SQLite uses `PRAGMA journal_mode=WAL`.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-6.2 Behavior Rules
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/BehaviorRuleConfigTest`, `Mysqli/BehaviorRuleCombinationsTest`, `Pdo/BehaviorRuleCombinationsTest`, `Pdo/MysqlBehaviorRuleRegexTest`
 
 When `behaviorRules` are configured in `ZtdConfig`, the system shall apply the first matching rule's behavior for unsupported SQL.
@@ -28,10 +56,39 @@ Rules support two pattern types:
 
 **Verified behavior:** Rule ordering is critical — first match wins. Broad prefix rules should be placed AFTER specific rules.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-6.3 Transaction Statements
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/SavepointTest`, `Mysqli/SavepointBehaviorTest`, `Pdo/MysqlSavepointTest`, `Pdo/MysqlSavepointBehaviorTest`, `Pdo/PostgresSavepointTest`, `Pdo/PostgresSavepointBehaviorTest`, `Pdo/SqliteSavepointTest`, `Pdo/SqliteSavepointBehaviorTest`
 
 Transaction control statements (BEGIN, COMMIT, ROLLBACK) are not rewritten and shall be delegated directly to the underlying connection.
@@ -43,10 +100,39 @@ SAVEPOINT, RELEASE SAVEPOINT, and ROLLBACK TO SAVEPOINT are NOT supported:
 
 For `ZtdMysqli`, use dedicated methods (`begin_transaction()`, `commit()`, `rollback()`) rather than SQL strings.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-6.4 EXPLAIN Statements
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.5
 **Tests:** `Mysqli/ExplainQueryTest`, `Pdo/MysqlExplainQueryTest`, `Pdo/PostgresExplainQueryTest`, `Pdo/SqliteExplainPragmaTest`
 
 EXPLAIN is a utility statement used for performance debugging. Behavior through ZTD varies by platform — EXPLAIN may execute against the CTE-rewritten query or may throw an unsupported SQL exception. Both outcomes are acceptable.
@@ -57,10 +143,39 @@ EXPLAIN is a utility statement used for performance debugging. Behavior through 
 
 **Verified behavior:** EXPLAIN does not modify shadow state. Shadow operations (INSERT, SELECT, UPDATE, DELETE) continue to work correctly after an EXPLAIN attempt, whether it succeeds or throws. EXPLAIN does not corrupt the shadow store.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | -   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | ✓   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | -   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | ✓   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | -   |
+| 8.4 | -   |
+| 8.5 | ✓   |
+
 ## SPEC-6.5 CALL Stored Procedures
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PHP 8.5
 **Tests:** `Mysqli/StoredProcedureTest`, `Pdo/MysqlStoredProcedureTest`
 
 `CALL procedure_name(args)` is MySQL-specific syntax for invoking stored procedures. CALL statements are treated as unsupported SQL by the ZTD adapter — they throw an exception (default behavior) or are handled by behavior rules.
@@ -69,3 +184,13 @@ EXPLAIN is a utility statement used for performance debugging. Behavior through 
 - Stored procedures that perform INSERT/UPDATE/DELETE modify the physical table, bypassing the shadow store.
 
 **Verified behavior:** Shadow operations continue to work correctly after a CALL attempt (whether it succeeds or throws). The shadow store is not corrupted by a failed CALL attempt. PostgreSQL does not use CALL for function invocation (uses `SELECT func()` instead, which is covered by [SPEC-3.3g](#spec-33g-user-defined-functions-in-queries)).
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | -   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | ✓   | -   | -   |

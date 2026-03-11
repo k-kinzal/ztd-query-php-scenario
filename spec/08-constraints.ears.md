@@ -3,7 +3,6 @@
 ## SPEC-8.1 Shadow Store Constraints
 **Status:** Verified (By-Design)
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/ConstraintBehaviorTest`, `Pdo/MysqlConstraintBehaviorTest`, `Pdo/PostgresConstraintBehaviorTest`, `Pdo/SqliteConstraintBehaviorTest`, `Pdo/ConstraintBehaviorTest`
 
 The shadow store does NOT enforce database constraints:
@@ -17,10 +16,39 @@ The shadow store does NOT enforce database constraints:
 
 This is by design — the shadow store is an in-memory simulation layer.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-8.2 Error Recovery
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/ErrorRecoveryTest`, `Pdo/MysqlErrorRecoveryTest`, `Pdo/PostgresErrorRecoveryTest`, `Pdo/SqliteErrorRecoveryTest`, `Pdo/ErrorRecoveryTest`, `Pdo/MysqlErrorBoundaryTest`, `Pdo/PostgresErrorBoundaryTest`, `Pdo/SqliteErrorBoundaryTest`
 
 ### SPEC-8.2a Transformer Errors
@@ -31,10 +59,39 @@ When a SQL error occurs, the shadow store shall remain consistent. Previously in
 
 **Verified behavior:** Multiple consecutive errors do not compound. Error code cleared after successful recovery. Mid-workflow error recovery maintains shadow consistency.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-8.3 Trigger Behavior
 **Status:** Verified (By-Design)
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.5
 **Tests:** `Mysqli/TriggerInteractionTest`, `Pdo/MysqlTriggerInteractionTest`, `Pdo/PostgresTriggerInteractionTest`, `Pdo/SqliteTriggerInteractionTest`
 
 Database triggers (BEFORE/AFTER INSERT/UPDATE/DELETE) do NOT fire for shadow operations. Since ZTD rewrites DML to CTE-based simulations, no actual INSERT/UPDATE/DELETE reaches the physical table, and therefore triggers defined on those tables are not executed.
@@ -48,3 +105,33 @@ This applies to all trigger types:
 **Verified behavior:** The presence of triggers on a table does NOT interfere with shadow CRUD operations — INSERT, UPDATE, DELETE, and SELECT all work correctly through ZTD even when triggers are defined on the physical table. Trigger audit log tables remain empty after shadow operations. Full CRUD workflow (INSERT → SELECT → UPDATE → SELECT → DELETE → SELECT) works correctly with triggers present on all platforms.
 
 This is by design — the shadow store operates at the SQL rewrite level, not the storage engine level.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | -   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | ✓   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | -   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | ✓   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | -   |
+| 8.4 | -   |
+| 8.5 | ✓   |

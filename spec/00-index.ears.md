@@ -79,6 +79,8 @@ docker run --rm ztd-test-php81 --filter 'Tests\\Pdo\\Sqlite'
 | [09-configuration.ears.md](09-configuration.ears.md) | 9. Configuration | SPEC-9.1 – SPEC-9.2 | ZtdConfig, default configuration |
 | [10-platform-notes.ears.md](10-platform-notes.ears.md) | 10. Platform Notes | SPEC-10.2.1 – SPEC-10.2.169 | Platform-specific behavioral notes |
 | [11-known-issues.ears.md](11-known-issues.ears.md) | 11. Known Issues | SPEC-11.x | Cross-platform inconsistencies with issue tags |
+| [12-pdo-configuration.ears.md](12-pdo-configuration.ears.md) | 12. PDO Configuration | SPEC-12.1 – SPEC-12.6 | PDO attributes affecting ZTD behavior |
+| [13-type-mappings.ears.md](13-type-mappings.ears.md) | 13. Type Mappings | SPEC-13.1 – SPEC-13.4 | SQL column type → PHP type per DB engine, ZTD vs physical |
 
 ## Supporting Files
 
@@ -86,6 +88,62 @@ docker run --rm ztd-test-php81 --filter 'Tests\\Pdo\\Sqlite'
 |------|---------|
 | [traceability.md](traceability.md) | Spec ID → Test Class → Verified Version matrix |
 | [ztd-query-adapter.ears.md](ztd-query-adapter.ears.md) | Original monolithic spec (preserved for reference) |
+
+## Spec Entry Format
+
+Each spec entry MUST include:
+
+1. **Status** — `Verified`, `Partially Verified`, or `Known Issue`
+2. **Platforms** — Which adapter(s) apply (MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO)
+3. **Tests** — Test class(es) that verify this entry
+4. **Verification Matrix** — A per-platform table showing which PHP × DB version combinations have been tested
+
+### Verification Matrix Format
+
+Every spec entry MUST include a verification matrix for each applicable platform. Use the following legend:
+
+- `✓` — Verified (test passes)
+- `✗` — Failed (test fails)
+- `-` — Untested
+
+#### MySQL (MySQLi / PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
+The `Tested versions:` line is **retired**. It hid untested combinations by implying full coverage from a single version. The matrix makes gaps explicit.
+
+### Undocumented Behavioral Dimensions
+
+The following areas affect user-visible behavior but are NOT yet covered by the spec. New spec sections are required:
+
+- **PDO configuration space** (`ATTR_EMULATE_PREPARES`, `ATTR_STRINGIFY_FETCHES`, etc.) — see [12-pdo-configuration.ears.md](12-pdo-configuration.ears.md)
+- **PHP type of fetched values** (SQL column type → PHP `gettype()`) — see [13-type-mappings.ears.md](13-type-mappings.ears.md)
 
 ## SPEC-ID Convention
 

@@ -3,7 +3,6 @@
 ## SPEC-3.1 SELECT
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Scenarios/BasicCrudScenario::testInsertAndSelect` (all platforms), `Scenarios/BasicCrudScenario::testSelectReturnsEmptyWhenNoRows`
 
 When ZTD is enabled and a SELECT query is executed, the system shall return results from the shadow store only. Physical table data is not included; the CTE replaces the table reference with shadow store contents.
@@ -12,10 +11,39 @@ When ZTD is enabled and the result set is empty, the system shall return an empt
 
 **Verified behavior:** Aggregates on empty sets return correct values (COUNT → 0, SUM/AVG/MIN/MAX → NULL). Zero-match UPDATE/DELETE returns 0 affected rows without error. Cursor-based (keyset) pagination (WHERE id > ? ORDER BY id LIMIT N) works correctly — page traversal, mid-dataset inserts/deletes, and descending cursor all return expected results. Offset-based pagination (LIMIT/OFFSET) works correctly across all platforms — page traversal, partial last page, empty result beyond data range, pagination after INSERT/DELETE all return expected results. MySQL PDO requires PARAM_INT binding for LIMIT/OFFSET prepared parameters (see [SPEC-10.2.17](10-platform-notes.ears.md)). DECIMAL precision is preserved through shadow store for financial calculations (SUM, arithmetic in UPDATE SET, comparison in WHERE). IS NULL / IS NOT NULL filtering on nullable columns (soft delete pattern) works correctly. Type roundtrip through shadow store preserves integers (including INT_MIN/INT_MAX), floats, decimals, strings (including empty strings and single quotes), NULLs, and booleans (MySQL/SQLite; PostgreSQL false has known issue [SPEC-11.PG-BOOLEAN-FALSE](11-known-issues.ears.md)). Prepared IN-list queries (WHERE id IN (?, ?, ?)) work correctly across all platforms for both positional and integer/string parameters. Dual-query pagination pattern (paginated data + total count in same session) works correctly — total count reflects INSERT/DELETE mutations, filtered counts work, keyset and offset pagination both work alongside COUNT queries (see [SPEC-10.2.52](10-platform-notes.ears.md)). Multi-column ORDER BY with expressions, CASE-based priority sorting, and NULL ordering all work correctly (see [SPEC-10.2.54](10-platform-notes.ears.md)).
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-3.2 Prepared SELECT
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Scenarios/BasicCrudScenario::testPreparedSelectWithBindValue` (all platforms), `Scenarios/PreparedStatementScenario` (all platforms), `Mysqli/PreparedStatementTest`, `Pdo/MysqlPreparedStatementTest`, `Pdo/PostgresPreparedStatementTest`, `Pdo/SqlitePreparedStatementTest`, `Pdo/PreparedStatementTest`
 
 When a prepared SELECT statement with bound parameters is executed, the system shall rewrite the query and return correct results.
@@ -30,10 +58,39 @@ Query rewriting occurs at **prepare time**, not execute time. If ZTD mode is tog
 
 **Verified behavior:** Prepare-time rewriting persistence confirmed. Named parameter binding (`:param` syntax) works. Interleaved prepared statements maintain independent snapshots. ORM-style statement reuse (prepare-once/execute-many) works. Parameterized LIMIT/OFFSET works (MySQL requires `PARAM_INT`). Dynamic WHERE clause building patterns (WHERE 1=1 AND optional filters, varying parameter counts across separate queries) work correctly — common PHP query builder idiom (see [SPEC-10.2.51](10-platform-notes.ears.md)).
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-3.3 Complex Queries
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Scenarios/JoinAndSubqueryScenario` (all platforms), `Mysqli/ComplexQueryTest`, `Mysqli/AdvancedQueryPatternsTest`, `Pdo/MysqlComplexQueryTest`, `Pdo/PostgresComplexQueryTest`, `Pdo/SqliteComplexQueryTest`, `Pdo/ComplexQueryTest`, `Pdo/AdvancedQueryPatternsTest`
 
 When ZTD is enabled, the CTE rewriting shall correctly handle:
@@ -71,10 +128,39 @@ User-written CTE (WITH) queries shall work correctly alongside ZTD's internal CT
 
 **Verified behavior:** Prepared statements with complex queries work (JOINs, IN/NOT IN, CASE WHEN, aggregation GROUP BY, subqueries). Advanced subquery patterns (3-level nesting, scalar subqueries, combined AND/OR/IN). 4-table and 5-table JOINs work. Platform-specific functions (MySQL: IF, IFNULL, FIND_IN_SET, CONCAT_WS, REVERSE, LPAD, GROUP_CONCAT ORDER BY; PostgreSQL: ILIKE, `::` casting, `||` concat, POSITION, FILTER clause, STRING_AGG ORDER BY, GREATEST/LEAST, DISTINCT ON; SQLite: typeof, INSTR, IIF, printf, HEX, NULLIF, CAST, GLOB).
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-3.3f Full-Text Search
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.5
 **Tests:** `Mysqli/FullTextSearchTest`, `Pdo/MysqlFullTextSearchTest`, `Pdo/PostgresFullTextSearchTest`, `Pdo/SqliteFullTextSearchTest`
 
 Full-text search is NOT supported through ZTD CTE rewriting on any platform. Each platform fails for a different reason:
@@ -87,10 +173,39 @@ All platforms: physical isolation is confirmed (shadow INSERTs do not reach the 
 
 Workaround: disable ZTD for full-text search queries, or use LIKE-based pattern matching through ZTD instead.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | -   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | ✓   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | -   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | ✓   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | -   |
+| 8.4 | -   |
+| 8.5 | ✓   |
+
 ## SPEC-3.3g User-Defined Functions in Queries
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, PHP 8.5
 **Tests:** `Mysqli/StoredProcedureTest`, `Pdo/MysqlStoredProcedureTest`, `Pdo/PostgresStoredFunctionTest`
 
 User-defined functions (MySQL stored functions, PostgreSQL PL/pgSQL functions) called within SELECT, WHERE, and ORDER BY clauses work through the CTE-rewritten shadow queries. The function call is a scalar expression evaluated by the database engine on the CTE-derived data.
@@ -101,10 +216,29 @@ User-defined functions (MySQL stored functions, PostgreSQL PL/pgSQL functions) c
 
 If a user-defined function internally reads from a table that is shadow-stored, the function reads from the physical table (empty), not the shadow store. This is a fundamental limitation: the CTE rewriter only rewrites table references in the outer query, not inside function bodies.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | -   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | ✓   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | -   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | ✓   | -   | -   |
+
 ## SPEC-3.3e CTE-based DML (WITH ... INSERT/UPDATE/DELETE)
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/CteDmlTest`, `Pdo/MysqlCteDmlTest`, `Pdo/PostgresCteDmlTest`, `Pdo/SqliteCteDmlTest`
 
 `WITH ... INSERT INTO ... SELECT`, `WITH ... UPDATE`, and `WITH ... DELETE` (CTE-based DML) are NOT supported on any platform:
@@ -115,10 +249,39 @@ If a user-defined function internally reads from a table that is shadow-stored, 
 
 The shadow store is not corrupted by CTE DML failures — previously inserted data remains intact after the error. Users needing CTE-based DML should either disable ZTD for those queries or rewrite the query as a standard DML with subqueries.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-3.3a Derived Tables (Subqueries in FROM)
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/DerivedTableAndViewTest`, `Pdo/MysqlDerivedTableAndViewTest`, `Pdo/PostgresDerivedTableAndViewTest`, `Pdo/SqliteDerivedTableAndViewTest`
 
 Derived tables (subqueries in the FROM clause) are NOT fully supported by the CTE rewriter. Table references inside derived subqueries are generally not rewritten:
@@ -127,18 +290,76 @@ Derived tables (subqueries in the FROM clause) are NOT fully supported by the CT
 - **PostgreSQL**: Derived tables as sole FROM source work correctly — table references inside the subquery ARE rewritten. This includes `SELECT ... FROM (SELECT ... ROW_NUMBER() OVER (...) FROM table) sub WHERE ...` patterns (e.g., deduplication with ROW_NUMBER). JOINed derived tables also work.
 - **SQLite**: Derived tables as sole FROM source return empty. However, when a derived table is JOINed with a regular table, table references inside the derived subquery ARE rewritten and return shadow data correctly. Mutations in the shadow store are reflected through derived table JOINs on SQLite.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-3.3b Views
 **Status:** Known Issue (By-Design)
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/ViewThroughZtdTest`, `Pdo/MysqlViewThroughZtdTest`, `Pdo/PostgresViewThroughZtdTest`, `Pdo/SqliteViewThroughZtdTest`
 
 Database views are NOT rewritten by the CTE rewriter. Querying a view through ZTD returns empty results because the view's underlying query reads from physical tables, not the shadow store. This applies to all platforms. Users should query base tables directly for shadow data visibility.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-3.3c Recursive CTEs
 **Status:** Known Issue
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/RecursiveCteAndRightJoinTest`, `Pdo/MysqlRecursiveCteAndRightJoinTest`, `Pdo/PostgresRecursiveCteAndRightJoinTest`, `Pdo/SqliteRecursiveCteAndRightJoinTest`
 
 `WITH RECURSIVE` queries that do NOT reference shadow tables (e.g., number series generation) work correctly on all platforms.
@@ -148,10 +369,39 @@ Database views are NOT rewritten by the CTE rewriter. Querying a view through ZT
 - **SQLite**: The query executes but returns empty results — table references inside the recursive CTE are not rewritten, so the query reads from the physical table (empty).
 - **PostgreSQL**: Same behavior as non-recursive user CTEs — returns empty results because table references inside CTEs are not rewritten.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-3.3d Set Operations (EXCEPT / INTERSECT)
 **Status:** Partially Verified
 **Platforms:** SQLite-PDO, PostgreSQL-PDO (verified); MySQLi, MySQL-PDO (not supported)
-**Tested versions:** ztd-query-pdo-adapter v0.1.1, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Pdo/SqliteSetOperationsAndFunctionsTest`, `Pdo/PostgresSetOperationsAndFunctionsTest`, `Mysqli/ExceptIntersectTest`, `Pdo/MysqlExceptIntersectTest`
 
 `EXCEPT` and `INTERSECT` set operations work correctly on **SQLite** and **PostgreSQL** — table references in both sides are rewritten to read from the shadow store.
@@ -159,6 +409,26 @@ Database views are NOT rewritten by the CTE rewriter. Querying a view through ZT
 On **MySQL** (both MySQLi and PDO adapters), `EXCEPT` and `INTERSECT` throw `UnsupportedSqlException` ("Multi-statement SQL statement"). The MySQL CTE rewriter incorrectly parses these as multi-statement SQL. UNION works correctly on all platforms.
 
 **Verified behavior:** UNION/EXCEPT/INTERSECT correctly reflect shadow store mutations (INSERT, UPDATE, DELETE). UNION with prepared statements and aggregation in UNION branches works.
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-3.5 JSON / JSONB Functions
 **Status:** Partially Verified
@@ -174,6 +444,36 @@ Platform-specific support:
 - **SQLite**: `json_extract()`, `->` / `->>` operators (3.38.0+), `json_type()`, `json_array_length()`, `json_group_array()`, `json_set()` in UPDATE. JSON functions work in SELECT, WHERE, and ORDER BY clauses. Prepared statements with `json_extract()` in WHERE work.
 
 **Limitation (PostgreSQL prepared statements):** Prepared statements with JSONB operators (`->>`, `@>`) in WHERE clauses may return empty results through the CTE rewriter, similar to [SPEC-11.PG-PREPARED-FUNCTION](11-known-issues.ears.md). The `?` key-existence operator may conflict with prepared statement parameter placeholders.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
 
 ## SPEC-3.6 Composite Primary Keys
 **Status:** Verified
@@ -192,6 +492,36 @@ When ZTD is enabled, tables with composite (multi-column) primary keys shall sup
 
 **Verified behavior (extended):** UPDATE/DELETE with subquery WHERE on composite PK tables work (e.g., `WHERE order_id IN (SELECT ... FROM other_table WHERE ...)`). Cross-table JOINs between composite PK table and another table work. Aggregate across JOIN with composite PK table works. Prepared multi-execute with composite PK parameters works. DELETE then re-INSERT at same composite PK works. Correlated subqueries referencing composite PK tables work. Self-referencing arithmetic UPDATE on partial PK match works.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-3.7 NULL Handling
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
@@ -208,10 +538,39 @@ When ZTD is enabled, NULL values shall be correctly handled through the shadow s
 
 **Verified behavior (aggregates):** COUNT(*) counts all rows including NULLs; COUNT(column) excludes NULLs. COUNT(DISTINCT column) excludes NULLs. SUM/AVG of all-NULL groups returns NULL. MIN/MAX of all-NULL sets returns NULL. HAVING with COUNT(column) correctly filters groups with no non-NULL values. HAVING SUM(...) IS NOT NULL works. COALESCE inside aggregate (SUM(COALESCE(col, 0))) works. GROUP_CONCAT / STRING_AGG omits NULLs (returns NULL for all-NULL groups). NULL in arithmetic produces NULL (e.g., NULL + 10 = NULL). NULL excluded from BETWEEN. NULL = NULL is never true (standard SQL). NULL in CASE with conditional aggregation works correctly.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-3.4 Fetch Methods
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/FetchMethodsTest`, `Mysqli/FetchModesTest`, `Pdo/MysqlFetchModeTest`, `Pdo/MysqlFetchModesTest`, `Pdo/MysqlFetchModeAdvancedTest`, `Pdo/PostgresFetchModeTest`, `Pdo/PostgresFetchModesTest`, `Pdo/SqliteFetchModeTest`, `Pdo/SqliteFetchModesTest`
 
 ### PDO Adapter
@@ -250,3 +609,33 @@ When ZTD is enabled, the following MySQLi result methods shall return correct re
 Re-executing a prepared statement (calling `execute()` multiple times with different parameters) shall work correctly with ZTD-enabled queries.
 
 **Verified behavior:** nextRowset() delegates to underlying PDO driver. MySQL returns false. SQLite and PostgreSQL throw PDOException. debugDumpParams() outputs rewritten SQL. FETCH_CLASS/FETCH_INTO work. bindColumn with type hints works.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |

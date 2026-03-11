@@ -3,7 +3,6 @@
 ## SPEC-4.1 INSERT
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Scenarios/BasicCrudScenario::testInsertAndSelect` (all platforms), `Scenarios/WriteOperationScenario::testMultiRowInsert` (all platforms), `Mysqli/BatchInsertTest`, `Pdo/MysqlBatchInsertTest`, `Pdo/PostgresBatchInsertTest`, `Pdo/SqliteBatchInsertTest`
 
 When an INSERT is executed with ZTD enabled, the system shall track the inserted rows in the shadow store without modifying the physical table.
@@ -18,10 +17,39 @@ INSERT with NULL values is supported. NULL values are correctly stored in the sh
 
 **Verified behavior:** INSERT without column list works. INSERT with SQL expressions in VALUES (arithmetic, functions, COALESCE, CASE, CONCAT, ABS, LENGTH, negative numbers, GREATEST, IF) are correctly evaluated. INSERT ... SET syntax (MySQL) works. Multi-row REPLACE INTO works. 50+ sequential INSERTs and 200-row bulk INSERTs work correctly.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.1a INSERT ... SELECT
 **Status:** Partially Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/InsertSelectUpsertTest`, `Mysqli/InsertSubqueryPatternsTest`, `Pdo/MysqlInsertSelectUpsertTest`, `Pdo/MysqlInsertSubqueryPatternsTest`, `Pdo/PostgresInsertSubqueryPatternsTest`, `Pdo/SqliteInsertSubqueryPatternsTest`
 
 When an `INSERT ... SELECT` is executed with ZTD enabled, the system shall insert rows from the SELECT result (which reads from the shadow store) into the target table's shadow store.
@@ -36,10 +64,39 @@ On MySQL, `INSERT ... SELECT` requires explicit column lists on both sides. Usin
 
 Self-referencing INSERT (`INSERT INTO t SELECT FROM t`) works correctly — SELECT snapshot is taken before INSERT starts.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.2 UPDATE
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Scenarios/BasicCrudScenario::testUpdateAndVerify` (all platforms), `Scenarios/WriteOperationScenario::testUpdateMultipleRows` (all platforms)
 
 When an UPDATE is executed with ZTD enabled, the system shall track the updated rows in the shadow store without modifying the physical table.
@@ -50,10 +107,39 @@ UPDATE operations require the table schema (including primary keys) to be known.
 
 **Verified behavior:** Self-referencing UPDATE (SET col = col + N) works. CASE expressions in UPDATE SET work. String concatenation in SET works. Multiple sequential UPDATEs to same row work. MySQL DELETE/UPDATE with ORDER BY + LIMIT works. Optimistic locking pattern (UPDATE WHERE version = N, check affected rows, bump version) works correctly — stale version matches 0 rows. Soft delete pattern (UPDATE SET deleted_at = timestamp, then filter with IS NULL/IS NOT NULL) works correctly.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.2a UPSERT
 **Status:** Partially Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/UpsertTest`, `Mysqli/PreparedUpsertTest`, `Pdo/MysqlUpsertTest`, `Pdo/PostgresUpsertTest`, `Pdo/SqliteUpsertTest`, `Pdo/MysqlPreparedUpsertTest`, `Pdo/PostgresPreparedUpsertTest`, `Pdo/SqlitePreparedUpsertTest`
 
 When an `INSERT ... ON DUPLICATE KEY UPDATE` (MySQL) or `INSERT ... ON CONFLICT DO UPDATE` (PostgreSQL) is executed with ZTD enabled, the system shall:
@@ -66,10 +152,39 @@ When `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL) is executed and a duplicat
 
 **Known Issue:** `ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)` — self-referencing expression loses the original row's value ([Issue #16](11-known-issues.ears.md)).
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.2b REPLACE
 **Status:** Partially Verified
 **Platforms:** MySQLi, MySQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/HavingAndReplaceTest`, `Mysqli/ReplaceMultiRowTest`, `Pdo/MysqlHavingAndReplaceTest`, `Pdo/MysqlReplaceMultiRowTest`, `Pdo/SqliteConflictResolutionTest`
 
 When a `REPLACE INTO` statement (MySQL) is executed with ZTD enabled, the system shall delete any existing row with matching primary key and insert the new row in the shadow store.
@@ -78,10 +193,29 @@ When a `REPLACE INTO` statement (MySQL) is executed with ZTD enabled, the system
 
 SQLite additionally supports `INSERT OR REPLACE INTO` syntax as a synonym for `REPLACE INTO`. The same exec/prepared statement behavior applies.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.2c Multi-Table UPDATE
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, PHP 8.3
 **Tests:** `Mysqli/MultiTableOperationsTest`, `Pdo/MysqlMultiTableOperationsTest`, `Pdo/PostgresMultiTableOperationsTest`, `Pdo/MultiTableOperationsTest`
 
 When a multi-table UPDATE statement is executed with ZTD enabled, the system shall update the target table rows in the shadow store based on the JOIN condition, without modifying the physical database.
@@ -92,10 +226,29 @@ Platform-specific syntax:
 
 **Note:** MySQL comma-syntax multi-table UPDATE (`UPDATE t1, t2 SET ...`) is partially supported — prefer JOIN syntax.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-4.2d Multi-Table DELETE
 **Status:** Partially Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, PHP 8.3
 **Tests:** `Mysqli/MultiTableDeleteTest`, `Pdo/MysqlMultiTableDeleteTest`, `Pdo/PostgresMultiTableOperationsTest`
 
 When a multi-table DELETE statement is executed with ZTD enabled, the system shall delete the specified rows from the shadow store based on the JOIN condition.
@@ -106,10 +259,29 @@ Platform-specific syntax:
 
 **Known Issue:** Multi-target DELETE (`DELETE t1, t2 FROM ...`) only affects the first table ([Issue #26](11-known-issues.ears.md)).
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-4.2e INSERT IGNORE / Ignore-Duplicate Syntax
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/InsertIgnoreTest`, `Pdo/MysqlInsertIgnoreTest`, `Pdo/PostgresInsertIgnoreTest`, `Pdo/SqliteInsertIgnoreTest`
 
 When an ignore-duplicate INSERT is executed, the system shall silently skip rows with duplicate primary keys. Non-duplicate rows are inserted normally.
@@ -118,10 +290,39 @@ Platform-specific syntax: MySQL uses `INSERT IGNORE INTO`, SQLite uses `INSERT O
 
 **Note**: On SQLite, the standard SQL `INSERT ... ON CONFLICT DO NOTHING` does NOT correctly skip duplicates; use `INSERT OR IGNORE` instead.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.3 DELETE
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Scenarios/BasicCrudScenario::testDeleteAndVerify` (all platforms), `Mysqli/DeleteWithoutWhereTest`, `Pdo/MysqlDeleteWithoutWhereTest`, `Pdo/PostgresDeleteWithoutWhereTest`, `Pdo/SqliteDeleteWithoutWhereTest`
 
 When a DELETE is executed with ZTD enabled, the system shall track the deletion in the shadow store without modifying the physical table.
@@ -130,10 +331,39 @@ When a DELETE is executed with ZTD enabled, the system shall track the deletion 
 
 **Verified behavior:** DELETE with correlated subqueries (EXISTS, NOT EXISTS, IN, scalar comparison) works. MySQL DELETE with ORDER BY + LIMIT works.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.4 Affected Row Count
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/ExecReturnValueTest`, `Mysqli/RowCountEdgeCasesTest`, `Pdo/MysqlExecReturnValueTest`, `Pdo/MysqlRowCountTest`, `Pdo/PostgresExecReturnValueTest`, `Pdo/PostgresRowCountTest`, `Pdo/SqliteExecReturnValueTest`, `Pdo/SqliteRowCountTest`
 
 After a write operation via `ZtdMysqli::query()`, `lastAffectedRows()` shall return the number of rows affected.
@@ -144,10 +374,39 @@ After a write operation via `ZtdPdoStatement::execute()`, `rowCount()` shall ret
 
 After a write operation via `ZtdMysqliStatement::execute()`, `ztdAffectedRows()` shall return the number of affected rows. Note: The `$stmt->affected_rows` property may not be available; `ztdAffectedRows()` is the reliable accessor.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.5 Write Result Sets
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/WriteResultSetTest`, `Pdo/MysqlWriteResultSetTest`, `Pdo/PostgresWriteResultSetTest`, `Pdo/SqliteWriteResultSetTest`, `Pdo/WriteResultSetTest`
 
 When a write operation is executed with ZTD enabled, the affected row data is consumed internally for shadow processing.
@@ -156,30 +415,77 @@ For `ZtdMysqli::query()`, the returned `mysqli_result` object from a write opera
 
 For `ZtdPdoStatement`, calling `fetchAll()` after a write operation returns an empty array because `hasResultSet()` is `false`.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.6 real_query (mysqli)
 **Status:** Verified
 **Platforms:** MySQLi
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, MySQL 8.0, PHP 8.3
 **Tests:** `Mysqli/RealQueryTest`
 
 When `real_query()` is called with ZTD enabled, write operations shall be tracked in the shadow store and return `true`.
 
 When `real_query()` is called for a SELECT query, `real_query()` returns `true`, but `store_result()` returns `false`. Use `query()` instead for SELECT queries in ZTD mode.
 
+#### Verification Matrix — MySQL (MySQLi)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-4.7 Property Access (mysqli)
 **Status:** Verified (By-Design)
 **Platforms:** MySQLi
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, MySQL 8.0, PHP 8.3
 **Tests:** `Mysqli/StatementIntrospectionTest`, `Mysqli/InsertIdBehaviorTest`, `Mysqli/LastInsertIdTest`
 
 When ZTD is enabled, accessing mysqli properties (e.g., `$mysqli->insert_id`, `$mysqli->affected_rows`) throws an `Error` ("Property access is not allowed yet"). Use dedicated methods instead: `lastAffectedRows()` for affected row count.
 
 `lastInsertId()` / `insert_id` returns 0 after shadow INSERT on all platforms (no physical INSERT occurs). On PostgreSQL PDO, `lastInsertId()` with sequence name throws `PDOException`.
 
+#### Verification Matrix — MySQL (MySQLi)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
 ## SPEC-4.8 Transactions
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Scenarios/TransactionScenario` (all platforms), `Mysqli/TransactionTest`, `Mysqli/TransactionWithShadowTest`, `Mysqli/TransactionShadowInteractionTest`, `Pdo/MysqlTransactionTest`, `Pdo/PostgresTransactionTest`, `Pdo/SqliteTransactionTest`, `Pdo/TransactionTest`
 
 Transaction control methods are delegated directly to the underlying connection. They do not affect the shadow store.
@@ -188,10 +494,39 @@ Shadow data remains visible after `commit()` or `rollBack()` because it is store
 
 **Verified behavior:** Transaction-shadow independence — shadow store is completely independent of physical transaction state. Shadow data persists after rollBack(). commit() does not flush shadow data. Multiple transaction cycles accumulate shadow data.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.9 Utility Methods
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Mysqli/DelegatedMethodsTest`, `Mysqli/StmtInitBypassTest`, `Mysqli/SelectDbInteractionTest`, `Pdo/MysqlUtilityMethodsTest`, `Pdo/PostgresUtilityMethodsTest`, `Pdo/SqliteUtilityMethodsTest`
 
 `real_escape_string()` (mysqli) and `quote()` (PDO) are delegated to the underlying connection.
@@ -208,18 +543,76 @@ For `ZtdPdoStatement`, `closeCursor()`, `setFetchMode()`, `bindColumn()`, `getCo
 
 **debugDumpParams() note**: Outputs the rewritten SQL, not the original user SQL.
 
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.10 FETCH_CLASS / FETCH_INTO
 **Status:** Verified
 **Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Pdo/MysqlFetchClassTest`, `Pdo/PostgresFetchClassTest`, `Pdo/SqliteFetchClassTest`
 
 `setFetchMode(PDO::FETCH_CLASS, ClassName)`, `fetchAll(PDO::FETCH_CLASS, ClassName)`, constructor args, `FETCH_PROPS_LATE`, and `FETCH_INTO` all work correctly with shadow store data.
 
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.11 PDO Error Modes
 **Status:** Verified
 **Platforms:** MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
-**Tested versions:** ztd-query-pdo-adapter v0.1.1, MySQL 8.0, PostgreSQL 16, SQLite 3.x, PHP 8.3
 **Tests:** `Pdo/MysqlErrorModeInteractionTest`, `Pdo/PostgresErrorModeInteractionTest`, `Pdo/SqliteErrorModeInteractionTest`
 
 When `ATTR_ERRMODE` is set to `ERRMODE_EXCEPTION`, invalid SQL shall throw `PDOException`.
@@ -230,10 +623,39 @@ When `ATTR_ERRMODE` is set to `ERRMODE_WARNING`, invalid SQL shall emit a PHP wa
 
 Shadow store remains intact after errors in any mode. Switching error modes mid-session takes effect immediately.
 
+#### Verification Matrix — MySQL (PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
 ## SPEC-4.12 Statement Property Access (MySQLi)
 **Status:** Verified (By-Design)
 **Platforms:** MySQLi
-**Tested versions:** ztd-query-mysqli-adapter v0.1.1, MySQL 8.0, PHP 8.3
 **Tests:** `Mysqli/StatementIntrospectionTest`, `Mysqli/StatementMethodsTest`
 
 Accessing `param_count` on `ZtdMysqliStatement` throws `Error` ("ZtdMysqliStatement object is already closed").
@@ -241,3 +663,13 @@ Accessing `param_count` on `ZtdMysqliStatement` throws `Error` ("ZtdMysqliStatem
 Use `ztdAffectedRows()` for affected row counts. `store_result()` works on prepared SELECT after `execute()`. `field_count` and `num_rows` work correctly on `mysqli_result` objects.
 
 **Verified behavior:** MySQLi statement methods — `ztdAffectedRows()`, `get_result()` + `fetch_all()`, `bind_result()` + `fetch()`, `reset()`, `free_result()` all work correctly.
+
+#### Verification Matrix — MySQL (MySQLi)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |

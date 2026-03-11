@@ -17,3 +17,23 @@ Potential discrepancy: ZTD rewrites SELECT queries into CTEs with `CAST()` expre
 - Cover at minimum: INT, BIGINT, DOUBLE, DECIMAL, VARCHAR, TINYINT(1)/BOOLEAN, NULL.
 - Also check `ATTR_STRINGIFY_FETCHES=false` explicitly.
 - Test on PDO/MySQL. Consider also PDO/PostgreSQL and PDO/SQLite if behavior may differ.
+
+## PHP type behavior of PDO::query() and PDO::prepare() across PHP and MySQL versions
+
+The spec does not document what PHP types (`int`, `float`, `string`) are returned by `PDO::FETCH_ASSOC` for each SQL column type under the default PDO configuration. The behavior depends on:
+
+- `ATTR_EMULATE_PREPARES` (`true` by default for PDO MySQL)
+- `ATTR_STRINGIFY_FETCHES`
+- Whether `query()` or `prepare()/execute()` is used
+- The MySQL client library (mysqlnd, always used in PHP 8.x)
+
+The current spec says "work correctly" but never specifies the expected PHP type for each SQL type. This matters because user code may rely on `===` comparisons or `gettype()` checks.
+
+### To verify
+
+- For each method (`query()`, `prepare()/execute()`), fetch rows and record `gettype()` of each column value.
+- Cover column types: INT, BIGINT, DOUBLE, DECIMAL(10,2), VARCHAR, TEXT, TINYINT(1), DATE, DATETIME, NULL.
+- Test with default PDO settings (no explicit `EMULATE_PREPARES` or `STRINGIFY_FETCHES`).
+- Run across the supported matrix: PHP 8.1–8.5, MySQL 5.6–9.1.
+- Determine whether the returned PHP types are consistent across all combinations, or whether they vary by PHP/MySQL version.
+- Document the baseline in the spec.

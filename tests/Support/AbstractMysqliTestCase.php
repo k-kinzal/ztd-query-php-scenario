@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
 use ZtdQuery\Adapter\Mysqli\ZtdMysqli;
 
 abstract class AbstractMysqliTestCase extends TestCase
@@ -23,21 +21,69 @@ abstract class AbstractMysqliTestCase extends TestCase
      */
     abstract protected function getTableNames(): array;
 
+    private static function isDockerMode(): bool
+    {
+        return getenv('MYSQL_HOST') !== false;
+    }
+
+    private static function getMysqliHost(): string
+    {
+        if (self::isDockerMode()) {
+            return getenv('MYSQL_HOST');
+        }
+        return MySQLContainer::getHost();
+    }
+
+    private static function getMysqliPort(): int
+    {
+        if (self::isDockerMode()) {
+            return (int) (getenv('MYSQL_PORT') ?: '3306');
+        }
+        return MySQLContainer::getPort();
+    }
+
+    private static function getMysqliUser(): string
+    {
+        if (self::isDockerMode()) {
+            return getenv('MYSQL_USER') ?: 'root';
+        }
+        return 'root';
+    }
+
+    private static function getMysqliPassword(): string
+    {
+        if (self::isDockerMode()) {
+            return getenv('MYSQL_PASSWORD') ?: 'root';
+        }
+        return 'root';
+    }
+
+    private static function getMysqliDatabase(): string
+    {
+        if (self::isDockerMode()) {
+            return getenv('MYSQL_DATABASE') ?: 'ztd_test';
+        }
+        return 'test';
+    }
+
     public static function setUpBeforeClass(): void
     {
+        if (self::isDockerMode()) {
+            return;
+        }
         MySQLContainer::resolveImage();
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        $container = (new MySQLContainer())->withReuseMode(\Testcontainers\Containers\ReuseMode::REUSE());
+        \Testcontainers\Testcontainers::run($container);
     }
 
     protected function setUp(): void
     {
         $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
+            self::getMysqliHost(),
+            self::getMysqliUser(),
+            self::getMysqliPassword(),
+            self::getMysqliDatabase(),
+            self::getMysqliPort(),
         );
         foreach ($this->getTableNames() as $table) {
             $raw->query("DROP TABLE IF EXISTS {$table}");
@@ -55,11 +101,11 @@ abstract class AbstractMysqliTestCase extends TestCase
     protected function createZtdConnection(): ZtdMysqli
     {
         return new ZtdMysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
+            self::getMysqliHost(),
+            self::getMysqliUser(),
+            self::getMysqliPassword(),
+            self::getMysqliDatabase(),
+            self::getMysqliPort(),
         );
     }
 
@@ -106,11 +152,11 @@ abstract class AbstractMysqliTestCase extends TestCase
     protected function createTable(string $ddl): void
     {
         $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
+            self::getMysqliHost(),
+            self::getMysqliUser(),
+            self::getMysqliPassword(),
+            self::getMysqliDatabase(),
+            self::getMysqliPort(),
         );
         $raw->query($ddl);
         $raw->close();
@@ -119,11 +165,11 @@ abstract class AbstractMysqliTestCase extends TestCase
     protected function dropTable(string $name): void
     {
         $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
+            self::getMysqliHost(),
+            self::getMysqliUser(),
+            self::getMysqliPassword(),
+            self::getMysqliDatabase(),
+            self::getMysqliPort(),
         );
         $raw->query("DROP TABLE IF EXISTS {$name}");
         $raw->close();
@@ -162,11 +208,11 @@ abstract class AbstractMysqliTestCase extends TestCase
     protected function getDbVersion(): string
     {
         $raw = new \mysqli(
-            MySQLContainer::getHost(),
-            'root',
-            'root',
-            'test',
-            MySQLContainer::getPort(),
+            self::getMysqliHost(),
+            self::getMysqliUser(),
+            self::getMysqliPassword(),
+            self::getMysqliDatabase(),
+            self::getMysqliPort(),
         );
         $result = $raw->query('SELECT VERSION()');
         $version = $result->fetch_row()[0];

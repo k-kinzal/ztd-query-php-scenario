@@ -6,8 +6,6 @@ namespace Tests\Support;
 
 use PDO;
 use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
 use ZtdQuery\Adapter\Pdo\ZtdPdo;
 use ZtdQuery\Adapter\Pdo\ZtdPdoStatement;
 
@@ -29,19 +27,54 @@ abstract class AbstractMysqlPdoTestCase extends TestCase
      */
     abstract protected function getTableNames(): array;
 
+    private static function isDockerMode(): bool
+    {
+        return getenv('MYSQL_HOST') !== false;
+    }
+
+    private static function getMysqlDsn(): string
+    {
+        if (self::isDockerMode()) {
+            $host = getenv('MYSQL_HOST');
+            $port = getenv('MYSQL_PORT') ?: '3306';
+            $db = getenv('MYSQL_DATABASE') ?: 'ztd_test';
+            return "mysql:host={$host};port={$port};dbname={$db}";
+        }
+        return MySQLContainer::getDsn();
+    }
+
+    private static function getMysqlUser(): string
+    {
+        if (self::isDockerMode()) {
+            return getenv('MYSQL_USER') ?: 'root';
+        }
+        return 'root';
+    }
+
+    private static function getMysqlPassword(): string
+    {
+        if (self::isDockerMode()) {
+            return getenv('MYSQL_PASSWORD') ?: 'root';
+        }
+        return 'root';
+    }
+
     public static function setUpBeforeClass(): void
     {
+        if (self::isDockerMode()) {
+            return;
+        }
         MySQLContainer::resolveImage();
-        $container = (new MySQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        $container = (new MySQLContainer())->withReuseMode(\Testcontainers\Containers\ReuseMode::REUSE());
+        \Testcontainers\Testcontainers::run($container);
     }
 
     protected function setUp(): void
     {
         $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
+            self::getMysqlDsn(),
+            self::getMysqlUser(),
+            self::getMysqlPassword(),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
         foreach ($this->getTableNames() as $table) {
@@ -59,9 +92,9 @@ abstract class AbstractMysqlPdoTestCase extends TestCase
     protected function createZtdConnection(): ZtdPdo
     {
         return new ZtdPdo(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
+            self::getMysqlDsn(),
+            self::getMysqlUser(),
+            self::getMysqlPassword(),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
     }
@@ -98,9 +131,9 @@ abstract class AbstractMysqlPdoTestCase extends TestCase
     protected function createTable(string $ddl): void
     {
         $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
+            self::getMysqlDsn(),
+            self::getMysqlUser(),
+            self::getMysqlPassword(),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
         $raw->exec($ddl);
@@ -109,9 +142,9 @@ abstract class AbstractMysqlPdoTestCase extends TestCase
     protected function dropTable(string $name): void
     {
         $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
+            self::getMysqlDsn(),
+            self::getMysqlUser(),
+            self::getMysqlPassword(),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
         $raw->exec("DROP TABLE IF EXISTS {$name}");
@@ -155,9 +188,9 @@ abstract class AbstractMysqlPdoTestCase extends TestCase
     protected function getDbVersion(): string
     {
         $raw = new PDO(
-            MySQLContainer::getDsn(),
-            'root',
-            'root',
+            self::getMysqlDsn(),
+            self::getMysqlUser(),
+            self::getMysqlPassword(),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
         return $raw->query('SELECT VERSION()')->fetchColumn();

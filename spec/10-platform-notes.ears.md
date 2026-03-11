@@ -12687,6 +12687,8 @@ SELECT with GROUP BY ROLLUP, CUBE, and GROUPING SETS all work correctly through 
 
 The CTE shadow store does not evaluate ANY expression in UPDATE SET clauses. This is a systemic issue that affects: arithmetic (`col + 1`), string functions (`UPPER(col)`, `LOWER(col)`, `REPLACE(col, old, new)`, `CONCAT(...)`), CASE WHEN expressions, COALESCE/IFNULL, scalar subqueries, and JSON functions (Issue #174). Only simple literal assignments (`SET col = 'value'` or `SET col = 42`) work correctly. The shadow store extracts the SET value as a literal string; when the value is an expression, it is either stored as the expression text itself or discarded.
 
+**Note:** Even among simple literals, empty string (`SET col = ''`) fails on MySQL/PostgreSQL/MySQLi — see SPEC-10.2.401.
+
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
 | PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
@@ -12716,3 +12718,45 @@ The CTE shadow store does not evaluate ANY expression in UPDATE SET clauses. Thi
 | 8.3 | ✓   |
 | 8.4 | -   |
 | 8.5 | -   |
+
+## SPEC-10.2.401 UPDATE SET col = '' (empty string) preserves old value on MySQL/PostgreSQL/MySQLi
+**Status:** Known Issue [Issue #179]
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed). SQLite-PDO NOT affected.
+**Tests:** `Pdo/MysqlEmptyStringPreservationDmlTest`, `Pdo/PostgresEmptyStringPreservationDmlTest`, `Mysqli/EmptyStringPreservationDmlTest`, `Pdo/SqliteEmptyStringPreservationDmlTest`
+
+`UPDATE t SET col = '' WHERE condition` does not apply the empty string on MySQL, PostgreSQL, or MySQLi. The shadow store retains the previous column value. SQLite correctly applies the empty string. INSERT with empty string works on all platforms. This means `''` is not treated as a valid literal in UPDATE SET on non-SQLite platforms, despite other simple literal assignments working.
+
+## SPEC-10.2.402 Rapid mutation-query interleaving (INSERT→SELECT→UPDATE→SELECT→DELETE→SELECT)
+**Status:** Working
+**Platforms:** All 4 adapters (confirmed)
+**Tests:** `Pdo/SqliteRapidMutationQueryInterleavingTest`, `Pdo/MysqlRapidMutationQueryInterleavingTest`, `Pdo/PostgresRapidMutationQueryInterleavingTest`, `Mysqli/RapidMutationQueryInterleavingTest`
+
+Full CRUD lifecycle (INSERT→SELECT→UPDATE→SELECT→DELETE→SELECT), interleaved INSERT/COUNT, UPDATE-then-DELETE, filter on updated column — all work correctly through the shadow store when using explicit column values (avoiding DEFAULT). Each mutation step is visible to the immediately following SELECT.
+
+## SPEC-10.2.403 Empty string ('') vs NULL preservation in INSERT and SELECT
+**Status:** Working (INSERT/SELECT), Broken (UPDATE — see SPEC-10.2.401)
+**Platforms:** All 4 adapters
+**Tests:** `Pdo/SqliteEmptyStringPreservationDmlTest`, `Pdo/MysqlEmptyStringPreservationDmlTest`, `Pdo/PostgresEmptyStringPreservationDmlTest`, `Mysqli/EmptyStringPreservationDmlTest`
+
+INSERT with empty string, prepared INSERT with empty string, and empty-vs-NULL distinction in WHERE (`IS NULL` vs `= ''`) all work correctly through the CTE shadow store on all platforms.
+
+## SPEC-10.2.404 PDO bindValue/bindParam methods with ZTD
+**Status:** Working
+**Platforms:** SQLite-PDO (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed)
+**Tests:** `Pdo/SqliteBindMethodsDmlTest`, `Pdo/MysqlBindMethodsDmlTest`, `Pdo/PostgresBindMethodsDmlTest`
+
+Positional bindValue, named bindValue, bindParam reference semantics, NULL via bindValue, bindParam in loop, and re-execute with different values all work correctly through the CTE shadow store.
+
+## SPEC-10.2.405 exec() return value and rowCount() accuracy
+**Status:** Working
+**Platforms:** All 4 adapters (confirmed)
+**Tests:** `Pdo/SqliteExecReturnValueDmlTest`, `Pdo/MysqlExecReturnValueDmlTest`, `Pdo/PostgresExecReturnValueDmlTest`, `Mysqli/ExecReturnValueDmlTest`
+
+exec() returns correct affected row counts for INSERT (1), UPDATE (matched count), UPDATE no-match (0), DELETE (correct count). Prepared statement rowCount() works for both UPDATE and DELETE. DELETE-all without WHERE fails on SQLite only (Issue #7).
+
+## SPEC-10.2.406 DECIMAL/NUMERIC precision through CTE shadow store
+**Status:** Partially Working (literal INSERT/SELECT works; arithmetic UPDATE does not — see SPEC-10.2.394)
+**Platforms:** All 4 adapters (confirmed)
+**Tests:** `Pdo/SqliteDecimalPrecisionDmlTest`, `Pdo/MysqlDecimalPrecisionDmlTest`, `Pdo/PostgresDecimalPrecisionDmlTest`, `Mysqli/DecimalPrecisionDmlTest`
+
+DECIMAL/NUMERIC values round-trip correctly through INSERT and SELECT with full precision (including DECIMAL(30,10) beyond float64 precision). Prepared INSERT with DECIMAL params works. Arithmetic UPDATE (`SET price = price + 0.01`) does not evaluate — known systemic issue (SPEC-10.2.400).

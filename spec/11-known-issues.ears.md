@@ -5534,6 +5534,8 @@ The CTE shadow store does not evaluate ANY expression in UPDATE SET. Only simple
 
 **Impact:** This is the single highest-impact limitation of the shadow store. Nearly every real-world UPDATE uses some form of expression in SET. Applications must disable ZTD for any UPDATE that is not a simple literal assignment.
 
+**Note:** Even among simple literals, empty string (`''`) fails on MySQL/PostgreSQL/MySQLi — see SPEC-11.EMPTY-STRING-UPDATE below.
+
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
 | PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
@@ -5561,5 +5563,50 @@ The CTE shadow store does not evaluate ANY expression in UPDATE SET. Only simple
 | 8.1 | -   |
 | 8.2 | -   |
 | 8.3 | ✓   |
+| 8.4 | -   |
+| 8.5 | -   |
+
+## SPEC-11.EMPTY-STRING-UPDATE `[Issue #179]` UPDATE SET col = '' (empty string) preserves old value
+
+**Status:** Known Issue (newly discovered)
+**Platforms:** MySQLi (confirmed), MySQL-PDO (confirmed), PostgreSQL-PDO (confirmed). SQLite-PDO NOT affected.
+**Related specs:** [SPEC-4.2](04-write-operations.ears.md)
+**Tests:** `Pdo/MysqlEmptyStringPreservationDmlTest::testUpdateToEmptyString`, `Pdo/PostgresEmptyStringPreservationDmlTest::testUpdateToEmptyString`, `Mysqli/EmptyStringPreservationDmlTest::testUpdateToEmptyString`, `Pdo/SqliteEmptyStringPreservationDmlTest::testUpdateToEmptyString`
+
+`UPDATE t SET col = '' WHERE id = 1` does not update the column to empty string on MySQL, PostgreSQL, or MySQLi. The shadow store retains the previous value (e.g. 'some notes' remains 'some notes' after UPDATE to '').
+
+SQLite is not affected — empty string UPDATE works correctly on SQLite PDO.
+
+INSERT with empty string (`INSERT INTO t (col) VALUES ('')`) works correctly on all platforms. Empty string vs NULL distinction in SELECT also works. Only UPDATE SET to empty string literal is broken.
+
+This is distinct from the expression-not-evaluated issues (SPEC-11.EXPRESSION-UPDATE-SET-SYSTEMIC) since `''` is a simple string literal, not an expression. The shadow store claims to support simple literal assignments but treats empty string as a special case.
+
+#### Verification Matrix — MySQL (MySQLi, PDO)
+
+| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — PostgreSQL (PDO)
+
+| PHP | 14  | 15  | 16  | 17  | 18  |
+|-----|-----|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   | -   | -   |
+| 8.2 | -   | -   | -   | -   | -   |
+| 8.3 | -   | -   | ✓   | -   | -   |
+| 8.4 | -   | -   | -   | -   | -   |
+| 8.5 | -   | -   | -   | -   | -   |
+
+#### Verification Matrix — SQLite (PDO)
+
+| PHP | 3.x |
+|-----|-----|
+| 8.1 | -   |
+| 8.2 | -   |
+| 8.3 | ✗ (not affected — works correctly) |
 | 8.4 | -   |
 | 8.5 | -   |

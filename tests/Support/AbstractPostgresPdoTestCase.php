@@ -6,8 +6,6 @@ namespace Tests\Support;
 
 use PDO;
 use PHPUnit\Framework\TestCase;
-use Testcontainers\Containers\ReuseMode;
-use Testcontainers\Testcontainers;
 use ZtdQuery\Adapter\Pdo\ZtdPdo;
 use ZtdQuery\Adapter\Pdo\ZtdPdoStatement;
 
@@ -25,19 +23,54 @@ abstract class AbstractPostgresPdoTestCase extends TestCase
      */
     abstract protected function getTableNames(): array;
 
+    private static function isDockerMode(): bool
+    {
+        return getenv('POSTGRES_HOST') !== false;
+    }
+
+    private static function getPostgresDsn(): string
+    {
+        if (self::isDockerMode()) {
+            $host = getenv('POSTGRES_HOST');
+            $port = getenv('POSTGRES_PORT') ?: '5432';
+            $db = getenv('POSTGRES_DATABASE') ?: 'ztd_test';
+            return "pgsql:host={$host};port={$port};dbname={$db}";
+        }
+        return PostgreSQLContainer::getDsn();
+    }
+
+    private static function getPostgresUser(): string
+    {
+        if (self::isDockerMode()) {
+            return getenv('POSTGRES_USER') ?: 'postgres';
+        }
+        return 'test';
+    }
+
+    private static function getPostgresPassword(): string
+    {
+        if (self::isDockerMode()) {
+            return getenv('POSTGRES_PASSWORD') ?: 'postgres';
+        }
+        return 'test';
+    }
+
     public static function setUpBeforeClass(): void
     {
+        if (self::isDockerMode()) {
+            return;
+        }
         PostgreSQLContainer::resolveImage();
-        $container = (new PostgreSQLContainer())->withReuseMode(ReuseMode::REUSE());
-        Testcontainers::run($container);
+        $container = (new PostgreSQLContainer())->withReuseMode(\Testcontainers\Containers\ReuseMode::REUSE());
+        \Testcontainers\Testcontainers::run($container);
     }
 
     protected function setUp(): void
     {
         $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
+            self::getPostgresDsn(),
+            self::getPostgresUser(),
+            self::getPostgresPassword(),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
         foreach ($this->getTableNames() as $table) {
@@ -55,9 +88,9 @@ abstract class AbstractPostgresPdoTestCase extends TestCase
     protected function createZtdConnection(): ZtdPdo
     {
         return new ZtdPdo(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
+            self::getPostgresDsn(),
+            self::getPostgresUser(),
+            self::getPostgresPassword(),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
     }
@@ -87,9 +120,9 @@ abstract class AbstractPostgresPdoTestCase extends TestCase
     protected function createTable(string $ddl): void
     {
         $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
+            self::getPostgresDsn(),
+            self::getPostgresUser(),
+            self::getPostgresPassword(),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
         $raw->exec($ddl);
@@ -98,9 +131,9 @@ abstract class AbstractPostgresPdoTestCase extends TestCase
     protected function dropTable(string $name): void
     {
         $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
+            self::getPostgresDsn(),
+            self::getPostgresUser(),
+            self::getPostgresPassword(),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
         $raw->exec("DROP TABLE IF EXISTS {$name} CASCADE");
@@ -144,9 +177,9 @@ abstract class AbstractPostgresPdoTestCase extends TestCase
     protected function getDbVersion(): string
     {
         $raw = new PDO(
-            PostgreSQLContainer::getDsn(),
-            'test',
-            'test',
+            self::getPostgresDsn(),
+            self::getPostgresUser(),
+            self::getPostgresPassword(),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
         return $raw->query('SHOW server_version')->fetchColumn();

@@ -600,6 +600,12 @@ The following test classes exercise combinations of multiple specs in realistic 
 | SPEC-10.2.391 | `*SubqueryLimitDmlTest` | K | K | K | K | Subquery LIMIT in DML: silent no-op (MySQL/SL), syntax error (PG) (#176) |
 | SPEC-10.2.392 | `Pdo/MysqlRollupDmlTest`, `Mysqli/RollupDmlTest` | K | K | — | — | INSERT WITH ROLLUP drops NULL grand total row (#178) |
 | SPEC-10.2.393 | `Pdo/PostgresRollupDmlTest` | — | — | P | — | ROLLUP/CUBE/GROUPING SETS: SELECT works, INSERT after DML stale |
+| SPEC-10.2.401 | `*EmptyStringPreservationDmlTest` | K | K | K | V | UPDATE SET col = '' preserves old value on MySQL/PG/MySQLi; SQLite works (#179) |
+| SPEC-10.2.402 | `*RapidMutationQueryInterleavingTest` | V | V | V | V | Full CRUD lifecycle, interleaved INSERT/COUNT, filter on updated col |
+| SPEC-10.2.403 | `*EmptyStringPreservationDmlTest` | V | V | V | V | Empty string INSERT/SELECT works; UPDATE broken (see .401) |
+| SPEC-10.2.404 | `Pdo/SqliteBindMethodsDmlTest`, `Pdo/MysqlBindMethodsDmlTest`, `Pdo/PostgresBindMethodsDmlTest` | V | — | V | V | bindValue/bindParam methods work correctly with ZTD |
+| SPEC-10.2.405 | `*ExecReturnValueDmlTest` | V | V | V | V | exec()/rowCount() returns correct affected counts |
+| SPEC-10.2.406 | `*DecimalPrecisionDmlTest` | P | P | P | P | DECIMAL precision works for INSERT/SELECT; arithmetic UPDATE fails (#140) |
 
 ## Legend
 

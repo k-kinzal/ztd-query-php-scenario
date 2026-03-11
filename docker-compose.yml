@@ -14,7 +14,7 @@ x-sqlite-base: &sqlite-base
   build:
     context: .
     dockerfile: Dockerfile
-  command: ["--filter", "Tests\\Pdo\\Sqlite", "--testsuite", "Scenario"]
+  command: ["--filter", "Tests.Pdo.Sqlite", "--testsuite", "Scenario"]
   volumes:
     - ./build/matrix:/app/build/matrix
 
@@ -22,7 +22,7 @@ x-mysql-base: &mysql-base
   build:
     context: .
     dockerfile: Dockerfile
-  command: ["--filter", "Tests\\Pdo\\Mysql|Tests\\Mysqli\\", "--testsuite", "Scenario"]
+  command: ["--filter", "Tests.Pdo.Mysql|Tests.Mysqli.", "--testsuite", "Scenario"]
   volumes:
     - ./build/matrix:/app/build/matrix
   depends_on:
@@ -33,7 +33,7 @@ x-postgres-base: &postgres-base
   build:
     context: .
     dockerfile: Dockerfile
-  command: ["--filter", "Tests\\Pdo\\Postgres", "--testsuite", "Scenario"]
+  command: ["--filter", "Tests.Pdo.Postgres", "--testsuite", "Scenario"]
   volumes:
     - ./build/matrix:/app/build/matrix
   depends_on:

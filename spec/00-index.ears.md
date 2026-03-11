@@ -80,7 +80,7 @@ docker run --rm ztd-test-php81 --filter 'Tests\\Pdo\\Sqlite'
 | [10-platform-notes.ears.md](10-platform-notes.ears.md) | 10. Platform Notes | SPEC-10.2.1 – SPEC-10.2.169 | Platform-specific behavioral notes |
 | [11-known-issues.ears.md](11-known-issues.ears.md) | 11. Known Issues | SPEC-11.x | Cross-platform inconsistencies with issue tags |
 | [12-pdo-configuration.ears.md](12-pdo-configuration.ears.md) | 12. PDO Configuration | SPEC-12.1 – SPEC-12.21 | PDO attributes, driver-specific attrs, PARAM_* types, config combinations |
-| [13-type-mappings.ears.md](13-type-mappings.ears.md) | 13. Type Mappings | SPEC-13.1 – SPEC-13.4 | SQL column type → PHP type per DB engine, ZTD vs physical |
+| [13-type-mappings.ears.md](13-type-mappings.ears.md) | 13. Type Mappings | SPEC-13.0 – SPEC-13.4 | Type conversion pipeline, DB type inventories (MySQL 37 / PG 48 / SQLite 21), PHP gettype() per PDO config × ZTD on/off |
 
 ## Supporting Files
 

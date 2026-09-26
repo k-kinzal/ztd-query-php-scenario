@@ -75,6 +75,8 @@ Default database environments are `mysql:8.0`, `postgres:16`, and SQLite in memo
 composer install
 ```
 
+The lock file is resolved with `config.platform.php=8.1.0`, so the same dependencies install on the oldest supported PHP. This selects PHPUnit 10 and Symfony Process 6. Run `composer check-platform-reqs` to check the actual runtime.
+
 ### Run all scenarios
 
 ```bash
@@ -112,7 +114,7 @@ Check the split package references against upstream `main`, run the scenarios, a
 - **Spec traceability**: All test classes carry a `@spec SPEC-X.Y` docblock annotation linking them to specification statements in [`spec/`](spec). The [`spec/traceability.md`](spec/traceability.md) matrix maps SPEC-IDs to test classes across all adapters.
 - **Version tracking**: The `VersionRecorder` PHPUnit extension records PHP, database, and ztd-query versions and the adapter commit reference per test class into `spec/verification-log.json`. Tests extending the abstract base classes report versions via `setUp()`; standalone tests get versions auto-detected from running containers.
 - **Baseline comparison**: `scripts/capture-baseline.php` produces `baseline.json` from JUnit XML. `scripts/compare-baseline.php` diffs two baselines and classifies each change as regression, newly supported, intentional change, added, or removed.
-- **Shared base classes**: ~620 test classes extend platform-specific abstract base classes (`AbstractMysqliTestCase`, `AbstractMysqlPdoTestCase`, `AbstractPostgresPdoTestCase`, `AbstractSqlitePdoTestCase`). Each test class provides `getTableDDL()` and `getTableNames()`; the base class handles container setup, connection creation, table cleanup, and version recording. ~57 tests remain standalone where they require per-method connections (ZtdConfig, factory method tests).
+- **Shared base classes**: Tests extend platform-specific abstract base classes (`AbstractMysqliTestCase`, `AbstractMysqlPdoTestCase`, `AbstractPostgresPdoTestCase`, `AbstractSqlitePdoTestCase`). Each test class provides `getTableDDL()` and `getTableNames()`; the base class handles container setup, connection creation, table cleanup, and version recording. Some tests remain standalone where they require per-method connections (ZtdConfig, factory method tests).
 
 ## Issue reporting
 

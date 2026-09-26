@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "id": "BASE-20260926-main-aac51e9",
+  "upstream": "aac51e9d99121f79c98720fec3f8ddc03bf7c59b",
+  "packages": {
+    "k-kinzal/ztd-query-core": {
+      "version": "dev-main",
+      "reference": "f5ab3f0efdb355358b60feb61b7edfb9194fa21f",
+      "url": "https://github.com/k-kinzal/ztd-query-core.git"
+    },
+    "k-kinzal/ztd-query-mysql": {
+      "version": "dev-main",
+      "reference": "969eb5d9f194f3bca1f661a99594b54ead492423",
+      "url": "https://github.com/k-kinzal/ztd-query-mysql.git"
+    },
+    "k-kinzal/ztd-query-mysqli-adapter": {
+      "version": "dev-main",
+      "reference": "3fe31d57e65d337d53cee04a625ec8e855798181",
+      "url": "https://github.com/k-kinzal/ztd-query-mysqli-adapter.git"
+    },
+    "k-kinzal/ztd-query-pdo-adapter": {
+      "version": "dev-main",
+      "reference": "3ed255a43c776349d0170c5b19bcfdd53db626dd",
+      "url": "https://github.com/k-kinzal/ztd-query-pdo-adapter.git"
+    },
+    "k-kinzal/ztd-query-postgres": {
+      "version": "dev-main",
+      "reference": "02bcf6de3040157294b0501396f86872d5301a8e",
+      "url": "https://github.com/k-kinzal/ztd-query-postgres.git"
+    },
+    "k-kinzal/ztd-query-sqlite": {
+      "version": "dev-main",
+      "reference": "542d26203030ded36abbcdea04b77ce99ff8d934",
+      "url": "https://github.com/k-kinzal/ztd-query-sqlite.git"
+    }
+  },
+  "lock": "baselines/locks/5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92.lock",
+  "lock_sha256": "5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92",
+  "report": "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/report.md",
+  "previous": "BASE-20260926-main",
+  "scope": "Regression verification of the three curated scenarios (SQLite fixture lifecycle, SQLite insert column order, MySQL PDO product types) plus the new MySQL session-schema scenario on PHP 8.5.8/8.1.34 with SQLite 3.53.3/3.46.1 and MySQL 8.0.46. PostgreSQL, MySQLi beyond the session-schema scenario, MySQL 8.4/9.x and PHP 8.2-8.4 unverified.",
+  "alignment": "Split packages' latest commits are the subtree publication of monorepo PR #468 (merged 2026-09-26T12:21:44Z). Monorepo main aac51e9 additionally contains PR #467, which touched no packages/ztd-query-* path (checked with the GitHub compare and PR file lists on 2026-09-26). ztd-query-core and ztd-query-sqlite are unchanged since BASE-20260926-main. No implementation was inspected."
+}

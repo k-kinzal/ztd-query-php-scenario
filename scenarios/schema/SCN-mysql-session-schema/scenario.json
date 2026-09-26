@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "SCN-mysql-session-schema",
+  "title": "Create and use a session-only schema without migrations on MySQL",
+  "review": "public-api-expectation-reviewed",
+  "expectation": "spec/expectations/SPEC-session-created-schema.md",
+  "legacy_specs": ["SPEC-5.1", "SPEC-1.4", "SPEC-2.2"],
+  "scope": {
+    "adapter": ["mysql-pdo", "mysqli"],
+    "database": "Disposable MySQL; connection via ZTD_MYSQL_HOST, ZTD_MYSQL_PORT, ZTD_MYSQL_DB, ZTD_MYSQL_USER, ZTD_MYSQL_PASSWORD",
+    "options": {
+      "pdo": "defaults plus ERRMODE_EXCEPTION",
+      "mysqli": "MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT",
+      "ztd": "defaults"
+    },
+    "setup": "Empty disposable database; the script never creates a physical table. Table names are random per adapter so parallel runs do not collide. Runtime versions are emitted by the script."
+  },
+  "sources": [
+    "scenarios/schema/SCN-mysql-session-schema/scenario.php",
+    "scenarios/schema/SCN-mysql-session-schema/php81",
+    "Dockerfile"
+  ],
+  "steps": [
+    {"kind": "php", "argv": ["scenarios/schema/SCN-mysql-session-schema/scenario.php"]}
+  ],
+  "gaps": [
+    "PostgreSQL and SQLite",
+    "unknownSchemaBehavior: Exception",
+    "ALTER TABLE, DROP TABLE, transactions",
+    "Sessions in separate processes",
+    "Other PHP/MySQL versions"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "WRK-mysqli-native-parity",
+  "priority": 1,
+  "status": "ready",
+  "title": "Verify ZtdMysqli behaves like native mysqli for common application APIs",
+  "question": "Where does ZtdMysqli diverge from native mysqli for application code that was written against the extension (return values, result types, insert_id, multi_query, store_result, fromMysqli wrapping)?",
+  "next_action": "Write an expectation for plain query() result types with default options and with MYSQLI_OPT_INT_AND_FLOAT_NATIVE, then cover insert_id, real_query/store_result, multi_query and fromMysqli() against native controls. #471 and #472 are already reported; add material evidence only if new cases differ.",
+  "done_when": "Each chosen API has a native control and ZTD observation on a supported runtime; every confirmed divergence is reported upstream or linked to an existing issue.",
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/report.md",
+    "findings/FND-mysqli-query-return-type/finding.json",
+    "findings/FND-mysqli-query-native-types/finding.json"
+  ]
+}

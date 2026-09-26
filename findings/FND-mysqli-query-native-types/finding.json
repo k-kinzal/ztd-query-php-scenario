@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "FND-mysqli-query-native-types",
+  "scenario": "SCN-mysql-session-schema",
+  "status": "reported",
+  "classification": "existing-problem",
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/repro-types-php85-output.txt",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/repro-types-php81-output.txt",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/repro-php85-output.txt",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/old-lock-replay/README.md",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/old-lock-replay/repro-types-php85-output.txt",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/old-lock-replay/repro-types-php81-output.txt",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/report.md"
+  ],
+  "reproduction": "findings/FND-mysqli-query-native-types/repro.php",
+  "issue_search": "findings/FND-mysqli-query-native-types/issue-search.md",
+  "issue_body": "findings/FND-mysqli-query-native-types/issue-body.md",
+  "issue_url": "https://github.com/k-kinzal/ztd-query-php/issues/472"
+}

@@ -5,7 +5,11 @@
   "status": "ready",
   "title": "Exercise the documented no-migration application workflow",
   "question": "Can users create and populate a session-only schema without precreating physical tables?",
-  "next_action": "Use the current public PDO README example; assert physical schema/data effects and fresh-session behavior.",
+  "next_action": "MySQL PDO and MySQLi documented workflow executed on PHP 8.1.34/8.5.8 with MySQL 8.0.46; PDO met every expectation, MySQLi query() return value reported as #471. Next: run the same README workflow on PostgreSQL 16/17 and SQLite, then unknownSchemaBehavior: Exception and ALTER/DROP in the session.",
   "done_when": "Documented workflow executed with clean setup, expectation/observation separated and any confirmed problem reported.",
-  "evidence": []
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/report.md",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142939589356Z-SCN-mysql-session-schema/run.json",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142950478363Z-SCN-mysql-session-schema/run.json"
+  ]
 }

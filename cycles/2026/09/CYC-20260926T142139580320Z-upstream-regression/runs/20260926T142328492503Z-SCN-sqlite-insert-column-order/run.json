@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "scenario": "SCN-sqlite-insert-column-order",
+  "cycle": "CYC-20260926T142139580320Z-upstream-regression",
+  "started_at": "2026-09-26T14:23:28.564254+00:00",
+  "state": "finished",
+  "repository_revision": "fb2b44d1ddb27783e8f9141a94a89a24045353df",
+  "working_tree_dirty": true,
+  "source": {
+    "archive": "baselines/sources/915f7c75dddf5623b80ba5c0bafa4635e6ee939e1b38700ae0c4e648076971b1.tar.gz",
+    "sha256": "4c6ad68ba5d5e02b8c9292b7be96810418666a635c96010bead0f8f7c4c0909c",
+    "files": {
+      "composer.json": "766c264d0c2c2744206c2a9be33eb388333b24e295c678b67409cfdb28b9a424",
+      "findings/FND-sqlite-insert-column-order/repro.php": "332dff6a9856a1c752af6147f0f2507e585b4df46ff6cbeca55b523eb923de18",
+      "phpunit.xml": "77b28d75b05575f097b48e37b15f7c17580e317cd5e8ad4449e74b2058c798fd",
+      "scenarios/parameters/SCN-sqlite-insert-column-order/scenario.json": "91ee4099ff3d2736d68b42fa478ed2748d88eb614affa02b3cf604987840f1f4",
+      "scripts/lab.py": "5ec89e5f91d218789514237cc949dcd3c91894336730d923de012f18de0f4161",
+      "scripts/runtime.php": "f8a410529d7ea8e605d3d36837e42e71baafafb2baf6e21c6828143367cb2485",
+      "spec/expectations/SPEC-prepared-column-order.md": "3bc7a131a206050239503dd71e5eee0f308613df25f88f4967507f41856cd8f7",
+      "tests/Pdo/SqliteColumnOrderInsertTest.php": "4a87b32c03d01b1590a439b503f0f62331e27e662d006f92c5266efa142e7a56",
+      "tests/Scenarios/BasicCrudScenario.php": "c86bea1abe5f39cf520519404fcc561ef23eb4d55209b84fa7ea108360b37d9d",
+      "tests/Scenarios/JoinAndSubqueryScenario.php": "83260926d56d2dcc7fbe0ca0f2c42b39fcdeee2c8f1d23df3ee941a8783b9fb1",
+      "tests/Scenarios/PreparedStatementScenario.php": "35e4a674e896f1962504a050fcd7fa5710b6ff9bcc3d87c2a3d1c00c4be7240f",
+      "tests/Scenarios/TransactionScenario.php": "4626f4e9c7f365af3036d92a6469df2dc20166826900ad701cc68697ec7e4fe4",
+      "tests/Scenarios/WriteOperationScenario.php": "7964e2612ebb340c4545defb94bd580ffb80f215dffae5969e23b0356520eb5e",
+      "tests/Support/AbstractMysqlPdoTestCase.php": "aa8041bf1036ea40dada758d511bfb7fda2f51d086859f241caf3e6fc59f4dfc",
+      "tests/Support/AbstractMysqliTestCase.php": "aaf29624aa93c747de9f5ac190f7d6257a8be798bfdec159a05268399f1ece7a",
+      "tests/Support/AbstractPostgresPdoTestCase.php": "e8159d7d3849e28534ab044bf9f9d495446f84e05be5ffed04bb9208eed113da",
+      "tests/Support/AbstractSqlitePdoTestCase.php": "30e9d50191868505900fa96f2e232957143bb4aafa8d58c59740cc6c9291a7f3",
+      "tests/Support/MySQLContainer.php": "b9622080d86027e577a604737b38956a1854b2e6a88e1c0173f885e928e76304",
+      "tests/Support/PostgreSQLContainer.php": "819980deac865c22f50eb19515389e3cf3d1b5226e91947fb923958410e19bbb",
+      "tests/Support/PostgreSQLDSN.php": "3d241ce1884be5475ac22ffba5383abe699818d931a3dc76f16cf7f928161dbf",
+      "tests/Support/UserDto.php": "437c72d086ebf95ab4846c875382bdde1cde40728884ba81843e62e2a0be3b9c",
+      "tests/Support/UserDtoWithConstructor.php": "7d3041003b4a14777090012b8fa6374cc14c548f698c45272706392f5cf4717c",
+      "tests/Support/VersionRecorder.php": "e19d249e4941dc09a8c5ab367644a6e67320a3ea5ad52883decc253d432552ab"
+    }
+  },
+  "lock": "baselines/locks/5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92.lock",
+  "lock_sha256": "5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92",
+  "packages": {
+    "k-kinzal/ztd-query-core": {
+      "version": "dev-main",
+      "reference": "f5ab3f0efdb355358b60feb61b7edfb9194fa21f",
+      "url": "https://github.com/k-kinzal/ztd-query-core.git"
+    },
+    "k-kinzal/ztd-query-mysql": {
+      "version": "dev-main",
+      "reference": "969eb5d9f194f3bca1f661a99594b54ead492423",
+      "url": "https://github.com/k-kinzal/ztd-query-mysql.git"
+    },
+    "k-kinzal/ztd-query-mysqli-adapter": {
+      "version": "dev-main",
+      "reference": "3fe31d57e65d337d53cee04a625ec8e855798181",
+      "url": "https://github.com/k-kinzal/ztd-query-mysqli-adapter.git"
+    },
+    "k-kinzal/ztd-query-pdo-adapter": {
+      "version": "dev-main",
+      "reference": "3ed255a43c776349d0170c5b19bcfdd53db626dd",
+      "url": "https://github.com/k-kinzal/ztd-query-pdo-adapter.git"
+    },
+    "k-kinzal/ztd-query-postgres": {
+      "version": "dev-main",
+      "reference": "02bcf6de3040157294b0501396f86872d5301a8e",
+      "url": "https://github.com/k-kinzal/ztd-query-postgres.git"
+    },
+    "k-kinzal/ztd-query-sqlite": {
+      "version": "dev-main",
+      "reference": "542d26203030ded36abbcdea04b77ce99ff8d934",
+      "url": "https://github.com/k-kinzal/ztd-query-sqlite.git"
+    }
+  },
+  "upstream_check": "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/upstream.json",
+  "runtime": {
+    "php": "8.5.8",
+    "os": "Darwin",
+    "architecture": "arm64",
+    "extensions": {
+      "PDO": "8.5.8",
+      "pdo_sqlite": "8.5.8",
+      "pdo_mysql": "8.5.8",
+      "pdo_pgsql": "8.5.8",
+      "mysqli": "8.5.8"
+    },
+    "sqlite": "3.53.3",
+    "sqlite_client": "3.53.3",
+    "phpunit": "10.5.65"
+  },
+  "scope": {
+    "adapter": "sqlite-pdo",
+    "database": "sqlite::memory:",
+    "options": {
+      "pdo_error_mode": "exception",
+      "ztd": "defaults"
+    }
+  },
+  "steps": [
+    {
+      "command": [
+        "php",
+        "findings/FND-sqlite-insert-column-order/repro.php"
+      ],
+      "exit_code": 1,
+      "output": "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142328492503Z-SCN-sqlite-insert-column-order/01-output.txt",
+      "versions": null,
+      "junit": null,
+      "cases": []
+    },
+    {
+      "command": [
+        "php",
+        "vendor/bin/phpunit",
+        "tests/Pdo/SqliteColumnOrderInsertTest.php",
+        "--filter",
+        "testPreparedWithReorderedColumns",
+        "--do-not-cache-result",
+        "--colors=never",
+        "--log-junit",
+        "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142328492503Z-SCN-sqlite-insert-column-order/02-junit.xml"
+      ],
+      "exit_code": 1,
+      "output": "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142328492503Z-SCN-sqlite-insert-column-order/02-output.txt",
+      "versions": "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142328492503Z-SCN-sqlite-insert-column-order/02-versions.json",
+      "junit": "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142328492503Z-SCN-sqlite-insert-column-order/02-junit.xml",
+      "cases": [
+        {
+          "id": "Tests.Pdo.SqliteColumnOrderInsertTest::testPreparedWithReorderedColumns",
+          "outcome": "failed",
+          "assertions": "1"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-26T14:23:28.827446+00:00",
+  "database_runtime": [
+    [
+      "sqlite-pdo",
+      "3.53.3",
+      "8.5.8"
+    ]
+  ],
+  "artifacts": {
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142328492503Z-SCN-sqlite-insert-column-order/01-output.txt": "56ff01b5443db18b995758d47e1a1456b380c19a08b91dd27b796eab91d4b5b1",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142328492503Z-SCN-sqlite-insert-column-order/02-junit.xml": "fc034df74ab5b7d1d077e1c9e9cb698fbb0d1d258b22e419a9b5af19ce7ae549",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142328492503Z-SCN-sqlite-insert-column-order/02-output.txt": "71ff951d46d540f4248c31c33c001d75a9c3f0f99b7f6d0bf5949ea5ed77d85e",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142328492503Z-SCN-sqlite-insert-column-order/02-versions.json": "cd40f27ae7a1e64f6500bf1c2857175bea135384f8e080b9e6474eb27bb17486"
+  }
+}

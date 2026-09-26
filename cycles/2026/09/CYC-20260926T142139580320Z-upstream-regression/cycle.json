@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "CYC-20260926T142139580320Z-upstream-regression",
+  "state": "complete",
+  "topic": "upstream-regression",
+  "baseline": "BASE-20260926-main",
+  "branch": "regression",
+  "report": "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/report.md",
+  "findings": [
+    "FND-mysqli-query-return-type",
+    "FND-mysqli-query-native-types"
+  ],
+  "work_items": [
+    "WRK-session-created-schema",
+    "WRK-supported-matrix",
+    "WRK-mysqli-native-parity"
+  ],
+  "new_baseline": "BASE-20260926-main-aac51e9"
+}

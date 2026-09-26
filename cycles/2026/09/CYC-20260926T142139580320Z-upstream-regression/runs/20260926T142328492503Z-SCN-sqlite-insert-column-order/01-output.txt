@@ -1,0 +1,2 @@
+{"mode":"Native","execute":true,"all_rows":[{"id":10,"name":"PrepItem","price":19.99,"category":null}],"lookup":[{"id":10,"name":"PrepItem","price":19.99,"category":null}],"physical_rows":[{"id":10,"name":"PrepItem","price":19.99,"category":null}],"expectation_met":true}
+{"mode":"ZTD","execute":true,"all_rows":[{"id":19,"name":"10","price":0,"category":null}],"lookup":[],"physical_rows":[],"expectation_met":false}

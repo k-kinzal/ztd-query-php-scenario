@@ -1,0 +1,8 @@
+{"php":"8.1.34","mysqli":"8.1.34","server":"8.0.46"}
+{"statement":"CREATE TABLE","native":{"type":"bool","value":true},"ztd":{"type":"mysqli_result","num_rows":0,"field_count":1,"fetch_all":[]},"same_type":false}
+{"statement":"INSERT","native":{"type":"bool","value":true},"ztd":{"type":"mysqli_result","num_rows":2,"field_count":2,"fetch_all":[]},"same_type":false}
+{"statement":"UPDATE","native":{"type":"bool","value":true},"ztd":{"type":"mysqli_result","num_rows":1,"field_count":3,"fetch_all":[]},"same_type":false}
+{"statement":"DELETE","native":{"type":"bool","value":true},"ztd":{"type":"mysqli_result","num_rows":1,"field_count":2,"fetch_all":[]},"same_type":false}
+{"statement":"SELECT","native":{"type":"mysqli_result","num_rows":1,"field_count":2,"fetch_all":[{"id":"2","name":"Robert"}]},"ztd":{"type":"mysqli_result","num_rows":1,"field_count":2,"fetch_all":[{"id":2,"name":"Robert"}]},"same_type":true,"same_rows_strict":false}
+{"statement":"DROP TABLE","native":{"type":"bool","value":true},"ztd":{"type":"mysqli_result","num_rows":0,"field_count":1,"fetch_all":[]},"same_type":false}
+{"idiom":"$mysqli->query(ddl) === true","native_expected":true,"ztd_actual":false}

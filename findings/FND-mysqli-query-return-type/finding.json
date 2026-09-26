@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "id": "FND-mysqli-query-return-type",
+  "scenario": "SCN-mysql-session-schema",
+  "status": "reported",
+  "classification": "existing-problem",
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142939589356Z-SCN-mysql-session-schema/run.json",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/runs/20260926T142950478363Z-SCN-mysql-session-schema/run.json",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/repro-php85-output.txt",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/repro-php81-output.txt",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/old-lock-replay/README.md",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/old-lock-replay/repro-php85-output.txt",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/old-lock-replay/repro-php81-output.txt",
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/report.md"
+  ],
+  "reproduction": "findings/FND-mysqli-query-return-type/repro.php",
+  "issue_search": "findings/FND-mysqli-query-return-type/issue-search.md",
+  "issue_body": "findings/FND-mysqli-query-return-type/issue-body.md",
+  "issue_url": "https://github.com/k-kinzal/ztd-query-php/issues/471"
+}

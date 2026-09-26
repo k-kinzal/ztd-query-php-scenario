@@ -96,20 +96,29 @@ docker run --rm ztd-test-php81 --filter 'Tests\\Pdo\\Sqlite'
 
 ## Spec Entry Format
 
-Each spec entry MUST include:
+Specifications describe user expectations and record whether public-API scenarios satisfy them. Follow the [investigation workflow](../WORKFLOW.md) when adding or revalidating entries. Keep historical observations labeled with their original baseline; apply the following format to new or revalidated evidence.
 
-1. **Status** — `Verified`, `Partially Verified`, or `Known Issue`
-2. **Platforms** — Which adapter(s) apply (MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO)
-3. **Tests** — Test class(es) that verify this entry
-4. **Verification Matrix** — A per-platform table showing which PHP × DB version combinations have been tested
+Each new or revalidated spec entry MUST include:
+
+1. **User scenario and expected behavior** — The task, expected observable outcome, and its basis in user needs, the public contract, or native behavior with ZTD semantics accounted for.
+2. **Status** — `Unverified`, `Verified`, `Partially Verified`, or `Known Issue`, scoped to the cited baseline and tested combinations. `Unverified` means there is no sufficient execution evidence; the other statuses must cite results.
+3. **Platforms** — Which adapter(s) apply (MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO).
+4. **Tests and reproduction** — Executable test class/methods and a runnable example for any problem, with complete setup and commands.
+5. **Observed behavior and evidence** — Actual results kept separate from expectations, exact package commits and runtime versions, and a link to tracked verification evidence.
+6. **Verification Matrix** — A per-platform table showing which PHP × DB version combinations have been tested.
+7. **Issue disposition** — For confirmed problems, the upstream issue URL or an explicitly pending report with a complete issue body, reproduction, and submission blocker.
+
+A passing assertion that reproduces a known bug does not verify the user's expected behavior. Record the unmet expectation and issue separately. Do not replace the expectation with the current faulty outcome to obtain a passing test.
 
 ### Verification Matrix Format
 
 Every spec entry MUST include a verification matrix for each applicable platform and identify the package version or commit behind its results. New matrices start with untested cells. Use the following legend:
 
-- `✓` — Verified on the explicitly stated baseline (test passes)
-- `✗` — Failed (test fails)
+- `✓` — The user expectation was met on the explicitly stated baseline, with linked execution evidence
+- `✗` — The user expectation was not met, with linked execution evidence and classification
 - `-` — Untested
+
+Setup and infrastructure failures leave behavioral verification incomplete; record those failures and keep the affected cells unverified. Historical matrices retain their original meaning until revalidated and explicitly linked to new evidence.
 
 #### MySQL (MySQLi / PDO)
 
@@ -156,5 +165,5 @@ The following areas affect user-visible behavior but are NOT yet covered by the 
 - Examples: `SPEC-1.1`, `SPEC-3.3a`, `SPEC-4.2b`, `SPEC-11.PDO-UPSERT`
 - Each ID appears in exactly one section file
 - IDs match the original monolith's section numbering
-- Status values: `Verified`, `Known Issue`, `Partially Verified`
+- Status values: `Unverified`, `Verified`, `Known Issue`, `Partially Verified`
 - Platform scope uses adapter shorthand: `MySQLi`, `MySQL-PDO`, `PostgreSQL-PDO`, `SQLite-PDO`

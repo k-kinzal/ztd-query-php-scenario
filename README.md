@@ -1,6 +1,6 @@
 # ztd-query-php-scenario
 
-Independent user-perspective verification for `ztd-query-php`.
+Black-box verification of user scenarios for `ztd-query-php`.
 
 This repository is an external assurance layer for `ztd-query-php`. It is AI-maintained and public so that the current behavioral baseline, executable scenarios, written specifications, and discovered problems remain visible outside the library repository.
 
@@ -10,10 +10,11 @@ This repository is an external assurance layer for `ztd-query-php`. It is AI-mai
 
 ## What this repository does
 
-- Verifies `k-kinzal/ztd-query-mysqli-adapter` and `k-kinzal/ztd-query-pdo-adapter` from a user perspective
-- Makes expected behavior explicit through executable scenarios and written specifications
+- Exercises `k-kinzal/ztd-query-mysqli-adapter` and `k-kinzal/ztd-query-pdo-adapter` through their public APIs
+- Defines what users expect to accomplish and checks those expectations through executable scenarios
 - Detects bugs, regressions, unsupported cases, and high-friction usage before they reach users
-- Keeps a versioned behavioral baseline that can be compared across releases
+- Keeps exact dependency baselines, runnable reproductions, and verification evidence
+- Reports confirmed problems upstream with sample code, commands, and expected versus actual results
 
 This is not a formal certification program. It is an independently maintained external verification target.
 
@@ -24,14 +25,21 @@ This is not a formal certification program. It is an independently maintained ex
 - [`tests/Support/`](tests/Support) for Testcontainers helpers and test infrastructure
 - [`tests/Mysqli/`](tests/Mysqli) for MySQLi-specific coverage
 - [`tests/Pdo/`](tests/Pdo) for PDO coverage for MySQL, PostgreSQL, and SQLite
-- [`spec/`](spec) for written specifications derived from verified behavior
+- [`spec/`](spec) for user expectations, observed behavior, and versioned verification evidence
+- [`WORKFLOW.md`](WORKFLOW.md) for the investigation and issue-reporting procedure
 - [`composer.json`](composer.json) and [`composer.lock`](composer.lock) for dependency constraints and installed versions
 
-When a new `ztd-query` version is released, the new results are compared with the previous verified baseline so this repository can show:
+## Operating loop
 
-- which scenarios still hold;
-- which scenarios no longer hold;
-- whether each change looks like a bug, an intentional behavior change, newly supported behavior, or an outdated scenario/spec.
+Each investigation starts by comparing upstream `main` and the split packages' `dev-main` commit references with the recorded baseline.
+
+- **Upstream advanced:** refresh dependencies, run existing scenarios, and investigate differences against the previous baseline under comparable conditions.
+- **Upstream unchanged:** add or deepen user scenarios and verify them on the locked baseline.
+- **In either case:** reduce suspected problems to runnable examples, verify them, check existing open and closed upstream issues, and file confirmed new problems. Link existing reports and add material new evidence when available.
+
+Keep expectations separate from current observations. Preserve code, exact versions, commands, and essential output in tracked files so each conclusion can be reproduced. A scenario or local TODO alone does not complete reporting a confirmed problem.
+
+The [operating policy](AGENTS.md) and [workflow](WORKFLOW.md) define the required evidence, classification rules, and handling of incomplete checks or blocked reports.
 
 ## Current dependency baseline
 
@@ -107,18 +115,22 @@ Both runners store results under `build/matrix/` and return a nonzero exit code 
 composer update 'k-kinzal/ztd-query-*' --with-all-dependencies --minimal-changes
 ```
 
-Check the split package references against upstream `main`, run the scenarios, and update the baseline report with the commit and runtime versions. Commit `composer.lock` with the report. The `^0.1` release constraints used in the historical baseline do not track `main`.
+Preserve the previous lock and evidence before updating. Check the resolved split package references against upstream `main`, run the regression scenarios, and record the old/new results, exact commits, and runtime versions. Follow the [regression workflow](WORKFLOW.md#2a-upstream-advanced-verify-regressions) and commit `composer.lock` with the report. The `^0.1` release constraints used in the historical baseline do not track `main`.
 
 ## Architecture
 
 - **Spec traceability**: All test classes carry a `@spec SPEC-X.Y` docblock annotation linking them to specification statements in [`spec/`](spec). The [`spec/traceability.md`](spec/traceability.md) matrix maps SPEC-IDs to test classes across all adapters.
 - **Version tracking**: The `VersionRecorder` PHPUnit extension records PHP, database, and ztd-query versions and the adapter commit reference per test class into `spec/verification-log.json`. Tests extending the abstract base classes report versions via `setUp()`; standalone tests get versions auto-detected from running containers.
-- **Baseline comparison**: `scripts/capture-baseline.php` produces `baseline.json` from JUnit XML. `scripts/compare-baseline.php` diffs two baselines and classifies each change as regression, newly supported, intentional change, added, or removed.
+- **Baseline comparison**: `scripts/capture-baseline.php` produces `baseline.json` from JUnit XML. `scripts/compare-baseline.php` summarizes changes per test class. Its labels need verification: it can call a version-related failure `intentional` and does not compare `dev-main` commit references. Use exact references and individual scenario evidence to classify changes.
 - **Shared base classes**: Tests extend platform-specific abstract base classes (`AbstractMysqliTestCase`, `AbstractMysqlPdoTestCase`, `AbstractPostgresPdoTestCase`, `AbstractSqlitePdoTestCase`). Each test class provides `getTableDDL()` and `getTableNames()`; the base class handles container setup, connection creation, table cleanup, and version recording. Some tests remain standalone where they require per-method connections (ZtdConfig, factory method tests).
 
 ## Issue reporting
 
 - Upstream project: <https://github.com/k-kinzal/ztd-query-php>
 - Upstream issues: <https://github.com/k-kinzal/ztd-query-php/issues>
+
+For every confirmed new problem, file an upstream issue with a verified runnable PHP/SQL example, complete setup and execution commands, exact package/runtime versions, and expected versus actual output. Check open and closed issues first; link existing reports and contribute material new evidence to them.
+
+Keep the reproduction and essential verification output in tracked files and link the resulting issue from the relevant spec and investigation. See [the evidence requirements and reporting procedure](WORKFLOW.md#3-verify-an-issue-candidate). If submission is blocked, retain a complete issue body and record reporting as pending.
 
 Please do not open issues or pull requests in this repository.

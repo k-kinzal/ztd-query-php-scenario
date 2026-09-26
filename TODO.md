@@ -1,6 +1,8 @@
 # TODO
 
-> Items in this file are unverified hypotheses. Remove each item after it has been tested and documented in the spec.
+> Items in this file are unverified hypotheses or coverage gaps. Follow [WORKFLOW.md](WORKFLOW.md): check upstream first, prioritize regressions when `dev-main` advances, and develop user scenarios when it is unchanged. Close an item only after retaining executable evidence, documenting the result, and reporting any confirmed problem upstream. If submission is blocked, keep the item pending with a complete issue body, reproduction, and recorded blocker.
+
+For each investigation, state the user's task and expected outcome before testing. Record actual output, exact package/runtime versions, commands, and tested scope. Keep expectations separate from observed bugs, and link the scenario, spec, evidence, and upstream issue.
 
 ## PHP type of SELECT results: ZTD enabled vs disabled with EMULATE_PREPARES=false
 
@@ -41,4 +43,4 @@ All spec items now have explicit verification matrices (PHP × DB version). The 
 
 ## Revalidate historical specifications against main
 
-The numbered specs and traceability statuses describe the v0.1.1 baseline unless a newer run is explicitly cited. Use the [current baseline](spec/00-index.ears.md) to classify changes, update outdated expectations, and check upstream issues before reporting reproducible problems. The current support range is in [AGENTS.md](AGENTS.md).
+The numbered specs and traceability statuses describe the v0.1.1 baseline unless a newer run is explicitly cited. Use the [current baseline](spec/00-index.ears.md) to classify changes and correct outdated assertions with supporting evidence. Check open and closed upstream issues and report confirmed new problems with runnable examples. Preserve historical observations under their original versions. The current support range is in [AGENTS.md](AGENTS.md).

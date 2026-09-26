@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
+use Composer\InstalledVersions;
 use PHPUnit\Event\Test\Finished as TestFinished;
 use PHPUnit\Event\Test\FinishedSubscriber as TestFinishedSubscriber;
 use PHPUnit\Event\TestRunner\Finished as RunnerFinished;
@@ -14,7 +15,7 @@ use PHPUnit\Runner\Extension\ParameterCollection;
 use PHPUnit\TextUI\Configuration\Configuration;
 
 /**
- * PHPUnit extension that records {testClass, phpVersion, dbVersion, ztdVersion}
+ * PHPUnit extension that records runtime versions and the ZTD package reference
  * per test run into spec/verification-log.json.
  *
  * Register in phpunit.xml:
@@ -24,7 +25,7 @@ use PHPUnit\TextUI\Configuration\Configuration;
  */
 final class VersionRecorder implements Extension
 {
-    /** @var array<string, array{phpVersion: string, dbVersion: string, ztdVersion: string, adapter: string}> */
+    /** @var array<string, array{phpVersion: string, dbVersion: string, ztdVersion: string, ztdReference: string, adapter: string, timestamp: string}> */
     private static array $entries = [];
 
     /** @var array<string, array{dbVersion: string, ztdVersion: string}> Version info set by base class setUp(), before TestFinished fires */
@@ -75,6 +76,9 @@ final class VersionRecorder implements Extension
             'phpVersion' => PHP_VERSION,
             'dbVersion' => $dbVersion,
             'ztdVersion' => $ztdVersion,
+            'ztdReference' => InstalledVersions::getReference(
+                $adapter === 'mysqli' ? 'k-kinzal/ztd-query-mysqli-adapter' : 'k-kinzal/ztd-query-pdo-adapter'
+            ) ?? 'unknown',
             'adapter' => $adapter,
             'timestamp' => date('c'),
         ];

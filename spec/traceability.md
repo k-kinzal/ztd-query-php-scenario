@@ -3,7 +3,9 @@
 Maps SPEC-IDs to test classes and verified versions.
 
 **Last updated:** 2026-03-10
-**Verified environment:** PHP 8.1–8.5, MySQL 8.0, PostgreSQL 14/16/17, SQLite 3.x, ztd-query-pdo-adapter v0.1.1, ztd-query-mysqli-adapter v0.1.1
+**Historical verified environment (v0.1.1):** PHP 8.1–8.5, MySQL 8.0, PostgreSQL 14/16/17, SQLite 3.x, ztd-query-pdo-adapter v0.1.1, ztd-query-mysqli-adapter v0.1.1
+
+> Statuses below belong to the historical v0.1.1 baseline. For the current `dev-main` references, support range, and revalidation results, see [the spec index](00-index.ears.md). PostgreSQL 14 is retained here only as historical evidence.
 
 ## How to read this matrix
 

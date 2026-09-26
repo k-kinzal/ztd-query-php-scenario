@@ -22,14 +22,10 @@ WORKDIR /app
 # Copy project files first
 COPY . .
 
-# Resolve dependencies for this PHP version (no lock file).
-# Removes lock file so Composer resolves versions compatible with
-# the running PHP. testcontainers-php requires symfony/process
-# which may require newer PHP; we exclude it in container context
-# since containers connect to DB services directly, not via Docker.
-RUN rm -f composer.lock && rm -rf vendor \
-    && composer remove --dev k-kinzal/testcontainers-php --no-update --no-interaction \
-    && composer update --no-interaction --no-progress --prefer-dist
+# The lock file is resolved for PHP 8.1, the oldest supported runtime.
+# Every matrix image installs the same ZTD commits and test dependencies.
+RUN composer install --no-interaction --no-progress --prefer-dist \
+    && composer check-platform-reqs
 
 # Default: run all tests
 ENTRYPOINT ["php", "vendor/bin/phpunit"]

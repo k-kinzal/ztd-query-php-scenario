@@ -1,5 +1,7 @@
 # 11. Known Issues and Cross-Platform Inconsistencies
 
+> **Baseline:** Statuses, observations, and verification marks below were recorded against v0.1.1. The matrix columns follow the current support range; these historical results have not all been revalidated against `dev-main`. See the [current baseline and support policy](00-index.ears.md).
+
 ## SPEC-11.UNKNOWN-UPDATE `[Issue #39]` Unknown schema UPDATE (Passthrough mode)
 **Status:** Known Issue
 **Platforms:** MySQL-PDO (fromPdo), PostgreSQL-PDO, SQLite-PDO
@@ -10,23 +12,23 @@ On MySQL via `ZtdPdo::fromPdo()`, PostgreSQL, and SQLite, UPDATE on unreflected 
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -47,13 +49,13 @@ On PostgreSQL and SQLite, UPDATE throws `RuntimeException` ("UPDATE simulation r
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -74,13 +76,13 @@ On PostgreSQL, DELETE in Exception mode throws `RuntimeException` rather than `Z
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -120,13 +122,13 @@ On MySQL, `INSERT INTO t SELECT * FROM s` throws `RuntimeException` because the 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.PG-CTE `[Issue #4]` User-written CTEs (PostgreSQL)
 **Status:** Known Issue (By-Design)
@@ -138,13 +140,13 @@ On PostgreSQL, table references inside user CTEs are NOT rewritten — the inner
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-SCHEMA-QUALIFIED `[Issue #24]` Schema-qualified table names (PostgreSQL)
 **Status:** Known Issue
@@ -155,13 +157,13 @@ INSERT/UPDATE/DELETE with `public.tablename` work. SELECT returns empty (CTE rew
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.EXECUTE-QUERY-UPSERT `[Issue #42]` execute_query vs prepare+bind_param for UPSERT/REPLACE (MySQLi)
 **Status:** Known Issue
@@ -173,13 +175,13 @@ MySQLi `execute_query()` does NOT update/replace existing rows for UPSERT and RE
 
 #### Verification Matrix — MySQL (MySQLi)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.MYSQL-MULTI-TABLE-DELETE `[Issue #26]` Multi-target DELETE (MySQL)
 **Status:** Known Issue
@@ -191,13 +193,13 @@ Multi-target DELETE (`DELETE t1, t2 FROM ...`) only deletes from the first table
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.SQLITE-ALTER-RENAME `[Issue #27]` ALTER TABLE RENAME TO (SQLite)
 **Status:** Known Issue
@@ -227,13 +229,13 @@ ALTER TABLE RENAME TO drops shadow data without creating new entry. ZTD-inserted
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-RETURNING `[Issue #32]` PostgreSQL RETURNING clause
 **Status:** Known Issue
@@ -244,13 +246,13 @@ INSERT/UPDATE/DELETE RETURNING clause is not supported. CTE rewriter does not pr
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PDO-PREPARED-INSERT `[Issue #23]` PDO prepared INSERT cannot be updated/deleted
 **Status:** Known Issue
@@ -262,23 +264,23 @@ On PDO, rows inserted via `prepare()` + `execute()` cannot be subsequently updat
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -300,23 +302,23 @@ PDO prepared REPLACE INTO and INSERT ... ON CONFLICT DO UPDATE do NOT update exi
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -339,13 +341,13 @@ On SQLite, HAVING with bound parameters returns empty results. HAVING with liter
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -366,13 +368,13 @@ Backslash characters are corrupted in shadow store: `\t` → tab, `\n` → newli
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.PG-BOOLEAN-FALSE `[Issue #6]` PostgreSQL BOOLEAN false casting
 **Status:** Known Issue
@@ -383,13 +385,13 @@ Inserting `false` into BOOLEAN column via prepared statement succeeds, but SELEC
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-BIGINT `[Issue #6]` PostgreSQL BIGINT overflow
 **Status:** Known Issue
@@ -400,13 +402,13 @@ Large integers (> 2^31) in BIGINT columns fail on SELECT (CTE generates `CAST(va
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.SQLITE-DELETE-NO-WHERE `[Issue #7]` DELETE without WHERE clause (SQLite)
 **Status:** Known Issue
@@ -436,13 +438,13 @@ EXCEPT and INTERSECT throw `UnsupportedSqlException` on MySQL. The CTE rewriter 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.PG-EXTRACT `[Issue #15]` PostgreSQL EXTRACT on shadow dates
 **Status:** Known Issue
@@ -453,13 +455,13 @@ EXCEPT and INTERSECT throw `UnsupportedSqlException` on MySQL. The CTE rewriter 
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.UPSERT-SELF-REF `[Issue #16]` ON DUPLICATE KEY UPDATE self-referencing expression
 **Status:** Known Issue
@@ -470,13 +472,13 @@ EXCEPT and INTERSECT throw `UnsupportedSqlException` on MySQL. The CTE rewriter 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.INSERT-DEFAULT `[Issue #31]` INSERT with DEFAULT keyword
 **Status:** Known Issue
@@ -487,23 +489,23 @@ EXCEPT and INTERSECT throw `UnsupportedSqlException` on MySQL. The CTE rewriter 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -524,13 +526,13 @@ INSERT with INTEGER[] array values succeeds, but SELECT fails (CastRenderer emit
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.BINARY-DATA `[Issue #19]` BLOB/BINARY data with binary bytes
 **Status:** Known Issue
@@ -540,23 +542,23 @@ Inserting binary data (null bytes, high-byte values) via prepared statements suc
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -577,13 +579,13 @@ PostgreSQL PgSqlParser's regex doesn't handle `''` escaping, causing incorrect W
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.SQLITE-CTAS `[Issue #36]` CREATE TABLE AS SELECT (SQLite)
 **Status:** Known Issue
@@ -615,13 +617,13 @@ Computed columns and aggregated values become NULL when using INSERT...SELECT on
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -642,13 +644,13 @@ Computed columns and aggregated values become NULL when using INSERT...SELECT on
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.UPDATE-SUBQUERY-SET `[Issue #10]` UPDATE SET col = (subquery) platform differences
 **Status:** Known Issue
@@ -658,23 +660,23 @@ Non-correlated scalar subqueries in UPDATE SET work on MySQL and SQLite but fail
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -696,23 +698,23 @@ Full-text search queries (MATCH...AGAINST on MySQL, tsvector/tsquery on PostgreS
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -734,13 +736,13 @@ On PostgreSQL, prepared statements with user-defined functions in WHERE clauses 
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.UPDATE-FROM `[Issue #72]` UPDATE ... FROM syntax not supported (SQLite)
 **Status:** Known Issue
@@ -779,13 +781,13 @@ Workarounds:
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.BARE-SUBQUERY-REWRITE `[Issue #73]` Bare subquery table references not rewritten (SQLite)
 **Status:** Known Issue
@@ -876,23 +878,23 @@ Workarounds:
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -967,23 +969,23 @@ UPDATE departments SET avg_salary = 57500.00 WHERE id = 2;
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1009,23 +1011,23 @@ Workarounds:
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1067,23 +1069,23 @@ LEFT JOIN (SELECT bin_id, SUM(qty) AS total_out FROM outbound GROUP BY bin_id) o
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1122,23 +1124,23 @@ WHERE d.amount = (SELECT MAX(d2.amount) FROM deals d2 WHERE d2.rep_id = d.rep_id
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1175,23 +1177,23 @@ ORDER BY w.priority, w.id;
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1238,23 +1240,23 @@ UPDATE products SET status = 'featured' WHERE id IN (1, 2);
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1276,23 +1278,23 @@ When UPDATE or DELETE targets a table whose schema was not reflected at adapter 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1313,23 +1315,23 @@ When UPDATE or DELETE targets a table whose schema was not reflected at adapter 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1350,23 +1352,23 @@ The CTE rewriter prepends its own `WITH` clause before the user's `WITH RECURSIV
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1388,23 +1390,23 @@ CTE-based DML statements (`WITH ... INSERT`, `WITH ... UPDATE`, `WITH ... DELETE
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1426,13 +1428,13 @@ PostgreSQL conditional upserts with `ON CONFLICT DO UPDATE ... WHERE condition` 
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-CTAS-TEXT `[Issue #37]` CTAS column types default to TEXT (PostgreSQL)
 **Status:** Known Issue
@@ -1444,13 +1446,13 @@ When `CREATE TABLE AS SELECT` creates a shadow table on PostgreSQL, all column t
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.INSERT-SELECT-CASE `[Issue #76]` INSERT...SELECT with CASE expression produces 0 rows (SQLite)
 **Status:** Known Issue
@@ -1517,13 +1519,13 @@ UPDATE items SET code = SUBSTR(code, 1, 3) WHERE id = 1;
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-JSONB-QUESTION-MARK `[Issue #48]` JSONB ? / ?| / ?& operators conflict with parameter placeholder
 **Status:** Known Issue
@@ -1554,13 +1556,13 @@ SELECT name FROM docs WHERE jsonb_exists_all(meta, array['author', 'reviewed']);
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.SQLITE-MULTI-COL-SET-OP `[Issue #50]` Multi-column INTERSECT/EXCEPT returns empty results on SQLite
 **Status:** Known Issue
@@ -1601,23 +1603,23 @@ Self-referencing scalar subqueries in SET (e.g., `SET price = (SELECT MAX(price)
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1639,13 +1641,13 @@ Queries containing user-defined CTEs (`WITH ... AS (...)`) silently return 0 row
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1667,13 +1669,13 @@ INSERT/UPDATE/DELETE with RETURNING clause silently return 0 rows through the CT
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.INSERT-SELECT-JOIN `[Issue #49]` INSERT...SELECT with multi-table JOIN produces incorrect results
 **Status:** Known Issue
@@ -1701,23 +1703,23 @@ GROUP BY c.id, c.name, c.region;
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1743,13 +1745,13 @@ Queries using only original columns continue to work correctly after ADD COLUMN 
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1778,13 +1780,13 @@ Related: Issue #42 (MySQLi execute_query REPLACE), Issue #17 (PDO prepared upser
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1810,13 +1812,13 @@ Related: Issue #13 (derived tables not rewritten), SPEC-11.PG-LATERAL (LATERAL i
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-IS-NOT-DISTINCT-FROM `[Issue #57]` PostgreSQL IS NOT DISTINCT FROM between columns returns empty
 **Status:** Known Issue
@@ -1835,13 +1837,13 @@ Related: Issue #13 (derived tables not rewritten), SPEC-11.PG-LATERAL (LATERAL i
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.SQLITE-DELETE-HAVING `[Issue #58]` SQLite DELETE with IN (subquery GROUP BY HAVING) produces incomplete SQL
 **Status:** Known Issue
@@ -1875,13 +1877,13 @@ Related: Issue #11 (UPDATE self-referencing with GROUP BY HAVING).
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.PG-ROW-VALUE-DML `[Issue #60]` Row value constructor in UPDATE/DELETE WHERE produces syntax error
 **Status:** Known Issue
@@ -1893,23 +1895,23 @@ Related: Issue #11 (UPDATE self-referencing with GROUP BY HAVING).
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1935,23 +1937,23 @@ Related: Issue #47 (TRIM/SUBSTRING FROM in SET), Issue #51 (correlated subquery 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -1975,13 +1977,13 @@ Related: Issue #22 (HAVING with prepared params), Issue #45 (UDF in WHERE with p
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-USING-PREPARED `[Issue #63]` JOIN USING with $N WHERE parameter returns empty
 **Status:** Known Issue
@@ -1997,23 +1999,23 @@ Related: Issue #22 (HAVING with prepared params), Issue #62 (FILTER with prepare
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2057,23 +2059,23 @@ When `UPDATE SET id = new_value WHERE id = old_value` changes a primary key colu
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2095,13 +2097,13 @@ On PostgreSQL, JOIN between a table without a primary key and a table with a pri
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.SQLITE-STRING-LITERAL `[Issue #67]` SQLite: CTE rewriter replaces table references in string literals
 **Status:** Known Issue
@@ -2131,13 +2133,13 @@ On PostgreSQL, INSERT via prepared statement using `$N` parameter syntax (Postgr
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.SQL-COMMENT-DML `[Issue #69]` SQL block comments break DML statement parsing
 **Status:** Known Issue
@@ -2170,23 +2172,23 @@ Workaround: strip all SQL comments before passing queries to ZTD.
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2295,23 +2297,23 @@ On SQLite, UPDATE and DELETE statements with table aliases (`UPDATE t AS alias S
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2369,13 +2371,13 @@ SQL line comments (`--`) break the CTE rewriter in two cases: (1) a line comment
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2397,13 +2399,13 @@ SQL line comments (`--`) break the CTE rewriter in two cases: (1) a line comment
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2425,13 +2427,13 @@ PostgreSQL's `format()` function works correctly in SELECT, WHERE, and prepared-
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-DOLLAR-SELECT `[Issue #85]` PostgreSQL: SELECT with $N prepared params returns empty results
 **Status:** Known Issue
@@ -2454,13 +2456,13 @@ Workaround: Use `?` placeholders instead of `$N` on PostgreSQL.
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.KEYWORD-TABLE-NAME `[Issue #86]` Table names "select" and "values" break CTE rewriter
 **Status:** Known Issue
@@ -2480,23 +2482,23 @@ Workaround: Rename tables to avoid `select` and `values` as table names, or disa
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2526,23 +2528,23 @@ Workaround: Use `query()` instead of re-executing a prepared SELECT, or prepare 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2575,13 +2577,13 @@ Workaround: Use standard single-quoted strings with doubled single-quote escapin
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-ESCAPE-STRING `[Issue #89]` E-string escape syntax breaks CTE rewriter (PostgreSQL)
 **Status:** Known Issue
@@ -2604,13 +2606,13 @@ Workaround: Use standard single-quoted strings with PostgreSQL's default `standa
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-BIT-TYPE `[Issue #90]` BIT type values corrupted in shadow store (PostgreSQL)
 **Status:** Known Issue
@@ -2632,13 +2634,13 @@ Workaround: Store BIT values as TEXT and cast at query time, or avoid BIT column
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.INSERT-IGNORE-UNIQUE `[Issue #91]` INSERT IGNORE / ON CONFLICT DO NOTHING does not enforce non-PK UNIQUE constraints
 **Status:** Known Issue
@@ -2658,23 +2660,23 @@ Workaround: Check for existing rows via SELECT before inserting, or use a differ
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2703,13 +2705,13 @@ Workaround: Use an integer column with application-level mapping instead of ENUM
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.HEX-LITERAL-UPDATE `[Issue #93]` X'...' hex literal in UPDATE SET parsed as column name
 **Status:** Known Issue
@@ -2723,13 +2725,13 @@ Workaround: Use `0x...` prefix syntax instead of `X'...'`, or use prepared state
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.UPDATE-WHERE-ORDER-DESC-LIMIT `[Issue #94]` UPDATE WHERE + ORDER BY DESC + LIMIT updates wrong row
 **Status:** Known Issue
@@ -2743,13 +2745,13 @@ Workaround: Query the target row ID first via SELECT with ORDER BY DESC LIMIT, t
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.SQLITE-NESTED-FUNC-PARAMS `[Issue #95]` SQLite: Nested function WHERE expressions with prepared params return empty
 **Status:** Known Issue
@@ -2772,23 +2774,23 @@ Related: Issue #22 (HAVING with prepared params), Issue #75 (CASE with prepared 
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2816,13 +2818,13 @@ PostgreSQL and SQLite are NOT affected. Native MySQL (without ZTD) handles CASE 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.INSERT-DEFAULT-VALUES `[Issue #97]` INSERT DEFAULT VALUES / INSERT () VALUES () not supported
 **Status:** Known Issue
@@ -2842,23 +2844,23 @@ These are standard SQL patterns used by ORMs when inserting rows where all colum
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2884,13 +2886,13 @@ On MySQL (PDO and MySQLi), a SELECT with `CASE WHEN EXISTS (subquery) THEN ... E
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.INSERT-SELECT-DISTINCT `[Issue #99]` INSERT...SELECT DISTINCT ignores DISTINCT keyword
 **Status:** Known Issue
@@ -2908,23 +2910,23 @@ On MySQL (PDO and MySQLi), a SELECT with `CASE WHEN EXISTS (subquery) THEN ... E
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -2950,13 +2952,13 @@ On PostgreSQL, UPDATE or DELETE with `WHERE col IN (SELECT ... FROM other_table)
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.SQLITE-PREPARED-DELETE-EXPR-WHERE `[Issue #101]` SQLite: Prepared DELETE with arithmetic expression in WHERE deletes all rows
 **Status:** Known Issue
@@ -3009,23 +3011,23 @@ Non-derived-table patterns with JOINs work correctly on all platforms: top-level
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3047,23 +3049,23 @@ Non-derived-table patterns with JOINs work correctly on all platforms: top-level
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3090,13 +3092,13 @@ Non-derived-table patterns with JOINs work correctly on all platforms: top-level
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.MYSQL-UPDATE-JOIN-DERIVED `[Issue #104]` MySQL: UPDATE JOIN with derived table treats subquery as identifier
 **Status:** Known Issue
@@ -3130,13 +3132,13 @@ UPDATE summary SET
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.UPSERT-SUBQUERY-SET `[Issue #105]` UPSERT with subquery in SET evaluates incorrectly (all platforms)
 **Status:** Known Issue
@@ -3154,23 +3156,23 @@ UPSERT with simple expressions (VALUES/EXCLUDED, col + 1, literals) works correc
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3211,13 +3213,13 @@ Root cause appears to be that the CTE rewriter doesn't correctly track `$N` para
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PG-STRING-FUNC-PARAMS `[Issue #108]` UPDATE SET with string functions and $N params produces NULL
 **Status:** Known Issue
@@ -3229,13 +3231,13 @@ Root cause appears to be that the CTE rewriter doesn't correctly track `$N` para
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.EXPLAIN-BLOCKED `[Issue #107]` EXPLAIN, DESCRIBE, SHOW blocked by ZTD Write Protection
 **Status:** Known Issue
@@ -3246,23 +3248,23 @@ Read-only diagnostic statements (EXPLAIN, EXPLAIN QUERY PLAN, DESCRIBE, SHOW CRE
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3284,23 +3286,23 @@ Read-only diagnostic statements (EXPLAIN, EXPLAIN QUERY PLAN, DESCRIBE, SHOW CRE
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3322,23 +3324,23 @@ When a user writes `WITH tablename AS (SELECT ... FROM tablename WHERE ...) SELE
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3360,23 +3362,23 @@ When a user writes `WITH tablename AS (SELECT ... FROM tablename WHERE ...) SELE
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3404,13 +3406,13 @@ Upsert with a self-referencing accumulate expression in the SET clause evaluates
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3438,13 +3440,13 @@ Prepared SELECT with a JSON extraction function followed by a comparison operato
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3471,23 +3473,23 @@ INSERT with upsert clause containing a JSON function call (JSON_SET, jsonb_set) 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.WINDOW-FUNC-DML `[Issue #115]` Window function in DML subquery breaks CTE rewriter
 **Status:** Known Issue
@@ -3506,23 +3508,23 @@ DML statements containing window functions (ROW_NUMBER, DENSE_RANK, RANK) in sub
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3549,13 +3551,13 @@ DML statements containing window functions (ROW_NUMBER, DENSE_RANK, RANK) in sub
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.INSERT-SELECT-HAVING `[Issue #117]` INSERT...SELECT with GROUP BY HAVING produces "no such column" error
 **Status:** Known Issue
@@ -3572,13 +3574,13 @@ DML statements containing window functions (ROW_NUMBER, DENSE_RANK, RANK) in sub
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3608,23 +3610,23 @@ Prepared `UPDATE` and `DELETE` statements using `WHERE col BETWEEN ? AND ?` with
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.CAST-IN-DML `[Issue #119]` CAST expression in DML produces wrong values or is ignored
 **Status:** Known Issue
@@ -3720,23 +3722,23 @@ Extends SPEC-11.VIEW-JOIN-SHADOW: not only JOINs with views, but ALL view query 
 
 #### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3801,23 +3803,23 @@ This affects any application relying on FK cascades for data consistency. After 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -3841,13 +3843,13 @@ This also affects tables with `AUTO_INCREMENT` combined with FOREIGN KEY constra
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.PG-IN-CLAUSE-DOLLAR-DML `[Issue #128]` PostgreSQL: prepared DML with IN ($N, ...) is a no-op
 **Status:** Known Issue
@@ -3875,13 +3877,13 @@ Tests: `Pdo/PostgresSubstrReplaceDmlTest`. Related to Issue #108 (REPLACE/concat
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.SCALAR-FUNC-PREPARED-DELETE `[Issue #129]` Prepared DELETE with scalar function in WHERE deletes all rows (SQLite)
 **Status:** Known Issue
@@ -3921,13 +3923,13 @@ This is a very common MySQL pattern for queue processing (claim top-N items by p
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.INSERT-SELECT-INTERSECT-EXCEPT `[extends Issue #14]` INSERT...SELECT with INTERSECT/EXCEPT rejected as multi-statement (MySQL)
 **Status:** Known Issue
@@ -3941,13 +3943,13 @@ DELETE and UPDATE with WHERE IN (INTERSECT/EXCEPT subquery) work on MySQL becaus
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.UPSERT-IF-VALUES-ZERO `[Issue #133]` ON DUPLICATE KEY UPDATE with IF()/VALUES() conditional evaluates to 0 (MySQL)
 **Status:** Known Issue
@@ -3963,13 +3965,13 @@ Extends Issue #16 (self-referencing expression loses value) into the IF()/condit
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.CONDITIONAL-UPSERT-WHERE-IGNORED `[extends Issue #30]` ON CONFLICT DO UPDATE WHERE clause is ignored (PostgreSQL, SQLite)
 **Status:** Known Issue
@@ -3990,13 +3992,13 @@ Extends upstream Issue #30 (ON CONFLICT DO UPDATE WHERE clause ignored).
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -4026,13 +4028,13 @@ Basic SELECT with FILTER clause works correctly (non-DML context). The issue is 
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -4062,13 +4064,13 @@ PostgreSQL's `DISTINCT ON` works correctly in plain SELECT queries through the s
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.WRITABLE-CTE `[extends Issue #28]` Writable CTEs (DML inside WITH clause) not supported (PostgreSQL)
 **Status:** Known Issue
@@ -4088,13 +4090,13 @@ This is a widely-used PostgreSQL pattern for atomic DML-then-audit workflows. Ex
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.UPDATE-IN-SET-OPERATION `[Issue #134]` UPDATE WHERE IN (set operation subquery) syntax error (PostgreSQL)
 **Status:** Known Issue
@@ -4106,13 +4108,13 @@ This is a widely-used PostgreSQL pattern for atomic DML-then-audit workflows. Ex
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.INSERT-SELECT-SELF-JOIN `[Issue #135]` INSERT...SELECT with self-join fails (all platforms)
 **Status:** Known Issue
@@ -4134,23 +4136,23 @@ This is a common pattern for detecting overlapping records, finding duplicates, 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -4190,23 +4192,23 @@ Workaround: query matching IDs first via SELECT with REGEXP/~, then UPDATE/DELET
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -4238,23 +4240,23 @@ Related: SPEC-11.BARE-SUBQUERY-REWRITE [Issue #73] (bare subqueries not rewritte
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -4280,13 +4282,13 @@ Workaround: query IDs of NULL-priority rows first via SELECT, then DELETE by exp
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.MYSQL-BACKTICK-DML `[Issue #139]` Backtick-quoted identifiers break UPDATE/DELETE (MySQL)
 **Status:** Known Issue
@@ -4308,13 +4310,13 @@ This affects applications that consistently quote identifiers, as recommended by
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.DECIMAL-ARITHMETIC-UPDATE `[Issue #140]` UPDATE SET with DECIMAL multiplication preserves old value (MySQLi)
 **Status:** Known Issue
@@ -4328,13 +4330,13 @@ This may be related to a broader issue with DECIMAL type handling in the shadow 
 
 #### Verification Matrix — MySQL (MySQLi)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.COLUMN-SWAP-UPDATE `[Issue #141]` UPDATE SET a=b, b=a returns 0 rows (MySQLi)
 **Status:** Known Issue
@@ -4352,13 +4354,13 @@ This may indicate that the shadow store's UPDATE resolver fails when column refe
 
 #### Verification Matrix — MySQL (MySQLi)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.CASE-IN-SET-WITH-WHERE `[Issue #142]` CASE expression in UPDATE SET not evaluated when WHERE clause is present (all platforms)
 **Status:** Known Issue
@@ -4378,13 +4380,13 @@ This is distinct from Issue #96 (CASE in WHERE clause matches ALL rows). Here th
 
 #### Verification Matrix — MySQL (MySQLi)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.ANTI-JOIN-PATTERNS `[Issue #143]` Anti-join query patterns return wrong results (MySQL, MySQLi, PostgreSQL)
 **Status:** Known Issue
@@ -4406,13 +4408,13 @@ These are extremely common application patterns (find orphaned records, find ina
 
 #### Verification Matrix — MySQL (MySQLi)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.PG-COALESCE-DML `[Issue #144]` Multi-column COALESCE in UPDATE SET and nested COALESCE produce wrong results (PostgreSQL)
 **Status:** Known Issue
@@ -4451,13 +4453,13 @@ When INSERT omits the AUTO_INCREMENT (MySQL) or SERIAL (PostgreSQL) PK column, t
 
 #### Verification Matrix — MySQL (MySQLi)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.PREPARED-REPREPARE-STALE `[Issue #146]` Prepared UPDATE not visible after re-prepare sequence (all PDO platforms)
 **Status:** Known Issue
@@ -4484,23 +4486,23 @@ This is a PDO-adapter-specific issue, suggesting the shadow store's prepared sta
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -4535,23 +4537,23 @@ The workaround is to SELECT the aggregate values first, then UPDATE each row ind
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -4585,23 +4587,23 @@ PostgreSQL `INTERVAL '30 days'` and SQLite `datetime(col, '+30 days')` both work
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -4635,13 +4637,13 @@ The same patterns work correctly on MySQL (TINYINT boolean) and SQLite (INTEGER 
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.INDEXED-BY `[Issue #154]` INDEXED BY / NOT INDEXED hints produce error through CTE shadow store
 **Status:** Known Issue
@@ -4731,13 +4733,13 @@ SQLite STRICT tables (introduced in SQLite 3.37, 2021-11-27) fail with "ZTD Writ
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.CHILD-PARTITION `[Issue #159]` PostgreSQL child partition table queries return empty
 **Status:** Known Issue
@@ -4751,13 +4753,13 @@ Querying a child partition table directly (`SELECT FROM partition_child_table`) 
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.TABLESAMPLE `[Issue #160]` PostgreSQL TABLESAMPLE broken through CTE shadow store
 **Status:** Known Issue
@@ -4771,13 +4773,13 @@ Querying a child partition table directly (`SELECT FROM partition_child_table`) 
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.DO-BLOCK `[Issue #161]` PostgreSQL DO $$ anonymous blocks blocked
 **Status:** Known Issue
@@ -4791,13 +4793,13 @@ Querying a child partition table directly (`SELECT FROM partition_child_table`) 
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.MERGE-BLOCKED `[Issue #162]` MERGE statement blocked by Write Protection
 **Status:** Known Issue
@@ -4811,13 +4813,13 @@ PostgreSQL 15+ `MERGE INTO ... USING ... WHEN MATCHED/NOT MATCHED` is blocked by
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.COPY-SHADOW `[Issue #163]` COPY bypasses shadow store on PostgreSQL
 **Status:** Known Issue
@@ -4831,13 +4833,13 @@ PostgreSQL COPY has three distinct failure modes: (1) `pgsqlCopyToArray()` bypas
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.LOAD-DATA-BLOCKED `[Issue #164]` LOAD DATA blocked by Write Protection on MySQL
 **Status:** Known Issue
@@ -4851,13 +4853,13 @@ PostgreSQL COPY has three distinct failure modes: (1) `pgsqlCopyToArray()` bypas
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.MULTI-COLUMN-IN-DML `[Issue #165]` Multi-column IN tuple in DML silently ignored on all platforms
 **Status:** Known Issue
@@ -4871,23 +4873,23 @@ DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -4911,23 +4913,23 @@ DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -4950,13 +4952,13 @@ DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.UPDATE-SAME-TABLE-SUBQUERY `[Issue #168]` UPDATE SET with subquery on same table causes duplicate alias
 **Status:** Known Issue
@@ -4970,13 +4972,13 @@ DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.PARTIAL-INDEX-UPSERT `[Issue #169]` ON CONFLICT with partial index WHERE clause inserts duplicate
 **Status:** Known Issue
@@ -4990,13 +4992,13 @@ DELETE and UPDATE with `WHERE (col1, col2) IN ((val1, val2), ...)` using literal
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.DOMAIN-TYPE-DML `[Issue #170]` Domain-typed columns: UPDATE/DELETE fail through shadow store
 **Status:** Known Issue
@@ -5010,13 +5012,13 @@ Tables using PostgreSQL domain types (`CREATE DOMAIN`) exhibit multiple failures
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-11.VALUES-DML-SUBQUERY `[Issue #171]` VALUES expression in DML subquery fails on all platforms
 **Status:** Known Issue
@@ -5030,23 +5032,23 @@ DELETE and UPDATE with VALUES as a table source in subqueries fail on all platfo
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5076,23 +5078,23 @@ DML statements with a CTE (WITH clause) nested inside a subquery have mixed resu
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5116,23 +5118,23 @@ DML statements with a CTE (WITH clause) nested inside a subquery have mixed resu
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5156,23 +5158,23 @@ JSON function calls in UPDATE SET expressions and DELETE WHERE predicates are si
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5196,23 +5198,23 @@ JSON function calls in UPDATE SET expressions and DELETE WHERE predicates are si
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5236,23 +5238,23 @@ JSON function calls in UPDATE SET expressions and DELETE WHERE predicates are si
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5276,23 +5278,23 @@ Issue #138 reported DELETE WHERE IS NULL failure for PostgreSQL. These tests con
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5316,13 +5318,13 @@ INSERT...SELECT GROUP BY WITH ROLLUP on MySQL drops the grand total (NULL region
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-11.ARITHMETIC-UPDATE-SET `[Issue #179]` Arithmetic self-referencing UPDATE SET silently ignored
 **Status:** Known Issue
@@ -5336,23 +5338,23 @@ INSERT...SELECT GROUP BY WITH ROLLUP on MySQL drops the grand total (NULL region
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5376,23 +5378,23 @@ INSERT...SELECT GROUP BY WITH ROLLUP on MySQL drops the grand total (NULL region
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5416,23 +5418,23 @@ On MySQL/MySQLi, `INSERT INTO t SELECT ... UNION ALL SELECT ...` is blocked with
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5456,23 +5458,23 @@ On MySQL/MySQLi, `INSERT INTO t SELECT ... UNION ALL SELECT ...` is blocked with
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5496,23 +5498,23 @@ On MySQL/MySQLi, `INSERT INTO t SELECT ... UNION ALL SELECT ...` is blocked with
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5538,23 +5540,23 @@ The CTE shadow store does not evaluate ANY expression in UPDATE SET. Only simple
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -5583,23 +5585,23 @@ This is distinct from the expression-not-evaluated issues (SPEC-11.EXPRESSION-UP
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 

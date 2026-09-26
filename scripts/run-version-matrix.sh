@@ -23,12 +23,12 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 MATRIX_DIR="$PROJECT_DIR/build/matrix"
 SUMMARY_FILE="$MATRIX_DIR/summary.json"
 
-# Supported version ranges
-MYSQL_VERSIONS_ALL=("mysql:5.6" "mysql:5.7" "mysql:8.0" "mysql:8.4" "container-registry.oracle.com/mysql/community-server:9.1.0")
-MYSQL_VERSIONS_QUICK=("mysql:5.7" "mysql:8.0" "container-registry.oracle.com/mysql/community-server:9.1.0")
+# Representative releases within upstream support: MySQL 8.0.11–9.1, PostgreSQL 16–17
+MYSQL_VERSIONS_ALL=("mysql:8.0" "mysql:8.4" "container-registry.oracle.com/mysql/community-server:9.1.0")
+MYSQL_VERSIONS_QUICK=("mysql:8.0" "container-registry.oracle.com/mysql/community-server:9.1.0")
 
-POSTGRES_VERSIONS_ALL=("postgres:14" "postgres:15" "postgres:16" "postgres:17")
-POSTGRES_VERSIONS_QUICK=("postgres:14" "postgres:16" "postgres:17")
+POSTGRES_VERSIONS_ALL=("postgres:16" "postgres:17")
+POSTGRES_VERSIONS_QUICK=("postgres:16" "postgres:17")
 
 # Parse flags
 MODE="all"
@@ -103,7 +103,7 @@ run_suite() {
         skipped=${skipped:-0}
 
         local status="pass"
-        if [ "$failures" -gt 0 ] || [ "$errors" -gt 0 ]; then
+        if [ "$exit_code" -ne 0 ] || [ "$failures" -gt 0 ] || [ "$errors" -gt 0 ] || [ "$tests" -eq 0 ]; then
             status="fail"
             FAIL_COUNT=$((FAIL_COUNT + 1))
         else
@@ -181,3 +181,5 @@ EOF
 
 echo "Summary written to: $SUMMARY_FILE"
 echo "Individual baselines in: $MATRIX_DIR/"
+
+[ "$FAIL_COUNT" -eq 0 ] && [ "$SKIP_COUNT" -eq 0 ]

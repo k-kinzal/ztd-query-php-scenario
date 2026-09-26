@@ -33,31 +33,33 @@ When a new `ztd-query` version is released, the new results are compared with th
 - which scenarios no longer hold;
 - whether each change looks like a bug, an intentional behavior change, newly supported behavior, or an outdated scenario/spec.
 
-## Verified baseline
+## Current dependency baseline
 
-The repository tracks both the supported version range and the currently verified baseline.
+The scenario suite tracks upstream `main` through the split packages' `dev-main` branches. `composer.lock` pins the exact package commits. The 2026-09-26 refresh matches upstream [`3a6c7e361a16`](https://github.com/k-kinzal/ztd-query-php/commit/3a6c7e361a1613a7d75288a4628058e2b3af0e67); all six installed `src/` trees were compared with that monorepo commit.
 
-| Component | Constraint | Currently verified |
+| Component | Version | Locked reference |
 | --- | --- | --- |
-| `k-kinzal/ztd-query-mysqli-adapter` | `^0.1` | `v0.1.1` |
-| `k-kinzal/ztd-query-pdo-adapter` | `^0.1` | `v0.1.1` |
-| `k-kinzal/ztd-query-sqlite` | `^0.1.1` | `v0.1.1` |
-| `k-kinzal/ztd-query-postgres` | `^0.1.1` | `v0.1.1` |
-| `k-kinzal/testcontainers-php` | `^0.5` | `v0.5.1` |
-| `phpunit/phpunit` | `^10 \|\| ^11` | `11.5.55` |
+| `k-kinzal/ztd-query-core` | `dev-main` | `f5ab3f0efdb3` |
+| `k-kinzal/ztd-query-mysql` | `dev-main` | `bce93c331b03` |
+| `k-kinzal/ztd-query-mysqli-adapter` | `dev-main` | `0faf44e71fbc` |
+| `k-kinzal/ztd-query-pdo-adapter` | `dev-main` | `7f50ca47e3fd` |
+| `k-kinzal/ztd-query-postgres` | `dev-main` | `e25aa7ee0766` |
+| `k-kinzal/ztd-query-sqlite` | `dev-main` | `542d26203030` |
 
-Runtime targets covered by this repository:
+See the [refresh report](spec/baseline-2026-09-26.md) for executed scenarios, results, and remaining verification gaps. Historical v0.1.1 results remain labeled in the [spec index](spec/00-index.ears.md) and numbered specs.
 
-- PHP `8.1` to `8.5`
-- MySQL `5.6` to `9.1`
-- PostgreSQL `14` to `18`
-- SQLite `3`
+### Supported runtimes
 
-Current default execution environment:
+The upstream [core requirements](https://github.com/k-kinzal/ztd-query-php/blob/3a6c7e361a1613a7d75288a4628058e2b3af0e67/packages/ztd-query-core/README.md#requirements) define:
 
-- MySQL container image `mysql:8.0`
-- PostgreSQL container image `postgres:16`
-- SQLite in-memory via `sqlite::memory:`
+- PHP `8.1+`; this repository configures PHP `8.1` through `8.5`
+- MySQL `8.0.11` through `9.1`
+- PostgreSQL `16` and `17`
+- SQLite `3.x`
+
+The database matrix samples MySQL `8.0`, `8.4`, and `9.1`, PostgreSQL `16` and `17`, and the SQLite version bundled with PHP. Configuring a version does not mean all scenarios have been verified on it. MySQL 5.6/5.7 and PostgreSQL 14/15/18 are outside the current ZTD Query support range.
+
+Default database environments are `mysql:8.0`, `postgres:16`, and SQLite in memory (`sqlite::memory:`).
 
 ## Running the suite
 
@@ -82,23 +84,33 @@ vendor/bin/phpunit
 ### Run against different database versions
 
 ```bash
-MYSQL_IMAGE=mysql:5.7 vendor/bin/phpunit
-MYSQL_IMAGE=mysql:9.1 vendor/bin/phpunit
-POSTGRES_IMAGE=postgres:14 vendor/bin/phpunit
-POSTGRES_IMAGE=postgres:18 vendor/bin/phpunit
+MYSQL_IMAGE=mysql:8.4 vendor/bin/phpunit
+MYSQL_IMAGE=container-registry.oracle.com/mysql/community-server:9.1.0 vendor/bin/phpunit
+POSTGRES_IMAGE=postgres:16 vendor/bin/phpunit
+POSTGRES_IMAGE=postgres:17 vendor/bin/phpunit
 ```
 
-### Check dependency updates
+### Run the configured version matrices
 
 ```bash
-composer outdated 'k-kinzal/*' --direct
-composer show -l -D
+./scripts/run-version-matrix.sh --quick
+./scripts/run-php-version-matrix.sh --php 8.5 --profile all
 ```
+
+Both runners store results under `build/matrix/` and return a nonzero exit code when a run fails. The PHP matrix uses the committed lock file, so every PHP version tests the same ZTD package commits.
+
+### Refresh upstream main
+
+```bash
+composer update 'k-kinzal/ztd-query-*' --with-all-dependencies --minimal-changes
+```
+
+Check the split package references against upstream `main`, run the scenarios, and update the baseline report with the commit and runtime versions. Commit `composer.lock` with the report. The `^0.1` release constraints used in the historical baseline do not track `main`.
 
 ## Architecture
 
 - **Spec traceability**: All test classes carry a `@spec SPEC-X.Y` docblock annotation linking them to specification statements in [`spec/`](spec). The [`spec/traceability.md`](spec/traceability.md) matrix maps SPEC-IDs to test classes across all adapters.
-- **Version tracking**: The `VersionRecorder` PHPUnit extension records PHP, database, and ztd-query versions per test class into `spec/verification-log.json`. Tests extending the abstract base classes report versions via `setUp()`; standalone tests get versions auto-detected from running containers.
+- **Version tracking**: The `VersionRecorder` PHPUnit extension records PHP, database, and ztd-query versions and the adapter commit reference per test class into `spec/verification-log.json`. Tests extending the abstract base classes report versions via `setUp()`; standalone tests get versions auto-detected from running containers.
 - **Baseline comparison**: `scripts/capture-baseline.php` produces `baseline.json` from JUnit XML. `scripts/compare-baseline.php` diffs two baselines and classifies each change as regression, newly supported, intentional change, added, or removed.
 - **Shared base classes**: ~620 test classes extend platform-specific abstract base classes (`AbstractMysqliTestCase`, `AbstractMysqlPdoTestCase`, `AbstractPostgresPdoTestCase`, `AbstractSqlitePdoTestCase`). Each test class provides `getTableDDL()` and `getTableNames()`; the base class handles container setup, connection creation, table cleanup, and version recording. ~57 tests remain standalone where they require per-method connections (ZtdConfig, factory method tests).
 

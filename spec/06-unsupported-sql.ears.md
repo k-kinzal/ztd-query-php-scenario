@@ -1,5 +1,7 @@
 # 6. Unsupported SQL
 
+> **Baseline:** Statuses, observations, and verification marks below were recorded against v0.1.1. The matrix columns follow the current support range; these historical results have not all been revalidated against `dev-main`. See the [current baseline and support policy](00-index.ears.md).
+
 ## SPEC-6.1 Default Behavior
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
@@ -15,23 +17,23 @@ Platform-specific examples: MySQL uses `SET @var = 1`, PostgreSQL uses `SET sear
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -58,23 +60,23 @@ Rules support two pattern types:
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -102,23 +104,23 @@ For `ZtdMysqli`, use dedicated methods (`begin_transaction()`, `commit()`, `roll
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -145,23 +147,23 @@ EXPLAIN is a utility statement used for performance debugging. Behavior through 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | -   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | ✓   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | -   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | ✓   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | -   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | ✓   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | -   | -   |
+| 8.4 | -   | -   |
+| 8.5 | ✓   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -187,10 +189,10 @@ EXPLAIN is a utility statement used for performance debugging. Behavior through 
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | -   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | ✓   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | -   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | ✓   | -   | -   |

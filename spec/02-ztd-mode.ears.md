@@ -1,5 +1,7 @@
 # 2. ZTD Mode
 
+> **Baseline:** Statuses, observations, and verification marks below were recorded against v0.1.1. The matrix columns follow the current support range; these historical results have not all been revalidated against `dev-main`. See the [current baseline and support policy](00-index.ears.md).
+
 ## SPEC-2.1 Enable/Disable
 **Status:** Verified
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
@@ -13,23 +15,23 @@ When ZTD mode is disabled, the system shall pass queries directly to the underly
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -56,23 +58,23 @@ While ZTD mode is enabled, SELECT queries on **reflected** tables shall read fro
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -95,23 +97,23 @@ The system shall provide `enableZtd()`, `disableZtd()`, and `isZtdEnabled()` met
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -134,23 +136,23 @@ Each ZTD adapter instance maintains its own session state. Shadow data is not sh
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 

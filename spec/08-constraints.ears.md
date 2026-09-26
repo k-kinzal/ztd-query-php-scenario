@@ -1,5 +1,7 @@
 # 8. Constraint Enforcement
 
+> **Baseline:** Statuses, observations, and verification marks below were recorded against v0.1.1. The matrix columns follow the current support range; these historical results have not all been revalidated against `dev-main`. See the [current baseline and support policy](00-index.ears.md).
+
 ## SPEC-8.1 Shadow Store Constraints
 **Status:** Verified (By-Design)
 **Platforms:** MySQLi, MySQL-PDO, PostgreSQL-PDO, SQLite-PDO
@@ -18,23 +20,23 @@ This is by design — the shadow store is an in-memory simulation layer.
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -61,23 +63,23 @@ When a SQL error occurs, the shadow store shall remain consistent. Previously in
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | ✓   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | ✓   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 
@@ -108,23 +110,23 @@ This is by design — the shadow store operates at the SQL rewrite level, not th
 
 #### Verification Matrix — MySQL (MySQLi, PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | -   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | ✓   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | -   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | ✓   | -   | -   |
 
 #### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | -   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | ✓   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | -   | -   |
+| 8.4 | -   | -   |
+| 8.5 | ✓   | -   |
 
 #### Verification Matrix — SQLite (PDO)
 

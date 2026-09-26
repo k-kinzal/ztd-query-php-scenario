@@ -1,5 +1,7 @@
 # 13. Type Mappings
 
+> **Baseline:** Statuses, observations, and verification marks below were recorded against v0.1.1. The matrix columns follow the current support range; these historical results have not all been revalidated against `dev-main`. See the [current baseline and support policy](00-index.ears.md).
+
 > This section defines the type conversion behavior at every stage of the data lifecycle: PHP value → PDO bind → DB storage → PDO fetch → PHP value. ZTD changes this pipeline by interposing a shadow store, which alters both the write path and the read path.
 >
 > **Status: All entries in this section are UNTESTED.** The tables below define what needs to be verified, not what has been verified.
@@ -221,13 +223,13 @@ Expected: all non-NULL values return `string`. Verification confirms whether ZTD
 
 ### Verification Matrix
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | -   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | -   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ## SPEC-13.2 PostgreSQL Type Mappings
 
@@ -433,13 +435,13 @@ Even when both physical and ZTD return `string`, the string content may differ. 
 
 ### Verification Matrix
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | -   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | -   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ## SPEC-13.3 SQLite Type Mappings
 
@@ -596,23 +598,23 @@ Each mismatch must be verified across all PDO configuration variants and across 
 
 ### Verification Matrix — MySQL (PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | -   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | -   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 ### Verification Matrix — PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | -   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | -   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 ### Verification Matrix — SQLite (PDO)
 

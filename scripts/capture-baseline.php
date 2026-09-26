@@ -114,6 +114,7 @@ function collectTestSuites(SimpleXMLElement $suite, array $versions, string $tim
             'phpVersion' => $versionInfo['phpVersion'] ?? PHP_VERSION,
             'dbVersion' => $versionInfo['dbVersion'] ?? 'unknown',
             'ztdVersion' => $versionInfo['ztdVersion'] ?? 'unknown',
+            'ztdReference' => $versionInfo['ztdReference'] ?? 'unknown',
             'adapter' => $versionInfo['adapter'] ?? 'unknown',
             'timestamp' => $versionInfo['timestamp'] ?? $timestamp,
         ];

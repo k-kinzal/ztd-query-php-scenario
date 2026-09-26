@@ -1,5 +1,7 @@
 # Verification Summary — 2026-03-10
 
+> Historical v0.1.1 results. See [the current baseline](../spec/00-index.ears.md) for `dev-main` and the current support range.
+
 ## Test Results by Adapter (PHP 8.5.1 local, MySQL 8.0, PostgreSQL 16, SQLite 3.x)
 
 | Adapter | Tests | Pass | Errors | Failures | Skipped | Incomplete |

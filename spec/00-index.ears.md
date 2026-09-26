@@ -1,16 +1,18 @@
 # ZTD Query Adapter Specifications — Index
 
 > **Single source of truth.** The numbered section files listed below
-> (`01-connection.ears.md` through `11-known-issues.ears.md`) are the
+> (`01-connection.ears.md` through `13-type-mappings.ears.md`) are the
 > authoritative specifications. All spec updates must target these files.
 > The original monolith (`ztd-query-adapter.ears.md`) is preserved for
 > historical reference only and must not be updated.
 
-Version: ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1
+Current dependency baseline: `dev-main`, aligned with upstream [`3a6c7e361a16`](https://github.com/k-kinzal/ztd-query-php/commit/3a6c7e361a1613a7d75288a4628058e2b3af0e67) on 2026-09-26. Exact split-package references are pinned in [`composer.lock`](../composer.lock).
+
+The [refresh report](baseline-2026-09-26.md) records the current runs and limitations. Statuses, observations, and verification marks in the numbered sections and traceability matrix remain **historical v0.1.1 evidence** unless explicitly linked to a newer run. Updating a matrix's version columns does not revalidate its cells.
 
 ## Version Matrix
 
-### Verified Versions (actually tested)
+### Historical Verified Versions (v0.1.1)
 
 | Component | Verified Versions |
 |-----------|-------------------|
@@ -23,7 +25,7 @@ Version: ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1
 | ztd-query-sqlite | 0.1.1 |
 | ztd-query-postgres | 0.1.1 |
 
-### PHP Version Test Results (SQLite, 2026-03-09)
+### Historical PHP Version Test Results (v0.1.1, SQLite, 2026-03-09)
 
 | PHP Version | Tests | Pass | Errors | Failures |
 |-------------|-------|------|--------|----------|
@@ -33,25 +35,27 @@ Version: ztd-query-mysqli-adapter v0.1.1, ztd-query-pdo-adapter v0.1.1
 | 8.4.18 | 1347 | 1180 | 122 | 12 |
 | 8.5.1 (local) | 2030 | 1853 | 111 | 11 |
 
-Errors are ZTD CTE rewriter bugs (SQL syntax errors in generated queries), not test or adapter issues.
+These are historical counts and classifications; they do not describe the current `dev-main` run. PostgreSQL 14 remains listed above only as historical evidence.
 
-### Intended Compatibility (aspirational, not regularly tested)
+### Current Upstream Support
 
 | Component | Range |
 |-----------|-------|
-| PHP | 8.1 – 8.5 |
-| MySQL | 5.6 – 9.1 |
-| PostgreSQL | 14 – 18 |
-| SQLite | 3 |
+| PHP | 8.1+ (configured matrix: 8.1 – 8.5) |
+| MySQL | 8.0.11 – 9.1 |
+| PostgreSQL | 16 – 17 |
+| SQLite | 3.x |
+
+Source: upstream [core requirements](https://github.com/k-kinzal/ztd-query-php/blob/3a6c7e361a1613a7d75288a4628058e2b3af0e67/packages/ztd-query-core/README.md#requirements). The matrix samples MySQL 8.0, 8.4, and 9.1; the support range includes intermediate releases. Full current-version verification is still pending.
 
 ### Running Against Different Versions
 
 ```bash
-# Test against MySQL 5.7
-MYSQL_IMAGE=mysql:5.7 vendor/bin/phpunit
+# Test against MySQL 8.4
+MYSQL_IMAGE=mysql:8.4 vendor/bin/phpunit
 
-# Test against PostgreSQL 14
-POSTGRES_IMAGE=postgres:14 vendor/bin/phpunit
+# Test against PostgreSQL 17
+POSTGRES_IMAGE=postgres:17 vendor/bin/phpunit
 
 # Run a specific test class
 vendor/bin/phpunit --filter MysqlBasicCrudTest
@@ -100,31 +104,31 @@ Each spec entry MUST include:
 
 ### Verification Matrix Format
 
-Every spec entry MUST include a verification matrix for each applicable platform. Use the following legend:
+Every spec entry MUST include a verification matrix for each applicable platform and identify the package version or commit behind its results. New matrices start with untested cells. Use the following legend:
 
-- `✓` — Verified (test passes)
+- `✓` — Verified on the explicitly stated baseline (test passes)
 - `✗` — Failed (test fails)
 - `-` — Untested
 
 #### MySQL (MySQLi / PDO)
 
-| PHP | 5.6 | 5.7 | 8.0 | 8.4 | 9.1 |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 8.0 | 8.4 | 9.1 |
+|-----|-----|-----|-----|
+| 8.1 | -   | -   | -   |
+| 8.2 | -   | -   | -   |
+| 8.3 | -   | -   | -   |
+| 8.4 | -   | -   | -   |
+| 8.5 | -   | -   | -   |
 
 #### PostgreSQL (PDO)
 
-| PHP | 14  | 15  | 16  | 17  | 18  |
-|-----|-----|-----|-----|-----|-----|
-| 8.1 | -   | -   | -   | -   | -   |
-| 8.2 | -   | -   | -   | -   | -   |
-| 8.3 | -   | -   | ✓   | -   | -   |
-| 8.4 | -   | -   | -   | -   | -   |
-| 8.5 | -   | -   | -   | -   | -   |
+| PHP | 16  | 17  |
+|-----|-----|-----|
+| 8.1 | -   | -   |
+| 8.2 | -   | -   |
+| 8.3 | -   | -   |
+| 8.4 | -   | -   |
+| 8.5 | -   | -   |
 
 #### SQLite (PDO)
 
@@ -132,7 +136,7 @@ Every spec entry MUST include a verification matrix for each applicable platform
 |-----|-----|
 | 8.1 | -   |
 | 8.2 | -   |
-| 8.3 | ✓   |
+| 8.3 | -   |
 | 8.4 | -   |
 | 8.5 | -   |
 

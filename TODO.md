@@ -25,27 +25,20 @@ The spec now defines the type mapping tables and PDO configuration combinations 
 
 - For each method (`query()`, `prepare()/execute()`), fetch rows and record `gettype()` of each column value.
 - Cover the 6 configuration variants defined in SPEC-13.1.
-- Run across the supported matrix: PHP 8.1–8.5, MySQL 5.6–9.1.
+- Run across the supported matrix: PHP 8.1–8.5, MySQL 8.0.11–9.1.
 - Fill in the type mapping tables and verification matrices in SPEC-13.
-
-## MySQL 5.6/5.7 compatibility with CTE-based shadow store
-
-ztd-query-php declares MySQL 5.6–9.1 as its supported range. However, the CTE (`WITH ... AS`) syntax was introduced in MySQL 8.0. MySQL 5.6 and 5.7 do not support CTEs at all. No tests have been run against MySQL 5.6 or 5.7.
-
-### To verify
-
-- Attempt to run the basic CRUD scenario against MySQL 5.7 and confirm the failure mode.
-- Determine whether ztd-query-php has a fallback mechanism for pre-8.0 MySQL.
-- If no fallback exists, this is a candidate for an upstream issue report.
-- Update the spec verification matrices for MySQL 5.6/5.7 columns.
 
 ## Version matrix coverage gaps
 
-All spec items now have explicit verification matrices (PHP × DB version). The vast majority of cells are `-` (untested). The verified cells are concentrated at PHP 8.3 × MySQL 8.0 / PostgreSQL 16 / SQLite 3.x.
+All spec items now have explicit verification matrices (PHP × DB version). The vast majority of cells are `-` (untested). The historical v0.1.1 verification cells are concentrated at PHP 8.3 × MySQL 8.0 / PostgreSQL 16 / SQLite 3.x.
 
 ### To verify
 
-- Run the basic CRUD scenario against PostgreSQL 14, 15, 17, and 18.
-- Run the basic CRUD scenario against MySQL 5.6, 5.7, 8.4, and 9.1.
+- Run the basic CRUD scenario against PostgreSQL 16 and 17.
+- Run the basic CRUD scenario against MySQL 8.0, 8.4, and 9.1.
 - Run the basic CRUD scenario against PHP 8.1, 8.2, 8.4, and 8.5.
 - Update the verification matrices in each spec item as results come in.
+
+## Revalidate historical specifications against main
+
+The numbered specs and traceability statuses describe the v0.1.1 baseline unless a newer run is explicitly cited. Use the [current baseline](spec/00-index.ears.md) to classify changes, update outdated expectations, and check upstream issues before reporting reproducible problems. The current support range is in [AGENTS.md](AGENTS.md).

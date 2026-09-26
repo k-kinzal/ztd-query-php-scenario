@@ -90,7 +90,8 @@ docker run --rm ztd-test-php81 --filter 'Tests\\Pdo\\Sqlite'
 
 | File | Purpose |
 |------|---------|
-| [traceability.md](traceability.md) | Spec ID → Test Class → Verified Version matrix |
+| [traceability.md](traceability.md) | Spec ID → Test Class → historical verified version matrix |
+| [baseline-2026-09-26.md](baseline-2026-09-26.md) | Current main references, support range, validation results, and upstream report |
 | [ztd-query-adapter.ears.md](ztd-query-adapter.ears.md) | Original monolithic spec (preserved for reference) |
 
 ## Spec Entry Format

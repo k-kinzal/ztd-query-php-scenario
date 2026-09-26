@@ -9,6 +9,10 @@ This repository exists to find user-facing problems in `ztd-query-php` before th
 - Verify whether those expectations hold and retain reproducible evidence for every finding.
 - Report confirmed problems upstream with runnable examples.
 
+## Development rules
+
+- When work is complete, run the applicable checks and commit the changes made for the task before reporting completion.
+
 ## Black-box verification
 
 - Derive expectations from user needs, the public contract, and native PDO/MySQLi behavior where applicable. Account for ZTD's documented isolation semantics when making native comparisons.

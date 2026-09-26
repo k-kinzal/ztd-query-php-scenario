@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "FND-mysqli-result-metadata",
+  "scenario": "SCN-mysqli-native-parity",
+  "status": "reported",
+  "classification": "existing-problem",
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201657950162Z-SCN-mysqli-native-parity/run.json",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201659423693Z-SCN-mysqli-native-parity/run.json",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/repro/result-metadata-php85-output.txt",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/repro/result-metadata-php81-output.txt",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/report.md"
+  ],
+  "reproduction": "findings/FND-mysqli-result-metadata/repro.php",
+  "issue_search": "findings/FND-mysqli-result-metadata/issue-search.md",
+  "issue_body": "findings/FND-mysqli-result-metadata/issue-body.md",
+  "issue_url": "https://github.com/k-kinzal/ztd-query-php/issues/489",
+  "title": "ZtdMysqli: `fetch_fields()` metadata differs from native (INT/BOOLEAN reported as LONGLONG, no PRI_KEY/AUTO_INCREMENT/NOT_NULL flags, empty `orgtable`)"
+}

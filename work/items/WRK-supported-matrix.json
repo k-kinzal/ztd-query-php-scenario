@@ -5,9 +5,10 @@
   "status": "ready",
   "title": "Verify meaningful workflows across supported runtimes",
   "question": "Where do the current expectations lack supported PHP/database evidence?",
-  "next_action": "Regression cycle covered SQLite (PHP 8.5.8) and MySQL 8.0.46 (PHP 8.1.34, 8.5.8) for the curated scenarios; MySQLi now has one curated scenario. Next: PostgreSQL 16/17 for the fixture lifecycle and session-schema workflows, then MySQL 8.4/9.1 and PHP 8.2-8.4; preserve actual service versions.",
+  "next_action": "Cycle CYC-20260926T200050738102Z reran the curated scenarios on SQLite (PHP 8.5.8) and MySQL 8.0.46 (PHP 8.1.34, 8.5.8) and added MySQLi parity on the same runtimes. Next: PostgreSQL 16/17 for the fixture lifecycle and session-schema workflows, then MySQL 8.4/9.1 and PHP 8.2-8.4; preserve actual service versions.",
   "done_when": "Each chosen combination is recorded; environment failures remain gaps and confirmed problems are reported. No full-matrix claim without full evidence.",
   "evidence": [
-    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/report.md"
+    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/report.md",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/report.md"
   ]
 }

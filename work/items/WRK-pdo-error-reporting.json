@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "WRK-pdo-error-reporting",
+  "priority": 1,
+  "status": "ready",
+  "title": "Check how constraint violations and SQL errors surface through ZtdPdo",
+  "question": "Does ZtdPdo raise PDOException with the native SQLSTATE/driver code (23000/1062 for duplicate keys, 1364 for NOT NULL, 42000/1064 for syntax errors) and honour PDO::ERRMODE_SILENT/WARNING, or does it raise ZtdPdoException with code 0 as ZtdMysqli does (#485)?",
+  "next_action": "An ad hoc probe in CYC-20260926T200050738102Z saw ZtdPdo::exec() raise ZtdQuery\\Adapter\\Pdo\\ZtdPdoException code 0 for a duplicate primary key on MySQL (not retained as a run). Write an expectation from native PDO behaviour and PR #213 (simulation failures translated to the configured database exception), cover MySQL, SQLite and PostgreSQL with native controls and all three error modes, then report or link #485.",
+  "done_when": "Each error case and error mode has a native control and ZTD observation on a supported runtime; confirmed divergences are reported upstream or linked to an existing issue.",
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/report.md"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+    "Tests\\Pdo\\SqliteFixtureLifecycleTest": {
+        "phpVersion": "8.5.8",
+        "dbVersion": "3.53.3",
+        "ztdVersion": "dev-main",
+        "ztdReference": "3ed255a43c776349d0170c5b19bcfdd53db626dd",
+        "adapter": "sqlite-pdo",
+        "timestamp": "2026-09-26T20:06:01+00:00"
+    }
+}

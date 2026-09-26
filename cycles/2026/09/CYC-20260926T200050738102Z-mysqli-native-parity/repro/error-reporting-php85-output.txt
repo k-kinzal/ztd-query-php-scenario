@@ -1,0 +1,12 @@
+{"php":"8.5.8","mysqlnd":"mysqlnd 8.5.8","server":"8.0.46"}
+{"case":"strict: duplicate primary key","native":{"exception":"mysqli_sql_exception","code":1062,"sqlstate":"23000","is_mysqli_sql_exception":true},"ztd":{"exception":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliException","code":0,"sqlstate":null,"is_mysqli_sql_exception":false},"same":false}
+{"case":"strict: NOT NULL violation","native":{"exception":"mysqli_sql_exception","code":1364,"sqlstate":"HY000","is_mysqli_sql_exception":true},"ztd":{"exception":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliException","code":0,"sqlstate":null,"is_mysqli_sql_exception":false},"same":false}
+{"case":"strict: syntax error","native":{"exception":"mysqli_sql_exception","code":1064,"sqlstate":"42000","is_mysqli_sql_exception":true},"ztd":{"exception":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliException","code":0,"sqlstate":null,"is_mysqli_sql_exception":false},"same":false}
+{"case":"strict: unknown column","native":{"exception":"mysqli_sql_exception","code":1054,"sqlstate":"42S22","is_mysqli_sql_exception":true},"ztd":{"exception":"mysqli_sql_exception","code":1054,"sqlstate":"42S22","is_mysqli_sql_exception":true},"same":true}
+{"case":"strict: prepared duplicate primary key","native":{"exception":"mysqli_sql_exception","code":1062,"sqlstate":"23000","is_mysqli_sql_exception":true},"ztd":{"exception":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliException","code":0,"sqlstate":null,"is_mysqli_sql_exception":false},"same":false}
+{"case":"report_off: duplicate primary key","native":{"returned":{"type":"bool","value":false},"errno":1062,"error":"Duplicate entry '1' for key 'repro_4a872"},"ztd":{"exception":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliException","code":0},"same":false}
+{"case":"report_off: NOT NULL violation","native":{"returned":{"type":"bool","value":false},"errno":1364,"error":"Field 'name' doesn't have a default valu"},"ztd":{"exception":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliException","code":0},"same":false}
+{"case":"report_off: syntax error","native":{"returned":{"type":"bool","value":false},"errno":1064,"error":"You have an error in your SQL syntax; ch"},"ztd":{"exception":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliException","code":0},"same":false}
+{"case":"report_off: unknown column","native":{"returned":{"type":"bool","value":false},"errno":1054,"error":"Unknown column 'nope' in 'field list'"},"ztd":{"returned":{"type":"bool","value":false},"errno":0,"error":""},"same":false}
+{"case":"rows with id = 1 afterwards","native":1,"ztd":1,"same":true}
+{"diverged":8}

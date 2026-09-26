@@ -1,0 +1,30 @@
+{"php":"8.1.34","mysqlnd":"mysqlnd 8.1.34","server":"8.0.46"}
+{"property":"connection->insert_id after INSERT","native":{"type":"int","value":1},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->affected_rows after INSERT","native":{"type":"int","value":2},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->errno after INSERT","native":{"type":"int","value":0},"ztd":{"type":"int","value":0},"same":true}
+{"property":"connection->error after INSERT","native":{"type":"string","value":""},"ztd":{"type":"string","value":""},"same":true}
+{"property":"connection->sqlstate after INSERT","native":{"type":"string","value":"00000"},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->error_list after INSERT","native":[],"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->field_count after INSERT","native":{"type":"int","value":0},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->warning_count after INSERT","native":{"type":"int","value":0},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->info after INSERT","native":{"type":"string","value":"Records: 2  Duplicates: 0  Warnings: 0"},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->thread_id after INSERT","native":{"type":"int","value":105},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->host_info after INSERT","native":{"type":"string","value":"127.0.0.1 via TCP\/IP"},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->server_info after INSERT","native":{"type":"string","value":"8.0.46"},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->server_version after INSERT","native":{"type":"int","value":80046},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->protocol_version after INSERT","native":{"type":"int","value":10},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"connection->field_count after SELECT","native":{"type":"int","value":2},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"stmt->num_rows after SELECT","native":{"type":"int","value":1},"ztd":{"error":"Error","message":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliStatement object is already closed"},"same":false}
+{"property":"stmt->field_count after SELECT","native":{"type":"int","value":2},"ztd":{"error":"Error","message":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliStatement object is already closed"},"same":false}
+{"property":"stmt->param_count after SELECT","native":{"type":"int","value":1},"ztd":{"error":"Error","message":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliStatement object is already closed"},"same":false}
+{"property":"stmt->affected_rows after SELECT","native":{"type":"int","value":1},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"stmt->errno after SELECT","native":{"type":"int","value":0},"ztd":{"error":"Error","message":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliStatement object is already closed"},"same":false}
+{"property":"stmt->error after SELECT","native":{"type":"string","value":""},"ztd":{"error":"Error","message":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliStatement object is already closed"},"same":false}
+{"property":"stmt->sqlstate after SELECT","native":{"type":"string","value":"00000"},"ztd":{"error":"Error","message":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliStatement object is already closed"},"same":false}
+{"property":"stmt->affected_rows after INSERT","native":{"type":"int","value":1},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"property":"stmt->insert_id after INSERT","native":{"type":"int","value":3},"ztd":{"error":"Error","message":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliStatement object is already closed"},"same":false}
+{"property":"query(unknown table) return","native":{"type":"bool","value":false},"ztd":{"type":"bool","value":false},"same":true}
+{"property":"connection->errno after failed query","native":{"type":"int","value":1146},"ztd":{"type":"int","value":0},"same":false}
+{"property":"connection->error after failed query","native":{"type":"string","value":"Table 'ztd_types.repro_891d27cd_missing' doesn't exist"},"ztd":{"type":"string","value":""},"same":false}
+{"property":"connection->sqlstate after failed query","native":{"type":"string","value":"42S02"},"ztd":{"error":"Error","message":"Property access is not allowed yet"},"same":false}
+{"diverged":25}

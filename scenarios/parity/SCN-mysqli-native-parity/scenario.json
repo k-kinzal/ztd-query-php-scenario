@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "SCN-mysqli-native-parity",
+  "title": "Common mysqli application APIs through ZtdMysqli versus native mysqli",
+  "review": "public-api-expectation-reviewed",
+  "expectation": "spec/expectations/SPEC-mysqli-native-parity.md",
+  "legacy_specs": ["SPEC-5.1", "SPEC-2.2"],
+  "scope": {
+    "adapter": ["mysqli"],
+    "database": "Disposable MySQL; connection via ZTD_MYSQL_HOST, ZTD_MYSQL_PORT, ZTD_MYSQL_DB, ZTD_MYSQL_USER, ZTD_MYSQL_PASSWORD",
+    "options": {
+      "mysqli": "MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT, temporarily MYSQLI_REPORT_OFF for the errno checks; MYSQLI_OPT_INT_AND_FLOAT_NATIVE for the typing option checks",
+      "ztd": "defaults; fromMysqli() wrapping; new ZtdMysqli() + options() + real_connect()"
+    },
+    "setup": "Empty disposable database. The native control creates and drops one random physical table per control connection; ZTD connections create session-only tables with random names. Runtime versions are emitted by the script."
+  },
+  "sources": [
+    "scenarios/parity/SCN-mysqli-native-parity/scenario.php",
+    "scenarios/parity/SCN-mysqli-native-parity/php81",
+    "Dockerfile"
+  ],
+  "steps": [
+    {"kind": "php", "argv": ["scenarios/parity/SCN-mysqli-native-parity/scenario.php"]}
+  ],
+  "gaps": [
+    "Async queries (MYSQLI_ASYNC, poll, reap_async_query)",
+    "change_user, select_db, set_charset, get_warnings",
+    "Other MySQL versions (8.4, 9.x) and PHP 8.2-8.4",
+    "Non-default ZtdConfig"
+  ]
+}

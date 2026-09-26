@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "scenario": "SCN-mysqli-native-parity",
+  "cycle": "CYC-20260926T200050738102Z-mysqli-native-parity",
+  "started_at": "2026-09-26T20:16:58.165119+00:00",
+  "state": "finished",
+  "repository_revision": "8ec02fda7d95f4d9fc5a82d8faec92e15ac9b1ae",
+  "working_tree_dirty": true,
+  "source": {
+    "archive": "baselines/sources/0401bd6a59c83d10266df8c8445fa9f9b4ab35394220885a4d83109d2e15adb8.tar.gz",
+    "sha256": "6b7e6e2844710b5b46c9dff306da09ac71e42faab2289afd23bae6025b82c010",
+    "files": {
+      "Dockerfile": "c5f2a0605fea6212f3ca4100ff9272f3925a1a14eb5877c9aae1cdd973a05041",
+      "composer.json": "766c264d0c2c2744206c2a9be33eb388333b24e295c678b67409cfdb28b9a424",
+      "phpunit.xml": "77b28d75b05575f097b48e37b15f7c17580e317cd5e8ad4449e74b2058c798fd",
+      "scenarios/parity/SCN-mysqli-native-parity/php81": "b0617425daa50dee2dee61bb1e62be876b285fb6659c1d793754269b728ce767",
+      "scenarios/parity/SCN-mysqli-native-parity/scenario.json": "ef71a4d3010387d18db7a931dc40453a72a289a25973c5057b60537c68bed4aa",
+      "scenarios/parity/SCN-mysqli-native-parity/scenario.php": "c1846405a7d5060cdc9588f39e65d37da1cc34afd58d6da836cc77ea95aba17c",
+      "scripts/lab.py": "5ec89e5f91d218789514237cc949dcd3c91894336730d923de012f18de0f4161",
+      "scripts/runtime.php": "f8a410529d7ea8e605d3d36837e42e71baafafb2baf6e21c6828143367cb2485",
+      "spec/expectations/SPEC-mysqli-native-parity.md": "61ec542cff85f7422a7a94797c58a222efd76d3c0807da6aba033779e564e974",
+      "tests/Scenarios/BasicCrudScenario.php": "c86bea1abe5f39cf520519404fcc561ef23eb4d55209b84fa7ea108360b37d9d",
+      "tests/Scenarios/JoinAndSubqueryScenario.php": "83260926d56d2dcc7fbe0ca0f2c42b39fcdeee2c8f1d23df3ee941a8783b9fb1",
+      "tests/Scenarios/PreparedStatementScenario.php": "35e4a674e896f1962504a050fcd7fa5710b6ff9bcc3d87c2a3d1c00c4be7240f",
+      "tests/Scenarios/TransactionScenario.php": "4626f4e9c7f365af3036d92a6469df2dc20166826900ad701cc68697ec7e4fe4",
+      "tests/Scenarios/WriteOperationScenario.php": "7964e2612ebb340c4545defb94bd580ffb80f215dffae5969e23b0356520eb5e",
+      "tests/Support/AbstractMysqlPdoTestCase.php": "aa8041bf1036ea40dada758d511bfb7fda2f51d086859f241caf3e6fc59f4dfc",
+      "tests/Support/AbstractMysqliTestCase.php": "aaf29624aa93c747de9f5ac190f7d6257a8be798bfdec159a05268399f1ece7a",
+      "tests/Support/AbstractPostgresPdoTestCase.php": "e8159d7d3849e28534ab044bf9f9d495446f84e05be5ffed04bb9208eed113da",
+      "tests/Support/AbstractSqlitePdoTestCase.php": "30e9d50191868505900fa96f2e232957143bb4aafa8d58c59740cc6c9291a7f3",
+      "tests/Support/MySQLContainer.php": "b9622080d86027e577a604737b38956a1854b2e6a88e1c0173f885e928e76304",
+      "tests/Support/PostgreSQLContainer.php": "819980deac865c22f50eb19515389e3cf3d1b5226e91947fb923958410e19bbb",
+      "tests/Support/PostgreSQLDSN.php": "3d241ce1884be5475ac22ffba5383abe699818d931a3dc76f16cf7f928161dbf",
+      "tests/Support/UserDto.php": "437c72d086ebf95ab4846c875382bdde1cde40728884ba81843e62e2a0be3b9c",
+      "tests/Support/UserDtoWithConstructor.php": "7d3041003b4a14777090012b8fa6374cc14c548f698c45272706392f5cf4717c",
+      "tests/Support/VersionRecorder.php": "e19d249e4941dc09a8c5ab367644a6e67320a3ea5ad52883decc253d432552ab"
+    }
+  },
+  "lock": "baselines/locks/5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92.lock",
+  "lock_sha256": "5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92",
+  "packages": {
+    "k-kinzal/ztd-query-core": {
+      "version": "dev-main",
+      "reference": "f5ab3f0efdb355358b60feb61b7edfb9194fa21f",
+      "url": "https://github.com/k-kinzal/ztd-query-core.git"
+    },
+    "k-kinzal/ztd-query-mysql": {
+      "version": "dev-main",
+      "reference": "969eb5d9f194f3bca1f661a99594b54ead492423",
+      "url": "https://github.com/k-kinzal/ztd-query-mysql.git"
+    },
+    "k-kinzal/ztd-query-mysqli-adapter": {
+      "version": "dev-main",
+      "reference": "3fe31d57e65d337d53cee04a625ec8e855798181",
+      "url": "https://github.com/k-kinzal/ztd-query-mysqli-adapter.git"
+    },
+    "k-kinzal/ztd-query-pdo-adapter": {
+      "version": "dev-main",
+      "reference": "3ed255a43c776349d0170c5b19bcfdd53db626dd",
+      "url": "https://github.com/k-kinzal/ztd-query-pdo-adapter.git"
+    },
+    "k-kinzal/ztd-query-postgres": {
+      "version": "dev-main",
+      "reference": "02bcf6de3040157294b0501396f86872d5301a8e",
+      "url": "https://github.com/k-kinzal/ztd-query-postgres.git"
+    },
+    "k-kinzal/ztd-query-sqlite": {
+      "version": "dev-main",
+      "reference": "542d26203030ded36abbcdea04b77ce99ff8d934",
+      "url": "https://github.com/k-kinzal/ztd-query-sqlite.git"
+    }
+  },
+  "upstream_check": "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/upstream.json",
+  "runtime": {
+    "php": "8.5.8",
+    "os": "Darwin",
+    "architecture": "arm64",
+    "extensions": {
+      "PDO": "8.5.8",
+      "pdo_sqlite": "8.5.8",
+      "pdo_mysql": "8.5.8",
+      "pdo_pgsql": "8.5.8",
+      "mysqli": "8.5.8"
+    },
+    "sqlite": "3.53.3",
+    "sqlite_client": "3.53.3",
+    "phpunit": "10.5.65"
+  },
+  "scope": {
+    "adapter": [
+      "mysqli"
+    ],
+    "database": "Disposable MySQL; connection via ZTD_MYSQL_HOST, ZTD_MYSQL_PORT, ZTD_MYSQL_DB, ZTD_MYSQL_USER, ZTD_MYSQL_PASSWORD",
+    "options": {
+      "mysqli": "MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT, temporarily MYSQLI_REPORT_OFF for the errno checks; MYSQLI_OPT_INT_AND_FLOAT_NATIVE for the typing option checks",
+      "ztd": "defaults; fromMysqli() wrapping; new ZtdMysqli() + options() + real_connect()"
+    },
+    "setup": "Empty disposable database. The native control creates and drops one random physical table per control connection; ZTD connections create session-only tables with random names. Runtime versions are emitted by the script."
+  },
+  "steps": [
+    {
+      "command": [
+        "php",
+        "scenarios/parity/SCN-mysqli-native-parity/scenario.php"
+      ],
+      "exit_code": 1,
+      "output": "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201657950162Z-SCN-mysqli-native-parity/01-output.txt",
+      "versions": null,
+      "junit": null,
+      "cases": []
+    }
+  ],
+  "finished_at": "2026-09-26T20:16:59.268434+00:00",
+  "database_runtime": [],
+  "artifacts": {
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201657950162Z-SCN-mysqli-native-parity/01-output.txt": "dd0715e23ca0f0c908a162c075b856e42a01d175cff294f44bad1d0c6e617113"
+  }
+}

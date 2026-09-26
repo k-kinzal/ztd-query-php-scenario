@@ -1,0 +1,6 @@
+{"php":"8.1.34","mysqlnd":"mysqlnd 8.1.34","server":"8.0.46"}
+{"operation":"no tables: SELECT 1; SELECT 2","native":{"ok":true,"value":{"multi_query":{"type":"bool","value":true},"result_sets":[[{"a":"1"}],[{"b":"2"}]]}},"ztd":{"ok":true,"value":{"multi_query":{"type":"bool","value":true},"result_sets":[[{"a":"1"}],[{"b":"2"}]]}},"same":true}
+{"operation":"two SELECTs on the table","native":{"ok":true,"value":{"multi_query":{"type":"bool","value":true},"result_sets":[[{"name":"a"}],[{"n":"1"}]]}},"ztd":{"ok":false,"error":"mysqli_sql_exception","code":1146,"sqlstate":"42S02","message":"Table 'ztd_types.repro_e265ff51' doesn't exist"},"same":false}
+{"operation":"INSERT; UPDATE; SELECT on the table","native":{"ok":true,"value":{"multi_query":{"type":"bool","value":true},"result_sets":[{"result":false},{"result":false},[{"name":"k","qty":"5"}]]}},"ztd":{"ok":false,"error":"mysqli_sql_exception","code":1146,"sqlstate":"42S02","message":"Table 'ztd_types.repro_e265ff51' doesn't exist"},"same":false}
+{"operation":"rows afterwards via query()","native":{"ok":true,"value":[{"id":"1","name":"a","qty":"0"},{"id":"2","name":"k","qty":"5"}]},"ztd":{"ok":true,"value":[{"id":1,"name":"a","qty":0}]},"same":false}
+{"diverged":3}

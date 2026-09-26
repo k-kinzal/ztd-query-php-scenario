@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "FND-mysqli-stmt-init",
+  "scenario": "SCN-mysqli-native-parity",
+  "status": "reported",
+  "classification": "existing-problem",
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201657950162Z-SCN-mysqli-native-parity/run.json",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201659423693Z-SCN-mysqli-native-parity/run.json",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/repro/stmt-init-php85-output.txt",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/repro/stmt-init-php81-output.txt",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/report.md"
+  ],
+  "reproduction": "findings/FND-mysqli-stmt-init/repro.php",
+  "issue_search": "findings/FND-mysqli-stmt-init/issue-search.md",
+  "issue_body": "findings/FND-mysqli-stmt-init/issue-body.md",
+  "issue_url": "https://github.com/k-kinzal/ztd-query-php/issues/486",
+  "title": "ZtdMysqli::stmt_init() returns a statement bound to the physical connection, so `$stmt->prepare()` bypasses the session (unknown table 1146)"
+}

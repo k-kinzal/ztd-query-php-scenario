@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "id": "CYC-20260926T200050738102Z-mysqli-native-parity",
+  "state": "complete",
+  "topic": "mysqli-native-parity",
+  "baseline": "BASE-20260926-main-aac51e9",
+  "branch": "regression",
+  "report": "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/report.md",
+  "findings": [
+    "FND-mysqli-insert-id",
+    "FND-mysqli-state-properties",
+    "FND-mysqli-error-reporting",
+    "FND-mysqli-stmt-init",
+    "FND-mysqli-real-query-results",
+    "FND-mysqli-multi-query",
+    "FND-mysqli-result-metadata",
+    "FND-mysqli-unconnected-construct",
+    "FND-mysqli-query-return-type"
+  ],
+  "work_items": [
+    "WRK-mysqli-native-parity",
+    "WRK-pdo-error-reporting",
+    "WRK-supported-matrix"
+  ],
+  "new_baseline": "BASE-20260926-main-249944e"
+}

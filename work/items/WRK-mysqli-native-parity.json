@@ -5,10 +5,20 @@
   "status": "ready",
   "title": "Verify ZtdMysqli behaves like native mysqli for common application APIs",
   "question": "Where does ZtdMysqli diverge from native mysqli for application code that was written against the extension (return values, result types, insert_id, multi_query, store_result, fromMysqli wrapping)?",
-  "next_action": "Write an expectation for plain query() result types with default options and with MYSQLI_OPT_INT_AND_FLOAT_NATIVE, then cover insert_id, real_query/store_result, multi_query and fromMysqli() against native controls. #471 and #472 are already reported; add material evidence only if new cases differ.",
+  "next_action": "Eight divergences reported (#483-#490) from SCN-mysqli-native-parity on PHP 8.1.34/8.5.8 with MySQL 8.0.46; transactions, bind_result, get_result and fromMysqli isolation matched native. Next: post the pending #471 execute_query comment (findings/FND-mysqli-query-return-type/comment-execute-query.md) when a token with issue-write access is available; cover async queries (MYSQLI_ASYNC/poll/reap_async_query), change_user/select_db/set_charset and get_warnings(); re-run the scenario when upstream responds to the issues.",
   "done_when": "Each chosen API has a native control and ZTD observation on a supported runtime; every confirmed divergence is reported upstream or linked to an existing issue.",
   "evidence": [
-    "cycles/2026/09/CYC-20260926T142139580320Z-upstream-regression/report.md",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/report.md",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201657950162Z-SCN-mysqli-native-parity/run.json",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201659423693Z-SCN-mysqli-native-parity/run.json",
+    "findings/FND-mysqli-insert-id/finding.json",
+    "findings/FND-mysqli-state-properties/finding.json",
+    "findings/FND-mysqli-error-reporting/finding.json",
+    "findings/FND-mysqli-stmt-init/finding.json",
+    "findings/FND-mysqli-real-query-results/finding.json",
+    "findings/FND-mysqli-multi-query/finding.json",
+    "findings/FND-mysqli-result-metadata/finding.json",
+    "findings/FND-mysqli-unconnected-construct/finding.json",
     "findings/FND-mysqli-query-return-type/finding.json",
     "findings/FND-mysqli-query-native-types/finding.json"
   ]

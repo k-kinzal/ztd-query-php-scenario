@@ -1,0 +1,32 @@
+{"runtime":{"php":"8.1.34","pdo_mysql":"8.1.34","mysqli":"8.1.34","client":"mysqlnd 8.1.34","server":"8.0.46","sql_mode":"ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"}}
+{"adapter":"pdo","table":"users_3a076f1e3379"}
+{"check":"pdo.create_table","met":true,"expected":"no error","actual":{"ok":true,"value":0}}
+{"check":"pdo.physical_absent_after_create","met":true,"expected":[],"actual":[]}
+{"check":"pdo.insert_affected","met":true,"expected":2,"actual":{"ok":true,"value":2}}
+{"check":"pdo.readme_query","met":true,"expected":["Alice"],"actual":{"ok":true,"value":["Alice"]}}
+{"check":"pdo.lookup_types","met":true,"expected":{"id":{"type":"int","value":2},"name":{"type":"string","value":"Bob"},"active":{"type":"int","value":0}},"actual":{"ok":true,"value":{"id":{"type":"int","value":2},"name":{"type":"string","value":"Bob"},"active":{"type":"int","value":0}}}}
+{"check":"pdo.update_affected","met":true,"expected":1,"actual":{"ok":true,"value":1}}
+{"check":"pdo.update_visible","met":true,"expected":"Robert","actual":{"ok":true,"value":"Robert"}}
+{"check":"pdo.delete_affected","met":true,"expected":1,"actual":{"ok":true,"value":1}}
+{"check":"pdo.count_after_delete","met":true,"expected":1,"actual":{"ok":true,"value":1}}
+{"check":"pdo.physical_absent_after_writes","met":true,"expected":[],"actual":[]}
+{"check":"pdo.fresh_session_unknown_table","met":true,"expected":"unknown-table error (42S02\/1146)","actual":{"ok":false,"error":"PDOException","code":"42S02","sqlstate":"42S02","message":"SQLSTATE[42S02]: Base table or view not found: 1146 Table 'ztd_types.users_3a076f1e3379' doesn't exist"}}
+{"check":"pdo.disabled_sees_physical","met":true,"expected":"unknown-table error (42S02\/1146)","actual":{"ok":false,"error":"PDOException","code":"42S02","sqlstate":"42S02","message":"SQLSTATE[42S02]: Base table or view not found: 1146 Table 'ztd_types.users_3a076f1e3379' doesn't exist"}}
+{"check":"pdo.enabled_restores_session","met":true,"expected":1,"actual":{"ok":true,"value":1}}
+{"adapter":"mysqli","table":"users_514d8c73688e"}
+{"check":"mysqli.create_table","met":false,"expected":{"type":"bool","value":true},"actual":{"ok":true,"value":{"type":"mysqli_result","value":{}}}}
+{"check":"mysqli.physical_absent_after_create","met":true,"expected":[],"actual":[]}
+{"check":"mysqli.insert_affected","met":false,"expected":[{"type":"bool","value":true},{"type":"int","value":2}],"actual":{"ok":true,"value":[{"type":"mysqli_result","value":{}},{"type":"int","value":2}]}}
+{"check":"mysqli.readme_execute_query","met":true,"expected":[{"name":"Alice"}],"actual":{"ok":true,"value":[{"name":"Alice"}]}}
+{"check":"mysqli.readme_prepare_bind","met":true,"expected":[{"name":"Alice"}],"actual":{"ok":true,"value":[{"name":"Alice"}]}}
+{"check":"mysqli.lookup_types","met":true,"expected":{"id":{"type":"int","value":2},"name":{"type":"string","value":"Bob"},"active":{"type":"int","value":0}},"actual":{"ok":true,"value":{"id":{"type":"int","value":2},"name":{"type":"string","value":"Bob"},"active":{"type":"int","value":0}}}}
+{"check":"mysqli.update_affected","met":false,"expected":[{"type":"bool","value":true},{"type":"int","value":1}],"actual":{"ok":true,"value":[{"type":"mysqli_result","value":{}},{"type":"int","value":1}]}}
+{"check":"mysqli.update_visible","met":true,"expected":"Robert","actual":{"ok":true,"value":"Robert"}}
+{"check":"mysqli.delete_affected","met":false,"expected":[{"type":"bool","value":true},{"type":"int","value":1}],"actual":{"ok":true,"value":[{"type":"mysqli_result","value":{}},{"type":"int","value":1}]}}
+{"check":"mysqli.count_after_delete","met":true,"expected":1,"actual":{"ok":true,"value":1}}
+{"check":"mysqli.physical_absent_after_writes","met":true,"expected":[],"actual":[]}
+{"check":"mysqli.fresh_session_unknown_table","met":true,"expected":"unknown-table error (42S02\/1146)","actual":{"ok":false,"error":"mysqli_sql_exception","code":1146,"sqlstate":"42S02","message":"Table 'ztd_types.users_514d8c73688e' doesn't exist"}}
+{"check":"mysqli.disabled_sees_physical","met":true,"expected":"unknown-table error (42S02\/1146)","actual":{"ok":false,"error":"mysqli_sql_exception","code":1146,"sqlstate":"42S02","message":"Table 'ztd_types.users_514d8c73688e' doesn't exist"}}
+{"check":"mysqli.enabled_restores_session","met":true,"expected":1,"actual":{"ok":true,"value":1}}
+{"control":"native-mysqli","table":"users_41337d505cbc","query_returns":{"ok":true,"value":[{"type":"bool","value":true},{"type":"bool","value":true},{"type":"int","value":2},{"type":"bool","value":true},{"type":"int","value":1}]}}
+{"failed_checks":4}

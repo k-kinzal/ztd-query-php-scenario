@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "FND-mysqli-multi-query",
+  "scenario": "SCN-mysqli-native-parity",
+  "status": "reported",
+  "classification": "existing-problem",
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201657950162Z-SCN-mysqli-native-parity/run.json",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201659423693Z-SCN-mysqli-native-parity/run.json",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/repro/multi-query-php85-output.txt",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/repro/multi-query-php81-output.txt",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/report.md"
+  ],
+  "reproduction": "findings/FND-mysqli-multi-query/repro.php",
+  "issue_search": "findings/FND-mysqli-multi-query/issue-search.md",
+  "issue_body": "findings/FND-mysqli-multi-query/issue-body.md",
+  "issue_url": "https://github.com/k-kinzal/ztd-query-php/issues/488",
+  "title": "ZtdMysqli::multi_query() is not applied to session tables: statements referencing a session-created table fail with unknown table 1146"
+}

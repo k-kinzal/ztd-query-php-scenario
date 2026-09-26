@@ -1,0 +1,8 @@
+{"php":"8.5.8","mysqlnd":"mysqlnd 8.5.8","server":"8.0.46"}
+{"operation":"insert_id after query(INSERT)","native":{"ok":true,"value":{"type":"int","value":1}},"ztd":{"ok":false,"error":"Error","code":0,"sqlstate":null,"message":"Property access is not allowed yet"},"same":false}
+{"operation":"stmt->insert_id after prepared INSERT","native":{"ok":true,"value":{"type":"int","value":2}},"ztd":{"ok":false,"error":"Error","code":0,"sqlstate":null,"message":"ZtdQuery\\Adapter\\Mysqli\\ZtdMysqliStatement object is already closed"},"same":false}
+{"operation":"insert_id after prepared INSERT","native":{"ok":true,"value":{"type":"int","value":2}},"ztd":{"ok":false,"error":"Error","code":0,"sqlstate":null,"message":"Property access is not allowed yet"},"same":false}
+{"operation":"SELECT LAST_INSERT_ID()","native":{"ok":true,"value":{"type":"string","value":"2"}},"ztd":{"ok":true,"value":{"type":"int","value":0}},"same":false}
+{"operation":"SELECT MAX(id) (rows exist)","native":{"ok":true,"value":{"type":"string","value":"2"}},"ztd":{"ok":true,"value":{"type":"int","value":2}},"same":true}
+{"control":"ZtdPdo","lastInsertId()":{"ok":true,"value":{"type":"string","value":"2"}},"SELECT LAST_INSERT_ID()":{"ok":true,"value":{"type":"int","value":0}}}
+{"diverged":4}

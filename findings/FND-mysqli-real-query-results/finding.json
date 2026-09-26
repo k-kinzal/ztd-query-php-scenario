@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "FND-mysqli-real-query-results",
+  "scenario": "SCN-mysqli-native-parity",
+  "status": "reported",
+  "classification": "existing-problem",
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201657950162Z-SCN-mysqli-native-parity/run.json",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201659423693Z-SCN-mysqli-native-parity/run.json",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/repro/real-query-results-php85-output.txt",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/repro/real-query-results-php81-output.txt",
+    "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/report.md"
+  ],
+  "reproduction": "findings/FND-mysqli-real-query-results/repro.php",
+  "issue_search": "findings/FND-mysqli-real-query-results/issue-search.md",
+  "issue_body": "findings/FND-mysqli-real-query-results/issue-body.md",
+  "issue_url": "https://github.com/k-kinzal/ztd-query-php/issues/487",
+  "title": "ZtdMysqli::real_query() returns true but `store_result()` and `use_result()` return false, so a SELECT result cannot be read"
+}

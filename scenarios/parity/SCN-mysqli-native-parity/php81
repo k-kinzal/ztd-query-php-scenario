@@ -1,0 +1,11 @@
+#!/bin/sh
+# Optional lab.py --php interpreter using the retained PHP 8.1 image.
+set -eu
+project_dir=$(pwd)
+exec docker run --rm \
+    --entrypoint php \
+    --network "${ZTD_MYSQL_NETWORK:-bridge}" \
+    --volume "$project_dir:$project_dir" --workdir "$project_dir" \
+    --env ZTD_MYSQL_HOST --env ZTD_MYSQL_PORT --env ZTD_MYSQL_DB --env ZTD_MYSQL_USER --env ZTD_MYSQL_PASSWORD \
+    --env ZTD_VERSION_LOG --env XDEBUG_MODE \
+    "${ZTD_MYSQL_PHP_IMAGE:-sha256:3415e059fb3ae1bf23c52f053d6db09554eac9fe7d7d58329b8d726686bafe1b}" "$@"

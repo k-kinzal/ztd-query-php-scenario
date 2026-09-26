@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "id": "BASE-20260926-main-249944e",
+  "upstream": "249944eaed3ea200ed235fb6473296c7e301608a",
+  "packages": {
+    "k-kinzal/ztd-query-core": {
+      "version": "dev-main",
+      "reference": "f5ab3f0efdb355358b60feb61b7edfb9194fa21f",
+      "url": "https://github.com/k-kinzal/ztd-query-core.git"
+    },
+    "k-kinzal/ztd-query-mysql": {
+      "version": "dev-main",
+      "reference": "969eb5d9f194f3bca1f661a99594b54ead492423",
+      "url": "https://github.com/k-kinzal/ztd-query-mysql.git"
+    },
+    "k-kinzal/ztd-query-mysqli-adapter": {
+      "version": "dev-main",
+      "reference": "3fe31d57e65d337d53cee04a625ec8e855798181",
+      "url": "https://github.com/k-kinzal/ztd-query-mysqli-adapter.git"
+    },
+    "k-kinzal/ztd-query-pdo-adapter": {
+      "version": "dev-main",
+      "reference": "3ed255a43c776349d0170c5b19bcfdd53db626dd",
+      "url": "https://github.com/k-kinzal/ztd-query-pdo-adapter.git"
+    },
+    "k-kinzal/ztd-query-postgres": {
+      "version": "dev-main",
+      "reference": "02bcf6de3040157294b0501396f86872d5301a8e",
+      "url": "https://github.com/k-kinzal/ztd-query-postgres.git"
+    },
+    "k-kinzal/ztd-query-sqlite": {
+      "version": "dev-main",
+      "reference": "542d26203030ded36abbcdea04b77ce99ff8d934",
+      "url": "https://github.com/k-kinzal/ztd-query-sqlite.git"
+    }
+  },
+  "lock": "baselines/locks/5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92.lock",
+  "lock_sha256": "5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92",
+  "report": "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/report.md",
+  "previous": "BASE-20260926-main-aac51e9",
+  "scope": "Same lock as BASE-20260926-main-aac51e9. Regression reruns of the four curated scenarios (SQLite fixture lifecycle and insert column order on PHP 8.5.8; MySQL PDO product types and MySQL session schema on PHP 8.5.8/8.1.34 with MySQL 8.0.46) plus the new MySQLi native-parity scenario on PHP 8.5.8/8.1.34 with MySQL 8.0.46. PostgreSQL, MySQL 8.4/9.x and PHP 8.2-8.4 unverified.",
+  "alignment": "Monorepo main 249944e adds PRs #466, #470 and #353 on top of aac51e9; the Git tree SHAs of every packages/ztd-query-* directory are identical at both commits (checked with the GitHub contents API on 2026-09-26), and the changed sql-* packages are not dependencies of the locked ZTD packages. composer update reported nothing to modify, so the six split package references are unchanged and correspond to the ztd-query-* content of 249944e. No implementation was inspected."
+}

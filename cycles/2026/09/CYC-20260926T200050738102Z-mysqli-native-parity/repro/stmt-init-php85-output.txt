@@ -1,0 +1,5 @@
+{"php":"8.5.8","mysqlnd":"mysqlnd 8.5.8","server":"8.0.46"}
+{"path":"stmt_init class","native":"mysqli_stmt","ztd":"mysqli_stmt","same":true}
+{"path":"prepare()","native":{"ok":true,"value":{"name":"a"}},"ztd":{"ok":true,"value":{"name":"a"}},"same":true}
+{"path":"stmt_init()->prepare()","native":{"ok":true,"value":{"name":"a"}},"ztd":{"ok":false,"error":"mysqli_sql_exception","code":1146,"sqlstate":"42S02","message":"Table 'ztd_types.repro_a1d83876' doesn't exist"},"same":false}
+{"diverged":1}

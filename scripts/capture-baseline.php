@@ -20,7 +20,8 @@
  *     "result": "pass",
  *     "phpVersion": "8.3.0",
  *     "dbVersion": "8.0.36",
- *     "ztdVersion": "0.1.1",
+ *     "ztdVersion": "dev-main",
+ *     "ztdReference": "7f50ca47e3fddd0e782e8fd4b2e635ce2c35a01e",
  *     "adapter": "mysql-pdo",
  *     "timestamp": "2026-03-08T12:00:00+00:00"
  *   }

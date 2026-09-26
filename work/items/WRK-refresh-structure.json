@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "WRK-refresh-structure",
+  "priority": 1,
+  "status": "done",
+  "title": "Refresh the repository for repeated investigations",
+  "question": "Can future cycles retain independent expectations, scenarios, outcomes and reports without rewriting a giant spec?",
+  "next_action": "Finish migration, execute met and unmet expectations, validate retained evidence.",
+  "done_when": "Migration preserves historical bytes; both representative scenarios have exact reproducible evidence; navigation and validation work.",
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T092050957424Z-repository-renewal/report.md",
+    "docs/migration-2026-09-26.md"
+  ]
+}

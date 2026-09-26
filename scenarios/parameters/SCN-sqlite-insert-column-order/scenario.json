@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "review": "public-api-expectation-reviewed",
+  "options": {
+    "pdo_error_mode": "exception",
+    "ztd": "defaults"
+  },
+  "gaps": [
+    "Other PHP/SQLite versions",
+    "MySQL PDO/MySQLi",
+    "PostgreSQL PDO"
+  ],
+  "id": "SCN-sqlite-insert-column-order",
+  "title": "Insert a fixture using positional parameters in explicit column order",
+  "expectation": "spec/expectations/SPEC-prepared-column-order.md",
+  "legacy_specs": [
+    "SPEC-4.1"
+  ],
+  "scope": {
+    "adapter": "sqlite-pdo",
+    "database": "sqlite::memory:",
+    "options": {
+      "pdo_error_mode": "exception",
+      "ztd": "defaults"
+    }
+  },
+  "sources": [
+    "tests/Pdo/SqliteColumnOrderInsertTest.php",
+    "findings/FND-sqlite-insert-column-order/repro.php"
+  ],
+  "steps": [
+    {
+      "kind": "php",
+      "argv": [
+        "findings/FND-sqlite-insert-column-order/repro.php"
+      ]
+    },
+    {
+      "kind": "phpunit",
+      "argv": [
+        "vendor/bin/phpunit",
+        "tests/Pdo/SqliteColumnOrderInsertTest.php",
+        "--filter",
+        "testPreparedWithReorderedColumns"
+      ]
+    }
+  ]
+}

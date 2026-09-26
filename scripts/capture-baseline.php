@@ -5,7 +5,7 @@
  * Capture a test baseline from JUnit XML and verification-log.json.
  *
  * Usage:
- *   php scripts/capture-baseline.php [--junit build/junit.xml] [--versions spec/verification-log.json] [-o baseline.json]
+ *   php scripts/capture-baseline.php [--junit build/junit.xml] [--versions build/verification-log.json] [-o baseline.json]
  *
  * Reads JUnit XML for test results and verification-log.json for version
  * metadata. Produces baseline.json with one entry per test class:
@@ -34,7 +34,7 @@ $rootDir = dirname(__DIR__);
 // Parse CLI options
 $options = getopt('o:', ['junit:', 'versions:']);
 $junitPath = $options['junit'] ?? $rootDir . '/build/junit.xml';
-$versionsPath = $options['versions'] ?? $rootDir . '/spec/verification-log.json';
+$versionsPath = $options['versions'] ?? $rootDir . '/build/verification-log.json';
 $outputPath = $options['o'] ?? $rootDir . '/baseline.json';
 
 // Validate inputs
@@ -100,7 +100,7 @@ function collectTestSuites(SimpleXMLElement $suite, array $versions, string $tim
         $skipped = (int) ($suite['skipped'] ?? 0);
         $time = (float) ($suite['time'] ?? 0);
 
-        $result = ($failures === 0 && $errors === 0) ? 'pass' : 'fail';
+        $result = ($failures > 0 || $errors > 0) ? 'fail' : (($skipped > 0 || $tests === 0) ? 'incomplete' : 'pass');
 
         $versionInfo = $versions[$class] ?? [];
 
@@ -112,7 +112,7 @@ function collectTestSuites(SimpleXMLElement $suite, array $versions, string $tim
             'skipped' => $skipped,
             'time' => round($time, 4),
             'result' => $result,
-            'phpVersion' => $versionInfo['phpVersion'] ?? PHP_VERSION,
+            'phpVersion' => $versionInfo['phpVersion'] ?? 'unknown',
             'dbVersion' => $versionInfo['dbVersion'] ?? 'unknown',
             'ztdVersion' => $versionInfo['ztdVersion'] ?? 'unknown',
             'ztdReference' => $versionInfo['ztdReference'] ?? 'unknown',

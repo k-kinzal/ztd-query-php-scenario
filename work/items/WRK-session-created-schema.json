@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "WRK-session-created-schema",
+  "priority": 2,
+  "status": "ready",
+  "title": "Exercise the documented no-migration application workflow",
+  "question": "Can users create and populate a session-only schema without precreating physical tables?",
+  "next_action": "Use the current public PDO README example; assert physical schema/data effects and fresh-session behavior.",
+  "done_when": "Documented workflow executed with clean setup, expectation/observation separated and any confirmed problem reported.",
+  "evidence": []
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "WRK-scenario-setup",
+  "priority": 1,
+  "status": "ready",
+  "title": "Repair invalid setup before attributing failures to ZTD",
+  "question": "Do SqliteChainedDdlDmlTest, SqliteCheckConstraintBehaviorTest and SqliteConcurrentInstancesTest fail before meaningful adapter use?",
+  "next_action": "Choose one class; reproduce the native setup separately and repair only confirmed scenario defects.",
+  "done_when": "Clean setup and adapter run are retained, failures classified, confirmed upstream problems reported.",
+  "evidence": []
+}

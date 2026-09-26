@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "review": "public-api-expectation-reviewed",
+  "options": {
+    "pdo_error_mode": "exception",
+    "ztd": "defaults"
+  },
+  "gaps": [
+    "Other PHP/SQLite versions",
+    "MySQL PDO/MySQLi",
+    "PostgreSQL PDO"
+  ],
+  "id": "SCN-sqlite-fixture-lifecycle",
+  "title": "Create, edit and remove isolated fixtures without changing physical seed data",
+  "expectation": "spec/expectations/SPEC-isolated-fixture-lifecycle.md",
+  "legacy_specs": [
+    "SPEC-1.4",
+    "SPEC-2.2",
+    "SPEC-4.1",
+    "SPEC-4.2",
+    "SPEC-4.3"
+  ],
+  "scope": {
+    "adapter": "sqlite-pdo",
+    "database": "sqlite::memory:",
+    "options": {
+      "pdo_error_mode": "exception",
+      "ztd": "defaults"
+    }
+  },
+  "sources": [
+    "tests/Pdo/SqliteFixtureLifecycleTest.php",
+    "tests/Pdo/SqliteBasicCrudTest.php"
+  ],
+  "steps": [
+    {
+      "kind": "phpunit",
+      "argv": [
+        "vendor/bin/phpunit",
+        "tests/Pdo/SqliteFixtureLifecycleTest.php"
+      ]
+    },
+    {
+      "kind": "phpunit",
+      "argv": [
+        "vendor/bin/phpunit",
+        "tests/Pdo/SqliteBasicCrudTest.php"
+      ]
+    }
+  ]
+}

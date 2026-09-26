@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Pdo\SqliteBasicCrudTest" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Pdo/SqliteBasicCrudTest.php" tests="9" assertions="18" errors="0" failures="0" skipped="0" time="0.109551">
+    <testcase name="testInsertAndSelect" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Scenarios/BasicCrudScenario.php" line="25" class="Tests\Pdo\SqliteBasicCrudTest" classname="Tests.Pdo.SqliteBasicCrudTest" assertions="3" time="0.047347"/>
+    <testcase name="testUpdateAndVerify" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Scenarios/BasicCrudScenario.php" line="37" class="Tests\Pdo\SqliteBasicCrudTest" classname="Tests.Pdo.SqliteBasicCrudTest" assertions="2" time="0.012805"/>
+    <testcase name="testDeleteAndVerify" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Scenarios/BasicCrudScenario.php" line="49" class="Tests\Pdo\SqliteBasicCrudTest" classname="Tests.Pdo.SqliteBasicCrudTest" assertions="1" time="0.011452"/>
+    <testcase name="testZtdIsolation" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Scenarios/BasicCrudScenario.php" line="60" class="Tests\Pdo\SqliteBasicCrudTest" classname="Tests.Pdo.SqliteBasicCrudTest" assertions="2" time="0.006393"/>
+    <testcase name="testAutoDetectsDriver" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Scenarios/BasicCrudScenario.php" line="75" class="Tests\Pdo\SqliteBasicCrudTest" classname="Tests.Pdo.SqliteBasicCrudTest" assertions="1" time="0.003022"/>
+    <testcase name="testPreparedSelectWithBindValue" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Scenarios/BasicCrudScenario.php" line="81" class="Tests\Pdo\SqliteBasicCrudTest" classname="Tests.Pdo.SqliteBasicCrudTest" assertions="2" time="0.010741"/>
+    <testcase name="testSelectReturnsEmptyWhenNoRows" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Scenarios/BasicCrudScenario.php" line="92" class="Tests\Pdo\SqliteBasicCrudTest" classname="Tests.Pdo.SqliteBasicCrudTest" assertions="1" time="0.003715"/>
+    <testcase name="testMultipleInserts" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Scenarios/BasicCrudScenario.php" line="99" class="Tests\Pdo\SqliteBasicCrudTest" classname="Tests.Pdo.SqliteBasicCrudTest" assertions="3" time="0.011798"/>
+    <testcase name="testEnableDisableToggle" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Scenarios/BasicCrudScenario.php" line="112" class="Tests\Pdo\SqliteBasicCrudTest" classname="Tests.Pdo.SqliteBasicCrudTest" assertions="3" time="0.002280"/>
+  </testsuite>
+</testsuites>

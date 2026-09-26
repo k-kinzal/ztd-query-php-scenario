@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "WRK-legacy-black-box",
+  "priority": 1,
+  "status": "ready",
+  "title": "Review tests that inspect private implementation",
+  "question": "Can schema and auto-detection expectations be checked through observable adapter operations?",
+  "next_action": "Review Reflection use in MysqlAutoDetectionTest and *SchemaReflectionTest; replace only after deriving public expectations.",
+  "done_when": "Selected workflow no longer uses private state or generated SQL to decide correctness, and has execution evidence.",
+  "evidence": []
+}

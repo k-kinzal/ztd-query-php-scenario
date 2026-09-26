@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "FND-sqlite-insert-column-order",
+  "scenario": "SCN-sqlite-insert-column-order",
+  "status": "duplicate",
+  "classification": "existing-problem",
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T092050957424Z-repository-renewal/runs/20260926T092623785666Z-SCN-sqlite-insert-column-order/run.json",
+    "cycles/2026/09/CYC-20260926T092050957424Z-repository-renewal/runs/20260926T092110396186Z-SCN-sqlite-insert-column-order/run.json",
+    "cycles/2026/09/CYC-20260926T092050957424Z-repository-renewal/report.md"
+  ],
+  "reproduction": "findings/FND-sqlite-insert-column-order/repro.php",
+  "issue_url": "https://github.com/k-kinzal/ztd-query-php/issues/465",
+  "issue_search": "findings/FND-sqlite-insert-column-order/issue-search.md"
+}

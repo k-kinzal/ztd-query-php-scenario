@@ -78,3 +78,13 @@ Link the issue from the retained evidence. For an existing issue, avoid duplicat
 Source: upstream [AGENTS.md](https://github.com/k-kinzal/ztd-query-php/blob/3a6c7e361a1613a7d75288a4628058e2b3af0e67/AGENTS.md) and [core requirements](https://github.com/k-kinzal/ztd-query-php/blob/3a6c7e361a1613a7d75288a4628058e2b3af0e67/packages/ztd-query-core/README.md#requirements), checked on 2026-09-26. The broader MySQL range of upstream SQL tooling does not apply to `ztd-query-*`.
 
 Track upstream `main` through the split packages' `dev-main` branches and commit `composer.lock`. Record the upstream commit and the locked package references when refreshing the baseline. Keep historical verification results labeled with their original package versions.
+
+## Repository navigation
+
+Start with `python3 scripts/lab.py status`, then follow `WORKFLOW.md`. Read only the selected work item, scenario, expectation and relevant evidence. Use `python3 scripts/lab.py catalog <topic> --legacy` to find older coverage before creating tests.
+
+- New expectations: `spec/expectations/`; executable scenario manifests: `scenarios/<domain>/<SCN-id>/scenario.json`.
+- Each cycle: `cycles/YYYY/MM/CYC-.../`; confirmed problems: `findings/FND-.../`; bounded next work: `work/items/`.
+- `spec/legacy/` is frozen historical material. Its old “authoritative” declarations and matrices do not govern new work or establish current behavior. Existing tests retain their paths and remain unreviewed until adopted with explicit expectations and new execution evidence.
+- Keep expectations independent of observations. Run records are immutable; append new runs. Do not maintain hand-edited copies of traceability or verification matrices.
+- Run `python3 scripts/lab.py validate` after changing records. See `docs/records.md` for formats and replay. Structural maintenance serves behavioral investigations; subsequent cycles should prioritize user-visible uncertainty.

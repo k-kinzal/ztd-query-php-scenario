@@ -1,0 +1,73 @@
+Tooling output summary; trailing display padding removed. Scenario run output remains byte-preserved.
+
+cwd: /Users/ab/Projects/ztd-query-php-scenario
+command: ["python3", "-m", "unittest", "discover", "-s", "scripts/tests"]
+exit: 0
+............
+----------------------------------------------------------------------
+Ran 12 tests in 0.760s
+
+OK
+
+cwd: /Users/ab/Projects/ztd-query-php-scenario
+command: ["composer", "validate", "--strict"]
+exit: 0
+./composer.json is valid
+
+cwd: /Users/ab/Projects/ztd-query-php-scenario
+command: ["composer", "check-platform-reqs"]
+exit: 0
+Checking platform requirements for packages in the vendor dir
+ext-ctype     8.5.8      success
+ext-dom       20031129   success
+ext-filter    8.5.8      success
+ext-iconv     8.5.8      success
+ext-json      8.5.8      success
+ext-libxml    8.5.8      success
+ext-mbstring  *          success provided by symfony/polyfill-mbstring
+ext-mysqli    8.5.8      success
+ext-pdo       8.5.8      success
+ext-phar      8.5.8      success
+ext-tokenizer 8.5.8      success
+ext-xmlwriter 8.5.8      success
+php           8.5.8      success
+
+cwd: build/replay-renewal
+command: ["php", "vendor/bin/phpunit", "tests/Pdo/SqliteFixtureLifecycleTest.php", "--do-not-cache-result", "--colors=never"]
+exit: 0
+PHPUnit 10.5.65 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.8
+Configuration: /Users/ab/Projects/ztd-query-php-scenario/build/replay-renewal/phpunit.xml
+
+.                                                                   1 / 1 (100%)
+
+Time: 00:00.094, Memory: 10.00 MB
+
+OK (1 test, 10 assertions)
+
+cwd: build/replay-renewal
+command: ["php", "vendor/bin/phpunit", "tests/Pdo/SqliteBasicCrudTest.php", "--do-not-cache-result", "--colors=never"]
+exit: 0
+PHPUnit 10.5.65 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.8
+Configuration: /Users/ab/Projects/ztd-query-php-scenario/build/replay-renewal/phpunit.xml
+
+.........                                                           9 / 9 (100%)
+
+Time: 00:00.180, Memory: 10.00 MB
+
+OK (9 tests, 18 assertions)
+
+Final check command: ["python3", "-m", "unittest", "discover", "-s", "scripts/tests"]
+exit: 0
+............
+----------------------------------------------------------------------
+Ran 12 tests in 1.349s
+
+OK
+
+Final check command: ["python3", "scripts/lab.py", "validate"]
+exit: 0
+Records, references, evidence hashes and historical migration: valid

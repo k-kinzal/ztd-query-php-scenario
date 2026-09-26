@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "CYC-20260926T092050957424Z-repository-renewal",
+  "state": "complete",
+  "topic": "repository-renewal",
+  "baseline": "BASE-20260926-main",
+  "branch": "scenario-development",
+  "report": "cycles/2026/09/CYC-20260926T092050957424Z-repository-renewal/report.md",
+  "findings": [
+    "FND-sqlite-insert-column-order"
+  ],
+  "work_items": [
+    "WRK-refresh-structure"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "WRK-historical-assertions",
+  "priority": 1,
+  "status": "ready",
+  "title": "Revalidate historical assertions against the current public contract",
+  "question": "Which historical SQLite assertions still describe bugs rather than desired behavior?",
+  "next_action": "Start with SqliteAlterAddColumnDmlTest and issue #54; review the public contract, then rerun and retain evidence.",
+  "done_when": "Selected user workflow has desired assertions, classified output and reported remaining problems.",
+  "evidence": []
+}

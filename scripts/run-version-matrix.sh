@@ -90,7 +90,7 @@ run_suite() {
     if [ -f "$junit_file" ] && [ -s "$junit_file" ]; then
         php "$SCRIPT_DIR/capture-baseline.php" \
             --junit "$junit_file" \
-            --versions "$PROJECT_DIR/spec/verification-log.json" \
+            --versions "$PROJECT_DIR/build/verification-log.json" \
             -o "$baseline_file" 2>/dev/null || true
 
         local tests=$(grep -o 'tests="[0-9]*"' "$junit_file" | head -1 | grep -o '[0-9]*')

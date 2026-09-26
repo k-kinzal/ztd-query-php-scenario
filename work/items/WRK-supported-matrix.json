@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "WRK-supported-matrix",
+  "priority": 2,
+  "status": "ready",
+  "title": "Verify meaningful workflows across supported runtimes",
+  "question": "Where do the current expectations lack supported PHP/database evidence?",
+  "next_action": "First repeat MySQL CRUD with locked PHPUnit after prior startup timeouts; then sample MySQL 8.0/8.4/9.1, PostgreSQL 16/17 and PHP 8.1\u20138.5; preserve actual service versions.",
+  "done_when": "Each chosen combination is recorded; environment failures remain gaps and confirmed problems are reported. No full-matrix claim without full evidence.",
+  "evidence": []
+}

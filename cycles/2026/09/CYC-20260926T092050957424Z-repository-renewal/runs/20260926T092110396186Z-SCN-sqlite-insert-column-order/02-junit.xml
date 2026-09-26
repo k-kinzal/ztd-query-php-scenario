@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Pdo\SqliteColumnOrderInsertTest" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Pdo/SqliteColumnOrderInsertTest.php" tests="1" assertions="1" errors="0" failures="1" skipped="0" time="0.051328">
+    <testcase name="testPreparedWithReorderedColumns" file="/Users/ab/Projects/ztd-query-php-scenario/tests/Pdo/SqliteColumnOrderInsertTest.php" line="100" class="Tests\Pdo\SqliteColumnOrderInsertTest" classname="Tests.Pdo.SqliteColumnOrderInsertTest" assertions="1" time="0.051328">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Pdo\SqliteColumnOrderInsertTest::testPreparedWithReorderedColumns
+Failed asserting that actual size 0 matches expected size 1.
+
+/Users/ab/Projects/ztd-query-php-scenario/tests/Pdo/SqliteColumnOrderInsertTest.php:107</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

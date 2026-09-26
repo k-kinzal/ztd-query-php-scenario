@@ -6,3 +6,4 @@
 /build/
 /spec/verification-log.json
 /baseline.json
+__pycache__/

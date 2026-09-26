@@ -16,7 +16,7 @@ use PHPUnit\TextUI\Configuration\Configuration;
 
 /**
  * PHPUnit extension that records runtime versions and the ZTD package reference
- * per test run into spec/verification-log.json.
+ * for this process into ZTD_VERSION_LOG (default: build/verification-log.json).
  *
  * Register in phpunit.xml:
  *   <extensions>
@@ -36,7 +36,7 @@ final class VersionRecorder implements Extension
 
     public function bootstrap(Configuration $configuration, Facade $facade, ParameterCollection $parameters): void
     {
-        self::$outputPath = dirname(__DIR__, 2) . '/spec/verification-log.json';
+        self::$outputPath = getenv('ZTD_VERSION_LOG') ?: dirname(__DIR__, 2) . '/build/verification-log.json';
         self::$entries = [];
         self::$versionInfo = [];
 
@@ -86,27 +86,20 @@ final class VersionRecorder implements Extension
 
     public static function flush(): void
     {
-        if (self::$outputPath === null || empty(self::$entries)) {
+        if (self::$outputPath === null) {
             return;
         }
 
-        // Merge with existing log if present
-        $existing = [];
-        if (file_exists(self::$outputPath)) {
-            $content = file_get_contents(self::$outputPath);
-            if ($content !== false) {
-                $existing = json_decode($content, true) ?? [];
-            }
+        // A partial run must never inherit observations from an older run.
+        ksort(self::$entries);
+        $directory = dirname(self::$outputPath);
+        if (!is_dir($directory)) {
+            mkdir($directory, 0777, true);
         }
-
-        $merged = array_merge($existing, self::$entries);
-
-        // Sort by class name for readability
-        ksort($merged);
 
         file_put_contents(
             self::$outputPath,
-            json_encode($merged, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n"
+            json_encode((object) self::$entries, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n"
         );
     }
 

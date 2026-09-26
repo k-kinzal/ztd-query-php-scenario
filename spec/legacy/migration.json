@@ -1,0 +1,105 @@
+{
+  "revision": "9153d5f",
+  "files": [
+    {
+      "from": "spec/00-index.ears.md",
+      "to": "spec/legacy/00-index.ears.md",
+      "sha256": "8918599e2b77033802e90719aa2f92cb39cd333628177123dd6312a6f9386839"
+    },
+    {
+      "from": "spec/01-connection.ears.md",
+      "to": "spec/legacy/01-connection.ears.md",
+      "sha256": "52347ad780a40733017b6452d0c760446f7af771db1bd656d91f1abf84033cae"
+    },
+    {
+      "from": "spec/02-ztd-mode.ears.md",
+      "to": "spec/legacy/02-ztd-mode.ears.md",
+      "sha256": "7e69d6128f78bc04434bb7efa483a7ea8e9c243a4c2093dc70e661a2945626ce"
+    },
+    {
+      "from": "spec/03-read-operations.ears.md",
+      "to": "spec/legacy/03-read-operations.ears.md",
+      "sha256": "950ca24c6b0171944dfc850d044ddba195bbd47aba0300b083bbfc16cd50ed46"
+    },
+    {
+      "from": "spec/04-write-operations.ears.md",
+      "to": "spec/legacy/04-write-operations.ears.md",
+      "sha256": "1208cf5bf0066d0484da0c3cc922064863f0aae9f3fe397ed1158dd2a315fd7f"
+    },
+    {
+      "from": "spec/05-ddl-operations.ears.md",
+      "to": "spec/legacy/05-ddl-operations.ears.md",
+      "sha256": "dea4e01352967c868c84e8b68cdfa2d8bdac29df8503691b14115d1470de1eb8"
+    },
+    {
+      "from": "spec/06-unsupported-sql.ears.md",
+      "to": "spec/legacy/06-unsupported-sql.ears.md",
+      "sha256": "15e1cf60983e5ea9be02cc4c0cbd9cea20f80b3d2a7c651cf39a067ce2909db0"
+    },
+    {
+      "from": "spec/07-unknown-schema.ears.md",
+      "to": "spec/legacy/07-unknown-schema.ears.md",
+      "sha256": "615a3a93330c1f8a2ecf5cfde24e7aeaa8b26c19a8327c1aef316028f26fef60"
+    },
+    {
+      "from": "spec/08-constraints.ears.md",
+      "to": "spec/legacy/08-constraints.ears.md",
+      "sha256": "0264bbbcc6b645ed83f26f89dff614dd63a78492266d600ab90765dc713693cd"
+    },
+    {
+      "from": "spec/09-configuration.ears.md",
+      "to": "spec/legacy/09-configuration.ears.md",
+      "sha256": "85bc183532edbb474b54e7c0c29690b3821764b97108ab1d4c6b24041e428d86"
+    },
+    {
+      "from": "spec/10-platform-notes.ears.md",
+      "to": "spec/legacy/10-platform-notes.ears.md",
+      "sha256": "559968303d1d7dcfcc839422b80a34918d7f7e8772e02f14c552ee29aa6a8d78"
+    },
+    {
+      "from": "spec/11-known-issues.ears.md",
+      "to": "spec/legacy/11-known-issues.ears.md",
+      "sha256": "1a2e8c6a66ae68a64b1c6d964b4b24a51112f95152636f1fde90f0cb3a4752ac"
+    },
+    {
+      "from": "spec/12-pdo-configuration.ears.md",
+      "to": "spec/legacy/12-pdo-configuration.ears.md",
+      "sha256": "04248375f3dca0dab65cea375e7c17ece1ec6e7bd69dd372e9105798b9bd7f01"
+    },
+    {
+      "from": "spec/13-type-mappings.ears.md",
+      "to": "spec/legacy/13-type-mappings.ears.md",
+      "sha256": "390075f680be1a19d9db0e0dfa7a5d023ec5b0eaf6684ccbb857b7ae33a15fb7"
+    },
+    {
+      "from": "spec/baseline-2026-09-26.md",
+      "to": "spec/legacy/baseline-2026-09-26.md",
+      "sha256": "b5a29159da2232e3819e0e33d2d04f8629549808491d25fe364a2873405c67a0"
+    },
+    {
+      "from": "spec/traceability.md",
+      "to": "spec/legacy/traceability.md",
+      "sha256": "37f4401bef482f0a6a0142f0863019c7226abf9d9d80ec8b3cde2d47f468efcc"
+    },
+    {
+      "from": "spec/ztd-query-adapter.ears.md",
+      "to": "spec/legacy/ztd-query-adapter.ears.md",
+      "sha256": "d88f953ed26d7b35c5b5e6937eb45ddb6aab59c85b16488479104a4d650508b2"
+    },
+    {
+      "from": "scripts/add-matrices.py",
+      "to": "scripts/legacy/add-matrices.py",
+      "sha256": "3c17a0cb711a4e83075524be481fafe68535905147ec5e7ef33a3ce369062bc0"
+    },
+    {
+      "from": "scripts/restore-setup-data.php",
+      "to": "scripts/legacy/restore-setup-data.php",
+      "sha256": "00c1a22d2a4a722cfd57e77a5f2093295eeb89e44a6bd52e64b45d4eab1c54e4"
+    },
+    {
+      "from": "TODO.md",
+      "to": "spec/legacy/TODO.md",
+      "sha256": "2ae08041a10e218f6b25b804018fbea7a656c39a434c238c96c42216e6e27a13"
+    }
+  ]
+}

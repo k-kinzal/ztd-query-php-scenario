@@ -2,16 +2,16 @@
 <?php
 
 /**
- * Compare two baseline.json files and classify each change.
+ * Legacy class-level outcome comparison; review required. Prefer scripts/lab.py compare for retained method-level runs.
  *
  * Usage:
  *   php scripts/compare-baseline.php <old-baseline.json> <new-baseline.json> [--format=text|json]
  *   php scripts/compare-baseline.php --help
  *
  * Classifications:
- *   - regression:       test passed before, now fails
- *   - newly-supported:  test failed before, now passes
- *   - intentional:      test result changed and versions differ
+ *   - pass-to-fail:       test passed before, now fails
+ *   - fail-to-pass:  test failed before, now passes
+ *   - other-transition:      another result transition; review required
  *   - removed:          test existed before, absent now
  *   - added:            test absent before, exists now
  *   - unchanged:        same result
@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 if (in_array('--help', $argv, true) || in_array('-h', $argv, true) || $argc < 3) {
     fwrite(STDOUT, <<<'HELP'
-    Compare two baseline.json files and classify each change.
+    Legacy class-level outcome comparison; review required. Prefer scripts/lab.py compare for retained method-level runs.
 
     Usage:
       php scripts/compare-baseline.php <old-baseline.json> <new-baseline.json> [--format=text|json]
@@ -31,15 +31,15 @@ if (in_array('--help', $argv, true) || in_array('-h', $argv, true) || $argc < 3)
       --format=json   Machine-readable JSON output
 
     Classifications:
-      regression       Previously passing test now fails
-      newly-supported  Previously failing test now passes
-      intentional      Result changed between different ztd/db versions
+      pass-to-fail       Previously passing test now fails
+      fail-to-pass  Previously failing test now passes
+      other-transition      Other outcome transition; review required
       removed          Test present in old baseline but absent in new
       added            Test present in new baseline but absent in old
       unchanged        Same result in both baselines
 
     HELP);
-    exit($argc < 3 ? 1 : 0);
+    exit(in_array('--help', $argv, true) || in_array('-h', $argv, true) ? 0 : 1);
 }
 
 $oldPath = $argv[1];
@@ -118,32 +118,38 @@ foreach ($allClasses as $class) {
     }
 
     $versionChanged = ($old['ztdVersion'] ?? '') !== ($new['ztdVersion'] ?? '')
-        || ($old['dbVersion'] ?? '') !== ($new['dbVersion'] ?? '');
+        || ($old['dbVersion'] ?? '') !== ($new['dbVersion'] ?? '')
+        || ($old['ztdReference'] ?? '') !== ($new['ztdReference'] ?? '')
+        || ($old['phpVersion'] ?? '') !== ($new['phpVersion'] ?? '');
 
     if ($oldResult === 'pass' && $newResult === 'fail') {
         $changes[] = [
             'testClass' => $class,
-            'classification' => $versionChanged ? 'intentional' : 'regression',
+            'classification' => 'pass-to-fail',
             'oldResult' => $oldResult,
             'newResult' => $newResult,
             'detail' => $versionChanged
                 ? sprintf('Version changed: ztd %s→%s, db %s→%s',
                     $old['ztdVersion'] ?? '?', $new['ztdVersion'] ?? '?',
                     $old['dbVersion'] ?? '?', $new['dbVersion'] ?? '?')
-                : 'Same versions — likely regression',
+                : 'Changed outcome; requires review',
         ];
     } elseif ($oldResult === 'fail' && $newResult === 'pass') {
         $changes[] = [
             'testClass' => $class,
-            'classification' => 'newly-supported',
+            'classification' => 'fail-to-pass',
             'oldResult' => $oldResult,
             'newResult' => $newResult,
             'detail' => $versionChanged
                 ? sprintf('Version changed: ztd %s→%s, db %s→%s',
                     $old['ztdVersion'] ?? '?', $new['ztdVersion'] ?? '?',
                     $old['dbVersion'] ?? '?', $new['dbVersion'] ?? '?')
-                : 'Same versions — behavior fixed',
+                : 'Changed outcome; requires review',
         ];
+    } else {
+        $changes[] = ['testClass' => $class, 'classification' => 'other-transition',
+            'oldResult' => $oldResult, 'newResult' => $newResult,
+            'detail' => 'Outcome changed; requires review'];
     }
 }
 
@@ -160,12 +166,12 @@ if ($format === 'json') {
     $summary = summarize($changes);
     fwrite(STDOUT, "Baseline comparison: {$oldPath} → {$newPath}\n\n");
     fwrite(STDOUT, sprintf(
-        "  %d total | %d unchanged | %d regressions | %d newly-supported | %d intentional | %d added | %d removed\n\n",
+        "  %d total | %d unchanged | %d pass-to-fail transitions | %d fail-to-pass | %d other-transition | %d added | %d removed\n\n",
         $summary['total'],
         $summary['unchanged'],
-        $summary['regression'],
-        $summary['newly-supported'],
-        $summary['intentional'],
+        $summary['pass-to-fail'],
+        $summary['fail-to-pass'],
+        $summary['other-transition'],
         $summary['added'],
         $summary['removed'],
     ));
@@ -176,9 +182,9 @@ if ($format === 'json') {
     } else {
         foreach ($nonUnchanged as $change) {
             $arrow = match ($change['classification']) {
-                'regression' => '✗',
-                'newly-supported' => '✓',
-                'intentional' => '~',
+                'pass-to-fail' => '✗',
+                'fail-to-pass' => '✓',
+                'other-transition' => '~',
                 'added' => '+',
                 'removed' => '-',
                 default => '?',
@@ -194,11 +200,11 @@ if ($format === 'json') {
         }
     }
 
-    // Exit with non-zero if regressions found
-    if ($summary['regression'] > 0) {
-        fwrite(STDOUT, "\n  ⚠ {$summary['regression']} regression(s) detected.\n");
-        exit(2);
-    }
+
+}
+
+if (summarize($changes)['pass-to-fail'] > 0) {
+    exit(2);
 }
 
 function indexByClass(array $tests): array
@@ -215,9 +221,9 @@ function summarize(array $changes): array
     $summary = [
         'total' => count($changes),
         'unchanged' => 0,
-        'regression' => 0,
-        'newly-supported' => 0,
-        'intentional' => 0,
+        'pass-to-fail' => 0,
+        'fail-to-pass' => 0,
+        'other-transition' => 0,
         'added' => 0,
         'removed' => 0,
     ];

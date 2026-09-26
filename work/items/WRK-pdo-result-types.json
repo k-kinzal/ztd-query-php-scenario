@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "WRK-pdo-result-types",
+  "priority": 1,
+  "status": "ready",
+  "title": "Check fetched types under PDO configuration changes",
+  "question": "Does inserting mismatched PHP/SQL types preserve expected fetched types with native prepares?",
+  "next_action": "Adopt SPEC-12.1/12.6 and SPEC-13.1\u201313.4 selectively; compare query vs prepare, EMULATE_PREPARES/STRINGIFY_FETCHES, INT/BIGINT/DOUBLE/DECIMAL/VARCHAR/BOOLEAN/NULL against clean native controls.",
+  "done_when": "Each chosen type/options combination has exact types and runtime evidence; unexpected behavior reduced and reported; remaining combinations explicit.",
+  "evidence": []
+}

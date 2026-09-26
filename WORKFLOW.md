@@ -1,101 +1,100 @@
 # Investigation workflow
 
-[AGENTS.md](AGENTS.md) defines the repository's operating policy. Each investigation follows this loop: check upstream, run regressions if it changed or develop scenarios if it did not, then verify and report any problems with reproducible evidence.
+[AGENTS.md](AGENTS.md) defines policy. This document defines the operating procedure. [Record formats](docs/records.md) define where evidence lives. Do not load the entire historical corpus to begin a cycle.
 
-## 1. Check the upstream baseline
+## 1. Check the baseline and choose a bounded question
 
-Read the [current baseline](spec/00-index.ears.md), its report, and `composer.lock`. Check upstream `main` and all installed ZTD split packages' `dev-main` references against those recorded commits. Record the check time, upstream commit, and package references in the investigation report.
+```bash
+python3 scripts/lab.py status
+python3 scripts/lab.py start <short-topic>
+```
 
-| Observation | Required action |
+`start` creates `cycles/YYYY/MM/CYC-<UTC>-<topic>/` with `cycle.json`, `upstream.json` and a report template. Record all times in UTC. It compares remote `main` in the monorepo and all six locked split packages against [baselines/current.json](baselines/current.json). It records the actual locked references, remote references, errors and selected branch. A repeated `dev-main` label or unchanged local lock is insufficient.
+
+Read the baseline report and the relevant work item. Use `lab.py catalog <topic> --legacy` to find prior scenarios and spec entries. Choose a user task that changes our understanding of observable behavior. Reuse/deepen existing scenarios before adding overlapping tests. Each cycle should resolve a bounded question, not make structural cleanup or test counts its measure of progress.
+
+Split package SHAs differ from monorepo SHAs. An unchanged package set inherits only the previous recorded alignment. New commits need alignment evidence from package publication metadata/upstream statements. If alignment cannot be established, say so and test the explicitly identified package set. Do not inspect implementation to establish behavior.
+
+## 2. Select the branch
+
+| Observation | Action |
 | --- | --- |
-| Upstream `main` or a ZTD split-package reference advanced | Refresh dependencies and verify regressions before expanding scenarios. |
-| Upstream `main` and all ZTD split-package references are unchanged | Develop and execute user scenarios against the locked baseline. |
-| The check fails, or split packages lag behind upstream `main` | Record the uncertainty or pending package publication. Continue scenario work on the identified lock; repeat the upstream check before claiming a current baseline. |
+| Upstream or a split reference changed, or the local lock differs | Regression verification first. |
+| Every reference matches | Develop or deepen a user scenario on the locked baseline. |
+| A check failed or packages lag upstream | Record the limitation; continue useful work on the identified lock without claiming latest-main verification. |
 
-Use exact commit references for the comparison. A repeated `dev-main` label or unchanged local lock file does not demonstrate that upstream is unchanged. Identify packages through their metadata; behavioral verification uses their public APIs.
+### Upstream advanced
 
-## 2A. Upstream advanced: verify regressions
+1. Preserve the previous lock and scenario revision before updating. A recorded run already retains lock and source snapshots; otherwise copy the lock to `baselines/locks/<sha256>.lock` and record the previous revision.
+2. Refresh dependencies with `composer update 'k-kinzal/ztd-query-*' --with-all-dependencies --minimal-changes`. Record all changed dependencies, remote refs and alignment limits.
+3. Rerun existing scenarios and known-issue reproductions, beginning with the affected scope. Include broader legacy suites as needed; their aggregate pass count does not establish correct behavior. Use comparable PHP, drivers, DB versions and adapter options. If necessary replay the old lock with the same scenario source/runtime.
+4. Compare individual outcomes (`lab.py compare OLD NEW`), inspect native controls and desired assertions, and classify differences below. A historical assertion of a bug may fail when the bug is fixed.
+5. Only after investigation, create a new immutable baseline record and update the current pointer. Name its tested scope and remaining combinations; a partial run never establishes a full-matrix baseline. Commit the lock together with evidence when committing the cycle.
 
-1. Preserve the previous `composer.lock`, scenario revision, and verification results in Git history or tracked evidence before updating. Record the previous upstream and split-package references.
-2. Refresh the dependencies using the command in [README.md](README.md#refresh-upstream-main). Record the resolved references and any other dependency changes. If alignment with upstream `main` is uncertain, report the package set actually tested and the alignment gap.
-3. Rerun existing scenarios, including known-issue reproductions, using comparable PHP, driver, database, and adapter settings. Preserve the scenario revision used for comparison. If earlier evidence is missing or conditions differ, rerun the previous lock under the same conditions for suspected regressions.
-4. Inspect individual outcomes and classify differences using the table below. Verify the expected user behavior even when a historical test asserted an old bug and now fails because that bug was fixed. Correct such tests with an explanation and retain the original observations.
-5. Verify and report confirmed problems using steps 3 and 4 below. Update the baseline report, specs, and traceability links with actual results, issue URLs, and coverage gaps. Commit the refreshed lock with the report.
+### Upstream unchanged
 
-Run the existing suites for the supported adapters and runtime matrix as available. A partial run must name its tested scope and remaining work; it cannot establish a full-matrix baseline.
+Select a question from `work/items/` or a new concrete user need. Write the expectation **before** running. Specify schema, initial data, operation order, options, expected values/types/errors/physical effects, and basis in user needs, public contract or native behavior. Account for ZTD isolation when comparing native PDO/MySQLi.
 
-The capture and comparison scripts help locate changes. Their class-level summaries and automatic labels are preliminary: `compare-baseline.php` can label a version-related failure `intentional`, and it does not compare `dev-main` commit references. Inspect exact references and test-level output before drawing conclusions. A class can remain failing while individual scenarios improve or regress.
+Add or revise a small expectation in `spec/expectations/` and a manifest under `scenarios/<domain>/<SCN-id>/`. Exercise installed adapters through public APIs. Review legacy tests before adopting them; preserve bug observations separately from assertions of desired behavior. Run the relevant scenario:
 
-| Classification | Evidence required |
-| --- | --- |
-| Confirmed regression | The same user scenario meets its expectation on the old lock and fails on the new lock under comparable conditions. |
-| Existing problem | The failure also reproduces on the previous baseline. |
-| Newly supported or fixed behavior | The user expectation now succeeds; a historical assertion may need correction. |
-| Documented intentional change | A public contract or upstream statement explains the change. Record any remaining user trouble as a separate issue candidate. |
-| Scenario defect or outdated expectation | Invalid setup, an incorrect assertion, or a historical bug expectation explains the discrepancy. Correct it and rerun. |
-| Environment failure | Startup, connectivity, or tooling prevented behavioral verification. Record the gap and rerun when possible. |
-| Unresolved finding | Evidence is insufficient to determine the cause or when the problem began. Preserve the observation and next verification step. |
+```bash
+python3 scripts/lab.py run SCN-... --cycle CYC-...
+```
 
-A newly discovered problem can be reported once it is reproducible and its expected behavior is justified, even if its introduction point is unknown. Label it accordingly.
+A definition has no global pass status. Runs carry scope and results. Unknown combinations need no prefilled matrix cells. If an existing scenario cannot fit the runner (external DB image or alternate orchestration), retain an equivalent run record using [the record contract](docs/records.md), actual commands, output, source/lock snapshots and exact service versions. Do not copy placeholder runtime values or infer execution from configured images.
 
-## 2B. Upstream unchanged: develop user scenarios
+## 3. Verify a candidate
 
-Choose a concrete user task with a meaningful coverage gap. Use [TODO.md](TODO.md), unverified spec entries, and previous investigations to guide the choice. Useful work includes new workflows, deeper combinations of existing operations, boundary cases, and verification on supported runtimes that lack evidence.
-
-Before running a scenario, write down:
-
-- what the user is trying to accomplish;
-- schema, initial data, public API configuration, and operation sequence;
-- the expected observable result and its basis, including documented ZTD semantics;
-- the adapter/runtime combinations to test and the exact command.
-
-Implement the scenario through public adapter APIs and run it on the locked dependencies. Observe values, PHP types, errors, return values, and physical database effects relevant to the user's task. Compare with native PDO/MySQLi where it establishes the expectation, using equivalent clean setup and accounting for ZTD isolation.
-
-Keep user expectations and observations separate. A test that successfully reproduces a known bug records an observation; it does not establish that the user's scenario is supported. Preserve the desired-behavior assertion and link the issue evidence.
-
-Record successful scenarios as well as failures. Update the numbered spec sections and traceability matrix with the actual tested references. Leave untested combinations explicit.
-
-## 3. Verify an issue candidate
-
-1. Reduce the problem to the smallest runnable public-API example that retains the user's operation sequence. Include all DDL, seed data, configuration, parameter values and types, and required services.
-2. Run the example from clean setup on the identified locked dependencies and a supported runtime. Record exact output, including returned values or errors. Check that the scenario's setup itself is valid.
-3. Run a native PDO/MySQLi control when appropriate. If direct equivalence is inappropriate because of ZTD semantics, explain the expectation using the public contract and the user's task.
-4. Check relevant adapters or runtime variations needed to scope the finding. Claim only the combinations tested. A minimal confirmed case is sufficient to report; full-matrix coverage and implementation diagnosis are not prerequisites.
-5. Preserve the evidence below and proceed to upstream reporting. Correct local setup and infrastructure failures before attributing an outcome to ZTD.
+1. Reduce it to a self-contained PHP/SQL example, with clean DDL, seeds, connection/adapter options, parameter values/types, operation order and exact commands. Store it in `findings/FND-.../repro.php` (plus SQL/service files when needed).
+2. Run on supported PHP/driver/database versions with the exact lock. Confirm setup is valid and distinguish infrastructure failure from adapter behavior.
+3. Run clean native PDO/MySQLi controls where relevant. State deliberate differences due to ZTD semantics. Keep expected and actual results separate.
+4. Test the variations needed to scope the conclusion. One confirmed supported case suffices for reporting; full matrix coverage and root-cause analysis are not prerequisites.
+5. Retain essential output in the cycle's tracked run directory. Link the scenario, expectation, finding and upstream report. Ignored `build/` output alone is insufficient evidence.
 
 ### Evidence to keep
 
-Keep concise investigation reports under `spec/investigations/<date>-<topic>.md` and standalone examples under `reproductions/<topic>/`. Create these paths when there is evidence to save. An existing tracked scenario can serve as the reproduction if its setup and dependencies are complete and easy for an upstream maintainer to run. Include self-contained reproduction code in the issue whenever the scenario depends on repository helpers.
+Every cycle report records:
 
-Each report must contain:
+- The user task, expectation and its basis; selected workflow branch and why it was selected.
+- Exact prior/tested upstream and **all** ZTD split refs, check time and alignment limits (`upstream.json` and run metadata).
+- Scenario revision plus snapshots of local changes; complete lock; PHP, driver/client, server/database, tooling and service/image versions; options.
+- Commands, schema/seeds and links to runnable code; expected versus actual results, errors, native controls and old/new comparison for regression claims.
+- Scope, untested combinations, classification, remaining questions and bounded work item IDs.
+- Search of open and closed upstream issues, reporting status and URL, or complete pending body with blocker. A successful investigation explicitly says no problem was found in its tested scope.
 
-- **User scenario and expectation:** the task, expected result, and basis for that expectation.
-- **Baseline check:** date/time, whether upstream advanced, previous and tested upstream commits, all locked ZTD package references, and the scenario repository revision or identified local changes.
-- **Environment:** PHP, driver/client, database/server, test tooling, adapter options, and service/image versions relevant to reproduction.
-- **Reproduction:** tracked code or a runnable PHP/SQL block, complete setup and run commands, and a link to the executable scenario and SPEC-ID.
-- **Observed results:** expected versus actual output, relevant errors, native control results when applicable, and old/new results for a regression claim.
-- **Scope and classification:** tested combinations, untested gaps, conclusion and supporting evidence, or the next step for an unresolved result.
-- **Upstream disposition:** existing issue search, issue URL and reporting status, or a pending issue body and the reason submission is blocked. Successful investigations state that no issue was found in the tested scope.
+The runner preserves source/lock snapshots, runtime information, stdout/stderr, JUnit, process exit codes and process-specific version metadata. Fill the report with the interpretation. Do not alter retained run output to reflect a later fix; append a new run. A run that stops early stays incomplete/interrupted.
 
-Preserve essential output in tracked text so another person can assess and reproduce the conclusion from a checkout. Large logs, JUnit files, and generated baselines in ignored directories may supplement that record. Historical evidence keeps its original versions and results when a newer run is added.
+### Classify differences
 
-## 4. Report upstream and close the loop
+| Classification | Required evidence |
+| --- | --- |
+| Confirmed regression | Same desired behavior passes on old lock and fails on new under comparable conditions. |
+| Existing problem | Reproduces on the previous baseline. |
+| Newly supported/fixed behavior | Desired behavior now succeeds, including correction of historical bug assertions. |
+| Documented intentional change | Public contract or upstream statement explains the change. Still report material user trouble separately. |
+| Scenario defect | Broken setup/incorrect assertion explains it; correct and rerun. |
+| Environment failure | Startup, connection or tooling prevented behavioral verification. |
+| Unresolved | Evidence insufficient; retain the observation and next step. |
 
-Search both open and closed issues at <https://github.com/k-kinzal/ztd-query-php/issues> for the same observable problem and operation sequence.
+A new discovery can be reported even if its introduction point is unknown. No tool may infer intent from version differences or infer a library regression from aggregate counts.
 
-- **Confirmed new problem:** create an upstream issue with the verified runnable example. Filing the issue is part of completing the investigation.
-- **Existing report:** link it in the local evidence. Add material new reproduction details, affected versions, or renewed failures after a reported fix to that issue.
-- **Submission blocked:** save the complete issue body and runnable example in tracked files, record the blocker, and leave reporting pending.
+## 4. Report upstream
 
-An issue body should contain these sections:
+Search both open and closed issues at <https://github.com/k-kinzal/ztd-query-php/issues>. Retain search terms, time, relevant matches and conclusion in `findings/FND-.../issue-search.md`.
 
-1. **User task and impact** — what the user needs to do and how the problem prevents it or creates excessive work.
-2. **Expected behavior** — the result and its basis.
-3. **Actual behavior** — the observed values, types, errors, or steps required by a workaround.
-4. **Environment and versions** — exact tested commits, runtime versions, and adapter configuration.
-5. **Minimal reproduction** — complete setup, PHP/SQL code, and commands that reproduce the problem.
-6. **Verification** — actual output, native control and old/new comparison where relevant, tested scope, and links to retained evidence.
+- **Confirmed new problem:** file an issue; the investigation is incomplete until an upstream URL exists or submission is explicitly pending with a blocker.
+- **Duplicate:** link the existing issue. Add material new evidence, especially a reproduced failure after closure. Repeating the same known failure does not require a redundant comment.
+- **Blocked submission:** retain `issue-body.md`, runnable reproduction and blocker. Use `report-pending`; never claim reported without an upstream URL.
 
-Write the report around the observed problem. A proposed library fix is optional. Record the resulting issue URL in the investigation and relevant spec/test references. Keep the reproduction available for the next regression cycle.
+Include user task/impact, expected behavior and basis, actual values/types/errors or burdensome workaround, exact versions/options, complete minimal code/setup/commands, and verification output/scope. Link evidence and include self-contained code when repository helpers would otherwise be required. A proposed library patch is optional.
 
-At the end of every cycle, summarize which branch of the workflow ran, what was tested, what was learned, which issues were filed or linked, and what remains unverified. Close a TODO only after its evidence is retained and any confirmed problem is reported. If reporting is blocked, keep the item pending with a link to the prepared report and reproduction.
+## 5. Close the cycle
+
+Complete `report.md`, link findings/work items from `cycle.json`, and set its state to `complete` only when the investigation scope is accounted for. Remaining matrix work may stay open with explicit gaps. Confirmed unreported problems keep their work items pending, including when submission is blocked. Closing a work item requires retained evidence and completed reporting for confirmed problems.
+
+```bash
+python3 scripts/lab.py validate
+python3 -m unittest discover -s scripts/tests
+```
+
+The validator checks identifiers, references, hashes, report prerequisites and historical preservation. It cannot judge whether an expectation is correct; review that explicitly. Summarize branch, tested scope, findings/issues and remaining work for the user. A cycle finding no problem still retains its execution evidence.

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "SCN-mysql-product-types",
+  "title": "Fetch product values and exact PDO types after prepared fixture writes",
+  "review": "public-api-expectation-reviewed",
+  "expectation": "spec/expectations/SPEC-pdo-product-types.md",
+  "legacy_specs": ["SPEC-12.4", "SPEC-12.5", "SPEC-13.1", "SPEC-13.4"],
+  "scope": {
+    "adapter": "mysql-pdo",
+    "database": "Disposable MySQL; connection via ZTD_TYPES_DSN, ZTD_TYPES_USER, ZTD_TYPES_PASSWORD",
+    "options": {
+      "emulate_prepares": [false, true],
+      "stringify_fetches": [false, true],
+      "error_mode": "exception",
+      "oracle_nulls": "natural",
+      "fetch_mode": "assoc",
+      "ztd": "defaults",
+      "binding": ["execute-array", "bindValue"]
+    },
+    "setup": "Empty disposable database; script creates random named physical table before fromPdo(), no seeds, drops only that table in finally. Runtime versions are emitted by the script."
+  },
+  "sources": ["scenarios/types/SCN-mysql-product-types/scenario.php", "scenarios/types/SCN-mysql-product-types/php81", "Dockerfile"],
+  "steps": [{"kind": "php", "argv": ["scenarios/types/SCN-mysql-product-types/scenario.php"]}],
+  "gaps": ["Other PHP/MySQL versions", "PostgreSQL/SQLite/MySQLi", "Invalid input and overflow", "UPDATE", "Session-only DDL", "Pre-existing physical rows", "Other PDO error/null modes"]
+}

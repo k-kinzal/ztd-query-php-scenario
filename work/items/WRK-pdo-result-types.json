@@ -5,7 +5,11 @@
   "status": "ready",
   "title": "Check fetched types under PDO configuration changes",
   "question": "Does inserting mismatched PHP/SQL types preserve expected fetched types with native prepares?",
-  "next_action": "Adopt SPEC-12.1/12.6 and SPEC-13.1\u201313.4 selectively; compare query vs prepare, EMULATE_PREPARES/STRINGIFY_FETCHES, INT/BIGINT/DOUBLE/DECIMAL/VARCHAR/BOOLEAN/NULL against clean native controls.",
+  "next_action": "Extend exact-value/type native controls to SQLite and PostgreSQL convertible INSERT inputs with driver-appropriate expectations. MySQL 8.0.46 passed the selected eight option/binding combinations on PHP 8.1.34 and 8.5.8; UPDATE, invalid input, other PHP/MySQL versions and alternate null/error modes remain untested.",
   "done_when": "Each chosen type/options combination has exact types and runtime evidence; unexpected behavior reduced and reported; remaining combinations explicit.",
-  "evidence": []
+  "evidence": [
+    "cycles/2026/09/CYC-20260926T093729409229Z-pdo-result-types/report.md",
+    "cycles/2026/09/CYC-20260926T093729409229Z-pdo-result-types/runs/20260926T094551697374Z-SCN-mysql-product-types/run.json",
+    "cycles/2026/09/CYC-20260926T093729409229Z-pdo-result-types/runs/20260926T094607042313Z-SCN-mysql-product-types/run.json"
+  ]
 }

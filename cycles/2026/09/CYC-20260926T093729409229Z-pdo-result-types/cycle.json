@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "CYC-20260926T093729409229Z-pdo-result-types",
+  "state": "complete",
+  "topic": "pdo-result-types",
+  "baseline": "BASE-20260926-main",
+  "branch": "scenario-development",
+  "report": "cycles/2026/09/CYC-20260926T093729409229Z-pdo-result-types/report.md",
+  "findings": [],
+  "work_items": [
+    "WRK-pdo-result-types",
+    "WRK-supported-matrix"
+  ]
+}

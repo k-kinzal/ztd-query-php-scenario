@@ -1,0 +1,11 @@
+#!/bin/sh
+# Optional lab.py --php interpreter using the retained PHP 8.1 image.
+set -eu
+project_dir=$(pwd)
+exec docker run --rm \
+    --entrypoint php \
+    --network "${ZTD_TYPES_NETWORK:-bridge}" \
+    --volume "$project_dir:$project_dir" --workdir "$project_dir" \
+    --env ZTD_TYPES_DSN --env ZTD_TYPES_USER --env ZTD_TYPES_PASSWORD \
+    --env ZTD_VERSION_LOG --env XDEBUG_MODE \
+    "${ZTD_TYPES_PHP_IMAGE:-sha256:3415e059fb3ae1bf23c52f053d6db09554eac9fe7d7d58329b8d726686bafe1b}" "$@"

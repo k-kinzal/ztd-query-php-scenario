@@ -1,0 +1,6 @@
+
+Fatal error: Uncaught PDOException: SQLSTATE[HY000] [2002] Network is unreachable in /Users/ab/Projects/ztd-query-php-scenario/scenarios/types/SCN-mysql-product-types/scenario.php:84
+Stack trace:
+#0 /Users/ab/Projects/ztd-query-php-scenario/scenarios/types/SCN-mysql-product-types/scenario.php(84): PDO->__construct('mysql:host=host...', 'root', 'root')
+#1 {main}
+  thrown in /Users/ab/Projects/ztd-query-php-scenario/scenarios/types/SCN-mysql-product-types/scenario.php on line 84

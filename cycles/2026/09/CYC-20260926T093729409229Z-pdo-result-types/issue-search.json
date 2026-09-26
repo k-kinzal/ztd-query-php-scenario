@@ -1,0 +1,499 @@
+{
+  "checked_at": "2026-09-26T09:42:52.067774+00:00",
+  "searches": {
+    "type": {
+      "command": [
+        "gh",
+        "issue",
+        "list",
+        "--repo",
+        "k-kinzal/ztd-query-php",
+        "--state",
+        "all",
+        "--limit",
+        "100",
+        "--search",
+        "type",
+        "--json",
+        "number,title,state,url"
+      ],
+      "results": [
+        {
+          "number": 460,
+          "state": "OPEN",
+          "title": "SQLite ZTD rejects a native-valid standalone VALUES statement",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/460"
+        },
+        {
+          "number": 459,
+          "state": "OPEN",
+          "title": "ZTD rejects native-valid TABLE statements on MySQL and PostgreSQL",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/459"
+        },
+        {
+          "number": 37,
+          "state": "CLOSED",
+          "title": "PostgreSQL: CTAS column types default to TEXT causing type mismatch errors",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/37"
+        },
+        {
+          "number": 33,
+          "state": "CLOSED",
+          "title": "PostgreSQL: INTEGER[] and other array column types break CTE rewriter CAST",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/33"
+        },
+        {
+          "number": 170,
+          "state": "CLOSED",
+          "title": "Domain-typed columns: UPDATE and DELETE do not persist through shadow store",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/170"
+        },
+        {
+          "number": 92,
+          "state": "CLOSED",
+          "title": "MySQL: ENUM column type loses internal index ordering in CTE shadow store",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/92"
+        },
+        {
+          "number": 90,
+          "state": "CLOSED",
+          "title": "PostgreSQL: BIT type values corrupted in shadow store (B'11111111' becomes 1)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/90"
+        },
+        {
+          "number": 455,
+          "state": "OPEN",
+          "title": "[ztd-query-pdo-adapter fuzz] correctness-insert: 77a7d35edec8",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/455"
+        },
+        {
+          "number": 137,
+          "state": "CLOSED",
+          "title": "EXISTS(subquery) in SELECT list always returns false/0 (MySQL) or type error (PostgreSQL)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/137"
+        },
+        {
+          "number": 338,
+          "state": "OPEN",
+          "title": "[ztd-query-pdo-adapter fuzz] correctness-insert: 9abd677cb638",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/338"
+        },
+        {
+          "number": 337,
+          "state": "OPEN",
+          "title": "[ztd-query-pdo-adapter fuzz] correctness-insert: 414d535c6bc8",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/337"
+        },
+        {
+          "number": 171,
+          "state": "CLOSED",
+          "title": "VALUES expression in DML subquery fails on all platforms (type error or silent no-op)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/171"
+        },
+        {
+          "number": 427,
+          "state": "OPEN",
+          "title": "[ztd-query-pdo-adapter fuzz] correctness-insert: dd963c6a9fb3",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/427"
+        },
+        {
+          "number": 6,
+          "state": "CLOSED",
+          "title": "PostgreSQL: BOOLEAN false and BIGINT overflow in CTE shadow store",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/6"
+        },
+        {
+          "number": 15,
+          "state": "CLOSED",
+          "title": "PostgreSQL: EXTRACT returns 0 on shadow-stored DATE values",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/15"
+        },
+        {
+          "number": 155,
+          "state": "CLOSED",
+          "title": "typeof() returns wrong storage class for shadow store data (INTEGER/REAL reported as TEXT)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/155"
+        },
+        {
+          "number": 36,
+          "state": "CLOSED",
+          "title": "CREATE TABLE AS SELECT with empty result throws RuntimeException",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/36"
+        },
+        {
+          "number": 122,
+          "state": "CLOSED",
+          "title": "DML on temporary tables blocked by ZTD Write Protection (all platforms)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/122"
+        },
+        {
+          "number": 43,
+          "state": "CLOSED",
+          "title": "Full-text search (MATCH AGAINST, FTS5, tsvector) not supported through CTE rewriter",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/43"
+        },
+        {
+          "number": 161,
+          "state": "CLOSED",
+          "title": "DO $$ anonymous PL/pgSQL blocks blocked as unsupported (PostgreSQL)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/161"
+        },
+        {
+          "number": 119,
+          "state": "CLOSED",
+          "title": "CAST expression in DML produces wrong values or is ignored (all platforms)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/119"
+        },
+        {
+          "number": 162,
+          "state": "CLOSED",
+          "title": "MERGE statement blocked by Write Protection on PostgreSQL 15+",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/162"
+        },
+        {
+          "number": 78,
+          "state": "CLOSED",
+          "title": "Multi-statement SQL exec() throws undocumented 'ZTD Write Protection' error",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/78"
+        },
+        {
+          "number": 156,
+          "state": "CLOSED",
+          "title": "STRICT tables blocked by Write Protection \u2014 cannot determine columns (SQLite)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/156"
+        },
+        {
+          "number": 106,
+          "state": "CLOSED",
+          "title": "PostgreSQL: UPDATE...FROM with prepared $N parameters does not apply update",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/106"
+        },
+        {
+          "number": 164,
+          "state": "CLOSED",
+          "title": "LOAD DATA statement blocked by Write Protection on MySQL",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/164"
+        },
+        {
+          "number": 107,
+          "state": "CLOSED",
+          "title": "EXPLAIN, DESCRIBE, SHOW blocked by ZTD Write Protection (all platforms)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/107"
+        },
+        {
+          "number": 22,
+          "state": "CLOSED",
+          "title": "SQLite: HAVING clause with prepared statement parameters returns empty results",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/22"
+        },
+        {
+          "number": 157,
+          "state": "CLOSED",
+          "title": "ATTACH DATABASE blocked + schema-qualified main.table returns empty (SQLite)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/157"
+        },
+        {
+          "number": 29,
+          "state": "CLOSED",
+          "title": "PostgreSQL: Multi-table TRUNCATE only truncates first table in shadow",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/29"
+        },
+        {
+          "number": 26,
+          "state": "CLOSED",
+          "title": "MySQL: Multi-target DELETE only affects first listed table",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/26"
+        },
+        {
+          "number": 30,
+          "state": "CLOSED",
+          "title": "PostgreSQL: ON CONFLICT DO UPDATE WHERE clause ignored by UpsertMutation",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/30"
+        },
+        {
+          "number": 62,
+          "state": "CLOSED",
+          "title": "PostgreSQL: Prepared $N parameter inside aggregate FILTER (WHERE col = $1) returns wrong results",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/62"
+        },
+        {
+          "number": 2,
+          "state": "CLOSED",
+          "title": "ShadowStore throws raw RuntimeException instead of DatabaseException for missing primary keys",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/2"
+        },
+        {
+          "number": 27,
+          "state": "CLOSED",
+          "title": "SQLite: ALTER TABLE RENAME TO drops shadow but does not create new table name",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/27"
+        },
+        {
+          "number": 24,
+          "state": "CLOSED",
+          "title": "PostgreSQL: Schema-qualified table names in SELECT not rewritten by CTE rewriter",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/24"
+        },
+        {
+          "number": 16,
+          "state": "CLOSED",
+          "title": "MySQL: ON DUPLICATE KEY UPDATE with self-referencing expression loses original row value",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/16"
+        },
+        {
+          "number": 32,
+          "state": "CLOSED",
+          "title": "PostgreSQL: RETURNING clause not supported on DML statements",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/32"
+        },
+        {
+          "number": 28,
+          "state": "CLOSED",
+          "title": "CTE-based DML (WITH ... INSERT/UPDATE/DELETE) not supported on any platform",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/28"
+        },
+        {
+          "number": 14,
+          "state": "CLOSED",
+          "title": "MySQL: EXCEPT and INTERSECT treated as multi-statement SQL",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/14"
+        },
+        {
+          "number": 7,
+          "state": "CLOSED",
+          "title": "SQLite: DELETE without WHERE clause is silently ignored in shadow store",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/7"
+        },
+        {
+          "number": 21,
+          "state": "CLOSED",
+          "title": "Shadow store does not apply column DEFAULT values on INSERT with partial columns",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/21"
+        },
+        {
+          "number": 18,
+          "state": "CLOSED",
+          "title": "INSERT...SELECT with LEFT JOIN + GROUP BY produces NULL values or column-not-found error",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/18"
+        },
+        {
+          "number": 5,
+          "state": "CLOSED",
+          "title": "MySQL: backslash characters in prepared statement values are corrupted in shadow store",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/5"
+        },
+        {
+          "number": 31,
+          "state": "CLOSED",
+          "title": "INSERT ... VALUES (DEFAULT) fails: InsertTransformer converts to invalid SELECT DEFAULT",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/31"
+        },
+        {
+          "number": 19,
+          "state": "CLOSED",
+          "title": "BLOB/BINARY columns with binary data break CTE rewriter",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/19"
+        },
+        {
+          "number": 11,
+          "state": "CLOSED",
+          "title": "MySQL: UPDATE with self-referencing IN subquery + GROUP BY HAVING incorrectly updates all rows",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/11"
+        },
+        {
+          "number": 12,
+          "state": "CLOSED",
+          "title": "MySQL: WITH RECURSIVE + shadow table produces invalid SQL (syntax error)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/12"
+        },
+        {
+          "number": 13,
+          "state": "CLOSED",
+          "title": "Derived tables (subqueries in FROM) not rewritten by CTE rewriter",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/13"
+        },
+        {
+          "number": 9,
+          "state": "CLOSED",
+          "title": "SQLite/PostgreSQL: UPDATE with IN (subquery GROUP BY HAVING) fails due to CTE rewriter",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/9"
+        },
+        {
+          "number": 25,
+          "state": "CLOSED",
+          "title": "PostgreSQL: stripStringLiterals regex does not handle '' (doubled quote) escaping",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/25"
+        },
+        {
+          "number": 82,
+          "state": "CLOSED",
+          "title": "Line comments (--) break CTE rewriter for UPDATE and cause incorrect SELECT results",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/82"
+        },
+        {
+          "number": 23,
+          "state": "CLOSED",
+          "title": "PDO: Rows inserted via prepared statement cannot be updated/deleted",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/23"
+        },
+        {
+          "number": 17,
+          "state": "CLOSED",
+          "title": "Upsert via prepared statement does not update existing row in shadow store",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/17"
+        },
+        {
+          "number": 124,
+          "state": "CLOSED",
+          "title": "Generated columns (GENERATED ALWAYS AS) return NULL in shadow store (all platforms)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/124"
+        },
+        {
+          "number": 105,
+          "state": "CLOSED",
+          "title": "MySQL: ON DUPLICATE KEY UPDATE with subquery in SET evaluates to 0",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/105"
+        },
+        {
+          "number": 1,
+          "state": "CLOSED",
+          "title": "Fuzz: Crash detected",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/1"
+        },
+        {
+          "number": 415,
+          "state": "OPEN",
+          "title": "[ztd-query-pdo-adapter fuzz] correctness-insert: 5593a09ebb0c",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/415"
+        },
+        {
+          "number": 113,
+          "state": "CLOSED",
+          "title": "Prepared SELECT with JSON function + comparison operator returns empty (MySQL, SQLite)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/113"
+        },
+        {
+          "number": 149,
+          "state": "CLOSED",
+          "title": "Shadow store does not undo mutations on transaction ROLLBACK (all platforms)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/149"
+        },
+        {
+          "number": 114,
+          "state": "CLOSED",
+          "title": "Upsert SET with JSON function call (JSON_SET, jsonb_set) produces invalid JSON (all platforms)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/114"
+        },
+        {
+          "number": 69,
+          "state": "CLOSED",
+          "title": "SQL block comments break CTE rewriter statement parsing (SQLite/PostgreSQL)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/69"
+        },
+        {
+          "number": 20,
+          "state": "CLOSED",
+          "title": "INSERT...SELECT with computed columns or aggregation produces NULLs on SQLite/PostgreSQL",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/20"
+        },
+        {
+          "number": 86,
+          "state": "CLOSED",
+          "title": "Table names \"select\" and \"values\" break CTE rewriter (quoted identifiers)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/86"
+        },
+        {
+          "number": 123,
+          "state": "CLOSED",
+          "title": "SELECT from views returns empty results after shadow DML (all platforms)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/123"
+        },
+        {
+          "number": 120,
+          "state": "CLOSED",
+          "title": "SAVEPOINT / RELEASE SAVEPOINT / ROLLBACK TO SAVEPOINT not supported (all platforms)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/120"
+        },
+        {
+          "number": 87,
+          "state": "CLOSED",
+          "title": "Prepared SELECT re-execution returns stale shadow data after DML mutations",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/87"
+        },
+        {
+          "number": 163,
+          "state": "CLOSED",
+          "title": "COPY statement bypasses shadow store on PostgreSQL",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/163"
+        },
+        {
+          "number": 81,
+          "state": "CLOSED",
+          "title": "SQLite: json_each()/json_tree() table-valued functions return empty results through CTE rewriter",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/81"
+        },
+        {
+          "number": 151,
+          "state": "CLOSED",
+          "title": "SQLite REAL values lose precision through CTE shadow (PHP float-to-string truncation)",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/151"
+        },
+        {
+          "number": 3,
+          "state": "CLOSED",
+          "title": "MySQL INSERT ... SELECT * fails with column count mismatch",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/3"
+        },
+        {
+          "number": 10,
+          "state": "CLOSED",
+          "title": "SQLite/PostgreSQL: UPDATE with correlated subquery in SET clause fails",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/10"
+        },
+        {
+          "number": 4,
+          "state": "CLOSED",
+          "title": "PostgreSQL: user-written CTEs do not read from shadow store",
+          "url": "https://github.com/k-kinzal/ztd-query-php/issues/4"
+        }
+      ]
+    },
+    "STRINGIFY_FETCHES": {
+      "command": [
+        "gh",
+        "issue",
+        "list",
+        "--repo",
+        "k-kinzal/ztd-query-php",
+        "--state",
+        "all",
+        "--limit",
+        "100",
+        "--search",
+        "STRINGIFY_FETCHES",
+        "--json",
+        "number,title,state,url"
+      ],
+      "results": []
+    },
+    "EMULATE_PREPARES": {
+      "command": [
+        "gh",
+        "issue",
+        "list",
+        "--repo",
+        "k-kinzal/ztd-query-php",
+        "--state",
+        "all",
+        "--limit",
+        "100",
+        "--search",
+        "EMULATE_PREPARES",
+        "--json",
+        "number,title,state,url"
+      ],
+      "results": []
+    }
+  },
+  "conclusion": "No unmet expectation in this scenario; no issue candidate to report. Search results do not establish that other type workflows are correct."
+}

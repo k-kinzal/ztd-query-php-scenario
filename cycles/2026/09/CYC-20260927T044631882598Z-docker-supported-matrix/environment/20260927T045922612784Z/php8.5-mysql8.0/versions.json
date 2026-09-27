@@ -1,0 +1,9 @@
+{
+    "mysql-product-types": {
+        "phpVersion": "8.5.11",
+        "dbVersion": "8.0.46",
+        "adapter": "mysql-pdo",
+        "driver": "pdo_mysql",
+        "clientVersion": "mysqlnd 8.5.11"
+    }
+}

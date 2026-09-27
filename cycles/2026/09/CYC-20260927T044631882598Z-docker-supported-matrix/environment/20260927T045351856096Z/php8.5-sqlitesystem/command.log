@@ -1,0 +1,12 @@
+ Container ztd-matrix-20260927t045351856096z-4-sqlite-run-d4635c6328b5 Creating 
+ Container ztd-matrix-20260927t045351856096z-4-sqlite-run-d4635c6328b5 Created 
+PHPUnit 10.5.65 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.11
+Configuration: /app/phpunit.xml
+
+.                                                                   1 / 1 (100%)
+
+Time: 00:00.227, Memory: 10.00 MB
+
+OK (1 test, 10 assertions)

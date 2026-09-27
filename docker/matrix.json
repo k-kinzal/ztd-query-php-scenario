@@ -1,0 +1,28 @@
+{
+  "php": ["8.1", "8.2", "8.3", "8.4", "8.5"],
+  "mysql": {
+    "8.0.11": {"image": "mysql:8.0.11", "platform": "linux/amd64"},
+    "8.0": {"image": "mysql:8.0"},
+    "8.1": {"image": "mysql:8.1.0"},
+    "8.2": {"image": "mysql:8.2.0"},
+    "8.3": {"image": "mysql:8.3.0"},
+    "8.4": {"image": "mysql:8.4"},
+    "9.0": {"image": "mysql:9.0.1"},
+    "9.1": {"image": "mysql:9.1.0"}
+  },
+  "postgres": {
+    "16": {"image": "postgres:16"},
+    "17": {"image": "postgres:17"}
+  },
+  "sqlite": {
+    "system": {},
+    "3.40.1": {
+      "url": "https://www.sqlite.org/2022/sqlite-autoconf-3400100.tar.gz",
+      "sha256": "2c5dea207fa508d765af1ef620b637dcb06572afa6f01f0815bd5bbf864b33d9"
+    },
+    "3.46.1": {
+      "url": "https://www.sqlite.org/2024/sqlite-autoconf-3460100.tar.gz",
+      "sha256": "67d3fe6d268e6eaddcae3727fce58fcc8e9c53869bdd07a0c61e38ddf2965071"
+    }
+  }
+}

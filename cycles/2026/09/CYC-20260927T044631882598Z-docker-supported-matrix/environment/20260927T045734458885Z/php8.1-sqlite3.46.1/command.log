@@ -1,0 +1,12 @@
+ Container ztd-matrix-20260927t045734458885z-0-sqlite-run-813ab7007d07 Creating 
+ Container ztd-matrix-20260927t045734458885z-0-sqlite-run-813ab7007d07 Created 
+PHPUnit 10.5.65 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.1.34
+Configuration: /app/phpunit.xml
+
+.                                                                   1 / 1 (100%)
+
+Time: 00:00.212, Memory: 10.00 MB
+
+OK (1 test, 10 assertions)

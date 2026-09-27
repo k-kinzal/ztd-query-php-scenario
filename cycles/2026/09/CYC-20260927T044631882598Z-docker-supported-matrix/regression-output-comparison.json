@@ -1,0 +1,21 @@
+[
+  {
+    "scenario": "SCN-mysql-product-types",
+    "previous": "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T200601642725Z-SCN-mysql-product-types",
+    "current": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044918888130Z-SCN-mysql-product-types",
+    "outputs_equal_ignoring_random_table_names": true
+  },
+  {
+    "scenario": "SCN-mysql-session-schema",
+    "previous": "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T200602464374Z-SCN-mysql-session-schema",
+    "current": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044926815710Z-SCN-mysql-session-schema",
+    "outputs_equal_ignoring_random_table_names": true
+  },
+  {
+    "scenario": "SCN-mysqli-native-parity",
+    "previous": "cycles/2026/09/CYC-20260926T200050738102Z-mysqli-native-parity/runs/20260926T201657950162Z-SCN-mysqli-native-parity",
+    "current": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044928381692Z-SCN-mysqli-native-parity",
+    "outputs_equal_ignoring_random_table_names": false,
+    "review": "Only native thread_id differs after normalizing random table names; all checks and control outcomes match."
+  }
+]

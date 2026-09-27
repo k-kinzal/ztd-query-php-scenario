@@ -1,0 +1,725 @@
+ Image ztd-scenario-matrix:php8.1-sqlite3.46.1 Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 899B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile:
+#2 transferring dockerfile: 1.50kB 0.0s done
+#2 DONE 0.4s
+
+#3 [internal] load metadata for docker.io/library/php:8.1-cli-bookworm
+#3 DONE 0.1s
+
+#4 [internal] load metadata for docker.io/library/composer:2
+#4 DONE 1.2s
+
+#5 [internal] load .dockerignore
+#5 transferring context:
+#5 transferring context: 109B 0.1s done
+#5 DONE 0.3s
+
+#6 FROM docker.io/library/composer:2@sha256:9715c7f69044da2a212a5fbde29ee7da24e364d426560ae6367b060236f847d7
+#6 resolve docker.io/library/composer:2@sha256:9715c7f69044da2a212a5fbde29ee7da24e364d426560ae6367b060236f847d7 0.4s done
+#6 CACHED
+
+#7 [internal] load build context
+#7 ...
+
+#8 [stage-0 1/9] FROM docker.io/library/php:8.1-cli-bookworm@sha256:482717722f08d9a6c2b4f98c40bfee6d7935bd1a17fef928881ecd5884dfd76e
+#8 resolve docker.io/library/php:8.1-cli-bookworm@sha256:482717722f08d9a6c2b4f98c40bfee6d7935bd1a17fef928881ecd5884dfd76e 0.8s done
+#8 CACHED
+
+#7 [internal] load build context
+#7 transferring context: 25.64MB 3.5s done
+#7 DONE 4.4s
+
+#9 [stage-0 2/9] RUN apt-get update && apt-get install -y     git     unzip     libpq-dev     libsqlite3-dev     && rm -rf /var/lib/apt/lists/*
+#9 3.234 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#9 3.297 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#9 3.338 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#9 3.820 Get:4 http://deb.debian.org/debian bookworm/main arm64 Packages [8689 kB]
+#9 4.408 Get:5 http://deb.debian.org/debian bookworm-updates/main arm64 Packages [6936 B]
+#9 4.409 Get:6 http://deb.debian.org/debian-security bookworm-security/main arm64 Packages [343 kB]
+#9 6.916 Fetched 9280 kB in 4s (2386 kB/s)
+#9 6.916 Reading package lists...
+#9 8.526 Reading package lists...
+#9 10.29 Building dependency tree...
+#9 10.65 Reading state information...
+#9 11.08 The following additional packages will be installed:
+#9 11.08   curl git-man less libbsd0 libcbor0.8 libcurl3-gnutls libcurl4 libedit2
+#9 11.08   liberror-perl libexpat1 libfido2-1 libpq5 libssl-dev libssl3 libx11-6
+#9 11.08   libx11-data libxau6 libxcb1 libxdmcp6 libxext6 libxmuu1 openssh-client
+#9 11.08   openssl xauth
+#9 11.08 Suggested packages:
+#9 11.08   gettext-base git-daemon-run | git-daemon-sysvinit git-doc git-email git-gui
+#9 11.08   gitk gitweb git-cvs git-mediawiki git-svn postgresql-doc-15 sqlite3-doc
+#9 11.08   libssl-doc keychain libpam-ssh monkeysphere ssh-askpass zip
+#9 11.42 The following NEW packages will be installed:
+#9 11.42   git git-man less libbsd0 libcbor0.8 libcurl3-gnutls libedit2 liberror-perl
+#9 11.42   libexpat1 libfido2-1 libpq-dev libpq5 libsqlite3-dev libssl-dev libx11-6
+#9 11.42   libx11-data libxau6 libxcb1 libxdmcp6 libxext6 libxmuu1 openssh-client unzip
+#9 11.42   xauth
+#9 11.42 The following packages will be upgraded:
+#9 11.43   curl libcurl4 libssl3 openssl
+#9 11.52 4 upgraded, 24 newly installed, 0 to remove and 36 not upgraded.
+#9 11.52 Need to get 20.1 MB of archives.
+#9 11.52 After this operation, 80.1 MB of additional disk space will be used.
+#9 11.52 Get:1 http://deb.debian.org/debian bookworm/main arm64 less arm64 590-2.1~deb12u2 [128 kB]
+#9 11.54 Get:2 http://deb.debian.org/debian bookworm/main arm64 libbsd0 arm64 0.11.7-2 [115 kB]
+#9 11.55 Get:3 http://deb.debian.org/debian bookworm/main arm64 libedit2 arm64 3.1-20221030-2 [88.1 kB]
+#9 11.56 Get:4 http://deb.debian.org/debian bookworm/main arm64 libcbor0.8 arm64 0.8.0-2+b1 [26.0 kB]
+#9 11.56 Get:5 http://deb.debian.org/debian-security bookworm-security/main arm64 libssl3 arm64 3.0.22-1~deb12u1 [1828 kB]
+#9 11.83 Get:6 http://deb.debian.org/debian bookworm/main arm64 libfido2-1 arm64 1.12.0-2+b1 [72.6 kB]
+#9 11.83 Get:7 http://deb.debian.org/debian bookworm/main arm64 openssh-client arm64 1:9.2p1-2+deb12u10 [935 kB]
+#9 11.92 Get:8 http://deb.debian.org/debian bookworm/main arm64 curl arm64 7.88.1-10+deb12u15 [310 kB]
+#9 11.95 Get:9 http://deb.debian.org/debian bookworm/main arm64 libcurl4 arm64 7.88.1-10+deb12u15 [367 kB]
+#9 11.99 Get:10 http://deb.debian.org/debian bookworm/main arm64 libcurl3-gnutls arm64 7.88.1-10+deb12u15 [362 kB]
+#9 12.00 Get:11 http://deb.debian.org/debian-security bookworm-security/main arm64 libexpat1 arm64 2.5.0-1+deb12u3 [87.9 kB]
+#9 12.00 Get:12 http://deb.debian.org/debian bookworm/main arm64 liberror-perl all 0.17029-2 [29.0 kB]
+#9 12.00 Get:13 http://deb.debian.org/debian bookworm/main arm64 git-man all 1:2.39.5-0+deb12u3 [2053 kB]
+#9 12.28 Get:14 http://deb.debian.org/debian bookworm/main arm64 git arm64 1:2.39.5-0+deb12u3 [7153 kB]
+#9 13.03 Get:15 http://deb.debian.org/debian-security bookworm-security/main arm64 libpq5 arm64 15.19-0+deb12u1 [196 kB]
+#9 13.04 Get:16 http://deb.debian.org/debian-security bookworm-security/main arm64 libssl-dev arm64 3.0.22-1~deb12u1 [2318 kB]
+#9 13.23 Get:17 http://deb.debian.org/debian-security bookworm-security/main arm64 libpq-dev arm64 15.19-0+deb12u1 [153 kB]
+#9 13.23 Get:18 http://deb.debian.org/debian bookworm/main arm64 libsqlite3-dev arm64 3.40.1-2+deb12u2 [979 kB]
+#9 13.30 Get:19 http://deb.debian.org/debian bookworm/main arm64 libxau6 arm64 1:1.0.9-1 [19.7 kB]
+#9 13.30 Get:20 http://deb.debian.org/debian bookworm/main arm64 libxdmcp6 arm64 1:1.1.2-3 [25.4 kB]
+#9 13.30 Get:21 http://deb.debian.org/debian bookworm/main arm64 libxcb1 arm64 1.15-1 [143 kB]
+#9 13.30 Get:22 http://deb.debian.org/debian bookworm/main arm64 libx11-data all 2:1.8.4-2+deb12u2 [292 kB]
+#9 13.32 Get:23 http://deb.debian.org/debian bookworm/main arm64 libx11-6 arm64 2:1.8.4-2+deb12u2 [735 kB]
+#9 13.33 Get:24 http://deb.debian.org/debian bookworm/main arm64 libxext6 arm64 2:1.3.4-1+b1 [51.7 kB]
+#9 13.33 Get:25 http://deb.debian.org/debian bookworm/main arm64 libxmuu1 arm64 2:1.1.3-3 [24.0 kB]
+#9 13.33 Get:26 http://deb.debian.org/debian-security bookworm-security/main arm64 openssl arm64 3.0.22-1~deb12u1 [1410 kB]
+#9 13.36 Get:27 http://deb.debian.org/debian-security bookworm-security/main arm64 unzip arm64 6.0-28+deb12u1 [158 kB]
+#9 13.37 Get:28 http://deb.debian.org/debian bookworm/main arm64 xauth arm64 1:1.1.2-1 [35.5 kB]
+#9 13.99 debconf: delaying package configuration, since apt-utils is not installed
+#9 14.39 Fetched 20.1 MB in 2s (10.4 MB/s)
+#9 14.51 Selecting previously unselected package less.
+#9 14.51 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 13278 files and directories currently installed.)
+#9 14.76 Preparing to unpack .../00-less_590-2.1~deb12u2_arm64.deb ...
+#9 14.78 Unpacking less (590-2.1~deb12u2) ...
+#9 14.92 Selecting previously unselected package libbsd0:arm64.
+#9 14.94 Preparing to unpack .../01-libbsd0_0.11.7-2_arm64.deb ...
+#9 14.96 Unpacking libbsd0:arm64 (0.11.7-2) ...
+#9 15.11 Selecting previously unselected package libedit2:arm64.
+#9 15.12 Preparing to unpack .../02-libedit2_3.1-20221030-2_arm64.deb ...
+#9 15.16 Unpacking libedit2:arm64 (3.1-20221030-2) ...
+#9 15.35 Selecting previously unselected package libcbor0.8:arm64.
+#9 15.35 Preparing to unpack .../03-libcbor0.8_0.8.0-2+b1_arm64.deb ...
+#9 15.37 Unpacking libcbor0.8:arm64 (0.8.0-2+b1) ...
+#9 15.54 Preparing to unpack .../04-libssl3_3.0.22-1~deb12u1_arm64.deb ...
+#9 15.63 Unpacking libssl3:arm64 (3.0.22-1~deb12u1) over (3.0.17-1~deb12u3) ...
+#9 16.05 Selecting previously unselected package libfido2-1:arm64.
+#9 16.05 Preparing to unpack .../05-libfido2-1_1.12.0-2+b1_arm64.deb ...
+#9 16.06 Unpacking libfido2-1:arm64 (1.12.0-2+b1) ...
+#9 16.12 Selecting previously unselected package openssh-client.
+#9 16.12 Preparing to unpack .../06-openssh-client_1%3a9.2p1-2+deb12u10_arm64.deb ...
+#9 16.14 Unpacking openssh-client (1:9.2p1-2+deb12u10) ...
+#9 16.40 Preparing to unpack .../07-curl_7.88.1-10+deb12u15_arm64.deb ...
+#9 16.43 Unpacking curl (7.88.1-10+deb12u15) over (7.88.1-10+deb12u14) ...
+#9 16.60 Preparing to unpack .../08-libcurl4_7.88.1-10+deb12u15_arm64.deb ...
+#9 16.63 Unpacking libcurl4:arm64 (7.88.1-10+deb12u15) over (7.88.1-10+deb12u14) ...
+#9 16.78 Selecting previously unselected package libcurl3-gnutls:arm64.
+#9 16.78 Preparing to unpack .../09-libcurl3-gnutls_7.88.1-10+deb12u15_arm64.deb ...
+#9 16.79 Unpacking libcurl3-gnutls:arm64 (7.88.1-10+deb12u15) ...
+#9 16.91 Selecting previously unselected package libexpat1:arm64.
+#9 16.91 Preparing to unpack .../10-libexpat1_2.5.0-1+deb12u3_arm64.deb ...
+#9 16.92 Unpacking libexpat1:arm64 (2.5.0-1+deb12u3) ...
+#9 17.01 Selecting previously unselected package liberror-perl.
+#9 17.01 Preparing to unpack .../11-liberror-perl_0.17029-2_all.deb ...
+#9 17.01 Unpacking liberror-perl (0.17029-2) ...
+#9 17.08 Selecting previously unselected package git-man.
+#9 17.08 Preparing to unpack .../12-git-man_1%3a2.39.5-0+deb12u3_all.deb ...
+#9 17.09 Unpacking git-man (1:2.39.5-0+deb12u3) ...
+#9 17.36 Selecting previously unselected package git.
+#9 17.37 Preparing to unpack .../13-git_1%3a2.39.5-0+deb12u3_arm64.deb ...
+#9 17.38 Unpacking git (1:2.39.5-0+deb12u3) ...
+#9 18.15 Selecting previously unselected package libpq5:arm64.
+#9 18.16 Preparing to unpack .../14-libpq5_15.19-0+deb12u1_arm64.deb ...
+#9 18.17 Unpacking libpq5:arm64 (15.19-0+deb12u1) ...
+#9 18.26 Selecting previously unselected package libssl-dev:arm64.
+#9 18.26 Preparing to unpack .../15-libssl-dev_3.0.22-1~deb12u1_arm64.deb ...
+#9 18.27 Unpacking libssl-dev:arm64 (3.0.22-1~deb12u1) ...
+#9 18.63 Selecting previously unselected package libpq-dev.
+#9 18.63 Preparing to unpack .../16-libpq-dev_15.19-0+deb12u1_arm64.deb ...
+#9 18.64 Unpacking libpq-dev (15.19-0+deb12u1) ...
+#9 18.70 Selecting previously unselected package libsqlite3-dev:arm64.
+#9 18.71 Preparing to unpack .../17-libsqlite3-dev_3.40.1-2+deb12u2_arm64.deb ...
+#9 18.71 Unpacking libsqlite3-dev:arm64 (3.40.1-2+deb12u2) ...
+#9 18.89 Selecting previously unselected package libxau6:arm64.
+#9 18.90 Preparing to unpack .../18-libxau6_1%3a1.0.9-1_arm64.deb ...
+#9 18.91 Unpacking libxau6:arm64 (1:1.0.9-1) ...
+#9 18.95 Selecting previously unselected package libxdmcp6:arm64.
+#9 18.95 Preparing to unpack .../19-libxdmcp6_1%3a1.1.2-3_arm64.deb ...
+#9 18.96 Unpacking libxdmcp6:arm64 (1:1.1.2-3) ...
+#9 19.03 Selecting previously unselected package libxcb1:arm64.
+#9 19.03 Preparing to unpack .../20-libxcb1_1.15-1_arm64.deb ...
+#9 19.04 Unpacking libxcb1:arm64 (1.15-1) ...
+#9 19.14 Selecting previously unselected package libx11-data.
+#9 19.15 Preparing to unpack .../21-libx11-data_2%3a1.8.4-2+deb12u2_all.deb ...
+#9 19.34 Unpacking libx11-data (2:1.8.4-2+deb12u2) ...
+#9 19.48 Selecting previously unselected package libx11-6:arm64.
+#9 19.49 Preparing to unpack .../22-libx11-6_2%3a1.8.4-2+deb12u2_arm64.deb ...
+#9 19.50 Unpacking libx11-6:arm64 (2:1.8.4-2+deb12u2) ...
+#9 19.66 Selecting previously unselected package libxext6:arm64.
+#9 19.67 Preparing to unpack .../23-libxext6_2%3a1.3.4-1+b1_arm64.deb ...
+#9 19.68 Unpacking libxext6:arm64 (2:1.3.4-1+b1) ...
+#9 19.76 Selecting previously unselected package libxmuu1:arm64.
+#9 19.77 Preparing to unpack .../24-libxmuu1_2%3a1.1.3-3_arm64.deb ...
+#9 19.79 Unpacking libxmuu1:arm64 (2:1.1.3-3) ...
+#9 19.93 Preparing to unpack .../25-openssl_3.0.22-1~deb12u1_arm64.deb ...
+#9 19.96 Unpacking openssl (3.0.22-1~deb12u1) over (3.0.17-1~deb12u3) ...
+#9 20.28 Selecting previously unselected package unzip.
+#9 20.29 Preparing to unpack .../26-unzip_6.0-28+deb12u1_arm64.deb ...
+#9 20.30 Unpacking unzip (6.0-28+deb12u1) ...
+#9 20.36 Selecting previously unselected package xauth.
+#9 20.36 Preparing to unpack .../27-xauth_1%3a1.1.2-1_arm64.deb ...
+#9 20.36 Unpacking xauth (1:1.1.2-1) ...
+#9 20.43 Setting up libexpat1:arm64 (2.5.0-1+deb12u3) ...
+#9 20.45 Setting up libxau6:arm64 (1:1.0.9-1) ...
+#9 20.46 Setting up unzip (6.0-28+deb12u1) ...
+#9 20.48 Setting up libcbor0.8:arm64 (0.8.0-2+b1) ...
+#9 20.49 Setting up libssl3:arm64 (3.0.22-1~deb12u1) ...
+#9 20.51 Setting up libpq5:arm64 (15.19-0+deb12u1) ...
+#9 20.53 Setting up less (590-2.1~deb12u2) ...
+#9 20.58 Setting up libcurl3-gnutls:arm64 (7.88.1-10+deb12u15) ...
+#9 20.60 Setting up liberror-perl (0.17029-2) ...
+#9 20.61 Setting up libsqlite3-dev:arm64 (3.40.1-2+deb12u2) ...
+#9 20.63 Setting up libx11-data (2:1.8.4-2+deb12u2) ...
+#9 20.64 Setting up libssl-dev:arm64 (3.0.22-1~deb12u1) ...
+#9 20.66 Setting up libcurl4:arm64 (7.88.1-10+deb12u15) ...
+#9 20.70 Setting up git-man (1:2.39.5-0+deb12u3) ...
+#9 20.71 Setting up curl (7.88.1-10+deb12u15) ...
+#9 20.74 Setting up libfido2-1:arm64 (1.12.0-2+b1) ...
+#9 20.77 Setting up openssl (3.0.22-1~deb12u1) ...
+#9 20.80 Setting up libbsd0:arm64 (0.11.7-2) ...
+#9 20.83 Setting up libxdmcp6:arm64 (1:1.1.2-3) ...
+#9 20.84 Setting up libxcb1:arm64 (1.15-1) ...
+#9 20.87 Setting up libedit2:arm64 (3.1-20221030-2) ...
+#9 20.89 Setting up libpq-dev (15.19-0+deb12u1) ...
+#9 20.91 Setting up git (1:2.39.5-0+deb12u3) ...
+#9 20.97 Setting up libx11-6:arm64 (2:1.8.4-2+deb12u2) ...
+#9 20.98 Setting up libxmuu1:arm64 (2:1.1.3-3) ...
+#9 21.00 Setting up openssh-client (1:9.2p1-2+deb12u10) ...
+#9 21.13 Setting up libxext6:arm64 (2:1.3.4-1+b1) ...
+#9 21.14 Setting up xauth (1:1.1.2-1) ...
+#9 21.15 Processing triggers for libc-bin (2.36-9+deb12u13) ...
+#9 DONE 21.7s
+
+#10 [stage-0 3/9] COPY docker/install-sqlite.sh /tmp/install-sqlite.sh
+#10 DONE 0.1s
+
+#11 [stage-0 4/9] RUN sh /tmp/install-sqlite.sh     && docker-php-ext-install -j2         pdo_mysql         pdo_pgsql         mysqli     && php -r '$v = (new PDO("sqlite::memory:"))->query("SELECT sqlite_version()")->fetchColumn(); if (getenv("SQLITE_VERSION") !== "system" && $v !== getenv("SQLITE_VERSION")) { fwrite(STDERR, "Wrong PDO SQLite: $v\n"); exit(1); } if (SQLite3::version()["versionString"] !== $v) { exit(1); }'     && rm /tmp/install-sqlite.sh
+#11 0.263   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+#11 0.263                                  Dload  Upload   Total   Spent    Left  Speed
+#11 0.263   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0 3189k    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0 26 3189k   26  848k    0     0   477k      0  0:00:06  0:00:01  0:00:05  476k100 3189k  100 3189k    0     0  1505k      0  0:00:02  0:00:02 --:--:-- 1506k
+#11 2.464 /tmp/sqlite.tar.gz: OK
+#11 2.917 checking for a BSD-compatible install... /usr/bin/install -c
+#11 2.935 checking whether build environment is sane... yes
+#11 2.956 checking for a race-free mkdir -p... /usr/bin/mkdir -p
+#11 2.961 checking for gawk... no
+#11 2.961 checking for mawk... mawk
+#11 2.961 checking whether make sets $(MAKE)... yes
+#11 2.989 checking whether make supports nested variables... yes
+#11 3.008 checking whether make supports the include directive... yes (GNU style)
+#11 3.025 checking for gcc... gcc
+#11 3.072 checking whether the C compiler works... yes
+#11 3.154 checking for C compiler default output file name... a.out
+#11 3.159 checking for suffix of executables... 
+#11 3.218 checking whether we are cross compiling... no
+#11 3.331 checking for suffix of object files... o
+#11 3.373 checking whether the compiler supports GNU C... yes
+#11 3.429 checking whether gcc accepts -g... yes
+#11 3.492 checking for gcc option to enable C11 features... none needed
+#11 3.633 checking whether gcc understands -c and -o together... yes
+#11 3.713 checking dependency style of gcc... gcc3
+#11 3.784 checking for special C compiler options needed for large files... no
+#11 3.784 checking for _FILE_OFFSET_BITS value needed for large files... no
+#11 3.829 checking for gcc... (cached) gcc
+#11 3.893 checking whether the compiler supports GNU C... (cached) yes
+#11 3.893 checking whether gcc accepts -g... (cached) yes
+#11 3.895 checking for gcc option to enable C11 features... (cached) none needed
+#11 3.895 checking whether gcc understands -c and -o together... (cached) yes
+#11 3.895 checking dependency style of gcc... (cached) gcc3
+#11 3.908 checking build system type... aarch64-unknown-linux-gnu
+#11 3.991 checking host system type... aarch64-unknown-linux-gnu
+#11 3.991 checking how to print strings... printf
+#11 3.996 checking for a sed that does not truncate output... /usr/bin/sed
+#11 4.011 checking for grep that handles long lines and -e... /usr/bin/grep
+#11 4.018 checking for egrep... /usr/bin/grep -E
+#11 4.026 checking for fgrep... /usr/bin/grep -F
+#11 4.029 checking for ld used by gcc... /usr/bin/ld
+#11 4.042 checking if the linker (/usr/bin/ld) is GNU ld... yes
+#11 4.046 checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm -B
+#11 4.056 checking the name lister (/usr/bin/nm -B) interface... BSD nm
+#11 4.105 checking whether ln -s works... yes
+#11 4.105 checking the maximum length of command line arguments... 1572864
+#11 4.127 checking how to convert aarch64-unknown-linux-gnu file names to aarch64-unknown-linux-gnu format... func_convert_file_noop
+#11 4.128 checking how to convert aarch64-unknown-linux-gnu file names to toolchain format... func_convert_file_noop
+#11 4.128 checking for /usr/bin/ld option to reload object files... -r
+#11 4.128 checking for objdump... objdump
+#11 4.130 checking how to recognize dependent libraries... pass_all
+#11 4.131 checking for dlltool... no
+#11 4.132 checking how to associate runtime and link libraries... printf %s\n
+#11 4.132 checking for ar... ar
+#11 4.136 checking for archiver @FILE support... @
+#11 4.256 checking for strip... strip
+#11 4.259 checking for ranlib... ranlib
+#11 4.261 checking command to parse /usr/bin/nm -B output from gcc object... ok
+#11 4.398 checking for sysroot... no
+#11 4.398 checking for a working dd... /usr/bin/dd
+#11 4.409 checking how to truncate binary pipes... /usr/bin/dd bs=4096 count=1
+#11 4.416 checking for mt... no
+#11 4.416 checking if : is a manifest tool... no
+#11 4.424 checking for stdio.h... yes
+#11 4.461 checking for stdlib.h... yes
+#11 4.514 checking for string.h... yes
+#11 4.556 checking for inttypes.h... yes
+#11 4.598 checking for stdint.h... yes
+#11 4.649 checking for strings.h... yes
+#11 4.693 checking for sys/stat.h... yes
+#11 4.744 checking for sys/types.h... yes
+#11 4.804 checking for unistd.h... yes
+#11 4.860 checking for dlfcn.h... yes
+#11 4.958 checking for objdir... .libs
+#11 5.103 checking if gcc supports -fno-rtti -fno-exceptions... no
+#11 5.147 checking for gcc option to produce PIC... -fPIC -DPIC
+#11 5.147 checking if gcc PIC flag -fPIC -DPIC works... yes
+#11 5.192 checking if gcc static flag -static works... yes
+#11 5.317 checking if gcc supports -c -o file.o... yes
+#11 5.366 checking if gcc supports -c -o file.o... (cached) yes
+#11 5.366 checking whether the gcc linker (/usr/bin/ld) supports shared libraries... yes
+#11 5.381 checking whether -lc should be explicitly linked in... no
+#11 5.430 checking dynamic linker characteristics... GNU/Linux ld.so
+#11 5.534 checking how to hardcode library paths into programs... immediate
+#11 5.534 checking whether stripping libraries is possible... yes
+#11 5.539 checking if libtool supports shared libraries... yes
+#11 5.539 checking whether to build shared libraries... yes
+#11 5.539 checking whether to build static libraries... no
+#11 5.540 checking for fdatasync... yes
+#11 5.612 checking for usleep... yes
+#11 5.700 checking for fullfsync... no
+#11 5.805 checking for localtime_r... yes
+#11 5.879 checking for gmtime_r... yes
+#11 5.986 checking for gcc options needed to detect all undeclared functions... none needed
+#11 6.064 checking whether strerror_r is declared... yes
+#11 6.162 checking whether strerror_r returns char *... no
+#11 6.203 checking for editline/readline.h... no
+#11 6.264 checking for readline/readline.h... no
+#11 6.331 checking for library containing pthread_create... none required
+#11 6.409 checking for library containing pthread_mutexattr_init... none required
+#11 6.505 checking for library containing dlopen... none required
+#11 6.586 checking for whether to support dynamic extensions... yes
+#11 6.586 checking SQL math functions... enabled
+#11 6.588 checking for library containing ceil... -lm
+#11 6.764 checking FTS4 extension... enabled
+#11 6.764 checking FTS3 extension... disabled
+#11 6.764 checking FTS5 extension... enabled
+#11 6.764 checking for library containing log... none required
+#11 6.870 checking RTREE extension... enabled
+#11 6.870 checking Session extension... disabled
+#11 6.870 checking Build type... release
+#11 6.870 checking for posix_fallocate... yes
+#11 6.961 checking for zlib.h... no
+#11 7.016 checking for library containing system... none required
+#11 7.159 checking that generated files are newer than configure... done
+#11 7.159 configure: creating ./config.status
+#11 8.083 config.status: creating Makefile
+#11 8.102 config.status: creating sqlite3.pc
+#11 8.123 config.status: executing depfiles commands
+#11 8.168 config.status: executing libtool commands
+#11 8.248 gcc -DPACKAGE_NAME=\"sqlite\" -DPACKAGE_TARNAME=\"sqlite\" -DPACKAGE_VERSION=\"3.46.1\" -DPACKAGE_STRING=\"sqlite\ 3.46.1\" -DPACKAGE_BUGREPORT=\"http://www.sqlite.org\" -DPACKAGE_URL=\"\" -DPACKAGE=\"sqlite\" -DVERSION=\"3.46.1\" -DHAVE_STDIO_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_STRINGS_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_UNISTD_H=1 -DSTDC_HEADERS=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\" -DHAVE_FDATASYNC=1 -DHAVE_USLEEP=1 -DHAVE_LOCALTIME_R=1 -DHAVE_GMTIME_R=1 -DHAVE_DECL_STRERROR_R=1 -DHAVE_STRERROR_R=1 -DHAVE_POSIX_FALLOCATE=1 -I.    -D_REENTRANT=1 -DSQLITE_THREADSAFE=1 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_FTS4 -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_GEOPOLY  -DSQLITE_ENABLE_EXPLAIN_COMMENTS -DSQLITE_DQS=0 -DSQLITE_ENABLE_DBPAGE_VTAB -DSQLITE_ENABLE_STMTVTAB -DSQLITE_ENABLE_DBSTAT_VTAB  -g -O2 -MT sqlite3-shell.o -MD -MP -MF .deps/sqlite3-shell.Tpo -c -o sqlite3-shell.o `test -f 'shell.c' || echo './'`shell.c
+#11 8.249 gcc -DPACKAGE_NAME=\"sqlite\" -DPACKAGE_TARNAME=\"sqlite\" -DPACKAGE_VERSION=\"3.46.1\" -DPACKAGE_STRING=\"sqlite\ 3.46.1\" -DPACKAGE_BUGREPORT=\"http://www.sqlite.org\" -DPACKAGE_URL=\"\" -DPACKAGE=\"sqlite\" -DVERSION=\"3.46.1\" -DHAVE_STDIO_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_STRINGS_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_UNISTD_H=1 -DSTDC_HEADERS=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\" -DHAVE_FDATASYNC=1 -DHAVE_USLEEP=1 -DHAVE_LOCALTIME_R=1 -DHAVE_GMTIME_R=1 -DHAVE_DECL_STRERROR_R=1 -DHAVE_STRERROR_R=1 -DHAVE_POSIX_FALLOCATE=1 -I.    -D_REENTRANT=1 -DSQLITE_THREADSAFE=1 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_FTS4 -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_GEOPOLY  -DSQLITE_ENABLE_EXPLAIN_COMMENTS -DSQLITE_DQS=0 -DSQLITE_ENABLE_DBPAGE_VTAB -DSQLITE_ENABLE_STMTVTAB -DSQLITE_ENABLE_DBSTAT_VTAB  -g -O2 -MT sqlite3-sqlite3.o -MD -MP -MF .deps/sqlite3-sqlite3.Tpo -c -o sqlite3-sqlite3.o `test -f 'sqlite3.c' || echo './'`sqlite3.c
+#11 22.70 mv -f .deps/sqlite3-shell.Tpo .deps/sqlite3-shell.Po
+#11 22.71 /bin/bash ./libtool  --tag=CC   --mode=compile gcc -DPACKAGE_NAME=\"sqlite\" -DPACKAGE_TARNAME=\"sqlite\" -DPACKAGE_VERSION=\"3.46.1\" -DPACKAGE_STRING=\"sqlite\ 3.46.1\" -DPACKAGE_BUGREPORT=\"http://www.sqlite.org\" -DPACKAGE_URL=\"\" -DPACKAGE=\"sqlite\" -DVERSION=\"3.46.1\" -DHAVE_STDIO_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_STRINGS_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_UNISTD_H=1 -DSTDC_HEADERS=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\" -DHAVE_FDATASYNC=1 -DHAVE_USLEEP=1 -DHAVE_LOCALTIME_R=1 -DHAVE_GMTIME_R=1 -DHAVE_DECL_STRERROR_R=1 -DHAVE_STRERROR_R=1 -DHAVE_POSIX_FALLOCATE=1 -I.    -D_REENTRANT=1 -DSQLITE_THREADSAFE=1 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_FTS4 -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_GEOPOLY  -g -O2 -MT sqlite3.lo -MD -MP -MF .deps/sqlite3.Tpo -c -o sqlite3.lo sqlite3.c
+#11 23.03 libtool: compile:  gcc -DPACKAGE_NAME=\"sqlite\" -DPACKAGE_TARNAME=\"sqlite\" -DPACKAGE_VERSION=\"3.46.1\" "-DPACKAGE_STRING=\"sqlite 3.46.1\"" -DPACKAGE_BUGREPORT=\"http://www.sqlite.org\" -DPACKAGE_URL=\"\" -DPACKAGE=\"sqlite\" -DVERSION=\"3.46.1\" -DHAVE_STDIO_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_STRINGS_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_UNISTD_H=1 -DSTDC_HEADERS=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\" -DHAVE_FDATASYNC=1 -DHAVE_USLEEP=1 -DHAVE_LOCALTIME_R=1 -DHAVE_GMTIME_R=1 -DHAVE_DECL_STRERROR_R=1 -DHAVE_STRERROR_R=1 -DHAVE_POSIX_FALLOCATE=1 -I. -D_REENTRANT=1 -DSQLITE_THREADSAFE=1 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_FTS4 -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_GEOPOLY -g -O2 -MT sqlite3.lo -MD -MP -MF .deps/sqlite3.Tpo -c sqlite3.c  -fPIC -DPIC -o .libs/sqlite3.o
+#11 206.8 mv -f .deps/sqlite3-sqlite3.Tpo .deps/sqlite3-sqlite3.Po
+#11 206.8 /bin/bash ./libtool  --tag=CC   --mode=link gcc -D_REENTRANT=1 -DSQLITE_THREADSAFE=1 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_FTS4 -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_GEOPOLY  -DSQLITE_ENABLE_EXPLAIN_COMMENTS -DSQLITE_DQS=0 -DSQLITE_ENABLE_DBPAGE_VTAB -DSQLITE_ENABLE_STMTVTAB -DSQLITE_ENABLE_DBSTAT_VTAB  -g -O2   -o sqlite3 sqlite3-shell.o sqlite3-sqlite3.o  -lm 
+#11 206.9 libtool: link: gcc -D_REENTRANT=1 -DSQLITE_THREADSAFE=1 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_FTS4 -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_GEOPOLY -DSQLITE_ENABLE_EXPLAIN_COMMENTS -DSQLITE_DQS=0 -DSQLITE_ENABLE_DBPAGE_VTAB -DSQLITE_ENABLE_STMTVTAB -DSQLITE_ENABLE_DBSTAT_VTAB -g -O2 -o sqlite3 sqlite3-shell.o sqlite3-sqlite3.o  -lm
+#11 217.0 mv -f .deps/sqlite3.Tpo .deps/sqlite3.Plo
+#11 217.0 /bin/bash ./libtool  --tag=CC   --mode=link gcc -D_REENTRANT=1 -DSQLITE_THREADSAFE=1 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_FTS4 -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_GEOPOLY  -g -O2 -no-undefined -version-info 8:6:8  -o libsqlite3.la -rpath /usr/local/lib sqlite3.lo  -lm 
+#11 217.1 libtool: link: gcc -shared  -fPIC -DPIC  .libs/sqlite3.o   -lm  -g -O2   -Wl,-soname -Wl,libsqlite3.so.0 -o .libs/libsqlite3.so.0.8.6
+#11 217.3 libtool: link: (cd ".libs" && rm -f "libsqlite3.so.0" && ln -s "libsqlite3.so.0.8.6" "libsqlite3.so.0")
+#11 217.4 libtool: link: (cd ".libs" && rm -f "libsqlite3.so" && ln -s "libsqlite3.so.0.8.6" "libsqlite3.so")
+#11 217.5 libtool: link: ( cd ".libs" && rm -f "libsqlite3.la" && ln -s "../libsqlite3.la" "libsqlite3.la" )
+#11 217.6 make[1]: Entering directory '/tmp/sqlite-src'
+#11 217.6  /usr/bin/mkdir -p '/usr/local/lib'
+#11 217.6  /bin/bash ./libtool   --mode=install /usr/bin/install -c   libsqlite3.la '/usr/local/lib'
+#11 217.7 libtool: install: /usr/bin/install -c .libs/libsqlite3.so.0.8.6 /usr/local/lib/libsqlite3.so.0.8.6
+#11 217.8 libtool: install: (cd /usr/local/lib && { ln -s -f libsqlite3.so.0.8.6 libsqlite3.so.0 || { rm -f libsqlite3.so.0 && ln -s libsqlite3.so.0.8.6 libsqlite3.so.0; }; })
+#11 217.8 libtool: install: (cd /usr/local/lib && { ln -s -f libsqlite3.so.0.8.6 libsqlite3.so || { rm -f libsqlite3.so && ln -s libsqlite3.so.0.8.6 libsqlite3.so; }; })
+#11 217.8 libtool: install: /usr/bin/install -c .libs/libsqlite3.lai /usr/local/lib/libsqlite3.la
+#11 217.9 libtool: finish: PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/sbin" ldconfig -n /usr/local/lib
+#11 217.9 ----------------------------------------------------------------------
+#11 217.9 Libraries have been installed in:
+#11 217.9    /usr/local/lib
+#11 217.9 
+#11 217.9 If you ever happen to want to link against installed libraries
+#11 217.9 in a given directory, LIBDIR, you must either use libtool, and
+#11 217.9 specify the full pathname of the library, or use the '-LLIBDIR'
+#11 217.9 flag during linking and do at least one of the following:
+#11 217.9    - add LIBDIR to the 'LD_LIBRARY_PATH' environment variable
+#11 217.9      during execution
+#11 217.9    - add LIBDIR to the 'LD_RUN_PATH' environment variable
+#11 217.9      during linking
+#11 217.9    - use the '-Wl,-rpath -Wl,LIBDIR' linker flag
+#11 217.9    - have your system administrator add LIBDIR to '/etc/ld.so.conf'
+#11 217.9 
+#11 217.9 See any operating system documentation about shared libraries for
+#11 217.9 more information, such as the ld(1) and ld.so(8) manual pages.
+#11 217.9 ----------------------------------------------------------------------
+#11 217.9  /usr/bin/mkdir -p '/usr/local/bin'
+#11 218.0   /bin/bash ./libtool   --mode=install /usr/bin/install -c sqlite3 '/usr/local/bin'
+#11 218.1 libtool: install: /usr/bin/install -c sqlite3 /usr/local/bin/sqlite3
+#11 218.1  /usr/bin/mkdir -p '/usr/local/include'
+#11 218.1  /usr/bin/install -c -m 644 sqlite3.h sqlite3ext.h '/usr/local/include'
+#11 218.1  /usr/bin/mkdir -p '/usr/local/share/man/man1'
+#11 218.2  /usr/bin/install -c -m 644 sqlite3.1 '/usr/local/share/man/man1'
+#11 218.2  /usr/bin/mkdir -p '/usr/local/lib/pkgconfig'
+#11 218.2  /usr/bin/install -c -m 644 sqlite3.pc '/usr/local/lib/pkgconfig'
+#11 218.2 make[1]: Leaving directory '/tmp/sqlite-src'
+#11 223.1 Configuring for:
+#11 223.1 PHP Api Version:         20210902
+#11 223.1 Zend Module Api No:      20210902
+#11 223.1 Zend Extension Api No:   420210902
+#11 224.8 checking for grep that handles long lines and -e... /usr/bin/grep
+#11 224.8 checking for egrep... /usr/bin/grep -E
+#11 224.8 checking for a sed that does not truncate output... /usr/bin/sed
+#11 224.9 checking for pkg-config... /usr/bin/pkg-config
+#11 224.9 checking pkg-config is at least version 0.9.0... yes
+#11 225.0 checking for cc... cc
+#11 225.1 checking whether the C compiler works... yes
+#11 225.3 checking for C compiler default output file name... a.out
+#11 225.3 checking for suffix of executables... 
+#11 225.5 checking whether we are cross compiling... no
+#11 225.7 checking for suffix of object files... o
+#11 225.8 checking whether the compiler supports GNU C... yes
+#11 225.8 checking whether cc accepts -g... yes
+#11 225.9 checking for cc option to enable C11 features... none needed
+#11 226.0 checking how to run the C preprocessor... cc -E
+#11 226.1 checking for icc... no
+#11 226.2 checking for suncc... no
+#11 226.2 checking for system library directory... lib
+#11 226.2 checking if compiler supports -Wl,-rpath,... yes
+#11 226.3 checking build system type... aarch64-unknown-linux-gnu
+#11 226.4 checking host system type... aarch64-unknown-linux-gnu
+#11 226.4 checking target system type... aarch64-unknown-linux-gnu
+#11 226.5 checking for PHP prefix... /usr/local
+#11 226.5 checking for PHP includes... -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib
+#11 226.5 checking for PHP extension directory... /usr/local/lib/php/extensions/no-debug-non-zts-20210902
+#11 226.5 checking for PHP installed headers prefix... /usr/local/include/php
+#11 226.5 checking if debug is enabled... no
+#11 226.6 checking if zts is enabled... no
+#11 226.7 checking for gawk... no
+#11 226.7 checking for nawk... nawk
+#11 226.7 checking if nawk is broken... no
+#11 226.7 checking for MySQL support for PDO... yes, shared
+#11 226.7 checking for the location of libz... no
+#11 226.7 checking for MySQL UNIX socket location... 
+#11 226.7 checking for PDO includes... /usr/local/include/php/ext
+#11 226.7 checking for a sed that does not truncate output... /usr/bin/sed
+#11 226.7 checking for ld used by cc... /usr/bin/ld
+#11 226.8 checking if the linker (/usr/bin/ld) is GNU ld... yes
+#11 226.8 checking for /usr/bin/ld option to reload object files... -r
+#11 226.8 checking for BSD-compatible nm... /usr/bin/nm -B
+#11 226.8 checking whether ln -s works... yes
+#11 226.8 checking how to recognize dependent libraries... pass_all
+#11 226.8 checking for stdio.h... yes
+#11 226.9 checking for stdlib.h... yes
+#11 226.9 checking for string.h... yes
+#11 227.1 checking for inttypes.h... yes
+#11 227.2 checking for stdint.h... yes
+#11 227.2 checking for strings.h... yes
+#11 227.3 checking for sys/stat.h... yes
+#11 227.4 checking for sys/types.h... yes
+#11 227.5 checking for unistd.h... yes
+#11 227.5 checking for dlfcn.h... yes
+#11 227.6 checking the maximum length of command line arguments... 1572864
+#11 227.6 checking command to parse /usr/bin/nm -B output from cc object... ok
+#11 227.8 checking for objdir... .libs
+#11 227.8 checking for ar... ar
+#11 227.8 checking for ranlib... ranlib
+#11 227.8 checking for strip... strip
+#11 227.9 checking if cc supports -fno-rtti -fno-exceptions... no
+#11 227.9 checking for cc option to produce PIC... -fPIC
+#11 227.9 checking if cc PIC flag -fPIC works... yes
+#11 228.0 checking if cc static flag -static works... yes
+#11 228.3 checking if cc supports -c -o file.o... yes
+#11 228.4 checking whether the cc linker (/usr/bin/ld) supports shared libraries... yes
+#11 228.4 checking whether -lc should be explicitly linked in... no
+#11 228.5 checking dynamic linker characteristics... GNU/Linux ld.so
+#11 228.6 checking how to hardcode library paths into programs... immediate
+#11 228.6 checking whether stripping libraries is possible... yes
+#11 228.6 checking if libtool supports shared libraries... yes
+#11 228.6 checking whether to build shared libraries... yes
+#11 228.6 checking whether to build static libraries... no
+#11 228.9 
+#11 228.9 creating libtool
+#11 229.0 appending configuration tag "CXX" to libtool
+#11 229.1 configure: patching config.h.in
+#11 229.1 configure: creating ./config.status
+#11 229.2 config.status: creating config.h
+#11 229.3 /bin/bash /usr/src/php/ext/pdo_mysql/libtool --mode=compile cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64   -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/pdo_mysql.c -o pdo_mysql.lo  -MMD -MF pdo_mysql.dep -MT pdo_mysql.lo
+#11 229.3 /bin/bash /usr/src/php/ext/pdo_mysql/libtool --mode=compile cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64   -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/mysql_driver.c -o mysql_driver.lo  -MMD -MF mysql_driver.dep -MT mysql_driver.lo
+#11 229.6 mkdir .libs
+#11 229.6  cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/pdo_mysql.c -MMD -MF pdo_mysql.dep -MT pdo_mysql.lo  -fPIC -DPIC -o .libs/pdo_mysql.o
+#11 229.6  cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/mysql_driver.c -MMD -MF mysql_driver.dep -MT mysql_driver.lo  -fPIC -DPIC -o .libs/mysql_driver.o
+#11 230.0 /bin/bash /usr/src/php/ext/pdo_mysql/libtool --mode=compile cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64   -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/mysql_statement.c -o mysql_statement.lo  -MMD -MF mysql_statement.dep -MT mysql_statement.lo
+#11 230.3  cc -I. -I/usr/src/php/ext/pdo_mysql -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I/usr/local/include/php/ext -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_mysql/mysql_statement.c -MMD -MF mysql_statement.dep -MT mysql_statement.lo  -fPIC -DPIC -o .libs/mysql_statement.o
+#11 231.1 /bin/bash /usr/src/php/ext/pdo_mysql/libtool --mode=link cc -shared -I/usr/src/php/ext/pdo_mysql/include -I/usr/src/php/ext/pdo_mysql/main -I/usr/src/php/ext/pdo_mysql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64  -Wl,-O1 -pie  -o pdo_mysql.la -export-dynamic -avoid-version -prefer-pic -module -rpath /usr/src/php/ext/pdo_mysql/modules  pdo_mysql.lo mysql_driver.lo mysql_statement.lo 
+#11 231.3 cc -shared  .libs/pdo_mysql.o .libs/mysql_driver.o .libs/mysql_statement.o   -Wl,-O1 -Wl,-soname -Wl,pdo_mysql.so -o .libs/pdo_mysql.so
+#11 231.4 creating pdo_mysql.la
+#11 231.4 (cd .libs && rm -f pdo_mysql.la && ln -s ../pdo_mysql.la pdo_mysql.la)
+#11 231.5 /bin/bash /usr/src/php/ext/pdo_mysql/libtool --mode=install cp ./pdo_mysql.la /usr/src/php/ext/pdo_mysql/modules
+#11 231.5 cp ./.libs/pdo_mysql.so /usr/src/php/ext/pdo_mysql/modules/pdo_mysql.so
+#11 231.5 cp ./.libs/pdo_mysql.lai /usr/src/php/ext/pdo_mysql/modules/pdo_mysql.la
+#11 231.6 PATH="$PATH:/sbin" ldconfig -n /usr/src/php/ext/pdo_mysql/modules
+#11 231.6 ----------------------------------------------------------------------
+#11 231.6 Libraries have been installed in:
+#11 231.6    /usr/src/php/ext/pdo_mysql/modules
+#11 231.6 
+#11 231.6 If you ever happen to want to link against installed libraries
+#11 231.6 in a given directory, LIBDIR, you must either use libtool, and
+#11 231.6 specify the full pathname of the library, or use the `-LLIBDIR'
+#11 231.6 flag during linking and do at least one of the following:
+#11 231.6    - add LIBDIR to the `LD_LIBRARY_PATH' environment variable
+#11 231.6      during execution
+#11 231.6    - add LIBDIR to the `LD_RUN_PATH' environment variable
+#11 231.6      during linking
+#11 231.6    - use the `-Wl,--rpath -Wl,LIBDIR' linker flag
+#11 231.6    - have your system administrator add LIBDIR to `/etc/ld.so.conf'
+#11 231.6 
+#11 231.6 See any operating system documentation about shared libraries for
+#11 231.6 more information, such as the ld(1) and ld.so(8) manual pages.
+#11 231.6 ----------------------------------------------------------------------
+#11 231.6 
+#11 231.6 Build complete.
+#11 231.6 Don't forget to run 'make test'.
+#11 231.6 
+#11 231.7 + strip --strip-all modules/pdo_mysql.so
+#11 231.8 Installing shared extensions:     /usr/local/lib/php/extensions/no-debug-non-zts-20210902/
+#11 232.0 find . -name \*.gcno -o -name \*.gcda | xargs rm -f
+#11 232.0 find . -name \*.lo -o -name \*.o -o -name \*.dep | xargs rm -f
+#11 232.0 find . -name \*.la -o -name \*.a | xargs rm -f
+#11 232.0 find . -name \*.so | xargs rm -f
+#11 232.0 find . -name .libs -a -type d|xargs rm -rf
+#11 232.0 rm -f libphp.la      modules/* libs/*
+#11 232.0 rm -f ext/opcache/jit/zend_jit_x86.c
+#11 232.0 rm -f ext/opcache/jit/zend_jit_arm64.c
+#11 232.0 rm -f ext/opcache/minilua
+#11 232.1 Configuring for:
+#11 232.1 PHP Api Version:         20210902
+#11 232.1 Zend Module Api No:      20210902
+#11 232.1 Zend Extension Api No:   420210902
+#11 234.2 checking for grep that handles long lines and -e... /usr/bin/grep
+#11 234.2 checking for egrep... /usr/bin/grep -E
+#11 234.2 checking for a sed that does not truncate output... /usr/bin/sed
+#11 234.2 checking for pkg-config... /usr/bin/pkg-config
+#11 234.2 checking pkg-config is at least version 0.9.0... yes
+#11 234.2 checking for cc... cc
+#11 234.3 checking whether the C compiler works... yes
+#11 234.4 checking for C compiler default output file name... a.out
+#11 234.4 checking for suffix of executables... 
+#11 234.5 checking whether we are cross compiling... no
+#11 234.6 checking for suffix of object files... o
+#11 234.6 checking whether the compiler supports GNU C... yes
+#11 234.7 checking whether cc accepts -g... yes
+#11 234.7 checking for cc option to enable C11 features... none needed
+#11 234.9 checking how to run the C preprocessor... cc -E
+#11 235.0 checking for icc... no
+#11 235.0 checking for suncc... no
+#11 235.0 checking for system library directory... lib
+#11 235.0 checking if compiler supports -Wl,-rpath,... yes
+#11 235.1 checking build system type... aarch64-unknown-linux-gnu
+#11 235.2 checking host system type... aarch64-unknown-linux-gnu
+#11 235.2 checking target system type... aarch64-unknown-linux-gnu
+#11 235.3 checking for PHP prefix... /usr/local
+#11 235.3 checking for PHP includes... -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib
+#11 235.3 checking for PHP extension directory... /usr/local/lib/php/extensions/no-debug-non-zts-20210902
+#11 235.3 checking for PHP installed headers prefix... /usr/local/include/php
+#11 235.3 checking if debug is enabled... no
+#11 235.3 checking if zts is enabled... no
+#11 235.4 checking for gawk... no
+#11 235.4 checking for nawk... nawk
+#11 235.4 checking if nawk is broken... no
+#11 235.4 checking for PostgreSQL support for PDO... yes, shared
+#11 235.4 checking for pg_config... /usr/bin/pg_config
+#11 235.4 checking for PQlibVersion in -lpq... yes
+#11 235.6 checking for PDO includes... /usr/local/include/php/ext
+#11 235.7 checking for a sed that does not truncate output... /usr/bin/sed
+#11 235.7 checking for ld used by cc... /usr/bin/ld
+#11 235.7 checking if the linker (/usr/bin/ld) is GNU ld... yes
+#11 235.7 checking for /usr/bin/ld option to reload object files... -r
+#11 235.7 checking for BSD-compatible nm... /usr/bin/nm -B
+#11 235.7 checking whether ln -s works... yes
+#11 235.7 checking how to recognize dependent libraries... pass_all
+#11 235.7 checking for stdio.h... yes
+#11 235.8 checking for stdlib.h... yes
+#11 235.8 checking for string.h... yes
+#11 235.9 checking for inttypes.h... yes
+#11 235.9 checking for stdint.h... yes
+#11 236.0 checking for strings.h... yes
+#11 236.0 checking for sys/stat.h... yes
+#11 236.1 checking for sys/types.h... yes
+#11 236.1 checking for unistd.h... yes
+#11 236.2 checking for dlfcn.h... yes
+#11 236.2 checking the maximum length of command line arguments... 1572864
+#11 236.3 checking command to parse /usr/bin/nm -B output from cc object... ok
+#11 236.4 checking for objdir... .libs
+#11 236.4 checking for ar... ar
+#11 236.4 checking for ranlib... ranlib
+#11 236.4 checking for strip... strip
+#11 236.6 checking if cc supports -fno-rtti -fno-exceptions... no
+#11 236.6 checking for cc option to produce PIC... -fPIC
+#11 236.6 checking if cc PIC flag -fPIC works... yes
+#11 236.7 checking if cc static flag -static works... yes
+#11 236.8 checking if cc supports -c -o file.o... yes
+#11 236.9 checking whether the cc linker (/usr/bin/ld) supports shared libraries... yes
+#11 237.0 checking whether -lc should be explicitly linked in... no
+#11 237.1 checking dynamic linker characteristics... GNU/Linux ld.so
+#11 237.2 checking how to hardcode library paths into programs... immediate
+#11 237.2 checking whether stripping libraries is possible... yes
+#11 237.2 checking if libtool supports shared libraries... yes
+#11 237.2 checking whether to build shared libraries... yes
+#11 237.2 checking whether to build static libraries... no
+#11 237.6 
+#11 237.6 creating libtool
+#11 237.7 appending configuration tag "CXX" to libtool
+#11 237.8 configure: patching config.h.in
+#11 237.8 configure: creating ./config.status
+#11 238.0 config.status: creating config.h
+#11 238.1 /bin/bash /usr/src/php/ext/pdo_pgsql/libtool --mode=compile cc -I. -I/usr/src/php/ext/pdo_pgsql -I/usr/src/php/ext/pdo_pgsql/include -I/usr/src/php/ext/pdo_pgsql/main -I/usr/src/php/ext/pdo_pgsql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -I/usr/include/postgresql  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64   -I/usr/local/include/php/ext -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_pgsql/pdo_pgsql.c -o pdo_pgsql.lo  -MMD -MF pdo_pgsql.dep -MT pdo_pgsql.lo
+#11 238.1 /bin/bash /usr/src/php/ext/pdo_pgsql/libtool --mode=compile cc -I. -I/usr/src/php/ext/pdo_pgsql -I/usr/src/php/ext/pdo_pgsql/include -I/usr/src/php/ext/pdo_pgsql/main -I/usr/src/php/ext/pdo_pgsql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -I/usr/include/postgresql  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64   -I/usr/local/include/php/ext -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_pgsql/pgsql_driver.c -o pgsql_driver.lo  -MMD -MF pgsql_driver.dep -MT pgsql_driver.lo
+#11 238.5 mkdir .libs
+#11 238.5  cc -I. -I/usr/src/php/ext/pdo_pgsql -I/usr/src/php/ext/pdo_pgsql/include -I/usr/src/php/ext/pdo_pgsql/main -I/usr/src/php/ext/pdo_pgsql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -I/usr/include/postgresql -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I/usr/local/include/php/ext -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_pgsql/pgsql_driver.c -MMD -MF pgsql_driver.dep -MT pgsql_driver.lo  -fPIC -DPIC -o .libs/pgsql_driver.o
+#11 238.7  cc -I. -I/usr/src/php/ext/pdo_pgsql -I/usr/src/php/ext/pdo_pgsql/include -I/usr/src/php/ext/pdo_pgsql/main -I/usr/src/php/ext/pdo_pgsql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -I/usr/include/postgresql -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I/usr/local/include/php/ext -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_pgsql/pdo_pgsql.c -MMD -MF pdo_pgsql.dep -MT pdo_pgsql.lo  -fPIC -DPIC -o .libs/pdo_pgsql.o
+#11 239.1 /bin/bash /usr/src/php/ext/pdo_pgsql/libtool --mode=compile cc -I. -I/usr/src/php/ext/pdo_pgsql -I/usr/src/php/ext/pdo_pgsql/include -I/usr/src/php/ext/pdo_pgsql/main -I/usr/src/php/ext/pdo_pgsql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -I/usr/include/postgresql  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64   -I/usr/local/include/php/ext -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_pgsql/pgsql_statement.c -o pgsql_statement.lo  -MMD -MF pgsql_statement.dep -MT pgsql_statement.lo
+#11 239.4  cc -I. -I/usr/src/php/ext/pdo_pgsql -I/usr/src/php/ext/pdo_pgsql/include -I/usr/src/php/ext/pdo_pgsql/main -I/usr/src/php/ext/pdo_pgsql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -I/usr/include/postgresql -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I/usr/local/include/php/ext -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/pdo_pgsql/pgsql_statement.c -MMD -MF pgsql_statement.dep -MT pgsql_statement.lo  -fPIC -DPIC -o .libs/pgsql_statement.o
+#11 240.1 /bin/bash /usr/src/php/ext/pdo_pgsql/libtool --mode=link cc -shared -I/usr/src/php/ext/pdo_pgsql/include -I/usr/src/php/ext/pdo_pgsql/main -I/usr/src/php/ext/pdo_pgsql -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -I/usr/include/postgresql  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64  -Wl,-O1 -pie  -o pdo_pgsql.la -export-dynamic -avoid-version -prefer-pic -module -rpath /usr/src/php/ext/pdo_pgsql/modules  pdo_pgsql.lo pgsql_driver.lo pgsql_statement.lo -Wl,-rpath,/usr/lib/aarch64-linux-gnu -L/usr/lib/aarch64-linux-gnu -lpq
+#11 240.5 cc -shared  .libs/pdo_pgsql.o .libs/pgsql_driver.o .libs/pgsql_statement.o  -L/usr/lib/aarch64-linux-gnu -lpq  -Wl,-O1 -Wl,-rpath -Wl,/usr/lib/aarch64-linux-gnu -Wl,-soname -Wl,pdo_pgsql.so -o .libs/pdo_pgsql.so
+#11 240.5 creating pdo_pgsql.la
+#11 240.5 (cd .libs && rm -f pdo_pgsql.la && ln -s ../pdo_pgsql.la pdo_pgsql.la)
+#11 240.5 /bin/bash /usr/src/php/ext/pdo_pgsql/libtool --mode=install cp ./pdo_pgsql.la /usr/src/php/ext/pdo_pgsql/modules
+#11 240.6 cp ./.libs/pdo_pgsql.so /usr/src/php/ext/pdo_pgsql/modules/pdo_pgsql.so
+#11 240.6 cp ./.libs/pdo_pgsql.lai /usr/src/php/ext/pdo_pgsql/modules/pdo_pgsql.la
+#11 240.7 PATH="$PATH:/sbin" ldconfig -n /usr/src/php/ext/pdo_pgsql/modules
+#11 240.7 ----------------------------------------------------------------------
+#11 240.7 Libraries have been installed in:
+#11 240.7    /usr/src/php/ext/pdo_pgsql/modules
+#11 240.7 
+#11 240.7 If you ever happen to want to link against installed libraries
+#11 240.7 in a given directory, LIBDIR, you must either use libtool, and
+#11 240.7 specify the full pathname of the library, or use the `-LLIBDIR'
+#11 240.7 flag during linking and do at least one of the following:
+#11 240.7    - add LIBDIR to the `LD_LIBRARY_PATH' environment variable
+#11 240.7      during execution
+#11 240.7    - add LIBDIR to the `LD_RUN_PATH' environment variable
+#11 240.7      during linking
+#11 240.7    - use the `-Wl,--rpath -Wl,LIBDIR' linker flag
+#11 240.7    - have your system administrator add LIBDIR to `/etc/ld.so.conf'
+#11 240.7 
+#11 240.7 See any operating system documentation about shared libraries for
+#11 240.7 more information, such as the ld(1) and ld.so(8) manual pages.
+#11 240.7 ----------------------------------------------------------------------
+#11 240.7 
+#11 240.7 Build complete.
+#11 240.7 Don't forget to run 'make test'.
+#11 240.7 
+#11 240.7 + strip --strip-all modules/pdo_pgsql.so
+#11 240.8 Installing shared extensions:     /usr/local/lib/php/extensions/no-debug-non-zts-20210902/
+#11 241.1 find . -name \*.gcno -o -name \*.gcda | xargs rm -f
+#11 241.1 find . -name \*.lo -o -name \*.o -o -name \*.dep | xargs rm -f
+#11 241.1 find . -name \*.la -o -name \*.a | xargs rm -f
+#11 241.1 find . -name \*.so | xargs rm -f
+#11 241.2 find . -name .libs -a -type d|xargs rm -rf
+#11 241.2 rm -f libphp.la      modules/* libs/*
+#11 241.2 rm -f ext/opcache/jit/zend_jit_x86.c
+#11 241.2 rm -f ext/opcache/jit/zend_jit_arm64.c
+#11 241.2 rm -f ext/opcache/minilua
+#11 241.3 Configuring for:
+#11 241.3 PHP Api Version:         20210902
+#11 241.3 Zend Module Api No:      20210902
+#11 241.3 Zend Extension Api No:   420210902
+#11 242.9 checking for grep that handles long lines and -e... /usr/bin/grep
+#11 242.9 checking for egrep... /usr/bin/grep -E
+#11 242.9 checking for a sed that does not truncate output... /usr/bin/sed
+#11 243.0 checking for pkg-config... /usr/bin/pkg-config
+#11 243.0 checking pkg-config is at least version 0.9.0... yes
+#11 243.0 checking for cc... cc
+#11 243.0 checking whether the C compiler works... yes
+#11 243.1 checking for C compiler default output file name... a.out
+#11 243.1 checking for suffix of executables... 
+#11 243.1 checking whether we are cross compiling... no
+#11 243.3 checking for suffix of object files... o
+#11 243.3 checking whether the compiler supports GNU C... yes
+#11 243.4 checking whether cc accepts -g... yes
+#11 243.5 checking for cc option to enable C11 features... none needed
+#11 243.6 checking how to run the C preprocessor... cc -E
+#11 243.8 checking for icc... no
+#11 243.8 checking for suncc... no
+#11 243.8 checking for system library directory... lib
+#11 243.8 checking if compiler supports -Wl,-rpath,... yes
+#11 243.9 checking build system type... aarch64-unknown-linux-gnu
+#11 243.9 checking host system type... aarch64-unknown-linux-gnu
+#11 243.9 checking target system type... aarch64-unknown-linux-gnu
+#11 244.0 checking for PHP prefix... /usr/local
+#11 244.0 checking for PHP includes... -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib
+#11 244.0 checking for PHP extension directory... /usr/local/lib/php/extensions/no-debug-non-zts-20210902
+#11 244.0 checking for PHP installed headers prefix... /usr/local/include/php
+#11 244.0 checking if debug is enabled... no
+#11 244.0 checking if zts is enabled... no
+#11 244.1 checking for gawk... no
+#11 244.1 checking for nawk... nawk
+#11 244.1 checking if nawk is broken... no
+#11 244.1 checking for MySQLi support... yes, shared
+#11 244.1 checking for specified location of the MySQL UNIX socket... no
+#11 244.1 checking for MySQL UNIX socket location... no
+#11 244.1 checking for a sed that does not truncate output... /usr/bin/sed
+#11 244.1 checking for ld used by cc... /usr/bin/ld
+#11 244.1 checking if the linker (/usr/bin/ld) is GNU ld... yes
+#11 244.1 checking for /usr/bin/ld option to reload object files... -r
+#11 244.1 checking for BSD-compatible nm... /usr/bin/nm -B
+#11 244.1 checking whether ln -s works... yes
+#11 244.1 checking how to recognize dependent libraries... pass_all
+#11 244.1 checking for stdio.h... yes
+#11 244.2 checking for stdlib.h... yes
+#11 244.2 checking for string.h... yes
+#11 244.3 checking for inttypes.h... yes
+#11 244.4 checking for stdint.h... yes
+#11 244.5 checking for strings.h... yes
+#11 244.5 checking for sys/stat.h... yes
+#11 244.6 checking for sys/types.h... yes
+#11 244.6 checking for unistd.h... yes
+#11 244.7 checking for dlfcn.h... yes
+#11 244.8 checking the maximum length of command line arguments... 1572864
+#11 244.8 checking command to parse /usr/bin/nm -B output from cc object... ok
+#11 245.0 checking for objdir... .libs
+#11 245.0 checking for ar... ar
+#11 245.0 checking for ranlib... ranlib
+#11 245.0 checking for strip... strip
+#11 245.2 checking if cc supports -fno-rtti -fno-exceptions... no
+#11 245.3 checking for cc option to produce PIC... -fPIC
+#11 245.3 checking if cc PIC flag -fPIC works... yes
+#11 245.4 checking if cc static flag -static works... yes
+#11 245.6 checking if cc supports -c -o file.o... yes
+#11 245.7 checking whether the cc linker (/usr/bin/ld) supports shared libraries... yes
+#11 245.7 checking whether -lc should be explicitly linked in... no
+#11 245.7 checking dynamic linker characteristics... GNU/Linux ld.so
+#11 245.8 checking how to hardcode library paths into programs... immediate
+#11 245.8 checking whether stripping libraries is possible... yes
+#11 245.8 checking if libtool supports shared libraries... yes
+#11 245.8 checking whether to build shared libraries... yes
+#11 245.8 checking whether to build static libraries... no
+#11 246.3 
+#11 246.3 creating libtool
+#11 246.4 appending configuration tag "CXX" to libtool
+#11 246.7 configure: patching config.h.in
+#11 246.7 configure: creating ./config.status
+#11 246.9 config.status: creating config.h
+#11 247.1 /bin/bash /usr/src/php/ext/mysqli/libtool --mode=compile cc -I. -I/usr/src/php/ext/mysqli -I/usr/src/php/ext/mysqli/include -I/usr/src/php/ext/mysqli/main -I/usr/src/php/ext/mysqli -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64   -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/mysqli/mysqli.c -o mysqli.lo  -MMD -MF mysqli.dep -MT mysqli.lo
+#11 247.1 /bin/bash /usr/src/php/ext/mysqli/libtool --mode=compile cc -I. -I/usr/src/php/ext/mysqli -I/usr/src/php/ext/mysqli/include -I/usr/src/php/ext/mysqli/main -I/usr/src/php/ext/mysqli -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H  -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64   -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/mysqli/mysqli_api.c -o mysqli_api.lo  -MMD -MF mysqli_api.dep -MT mysqli_api.lo
+#11 247.6 mkdir .libs
+#11 247.6  cc -I. -I/usr/src/php/ext/mysqli -I/usr/src/php/ext/mysqli/include -I/usr/src/php/ext/mysqli/main -I/usr/src/php/ext/mysqli -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/mysqli/mysqli_api.c -MMD -MF mysqli_api.dep -MT mysqli_api.lo  -fPIC -DPIC -o .libs/mysqli_api.o
+#11 247.7  cc -I. -I/usr/src/php/ext/mysqli -I/usr/src/php/ext/mysqli/include -I/usr/src/php/ext/mysqli/main -I/usr/src/php/ext/mysqli -I/usr/local/include/php -I/usr/local/include/php/main -I/usr/local/include/php/TSRM -I/usr/local/include/php/Zend -I/usr/local/include/php/ext -I/usr/local/include/php/ext/date/lib -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H -fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DZEND_COMPILE_DL_EXT=1 -c /usr/src/php/ext/mysqli/mysqli.c -MMD -MF mysqli.dep -MT mysqli.lo  -fPIC -DPIC -o .libs/mysqli.o
+

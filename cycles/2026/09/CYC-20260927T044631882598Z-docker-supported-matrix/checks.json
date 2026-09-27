@@ -1,0 +1,62 @@
+[
+  {
+    "command": [
+      "docker",
+      "run",
+      "--rm",
+      "--entrypoint",
+      "php",
+      "-e",
+      "EXPECTED_PHP=9",
+      "ztd-scenario-matrix:php8.1-sqlitesystem",
+      "scripts/matrix-probe.php"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "RuntimeException: PHP: expected 9, got 8.1.34\n"
+  },
+  {
+    "command": [
+      "docker",
+      "compose",
+      "-f",
+      "docker-compose.yml",
+      "--profile",
+      "all",
+      "config",
+      "--quiet"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "docker",
+      "compose",
+      "-f",
+      "docker/compose.matrix.yml",
+      "--profile",
+      "mysql",
+      "--profile",
+      "postgres",
+      "config",
+      "--quiet"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/docker-matrix.py",
+      "--php",
+      "8.0",
+      "--list"
+    ],
+    "exit_code": 2,
+    "stdout": "",
+    "stderr": "usage: docker-matrix.py [-h] [--php PHP] [--database DATABASE] [--mysql MYSQL]\n                        [--postgres POSTGRES] [--sqlite SQLITE] [--all]\n                        [--list] [--output OUTPUT]\n                        ...\ndocker-matrix.py: error: Choose from 8.1, 8.2, 8.3, 8.4, 8.5 (or all); got '8.0'\n"
+  }
+]

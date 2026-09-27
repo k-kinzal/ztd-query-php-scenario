@@ -1,0 +1,85 @@
+{
+  "requested": {
+    "php": "8.5",
+    "database": "mysql",
+    "version": "8.0",
+    "image": "mysql:8.0"
+  },
+  "project": "ztd-matrix-20260927t045150216693z-1",
+  "commands": [
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/dev/null",
+        "-f",
+        "/Users/ab/Projects/ztd-query-php-scenario/docker/compose.matrix.yml",
+        "-p",
+        "ztd-matrix-20260927t045150216693z-1",
+        "--profile",
+        "mysql",
+        "config"
+      ],
+      "output": "compose.yml",
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/dev/null",
+        "-f",
+        "/Users/ab/Projects/ztd-query-php-scenario/docker/compose.matrix.yml",
+        "-p",
+        "ztd-matrix-20260927t045150216693z-1",
+        "--profile",
+        "mysql",
+        "build",
+        "mysql-test"
+      ],
+      "output": "build.log",
+      "exit_code": null
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/dev/null",
+        "-f",
+        "/Users/ab/Projects/ztd-query-php-scenario/docker/compose.matrix.yml",
+        "-p",
+        "ztd-matrix-20260927t045150216693z-1",
+        "--profile",
+        "mysql",
+        "logs",
+        "--no-color"
+      ],
+      "output": "services.log",
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/dev/null",
+        "-f",
+        "/Users/ab/Projects/ztd-query-php-scenario/docker/compose.matrix.yml",
+        "-p",
+        "ztd-matrix-20260927t045150216693z-1",
+        "--profile",
+        "mysql",
+        "down",
+        "--volumes",
+        "--remove-orphans"
+      ],
+      "output": "cleanup.log",
+      "exit_code": 0
+    }
+  ],
+  "status": "interrupted",
+  "finished_at": "2026-09-27T04:53:52.758873+00:00"
+}

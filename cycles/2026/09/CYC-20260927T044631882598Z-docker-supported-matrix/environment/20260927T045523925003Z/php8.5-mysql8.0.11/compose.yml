@@ -1,0 +1,123 @@
+name: ztd-matrix-20260927t045523925003z-0
+services:
+  mysql:
+    profiles:
+      - mysql
+    environment:
+      MYSQL_DATABASE: ztd_test
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_PASSWORD: root
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - MYSQL_PWD=root mysql --protocol=tcp -h 127.0.0.1 -uroot -D ztd_test -e "SELECT
+          1"
+      timeout: 5s
+      interval: 3s
+      retries: 60
+      start_period: 15s
+    image: mysql:8.0.11
+    networks:
+      default: null
+    platform: linux/amd64
+  mysql-test:
+    profiles:
+      - mysql
+    build:
+      context: /var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-1m5itepl
+      dockerfile: Dockerfile
+      args:
+        PHP_IMAGE: php:8.5-cli-bookworm
+        PHP_VERSION: "8.5"
+        SQLITE_SHA256: ""
+        SQLITE_URL: ""
+        SQLITE_VERSION: system
+    command:
+      - php
+      - scripts/matrix-probe.php
+    depends_on:
+      mysql:
+        condition: service_healthy
+        required: true
+    entrypoint: []
+    environment:
+      EXPECTED_DATABASE: 8.0.11
+      EXPECTED_PHP: "8.5"
+      EXPECTED_SQLITE: system
+      MATRIX_DATABASE: mysql
+      MYSQL_DATABASE: ztd_test
+      MYSQL_HOST: mysql
+      MYSQL_PASSWORD: root
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      ZTD_MYSQL_DATABASE: ztd_test
+      ZTD_MYSQL_HOST: mysql
+      ZTD_MYSQL_PASSWORD: root
+      ZTD_MYSQL_PORT: "3306"
+      ZTD_MYSQL_USER: root
+      ZTD_TYPES_DSN: mysql:host=mysql;port=3306;dbname=ztd_test;charset=utf8mb4
+      ZTD_TYPES_PASSWORD: root
+      ZTD_TYPES_USER: root
+      ZTD_VERSION_LOG: /evidence/versions.json
+    image: ztd-scenario-matrix:php8.5-sqlitesystem
+    networks:
+      default: null
+    volumes:
+      - type: bind
+        source: /Users/ab/Projects/ztd-query-php-scenario/cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/environment/20260927T045523925003Z/php8.5-mysql8.0.11
+        target: /evidence
+        bind: {}
+  sqlite:
+    build:
+      context: /var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-1m5itepl
+      dockerfile: Dockerfile
+      args:
+        PHP_IMAGE: php:8.5-cli-bookworm
+        PHP_VERSION: "8.5"
+        SQLITE_SHA256: ""
+        SQLITE_URL: ""
+        SQLITE_VERSION: system
+    command:
+      - php
+      - scripts/matrix-probe.php
+    entrypoint: []
+    environment:
+      EXPECTED_DATABASE: 8.0.11
+      EXPECTED_PHP: "8.5"
+      EXPECTED_SQLITE: system
+      MATRIX_DATABASE: mysql
+      ZTD_VERSION_LOG: /evidence/versions.json
+    image: ztd-scenario-matrix:php8.5-sqlitesystem
+    networks:
+      default: null
+    volumes:
+      - type: bind
+        source: /Users/ab/Projects/ztd-query-php-scenario/cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/environment/20260927T045523925003Z/php8.5-mysql8.0.11
+        target: /evidence
+        bind: {}
+networks:
+  default:
+    name: ztd-matrix-20260927t045523925003z-0_default
+x-client:
+  build:
+    args:
+      PHP_IMAGE: php:8.5-cli-bookworm
+      PHP_VERSION: "8.5"
+      SQLITE_SHA256: ""
+      SQLITE_URL: ""
+      SQLITE_VERSION: system
+    context: /var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-1m5itepl
+    dockerfile: Dockerfile
+  command:
+    - php
+    - scripts/matrix-probe.php
+  entrypoint: []
+  environment:
+    EXPECTED_DATABASE: 8.0.11
+    EXPECTED_PHP: "8.5"
+    EXPECTED_SQLITE: system
+    MATRIX_DATABASE: mysql
+    ZTD_VERSION_LOG: /evidence/versions.json
+  image: ztd-scenario-matrix:php8.5-sqlitesystem
+  volumes:
+    - /Users/ab/Projects/ztd-query-php-scenario/cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/environment/20260927T045523925003Z/php8.5-mysql8.0.11:/evidence

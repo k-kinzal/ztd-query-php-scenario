@@ -1,0 +1,17 @@
+{
+  "image": "sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b",
+  "command": [
+    "--performance-schema=OFF",
+    "--innodb-buffer-pool-size=32M",
+    "--innodb-log-buffer-size=8M",
+    "--max-connections=20"
+  ],
+  "ports": {
+    "3306/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "64671"
+      }
+    ]
+  }
+}

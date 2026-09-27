@@ -1,0 +1,77 @@
+{
+  "requested": {
+    "php": "8.5",
+    "database": "sqlite",
+    "version": "system"
+  },
+  "project": "ztd-matrix-20260927t045150216693z-0",
+  "commands": [
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/dev/null",
+        "-f",
+        "/Users/ab/Projects/ztd-query-php-scenario/docker/compose.matrix.yml",
+        "-p",
+        "ztd-matrix-20260927t045150216693z-0",
+        "config"
+      ],
+      "output": "compose.yml",
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/dev/null",
+        "-f",
+        "/Users/ab/Projects/ztd-query-php-scenario/docker/compose.matrix.yml",
+        "-p",
+        "ztd-matrix-20260927t045150216693z-0",
+        "build",
+        "sqlite"
+      ],
+      "output": "build.log",
+      "exit_code": 1
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/dev/null",
+        "-f",
+        "/Users/ab/Projects/ztd-query-php-scenario/docker/compose.matrix.yml",
+        "-p",
+        "ztd-matrix-20260927t045150216693z-0",
+        "logs",
+        "--no-color"
+      ],
+      "output": "services.log",
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "docker",
+        "compose",
+        "--env-file",
+        "/dev/null",
+        "-f",
+        "/Users/ab/Projects/ztd-query-php-scenario/docker/compose.matrix.yml",
+        "-p",
+        "ztd-matrix-20260927t045150216693z-0",
+        "down",
+        "--volumes",
+        "--remove-orphans"
+      ],
+      "output": "cleanup.log",
+      "exit_code": 0
+    }
+  ],
+  "status": "environment-failed",
+  "error": "build.log: exit 1",
+  "finished_at": "2026-09-27T04:53:42.795545+00:00"
+}

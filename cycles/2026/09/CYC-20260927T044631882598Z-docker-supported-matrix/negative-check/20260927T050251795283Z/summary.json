@@ -1,0 +1,261 @@
+{
+  "started_at": "20260927T050251795283Z",
+  "selected": [
+    {
+      "php": "8.5",
+      "database": "sqlite",
+      "version": "system"
+    }
+  ],
+  "command": [
+    "php",
+    "-r",
+    "exit(7);"
+  ],
+  "repository_revision": "12a0cfdec78674bd20b7233f3286b867ddee0c0c",
+  "working_tree_dirty": true,
+  "docker": "Client:\n Version:           29.7.2\n API version:       1.55\n Go version:        go1.26.5\n Git commit:        a7dcaa6\n Built:             Wed Aug  5 18:27:50 2026\n OS/Arch:           darwin/arm64\n Context:           desktop-linux\n\nServer: Docker Desktop 4.89.0 (238018)\n Engine:\n  Version:          29.7.2\n  API version:      1.55 (minimum version 1.40)\n  Go version:       go1.26.5\n  Git commit:       6a43e3d\n  Built:            Wed Aug  5 18:28:35 2026\n  OS/Arch:          linux/arm64\n  Experimental:     false\n containerd:\n  Version:          v2.3.3\n  GitCommit:        aad11006b869517fcd3009450b6f82da282e1a9b\n runc:\n  Version:          1.4.3\n  GitCommit:        v1.4.3-0-gbb14dabe\n docker-init:\n  Version:          0.19.0\n  GitCommit:        de40ad0\n",
+  "compose": "Docker Compose version v5.5.0\n",
+  "results": [
+    {
+      "requested": {
+        "php": "8.5",
+        "database": "sqlite",
+        "version": "system"
+      },
+      "project": "ztd-matrix-20260927t050251795283z-0",
+      "commands": [
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "--env-file",
+            "/dev/null",
+            "-f",
+            "/var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-u0s3fr0r/docker/compose.matrix.yml",
+            "-p",
+            "ztd-matrix-20260927t050251795283z-0",
+            "config"
+          ],
+          "output": "compose.yml",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "--env-file",
+            "/dev/null",
+            "-f",
+            "/var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-u0s3fr0r/docker/compose.matrix.yml",
+            "-p",
+            "ztd-matrix-20260927t050251795283z-0",
+            "build",
+            "sqlite"
+          ],
+          "output": "build.log",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "--env-file",
+            "/dev/null",
+            "-f",
+            "/var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-u0s3fr0r/docker/compose.matrix.yml",
+            "-p",
+            "ztd-matrix-20260927t050251795283z-0",
+            "run",
+            "--rm",
+            "--no-deps",
+            "-T",
+            "sqlite",
+            "php",
+            "scripts/matrix-probe.php"
+          ],
+          "output": "runtime.json",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "docker",
+            "image",
+            "inspect",
+            "--format",
+            "{{json .Id}} {{json .RepoDigests}} {{json .Architecture}}",
+            "ztd-scenario-matrix:20260927t050251795283z-php8.5-sqlitesystem"
+          ],
+          "output": "images.txt",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "--env-file",
+            "/dev/null",
+            "-f",
+            "/var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-u0s3fr0r/docker/compose.matrix.yml",
+            "-p",
+            "ztd-matrix-20260927t050251795283z-0",
+            "run",
+            "--rm",
+            "--no-deps",
+            "-T",
+            "sqlite",
+            "php",
+            "-r",
+            "exit(7);"
+          ],
+          "output": "command.log",
+          "exit_code": 7
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "--env-file",
+            "/dev/null",
+            "-f",
+            "/var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-u0s3fr0r/docker/compose.matrix.yml",
+            "-p",
+            "ztd-matrix-20260927t050251795283z-0",
+            "logs",
+            "--no-color"
+          ],
+          "output": "services.log",
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "docker",
+            "compose",
+            "--env-file",
+            "/dev/null",
+            "-f",
+            "/var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-u0s3fr0r/docker/compose.matrix.yml",
+            "-p",
+            "ztd-matrix-20260927t050251795283z-0",
+            "down",
+            "--volumes",
+            "--remove-orphans"
+          ],
+          "output": "cleanup.log",
+          "exit_code": 0
+        }
+      ],
+      "status": "command-failed",
+      "runtime": {
+        "scope": "native driver connectivity and CRUD; no ZTD behavior claim",
+        "php": "8.5.11",
+        "os": "Linux",
+        "architecture": "aarch64",
+        "extensions": {
+          "pdo_mysql": "8.5.11",
+          "pdo_pgsql": "8.5.11",
+          "pdo_sqlite": "8.5.11",
+          "sqlite3": "8.5.11",
+          "mysqli": "8.5.11"
+        },
+        "database": "sqlite",
+        "database_version": "3.40.1",
+        "pdo_client": "3.40.1",
+        "mysqli_client": null,
+        "sqlite": "3.40.1",
+        "sqlite_source_id": "2022-12-28 14:03:47 df5c253c0b3dd24916e4ec7cf77d3db5294cc9fd45ae7b9c5e82ad8197f3alt1",
+        "sqlite_compile_options": [
+          "ATOMIC_INTRINSICS=1",
+          "COMPILER=gcc-12.2.0",
+          "DEFAULT_AUTOVACUUM",
+          "DEFAULT_CACHE_SIZE=-2000",
+          "DEFAULT_FILE_FORMAT=4",
+          "DEFAULT_JOURNAL_SIZE_LIMIT=-1",
+          "DEFAULT_MMAP_SIZE=0",
+          "DEFAULT_PAGE_SIZE=4096",
+          "DEFAULT_PCACHE_INITSZ=20",
+          "DEFAULT_RECURSIVE_TRIGGERS",
+          "DEFAULT_SECTOR_SIZE=4096",
+          "DEFAULT_SYNCHRONOUS=2",
+          "DEFAULT_WAL_AUTOCHECKPOINT=1000",
+          "DEFAULT_WAL_SYNCHRONOUS=2",
+          "DEFAULT_WORKER_THREADS=0",
+          "ENABLE_COLUMN_METADATA",
+          "ENABLE_DBSTAT_VTAB",
+          "ENABLE_FTS3",
+          "ENABLE_FTS3_PARENTHESIS",
+          "ENABLE_FTS3_TOKENIZER",
+          "ENABLE_FTS4",
+          "ENABLE_FTS5",
+          "ENABLE_LOAD_EXTENSION",
+          "ENABLE_MATH_FUNCTIONS",
+          "ENABLE_PREUPDATE_HOOK",
+          "ENABLE_RTREE",
+          "ENABLE_SESSION",
+          "ENABLE_STMTVTAB",
+          "ENABLE_UNLOCK_NOTIFY",
+          "ENABLE_UPDATE_DELETE_LIMIT",
+          "HAVE_ISNAN",
+          "LIKE_DOESNT_MATCH_BLOBS",
+          "MALLOC_SOFT_LIMIT=1024",
+          "MAX_ATTACHED=10",
+          "MAX_COLUMN=2000",
+          "MAX_COMPOUND_SELECT=500",
+          "MAX_DEFAULT_PAGE_SIZE=32768",
+          "MAX_EXPR_DEPTH=1000",
+          "MAX_FUNCTION_ARG=127",
+          "MAX_LENGTH=1000000000",
+          "MAX_LIKE_PATTERN_LENGTH=50000",
+          "MAX_MMAP_SIZE=0x7fff0000",
+          "MAX_PAGE_COUNT=1073741823",
+          "MAX_PAGE_SIZE=65536",
+          "MAX_SCHEMA_RETRY=25",
+          "MAX_SQL_LENGTH=1000000000",
+          "MAX_TRIGGER_DEPTH=1000",
+          "MAX_VARIABLE_NUMBER=250000",
+          "MAX_VDBE_OP=250000000",
+          "MAX_WORKER_THREADS=8",
+          "MUTEX_PTHREADS",
+          "OMIT_LOOKASIDE",
+          "SECURE_DELETE",
+          "SOUNDEX",
+          "SYSTEM_MALLOC",
+          "TEMP_STORE=1",
+          "THREADSAFE=1",
+          "USE_URI"
+        ],
+        "lock_sha256": "5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92",
+        "packages": {
+          "k-kinzal/ztd-query-core": {
+            "version": "dev-main",
+            "reference": "f5ab3f0efdb355358b60feb61b7edfb9194fa21f"
+          },
+          "k-kinzal/ztd-query-mysql": {
+            "version": "dev-main",
+            "reference": "969eb5d9f194f3bca1f661a99594b54ead492423"
+          },
+          "k-kinzal/ztd-query-mysqli-adapter": {
+            "version": "dev-main",
+            "reference": "3fe31d57e65d337d53cee04a625ec8e855798181"
+          },
+          "k-kinzal/ztd-query-pdo-adapter": {
+            "version": "dev-main",
+            "reference": "3ed255a43c776349d0170c5b19bcfdd53db626dd"
+          },
+          "k-kinzal/ztd-query-postgres": {
+            "version": "dev-main",
+            "reference": "02bcf6de3040157294b0501396f86872d5301a8e"
+          },
+          "k-kinzal/ztd-query-sqlite": {
+            "version": "dev-main",
+            "reference": "542d26203030ded36abbcdea04b77ce99ff8d934"
+          }
+        },
+        "native_probe": "passed"
+      },
+      "error": "command.log: exit 7",
+      "finished_at": "2026-09-27T05:03:31.353335+00:00"
+    }
+  ],
+  "state": "finished"
+}

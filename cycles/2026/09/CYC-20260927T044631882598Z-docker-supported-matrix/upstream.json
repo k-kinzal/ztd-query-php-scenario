@@ -1,0 +1,61 @@
+{
+  "checked_at": "2026-09-27T04:46:31.881481+00:00",
+  "previous_baseline": "BASE-20260926-main-249944e",
+  "previous": {
+    "upstream": "249944eaed3ea200ed235fb6473296c7e301608a",
+    "k-kinzal/ztd-query-core": "f5ab3f0efdb355358b60feb61b7edfb9194fa21f",
+    "k-kinzal/ztd-query-mysql": "969eb5d9f194f3bca1f661a99594b54ead492423",
+    "k-kinzal/ztd-query-mysqli-adapter": "3fe31d57e65d337d53cee04a625ec8e855798181",
+    "k-kinzal/ztd-query-pdo-adapter": "3ed255a43c776349d0170c5b19bcfdd53db626dd",
+    "k-kinzal/ztd-query-postgres": "02bcf6de3040157294b0501396f86872d5301a8e",
+    "k-kinzal/ztd-query-sqlite": "542d26203030ded36abbcdea04b77ce99ff8d934"
+  },
+  "remote": {
+    "upstream": "e489d7daf1ea545ff3c03ccc216757ad85952bc4",
+    "k-kinzal/ztd-query-core": "f5ab3f0efdb355358b60feb61b7edfb9194fa21f",
+    "k-kinzal/ztd-query-mysql": "969eb5d9f194f3bca1f661a99594b54ead492423",
+    "k-kinzal/ztd-query-mysqli-adapter": "3fe31d57e65d337d53cee04a625ec8e855798181",
+    "k-kinzal/ztd-query-pdo-adapter": "3ed255a43c776349d0170c5b19bcfdd53db626dd",
+    "k-kinzal/ztd-query-postgres": "02bcf6de3040157294b0501396f86872d5301a8e",
+    "k-kinzal/ztd-query-sqlite": "542d26203030ded36abbcdea04b77ce99ff8d934"
+  },
+  "locked": {
+    "k-kinzal/ztd-query-core": {
+      "version": "dev-main",
+      "reference": "f5ab3f0efdb355358b60feb61b7edfb9194fa21f",
+      "url": "https://github.com/k-kinzal/ztd-query-core.git"
+    },
+    "k-kinzal/ztd-query-mysql": {
+      "version": "dev-main",
+      "reference": "969eb5d9f194f3bca1f661a99594b54ead492423",
+      "url": "https://github.com/k-kinzal/ztd-query-mysql.git"
+    },
+    "k-kinzal/ztd-query-mysqli-adapter": {
+      "version": "dev-main",
+      "reference": "3fe31d57e65d337d53cee04a625ec8e855798181",
+      "url": "https://github.com/k-kinzal/ztd-query-mysqli-adapter.git"
+    },
+    "k-kinzal/ztd-query-pdo-adapter": {
+      "version": "dev-main",
+      "reference": "3ed255a43c776349d0170c5b19bcfdd53db626dd",
+      "url": "https://github.com/k-kinzal/ztd-query-pdo-adapter.git"
+    },
+    "k-kinzal/ztd-query-postgres": {
+      "version": "dev-main",
+      "reference": "02bcf6de3040157294b0501396f86872d5301a8e",
+      "url": "https://github.com/k-kinzal/ztd-query-postgres.git"
+    },
+    "k-kinzal/ztd-query-sqlite": {
+      "version": "dev-main",
+      "reference": "542d26203030ded36abbcdea04b77ce99ff8d934",
+      "url": "https://github.com/k-kinzal/ztd-query-sqlite.git"
+    }
+  },
+  "changed": [
+    "upstream"
+  ],
+  "local_lock_changed": [],
+  "errors": {},
+  "branch": "regression",
+  "alignment": "unverified"
+}

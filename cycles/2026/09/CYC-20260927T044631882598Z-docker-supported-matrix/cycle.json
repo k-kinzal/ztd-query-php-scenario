@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "CYC-20260927T044631882598Z-docker-supported-matrix",
+  "state": "complete",
+  "topic": "docker-supported-matrix",
+  "baseline": "BASE-20260926-main-249944e",
+  "branch": "regression",
+  "report": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/report.md",
+  "findings": [],
+  "work_items": [
+    "WRK-supported-matrix"
+  ]
+}

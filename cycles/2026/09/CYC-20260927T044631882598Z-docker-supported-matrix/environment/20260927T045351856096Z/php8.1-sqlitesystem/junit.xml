@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Pdo\SqliteFixtureLifecycleTest" file="/app/tests/Pdo/SqliteFixtureLifecycleTest.php" tests="1" assertions="10" errors="0" failures="0" skipped="0" time="0.081812">
+    <testcase name="testFixtureLifecycleLeavesPhysicalSeedAndNextSessionUntouched" file="/app/tests/Pdo/SqliteFixtureLifecycleTest.php" line="15" class="Tests\Pdo\SqliteFixtureLifecycleTest" classname="Tests.Pdo.SqliteFixtureLifecycleTest" assertions="10" time="0.081812"/>
+  </testsuite>
+</testsuites>

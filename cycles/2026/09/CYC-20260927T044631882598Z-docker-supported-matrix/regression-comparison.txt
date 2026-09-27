@@ -1,0 +1,73 @@
+{
+  "comparable_recorded_conditions": true,
+  "packages_changed": false,
+  "changes": [],
+  "step_exit_codes_before": [
+    0,
+    0
+  ],
+  "step_exit_codes_after": [
+    0,
+    0
+  ],
+  "classification": "requires-review",
+  "note": "Check DB versions/options, native control and desired assertions. No automatic regression or intent claim."
+}
+
+{
+  "comparable_recorded_conditions": true,
+  "packages_changed": false,
+  "changes": [],
+  "step_exit_codes_before": [
+    1,
+    1
+  ],
+  "step_exit_codes_after": [
+    1,
+    1
+  ],
+  "classification": "requires-review",
+  "note": "Check DB versions/options, native control and desired assertions. No automatic regression or intent claim."
+}
+
+{
+  "comparable_recorded_conditions": false,
+  "packages_changed": false,
+  "changes": [],
+  "step_exit_codes_before": [
+    0
+  ],
+  "step_exit_codes_after": [
+    0
+  ],
+  "classification": "requires-review",
+  "note": "Check DB versions/options, native control and desired assertions. No automatic regression or intent claim."
+}
+
+{
+  "comparable_recorded_conditions": false,
+  "packages_changed": false,
+  "changes": [],
+  "step_exit_codes_before": [
+    1
+  ],
+  "step_exit_codes_after": [
+    1
+  ],
+  "classification": "requires-review",
+  "note": "Check DB versions/options, native control and desired assertions. No automatic regression or intent claim."
+}
+
+{
+  "comparable_recorded_conditions": false,
+  "packages_changed": false,
+  "changes": [],
+  "step_exit_codes_before": [
+    1
+  ],
+  "step_exit_codes_after": [
+    1
+  ],
+  "classification": "requires-review",
+  "note": "Check DB versions/options, native control and desired assertions. No automatic regression or intent claim."
+}

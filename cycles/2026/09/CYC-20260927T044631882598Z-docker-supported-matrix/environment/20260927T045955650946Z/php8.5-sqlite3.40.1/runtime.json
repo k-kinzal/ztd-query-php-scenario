@@ -1,0 +1,92 @@
+{
+    "scope": "native driver connectivity and CRUD; no ZTD behavior claim",
+    "php": "8.5.11",
+    "os": "Linux",
+    "architecture": "aarch64",
+    "extensions": {
+        "pdo_mysql": "8.5.11",
+        "pdo_pgsql": "8.5.11",
+        "pdo_sqlite": "8.5.11",
+        "sqlite3": "8.5.11",
+        "mysqli": "8.5.11"
+    },
+    "database": "sqlite",
+    "database_version": "3.40.1",
+    "pdo_client": "3.40.1",
+    "mysqli_client": null,
+    "sqlite": "3.40.1",
+    "sqlite_source_id": "2022-12-28 14:03:47 df5c253c0b3dd24916e4ec7cf77d3db5294cc9fd45ae7b9c5e82ad8197f38a24",
+    "sqlite_compile_options": [
+        "ATOMIC_INTRINSICS=1",
+        "COMPILER=gcc-12.2.0",
+        "DEFAULT_AUTOVACUUM",
+        "DEFAULT_CACHE_SIZE=-2000",
+        "DEFAULT_FILE_FORMAT=4",
+        "DEFAULT_JOURNAL_SIZE_LIMIT=-1",
+        "DEFAULT_MMAP_SIZE=0",
+        "DEFAULT_PAGE_SIZE=4096",
+        "DEFAULT_PCACHE_INITSZ=20",
+        "DEFAULT_RECURSIVE_TRIGGERS",
+        "DEFAULT_SECTOR_SIZE=4096",
+        "DEFAULT_SYNCHRONOUS=2",
+        "DEFAULT_WAL_AUTOCHECKPOINT=1000",
+        "DEFAULT_WAL_SYNCHRONOUS=2",
+        "DEFAULT_WORKER_THREADS=0",
+        "ENABLE_COLUMN_METADATA",
+        "ENABLE_FTS3",
+        "ENABLE_FTS4",
+        "ENABLE_FTS5",
+        "ENABLE_GEOPOLY",
+        "ENABLE_MATH_FUNCTIONS",
+        "ENABLE_RTREE",
+        "MALLOC_SOFT_LIMIT=1024",
+        "MAX_ATTACHED=10",
+        "MAX_COLUMN=2000",
+        "MAX_COMPOUND_SELECT=500",
+        "MAX_DEFAULT_PAGE_SIZE=8192",
+        "MAX_EXPR_DEPTH=1000",
+        "MAX_FUNCTION_ARG=127",
+        "MAX_LENGTH=1000000000",
+        "MAX_LIKE_PATTERN_LENGTH=50000",
+        "MAX_MMAP_SIZE=0x7fff0000",
+        "MAX_PAGE_COUNT=1073741823",
+        "MAX_PAGE_SIZE=65536",
+        "MAX_SQL_LENGTH=1000000000",
+        "MAX_TRIGGER_DEPTH=1000",
+        "MAX_VARIABLE_NUMBER=32766",
+        "MAX_VDBE_OP=250000000",
+        "MAX_WORKER_THREADS=8",
+        "MUTEX_PTHREADS",
+        "SYSTEM_MALLOC",
+        "TEMP_STORE=1",
+        "THREADSAFE=1"
+    ],
+    "lock_sha256": "5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92",
+    "packages": {
+        "k-kinzal\/ztd-query-core": {
+            "version": "dev-main",
+            "reference": "f5ab3f0efdb355358b60feb61b7edfb9194fa21f"
+        },
+        "k-kinzal\/ztd-query-mysql": {
+            "version": "dev-main",
+            "reference": "969eb5d9f194f3bca1f661a99594b54ead492423"
+        },
+        "k-kinzal\/ztd-query-mysqli-adapter": {
+            "version": "dev-main",
+            "reference": "3fe31d57e65d337d53cee04a625ec8e855798181"
+        },
+        "k-kinzal\/ztd-query-pdo-adapter": {
+            "version": "dev-main",
+            "reference": "3ed255a43c776349d0170c5b19bcfdd53db626dd"
+        },
+        "k-kinzal\/ztd-query-postgres": {
+            "version": "dev-main",
+            "reference": "02bcf6de3040157294b0501396f86872d5301a8e"
+        },
+        "k-kinzal\/ztd-query-sqlite": {
+            "version": "dev-main",
+            "reference": "542d26203030ded36abbcdea04b77ce99ff8d934"
+        }
+    },
+    "native_probe": "passed"
+}

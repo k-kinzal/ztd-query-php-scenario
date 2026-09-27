@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "scenario": "SCN-sqlite-fixture-lifecycle",
+  "cycle": "CYC-20260927T044631882598Z-docker-supported-matrix",
+  "started_at": "2026-09-27T04:47:59.466936+00:00",
+  "state": "finished",
+  "repository_revision": "12a0cfdec78674bd20b7233f3286b867ddee0c0c",
+  "working_tree_dirty": true,
+  "source": {
+    "archive": "baselines/sources/3a7718ed6036ad7417365ac12193920f52b4eeab6399ad16389b0e09f3953119.tar.gz",
+    "sha256": "2fa45378ec8ea30bb4407e1b594943e0898facdeb7aa7c84108bfd3d0ce7122d",
+    "files": {
+      "composer.json": "766c264d0c2c2744206c2a9be33eb388333b24e295c678b67409cfdb28b9a424",
+      "phpunit.xml": "77b28d75b05575f097b48e37b15f7c17580e317cd5e8ad4449e74b2058c798fd",
+      "scenarios/isolation/SCN-sqlite-fixture-lifecycle/scenario.json": "2b131aa775539639d8e716526e43ffb4ca8dccdb89d9136b465f6ae670dd5f24",
+      "scripts/lab.py": "5ec89e5f91d218789514237cc949dcd3c91894336730d923de012f18de0f4161",
+      "scripts/runtime.php": "f8a410529d7ea8e605d3d36837e42e71baafafb2baf6e21c6828143367cb2485",
+      "spec/expectations/SPEC-isolated-fixture-lifecycle.md": "70f8b89704d977c22899ad791d82b1e3bb7344292e69a6a14101d9f9f95cdd79",
+      "tests/Pdo/SqliteBasicCrudTest.php": "2ac65f13ec4ce9173ff28003105d529b7804b1b05887043064f07be3499386e5",
+      "tests/Pdo/SqliteFixtureLifecycleTest.php": "04f77cf804d2f0e7fbf578dce741a44b45a1c26a168ae3f05472cda1db2a418a",
+      "tests/Scenarios/BasicCrudScenario.php": "c86bea1abe5f39cf520519404fcc561ef23eb4d55209b84fa7ea108360b37d9d",
+      "tests/Scenarios/JoinAndSubqueryScenario.php": "83260926d56d2dcc7fbe0ca0f2c42b39fcdeee2c8f1d23df3ee941a8783b9fb1",
+      "tests/Scenarios/PreparedStatementScenario.php": "35e4a674e896f1962504a050fcd7fa5710b6ff9bcc3d87c2a3d1c00c4be7240f",
+      "tests/Scenarios/TransactionScenario.php": "4626f4e9c7f365af3036d92a6469df2dc20166826900ad701cc68697ec7e4fe4",
+      "tests/Scenarios/WriteOperationScenario.php": "7964e2612ebb340c4545defb94bd580ffb80f215dffae5969e23b0356520eb5e",
+      "tests/Support/AbstractMysqlPdoTestCase.php": "aa8041bf1036ea40dada758d511bfb7fda2f51d086859f241caf3e6fc59f4dfc",
+      "tests/Support/AbstractMysqliTestCase.php": "aaf29624aa93c747de9f5ac190f7d6257a8be798bfdec159a05268399f1ece7a",
+      "tests/Support/AbstractPostgresPdoTestCase.php": "e8159d7d3849e28534ab044bf9f9d495446f84e05be5ffed04bb9208eed113da",
+      "tests/Support/AbstractSqlitePdoTestCase.php": "30e9d50191868505900fa96f2e232957143bb4aafa8d58c59740cc6c9291a7f3",
+      "tests/Support/MySQLContainer.php": "b9622080d86027e577a604737b38956a1854b2e6a88e1c0173f885e928e76304",
+      "tests/Support/PostgreSQLContainer.php": "819980deac865c22f50eb19515389e3cf3d1b5226e91947fb923958410e19bbb",
+      "tests/Support/PostgreSQLDSN.php": "3d241ce1884be5475ac22ffba5383abe699818d931a3dc76f16cf7f928161dbf",
+      "tests/Support/UserDto.php": "437c72d086ebf95ab4846c875382bdde1cde40728884ba81843e62e2a0be3b9c",
+      "tests/Support/UserDtoWithConstructor.php": "7d3041003b4a14777090012b8fa6374cc14c548f698c45272706392f5cf4717c",
+      "tests/Support/VersionRecorder.php": "e19d249e4941dc09a8c5ab367644a6e67320a3ea5ad52883decc253d432552ab"
+    }
+  },
+  "lock": "baselines/locks/5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92.lock",
+  "lock_sha256": "5cf40ce75ff397286bc40f7646df41e852e84ae6dfade4efe23d2e1573beec92",
+  "packages": {
+    "k-kinzal/ztd-query-core": {
+      "version": "dev-main",
+      "reference": "f5ab3f0efdb355358b60feb61b7edfb9194fa21f",
+      "url": "https://github.com/k-kinzal/ztd-query-core.git"
+    },
+    "k-kinzal/ztd-query-mysql": {
+      "version": "dev-main",
+      "reference": "969eb5d9f194f3bca1f661a99594b54ead492423",
+      "url": "https://github.com/k-kinzal/ztd-query-mysql.git"
+    },
+    "k-kinzal/ztd-query-mysqli-adapter": {
+      "version": "dev-main",
+      "reference": "3fe31d57e65d337d53cee04a625ec8e855798181",
+      "url": "https://github.com/k-kinzal/ztd-query-mysqli-adapter.git"
+    },
+    "k-kinzal/ztd-query-pdo-adapter": {
+      "version": "dev-main",
+      "reference": "3ed255a43c776349d0170c5b19bcfdd53db626dd",
+      "url": "https://github.com/k-kinzal/ztd-query-pdo-adapter.git"
+    },
+    "k-kinzal/ztd-query-postgres": {
+      "version": "dev-main",
+      "reference": "02bcf6de3040157294b0501396f86872d5301a8e",
+      "url": "https://github.com/k-kinzal/ztd-query-postgres.git"
+    },
+    "k-kinzal/ztd-query-sqlite": {
+      "version": "dev-main",
+      "reference": "542d26203030ded36abbcdea04b77ce99ff8d934",
+      "url": "https://github.com/k-kinzal/ztd-query-sqlite.git"
+    }
+  },
+  "upstream_check": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/upstream.json",
+  "runtime": {
+    "php": "8.5.8",
+    "os": "Darwin",
+    "architecture": "arm64",
+    "extensions": {
+      "PDO": "8.5.8",
+      "pdo_sqlite": "8.5.8",
+      "pdo_mysql": "8.5.8",
+      "pdo_pgsql": "8.5.8",
+      "mysqli": "8.5.8"
+    },
+    "sqlite": "3.53.3",
+    "sqlite_client": "3.53.3",
+    "phpunit": "10.5.65"
+  },
+  "scope": {
+    "adapter": "sqlite-pdo",
+    "database": "sqlite::memory:",
+    "options": {
+      "pdo_error_mode": "exception",
+      "ztd": "defaults"
+    }
+  },
+  "steps": [
+    {
+      "command": [
+        "php",
+        "vendor/bin/phpunit",
+        "tests/Pdo/SqliteFixtureLifecycleTest.php",
+        "--do-not-cache-result",
+        "--colors=never",
+        "--log-junit",
+        "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/01-junit.xml"
+      ],
+      "exit_code": 0,
+      "output": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/01-output.txt",
+      "versions": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/01-versions.json",
+      "junit": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/01-junit.xml",
+      "cases": [
+        {
+          "id": "Tests.Pdo.SqliteFixtureLifecycleTest::testFixtureLifecycleLeavesPhysicalSeedAndNextSessionUntouched",
+          "outcome": "passed",
+          "assertions": "10"
+        }
+      ]
+    },
+    {
+      "command": [
+        "php",
+        "vendor/bin/phpunit",
+        "tests/Pdo/SqliteBasicCrudTest.php",
+        "--do-not-cache-result",
+        "--colors=never",
+        "--log-junit",
+        "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/02-junit.xml"
+      ],
+      "exit_code": 0,
+      "output": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/02-output.txt",
+      "versions": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/02-versions.json",
+      "junit": "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/02-junit.xml",
+      "cases": [
+        {
+          "id": "Tests.Pdo.SqliteBasicCrudTest::testAutoDetectsDriver",
+          "outcome": "passed",
+          "assertions": "1"
+        },
+        {
+          "id": "Tests.Pdo.SqliteBasicCrudTest::testDeleteAndVerify",
+          "outcome": "passed",
+          "assertions": "1"
+        },
+        {
+          "id": "Tests.Pdo.SqliteBasicCrudTest::testEnableDisableToggle",
+          "outcome": "passed",
+          "assertions": "3"
+        },
+        {
+          "id": "Tests.Pdo.SqliteBasicCrudTest::testInsertAndSelect",
+          "outcome": "passed",
+          "assertions": "3"
+        },
+        {
+          "id": "Tests.Pdo.SqliteBasicCrudTest::testMultipleInserts",
+          "outcome": "passed",
+          "assertions": "3"
+        },
+        {
+          "id": "Tests.Pdo.SqliteBasicCrudTest::testPreparedSelectWithBindValue",
+          "outcome": "passed",
+          "assertions": "2"
+        },
+        {
+          "id": "Tests.Pdo.SqliteBasicCrudTest::testSelectReturnsEmptyWhenNoRows",
+          "outcome": "passed",
+          "assertions": "1"
+        },
+        {
+          "id": "Tests.Pdo.SqliteBasicCrudTest::testUpdateAndVerify",
+          "outcome": "passed",
+          "assertions": "2"
+        },
+        {
+          "id": "Tests.Pdo.SqliteBasicCrudTest::testZtdIsolation",
+          "outcome": "passed",
+          "assertions": "2"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-09-27T04:48:00.502578+00:00",
+  "database_runtime": [
+    [
+      "sqlite-pdo",
+      "3.53.3",
+      "8.5.8"
+    ]
+  ],
+  "artifacts": {
+    "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/01-junit.xml": "f9d8b8f3122402bed5bbfb7b6fa5c62a61ba64addc9b3845fa8908238c318ce6",
+    "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/01-output.txt": "877bbaf8c0859229548dccd1221f2be3fa76920134b1339c29bbb4f6e66988fe",
+    "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/01-versions.json": "c678a2f9c0269788919d40049aa3674237477f84e722764ab06e7192cf05bd7b",
+    "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/02-junit.xml": "647b9c9b77f14d4f4619aec42c4b440a2a022d2a1f8a0c6e8d1a2bce832ade1e",
+    "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/02-output.txt": "c04728b170ce185b73b507f7683d89c32f2b36af33d6d9d60719fb4c44bc89ff",
+    "cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/runs/20260927T044759267104Z-SCN-sqlite-fixture-lifecycle/02-versions.json": "75b80bdd676c3321b25946ecfe9f6ae1b1829bcb862be449304ed995f2a1b6f7"
+  }
+}

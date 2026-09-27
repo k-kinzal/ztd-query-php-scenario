@@ -1,0 +1,200 @@
+ Image postgres:17 Pulling 
+ 8ed27976e552 Pulling fs layer 0B
+ c2c7493c80ee Pulling fs layer 0B
+ b9bd31abcf11 Pulling fs layer 0B
+ b57c5ada52d4 Pulling fs layer 0B
+ 0473fe57c965 Pulling fs layer 0B
+ eb9ecc778db0 Pulling fs layer 0B
+ 344ed0d36e61 Pulling fs layer 0B
+ e85e0dbf28ca Pulling fs layer 0B
+ 59a0df9d7a4a Pulling fs layer 0B
+ bf5220ddf37c Pulling fs layer 0B
+ f5fe4b142e90 Pulling fs layer 0B
+ 724cc01c4e68 Pulling fs layer 0B
+ aee75b2aa415 Pulling fs layer 0B
+ bd36565c0fde Pulling fs layer 0B
+ 8e340d1d2e57 Downloading 1.049MB
+ 8e340d1d2e57 Downloading 4.194MB
+ 8e340d1d2e57 Downloading 5.243MB
+ 8e340d1d2e57 Downloading 5.739MB
+ 4b5913bd23b5 Downloading 54.16kB
+ 4b5913bd23b5 Downloading 54.16kB
+ 59a0df9d7a4a Downloading 1.049MB
+ 8e340d1d2e57 Downloading 5.739MB
+ 59a0df9d7a4a Downloading 2.097MB
+ 8e340d1d2e57 Downloading 5.739MB
+ 4b5913bd23b5 Downloading 54.16kB
+ 0473fe57c965 Downloading 127B
+ 59a0df9d7a4a Downloading 5.243MB
+ 8e340d1d2e57 Downloading 5.739MB
+ b57c5ada52d4 Downloading 6.109kB
+ 4b5913bd23b5 Downloading 54.16kB
+ 0473fe57c965 Downloading 127B
+ 59a0df9d7a4a Downloading 6.235MB
+ 8e340d1d2e57 Downloading 5.739MB
+ b57c5ada52d4 Downloading 6.109kB
+ 4b5913bd23b5 Downloading 54.16kB
+ 0473fe57c965 Downloading 127B
+ 59a0df9d7a4a Downloading 6.235MB
+ 8e340d1d2e57 Download complete 0B
+ b57c5ada52d4 Downloading 6.109kB
+ 344ed0d36e61 Downloading 1.166kB
+ 4b5913bd23b5 Download complete 0B
+ c2c7493c80ee Downloading 3.14kB
+ b57c5ada52d4 Download complete 0B
+ 344ed0d36e61 Download complete 0B
+ c2c7493c80ee Download complete 0B
+ 0473fe57c965 Download complete 0B
+ 59a0df9d7a4a Download complete 0B
+ 8ed27976e552 Download complete 0B
+ eb9ecc778db0 Download complete 0B
+ b9bd31abcf11 Downloading 6.291MB
+ e85e0dbf28ca Download complete 0B
+ bd36565c0fde Downloading 3.146MB
+ b9bd31abcf11 Downloading 14.68MB
+ bd36565c0fde Download complete 0B
+ b9bd31abcf11 Download complete 0B
+ aee75b2aa415 Download complete 0B
+ f5fe4b142e90 Download complete 0B
+ 724cc01c4e68 Download complete 0B
+ bf5220ddf37c Download complete 0B
+ bd36565c0fde Extracting 1B
+ bd36565c0fde Extracting 1B
+ bd36565c0fde Extracting 1B
+ bd36565c0fde Extracting 2B
+ bd36565c0fde Extracting 4B
+ bd36565c0fde Extracting 4B
+ bd36565c0fde Extracting 5B
+ bd36565c0fde Pull complete 0B
+ 344ed0d36e61 Pull complete 0B
+ 59a0df9d7a4a Extracting 1B
+ 59a0df9d7a4a Extracting 1B
+ 59a0df9d7a4a Extracting 2B
+ 59a0df9d7a4a Extracting 3B
+ 59a0df9d7a4a Pull complete 0B
+ bf5220ddf37c Extracting 1B
+ bf5220ddf37c Pull complete 0B
+ f5fe4b142e90 Extracting 1B
+ f5fe4b142e90 Extracting 1B
+ f5fe4b142e90 Extracting 2B
+ f5fe4b142e90 Extracting 3B
+ f5fe4b142e90 Extracting 3B
+ f5fe4b142e90 Extracting 3B
+ f5fe4b142e90 Pull complete 0B
+ 724cc01c4e68 Extracting 1B
+ 724cc01c4e68 Pull complete 0B
+ e85e0dbf28ca Extracting 1B
+ e85e0dbf28ca Pull complete 0B
+ c2c7493c80ee Pull complete 0B
+ b9bd31abcf11 Extracting 1B
+ b9bd31abcf11 Extracting 1B
+ b9bd31abcf11 Extracting 1B
+ b9bd31abcf11 Extracting 1B
+ b9bd31abcf11 Extracting 2B
+ b9bd31abcf11 Extracting 2B
+ b9bd31abcf11 Extracting 4B
+ b9bd31abcf11 Extracting 4B
+ b9bd31abcf11 Extracting 4B
+ b9bd31abcf11 Extracting 5B
+ b9bd31abcf11 Extracting 5B
+ b9bd31abcf11 Extracting 5B
+ b9bd31abcf11 Extracting 5B
+ b9bd31abcf11 Extracting 5B
+ b9bd31abcf11 Extracting 5B
+ b9bd31abcf11 Extracting 5B
+ b9bd31abcf11 Extracting 6B
+ b9bd31abcf11 Extracting 6B
+ b9bd31abcf11 Extracting 6B
+ b9bd31abcf11 Extracting 6B
+ b9bd31abcf11 Extracting 6B
+ b9bd31abcf11 Extracting 7B
+ b9bd31abcf11 Extracting 7B
+ b9bd31abcf11 Extracting 7B
+ b9bd31abcf11 Extracting 7B
+ b9bd31abcf11 Extracting 8B
+ b9bd31abcf11 Extracting 8B
+ b9bd31abcf11 Extracting 8B
+ b9bd31abcf11 Extracting 9B
+ b9bd31abcf11 Extracting 9B
+ b9bd31abcf11 Extracting 9B
+ b9bd31abcf11 Extracting 10B
+ b9bd31abcf11 Extracting 10B
+ b9bd31abcf11 Extracting 10B
+ b9bd31abcf11 Extracting 11B
+ b9bd31abcf11 Extracting 11B
+ b9bd31abcf11 Extracting 11B
+ b9bd31abcf11 Extracting 11B
+ b9bd31abcf11 Extracting 12B
+ b9bd31abcf11 Extracting 12B
+ b9bd31abcf11 Extracting 12B
+ b9bd31abcf11 Extracting 12B
+ b9bd31abcf11 Extracting 12B
+ b9bd31abcf11 Extracting 13B
+ b9bd31abcf11 Extracting 13B
+ b9bd31abcf11 Extracting 13B
+ b9bd31abcf11 Extracting 14B
+ b9bd31abcf11 Extracting 14B
+ b9bd31abcf11 Extracting 15B
+ b9bd31abcf11 Extracting 15B
+ b9bd31abcf11 Extracting 15B
+ b9bd31abcf11 Extracting 16B
+ b9bd31abcf11 Extracting 16B
+ b9bd31abcf11 Extracting 16B
+ b9bd31abcf11 Extracting 17B
+ b9bd31abcf11 Extracting 17B
+ b9bd31abcf11 Extracting 18B
+ b9bd31abcf11 Extracting 19B
+ b9bd31abcf11 Extracting 19B
+ b9bd31abcf11 Extracting 19B
+ b9bd31abcf11 Extracting 20B
+ b9bd31abcf11 Extracting 20B
+ b9bd31abcf11 Extracting 20B
+ b9bd31abcf11 Extracting 20B
+ b9bd31abcf11 Extracting 20B
+ b9bd31abcf11 Extracting 21B
+ b9bd31abcf11 Extracting 21B
+ b9bd31abcf11 Extracting 21B
+ b9bd31abcf11 Extracting 21B
+ b9bd31abcf11 Extracting 22B
+ b9bd31abcf11 Extracting 22B
+ b9bd31abcf11 Extracting 22B
+ b9bd31abcf11 Extracting 23B
+ b9bd31abcf11 Extracting 23B
+ b9bd31abcf11 Extracting 24B
+ b9bd31abcf11 Extracting 24B
+ b9bd31abcf11 Extracting 25B
+ b9bd31abcf11 Extracting 25B
+ b9bd31abcf11 Extracting 25B
+ b9bd31abcf11 Extracting 26B
+ b9bd31abcf11 Extracting 26B
+ b9bd31abcf11 Extracting 27B
+ b9bd31abcf11 Extracting 27B
+ b9bd31abcf11 Extracting 28B
+ b9bd31abcf11 Extracting 28B
+ b9bd31abcf11 Extracting 29B
+ b9bd31abcf11 Extracting 34B
+ b9bd31abcf11 Extracting 34B
+ b9bd31abcf11 Extracting 35B
+ b9bd31abcf11 Extracting 35B
+ b9bd31abcf11 Extracting 35B
+ b9bd31abcf11 Extracting 35B
+ b9bd31abcf11 Pull complete 0B
+ eb9ecc778db0 Pull complete 0B
+ 0473fe57c965 Pull complete 0B
+ aee75b2aa415 Extracting 1B
+ aee75b2aa415 Pull complete 0B
+ b57c5ada52d4 Pull complete 0B
+ 8ed27976e552 Extracting 1B
+ 8ed27976e552 Extracting 1B
+ 8ed27976e552 Pull complete 0B
+ Image postgres:17 Pulled 
+ Network ztd-matrix-20260927t045523925003z-4_default Creating 
+ Network ztd-matrix-20260927t045523925003z-4_default Creating 
+ Network ztd-matrix-20260927t045523925003z-4_default Created 
+ Network ztd-matrix-20260927t045523925003z-4_default Created 
+ Container ztd-matrix-20260927t045523925003z-4-postgres-1 Creating 
+ Container ztd-matrix-20260927t045523925003z-4-postgres-1 Created 
+ Container ztd-matrix-20260927t045523925003z-4-postgres-1 Starting 
+ Container ztd-matrix-20260927t045523925003z-4-postgres-1 Started 
+ Container ztd-matrix-20260927t045523925003z-4-postgres-1 Waiting 
+ Container ztd-matrix-20260927t045523925003z-4-postgres-1 Healthy 

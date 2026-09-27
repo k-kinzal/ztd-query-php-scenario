@@ -1,0 +1,83 @@
+{
+  "checked_at": "2026-09-27",
+  "scope": "Known reports for identical regression reruns; open and closed states checked",
+  "issues": [
+    {
+      "number": 465,
+      "state": "open",
+      "title": "SQLite prepared INSERT assigns positional values to the wrong columns when the column list is reordered",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/465",
+      "updated_at": "2026-09-26T08:48:51Z"
+    },
+    {
+      "number": 471,
+      "state": "open",
+      "title": "ZtdMysqli::query() returns mysqli_result instead of true for INSERT/UPDATE/DELETE/DDL",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/471",
+      "updated_at": "2026-09-26T14:34:39Z"
+    },
+    {
+      "number": 472,
+      "state": "open",
+      "title": "ZtdMysqli::query() returns int/float column values where native mysqli returns strings",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/472",
+      "updated_at": "2026-09-26T14:34:44Z"
+    },
+    {
+      "number": 483,
+      "state": "open",
+      "title": "ZtdMysqli: generated AUTO_INCREMENT keys cannot be read (`insert_id` throws, `SELECT LAST_INSERT_ID()` returns 0)",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/483",
+      "updated_at": "2026-09-26T20:21:02Z"
+    },
+    {
+      "number": 484,
+      "state": "open",
+      "title": "ZtdMysqli: mysqli connection and statement properties throw `Error`, and `errno`/`error` stay empty after a failed `query()`",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/484",
+      "updated_at": "2026-09-26T20:21:10Z"
+    },
+    {
+      "number": 485,
+      "state": "open",
+      "title": "ZtdMysqli: constraint violations and syntax errors raise `ZtdMysqliException` (code 0) instead of `mysqli_sql_exception` with errno/SQLSTATE, and are thrown even under `MYSQLI_REPORT_OFF`",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/485",
+      "updated_at": "2026-09-26T20:21:11Z"
+    },
+    {
+      "number": 486,
+      "state": "open",
+      "title": "ZtdMysqli::stmt_init() returns a statement bound to the physical connection, so `$stmt->prepare()` bypasses the session (unknown table 1146)",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/486",
+      "updated_at": "2026-09-26T20:21:12Z"
+    },
+    {
+      "number": 487,
+      "state": "open",
+      "title": "ZtdMysqli::real_query() returns true but `store_result()` and `use_result()` return false, so a SELECT result cannot be read",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/487",
+      "updated_at": "2026-09-26T20:21:14Z"
+    },
+    {
+      "number": 488,
+      "state": "open",
+      "title": "ZtdMysqli::multi_query() is not applied to session tables: statements referencing a session-created table fail with unknown table 1146",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/488",
+      "updated_at": "2026-09-26T20:21:15Z"
+    },
+    {
+      "number": 489,
+      "state": "open",
+      "title": "ZtdMysqli: `fetch_fields()` metadata differs from native (INT/BOOLEAN reported as LONGLONG, no PRI_KEY/AUTO_INCREMENT/NOT_NULL flags, empty `orgtable`)",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/489",
+      "updated_at": "2026-09-26T20:21:17Z"
+    },
+    {
+      "number": 490,
+      "state": "open",
+      "title": "`new ZtdMysqli()` without arguments connects immediately (unlike `new mysqli()`), so `options()` cannot be set before `real_connect()`",
+      "html_url": "https://github.com/k-kinzal/ztd-query-php/issues/490",
+      "updated_at": "2026-09-26T20:21:18Z"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+ Image ztd-scenario-matrix:php8.5-sqlitesystem Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 851B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.50kB 0.0s done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/php:8.5-cli-bookworm
+#3 ...
+
+#4 [internal] load metadata for docker.io/library/composer:2
+#4 DONE 1.1s
+
+#5 FROM docker.io/library/composer:2@sha256:9715c7f69044da2a212a5fbde29ee7da24e364d426560ae6367b060236f847d7
+#5 resolve docker.io/library/composer:2@sha256:9715c7f69044da2a212a5fbde29ee7da24e364d426560ae6367b060236f847d7 0.4s done
+#5 CACHED
+
+#3 [internal] load metadata for docker.io/library/php:8.5-cli-bookworm
+#3 DONE 1.1s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 138B 0.0s done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 151.05kB 0.1s done
+#7 DONE 0.2s
+
+#8 [stage-0 1/9] FROM docker.io/library/php:8.5-cli-bookworm@sha256:d551e79d694fd91c4fdf34c4adcc52dd2042a064b881e25c319b2533ead0682c
+#8 resolve docker.io/library/php:8.5-cli-bookworm@sha256:d551e79d694fd91c4fdf34c4adcc52dd2042a064b881e25c319b2533ead0682c 0.2s done
+#8 DONE 0.2s
+
+#9 [stage-0 2/9] RUN apt-get update && apt-get install -y     git     unzip     libpq-dev     libsqlite3-dev     && rm -rf /var/lib/apt/lists/*
+#9 CACHED
+
+#10 [stage-0 7/9] COPY composer.json composer.lock ./
+#10 CACHED
+
+#11 [stage-0 3/9] COPY docker/install-sqlite.sh /tmp/install-sqlite.sh
+#11 CACHED
+
+#12 [stage-0 4/9] RUN sh /tmp/install-sqlite.sh     && docker-php-ext-install -j2         pdo_mysql         pdo_pgsql         mysqli     && php -r '$v = (new PDO("sqlite::memory:"))->query("SELECT sqlite_version()")->fetchColumn(); if (getenv("SQLITE_VERSION") !== "system" && $v !== getenv("SQLITE_VERSION")) { fwrite(STDERR, "Wrong PDO SQLite: $v\n"); exit(1); } if (SQLite3::version()["versionString"] !== $v) { exit(1); }'     && rm /tmp/install-sqlite.sh
+#12 CACHED
+
+#13 [stage-0 6/9] WORKDIR /app
+#13 CACHED
+
+#14 [stage-0 8/9] RUN composer install --no-interaction --no-progress --prefer-dist     && composer check-platform-reqs
+#14 CACHED
+
+#15 [stage-0 5/9] COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+#15 CACHED
+
+#16 [stage-0 9/9] COPY . .
+#16 CACHED
+
+#17 exporting to image
+#17 exporting layers 0.0s done
+#17 exporting manifest sha256:aca3bb3fae803578612502604c3b56399adc3453acb579a40ed1c7ef1cbb09f2 0.1s done
+#17 exporting config sha256:65f7ae5810cc7a86525ca6078ddd6d5eba110252be03835143b3b653937bf957 0.0s done
+#17 exporting attestation manifest sha256:32d136af63f654ed3e47bc55390b52184314f6640100d20f32bde4ebcc6c61e2
+#17 exporting attestation manifest sha256:32d136af63f654ed3e47bc55390b52184314f6640100d20f32bde4ebcc6c61e2 0.0s done
+#17 exporting manifest list sha256:659ea00247e56e2653b0fdfac2f571534ae7d6d0a6b3f696bdda572ff1cc5198
+#17 exporting manifest list sha256:659ea00247e56e2653b0fdfac2f571534ae7d6d0a6b3f696bdda572ff1cc5198 0.2s done
+#17 naming to docker.io/library/ztd-scenario-matrix:php8.5-sqlitesystem
+#17 naming to docker.io/library/ztd-scenario-matrix:php8.5-sqlitesystem done
+#17 unpacking to docker.io/library/ztd-scenario-matrix:php8.5-sqlitesystem 0.0s done
+#17 DONE 0.8s
+
+#18 resolving provenance for metadata file
+#18 DONE 0.1s
+ Image ztd-scenario-matrix:php8.5-sqlitesystem Built 

@@ -1,0 +1,2 @@
+# Captured process logs preserve their original whitespace as execution evidence.
+cycles/**/*.log -whitespace

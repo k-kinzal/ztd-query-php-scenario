@@ -1,0 +1,56 @@
+name: ztd-matrix-20260927t045734458885z-0
+services:
+  sqlite:
+    build:
+      context: /var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-ovxo0ygh
+      dockerfile: Dockerfile
+      args:
+        PHP_IMAGE: php:8.1-cli-bookworm
+        PHP_VERSION: "8.1"
+        SQLITE_SHA256: 67d3fe6d268e6eaddcae3727fce58fcc8e9c53869bdd07a0c61e38ddf2965071
+        SQLITE_URL: https://www.sqlite.org/2024/sqlite-autoconf-3460100.tar.gz
+        SQLITE_VERSION: 3.46.1
+    command:
+      - php
+      - scripts/matrix-probe.php
+    entrypoint: []
+    environment:
+      EXPECTED_DATABASE: 3.46.1
+      EXPECTED_PHP: "8.1"
+      EXPECTED_SQLITE: 3.46.1
+      MATRIX_DATABASE: sqlite
+      ZTD_VERSION_LOG: /evidence/versions.json
+    image: ztd-scenario-matrix:20260927t045734458885z-php8.1-sqlite3.46.1
+    networks:
+      default: null
+    volumes:
+      - type: bind
+        source: /Users/ab/Projects/ztd-query-php-scenario/cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/environment/20260927T045734458885Z/php8.1-sqlite3.46.1
+        target: /evidence
+        bind: {}
+networks:
+  default:
+    name: ztd-matrix-20260927t045734458885z-0_default
+x-client:
+  build:
+    args:
+      PHP_IMAGE: php:8.1-cli-bookworm
+      PHP_VERSION: "8.1"
+      SQLITE_SHA256: 67d3fe6d268e6eaddcae3727fce58fcc8e9c53869bdd07a0c61e38ddf2965071
+      SQLITE_URL: https://www.sqlite.org/2024/sqlite-autoconf-3460100.tar.gz
+      SQLITE_VERSION: 3.46.1
+    context: /var/folders/j2/k150yy6d74ld6gm3rk77rjkr0000gn/T/ztd-matrix-ovxo0ygh
+    dockerfile: Dockerfile
+  command:
+    - php
+    - scripts/matrix-probe.php
+  entrypoint: []
+  environment:
+    EXPECTED_DATABASE: 3.46.1
+    EXPECTED_PHP: "8.1"
+    EXPECTED_SQLITE: 3.46.1
+    MATRIX_DATABASE: sqlite
+    ZTD_VERSION_LOG: /evidence/versions.json
+  image: ztd-scenario-matrix:20260927t045734458885z-php8.1-sqlite3.46.1
+  volumes:
+    - /Users/ab/Projects/ztd-query-php-scenario/cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/environment/20260927T045734458885Z/php8.1-sqlite3.46.1:/evidence

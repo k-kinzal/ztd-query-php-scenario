@@ -1,0 +1,10 @@
+PHPUnit 10.5.65 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.8
+Configuration: /Users/ab/Projects/ztd-query-php-scenario/phpunit.xml
+
+.                                                                   1 / 1 (100%)
+
+Time: 00:00.126, Memory: 10.00 MB
+
+OK (1 test, 10 assertions)

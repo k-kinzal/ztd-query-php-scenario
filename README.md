@@ -62,7 +62,10 @@ vendor/bin/phpunit
 MYSQL_IMAGE=mysql:8.4 vendor/bin/phpunit --filter MysqlBasicCrudTest
 POSTGRES_IMAGE=postgres:17 vendor/bin/phpunit --filter PostgresBasicCrudTest
 
-# Existing matrix runners: exploratory output under build/; retain evidence per workflow.
+# Docker matrix: PHP + database versions, native probes and isolated evidence.
+python3 scripts/docker-matrix.py --php 8.1,8.5 --database postgres --postgres all
+
+# Legacy matrix runners: exploratory output under build/; retain evidence per workflow.
 ./scripts/run-version-matrix.sh --quick
 ./scripts/run-php-version-matrix.sh --php 8.5 --profile all
 
@@ -71,6 +74,9 @@ python3 -m unittest discover -s scripts/tests
 python3 scripts/lab.py validate
 composer validate --strict
 ```
+
+See [Docker version matrix](docs/docker-matrix.md) for MySQL 8.0.11–9.1,
+PostgreSQL 16/17 and selectable SQLite libraries, scenario execution and replay.
 
 ### Refresh upstream main
 

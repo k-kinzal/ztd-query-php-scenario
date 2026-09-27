@@ -1,0 +1,56 @@
+name: ztd-matrix-20260927t045150216693z-0
+services:
+  sqlite:
+    build:
+      context: /Users/ab/Projects/ztd-query-php-scenario
+      dockerfile: Dockerfile
+      args:
+        PHP_IMAGE: php:8.5-cli-bookworm
+        PHP_VERSION: "8.5"
+        SQLITE_SHA256: ""
+        SQLITE_URL: ""
+        SQLITE_VERSION: system
+    command:
+      - php
+      - scripts/matrix-probe.php
+    entrypoint: []
+    environment:
+      EXPECTED_DATABASE: "3"
+      EXPECTED_PHP: "8.5"
+      EXPECTED_SQLITE: system
+      MATRIX_DATABASE: sqlite
+      ZTD_VERSION_LOG: /evidence/versions.json
+    image: ztd-scenario-matrix:php8.5-sqlitesystem
+    networks:
+      default: null
+    volumes:
+      - type: bind
+        source: /Users/ab/Projects/ztd-query-php-scenario/cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/environment/20260927T045150216693Z/php8.5-sqlitesystem
+        target: /evidence
+        bind: {}
+networks:
+  default:
+    name: ztd-matrix-20260927t045150216693z-0_default
+x-client:
+  build:
+    args:
+      PHP_IMAGE: php:8.5-cli-bookworm
+      PHP_VERSION: "8.5"
+      SQLITE_SHA256: ""
+      SQLITE_URL: ""
+      SQLITE_VERSION: system
+    context: ..
+    dockerfile: Dockerfile
+  command:
+    - php
+    - scripts/matrix-probe.php
+  entrypoint: []
+  environment:
+    EXPECTED_DATABASE: "3"
+    EXPECTED_PHP: "8.5"
+    EXPECTED_SQLITE: system
+    MATRIX_DATABASE: sqlite
+    ZTD_VERSION_LOG: /evidence/versions.json
+  image: ztd-scenario-matrix:php8.5-sqlitesystem
+  volumes:
+    - /Users/ab/Projects/ztd-query-php-scenario/cycles/2026/09/CYC-20260927T044631882598Z-docker-supported-matrix/environment/20260927T045150216693Z/php8.5-sqlitesystem:/evidence

@@ -1,0 +1,47 @@
+ Image ztd-scenario-matrix:php8.5-sqlitesystem Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 789B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.50kB 0.0s done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/composer:2
+#3 ...
+
+#4 [internal] load metadata for docker.io/library/php:8.5-cli-bookworm
+#4 DONE 0.9s
+
+#3 [internal] load metadata for docker.io/library/composer:2
+#3 DONE 1.0s
+
+#5 FROM docker.io/library/composer:2@sha256:9715c7f69044da2a212a5fbde29ee7da24e364d426560ae6367b060236f847d7
+#5 resolve docker.io/library/composer:2@sha256:9715c7f69044da2a212a5fbde29ee7da24e364d426560ae6367b060236f847d7 0.4s done
+#5 CACHED
+
+#6 [internal] load .dockerignore
+#6 transferring context: 109B 0.0s done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 3.13MB 0.4s done
+#7 DONE 0.4s
+
+#8 [stage-0 1/9] FROM docker.io/library/php:8.5-cli-bookworm@sha256:d551e79d694fd91c4fdf34c4adcc52dd2042a064b881e25c319b2533ead0682c
+#8 resolve docker.io/library/php:8.5-cli-bookworm@sha256:d551e79d694fd91c4fdf34c4adcc52dd2042a064b881e25c319b2533ead0682c 0.3s done
+#8 DONE 0.4s
+
+#9 [stage-0 2/9] RUN apt-get update && apt-get install -y     git     unzip     libpq-dev     libsqlite3-dev     && rm -rf /var/lib/apt/lists/*
+#9 CACHED
+
+#10 [stage-0 3/9] COPY docker/install-sqlite.sh /tmp/install-sqlite.sh
+#10 CACHED
+
+#11 [stage-0 4/9] RUN sh /tmp/install-sqlite.sh     && docker-php-ext-install -j2         pdo_mysql         pdo_pgsql         mysqli     && php -r '$v = (new PDO("sqlite::memory:"))->query("SELECT sqlite_version()")->fetchColumn(); if (getenv("SQLITE_VERSION") !== "system" && $v !== getenv("SQLITE_VERSION")) { fwrite(STDERR, "Wrong PDO SQLite: $v\n"); exit(1); } if (SQLite3::version()["versionString"] !== $v) { exit(1); }'     && rm /tmp/install-sqlite.sh
+#11 5.399 Configuring for:
+#11 5.399 PHP Version:             8.5
+#11 5.399 PHP Api Version:         20250925
+#11 5.399 Zend Module Api No:      20250925
+#11 5.399 Zend Extension Api No:   420250925
+

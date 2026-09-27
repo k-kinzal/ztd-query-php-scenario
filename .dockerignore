@@ -5,3 +5,6 @@
 .phpunit.result.cache
 build
 vendor
+cycles
+baselines
+spec/legacy
